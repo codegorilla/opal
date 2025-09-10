@@ -6,20 +6,20 @@ import java.io.IOException;
 
 public class Reader {
 
-    Path input = null;
+  Path input = null;
 
-    public Reader (Path input) {
-        this.input = input;
+  public Reader(Path input) {
+    this.input = input;
+  }
+
+  public String process() {
+
+    String content = null;
+    try {
+      content = Files.readString(input);
+    } catch (IOException e) {
+      e.printStackTrace();
     }
-
-    public String process () {
-
-        String content = null;
-        try {
-            content = Files.readString(input);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return content;
-    }
+    return content;
+  }
 }
