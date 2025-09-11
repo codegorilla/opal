@@ -661,213 +661,128 @@ public class Lexer {
     return token;
   }
 
+  private Token octalInteger () {
+    // Note: We arrive at this function after lookahead or
+    // backtracking, so we really should never fail to match the '0o'
+    // portion, unless there is a bug in this program.
+    final var begin = position;
+    var state = State.OCT_START;
+    Token token = null;
+    while (token == null) {
+      switch (state) {
+        case State.OCT_START:
+          if (current == '0') {
+            consume();
+            state = State.OCT_100;
+          } else
+            state = State.OCT_ERROR;
+          break;
+        case State.OCT_100:
+          if (current == 'o') {
+            consume();
+            state = State.OCT_200;
+          } else
+            state = State.OCT_ERROR;
+          break;
+        case State.OCT_200:
+          if (isOctalDigit(current)) {
+            consume();
+            state = State.OCT_400;
+          } else if (current == '_') {
+            consume();
+            state = State.OCT_300;
+          } else {
+            // Pretend we got a digit or underscore for error recovery purposes
+            error("invalid number: found '" + current + "', expected octal digit or underscore");
+            consume();
+            state = State.OCT_400;
+          }
+          break;
+        case State.OCT_300:
+          if (isOctalDigit(current)) {
+            consume();
+            state = State.OCT_400;
+          }
+          break;
+        case State.OCT_400:
+          if (isOctalDigit(current)) {
+            consume();
+          } else if (current == '_') {
+            consume();
+            state = State.OCT_500;
+          } else if (current == 'L') {
+            consume();
+            state = State.OCT_600;
+          } else if (current == 'u') {
+            consume();
+            state = State.OCT_700;
+          } else {
+            // Accept
+            final var end = position;
+            final var lexeme = input.substring(begin, end);
+            token = new Token(Token.Kind.OCTAL_INT32_LITERAL, lexeme, position, line, column);
+          }
+          break;
+        case State.OCT_500:
+          if (isOctalDigit(current)) {
+            consume();
+            state = State.OCT_400;
+          } else if (current == 'L') {
+            consume();
+            state = State.OCT_600;
+          } else if (current == 'u') {
+            consume();
+            state = State.OCT_700;
+          } else {
+            // Pretend we got a digit for error recovery purposes
+            error("invalid number: found '" + current + "', expected octal digit");
+            consume();
+            state = State.OCT_400;
+          }
+          break;
+        case State.OCT_600:
+          if (current == 'u') {
+            consume();
+            state = State.OCT_800;
+          } else {
+            // Accept
+            final var end = position;
+            final var lexeme = input.substring(begin, end);
+            token = new Token(Token.Kind.OCTAL_INT64_LITERAL, lexeme, position, line, column);
+          }
+          break;
+        case State.OCT_700:
+          if (current == 'L') {
+            consume();
+            state = State.OCT_800;
+          } else {
+            // Accept
+            final var end = position;
+            final var lexeme = input.substring(begin, end);
+            token = new Token(Token.Kind.OCTAL_UINT32_LITERAL, lexeme, position, line, column);
+          }
+          break;
+        case State.OCT_800:
+          // Accept
+          final var end = position;
+          final var lexeme = input.substring(begin, end);
+          token = new Token(Token.Kind.OCTAL_UINT64_LITERAL, lexeme, position, line, column);
+          break;
+        default:
+          // Invalid state. Can only be reached through a lexer bug.
+          System.out.println("error: Invalid state.");
+          break;
+      }
+    }
+    return token;
+  }
+
+
+
 }
 
 
 /*
-
-    def binaryInteger (): Token =
-    // Note: We arrive at this function after lookahead or
-    // backtracking, so we really should never fail to match the '0b'
-    // portion, unless there is a bug in this program.
-    val begin = position
-    var state = State.BIN_START
-    var token: Token = null
-            while token == null do
-    state match
-        case State.BIN_START =>
-            if current == '0' then
-    consume()
-    state = State.BIN_100
-          else
-    state = State.BIN_ERROR
-        case State.BIN_100 =>
-            if current == 'b' then
-    consume()
-    state = State.BIN_200
-          else
-    state = State.BIN_ERROR
-        case State.BIN_200 =>
-    consume()
-          if isBinaryDigit(current) then
-    consume()
-    state = State.BIN_400
-          else if current == '_' then
-    consume()
-    state = State.BIN_300
-          else
-    // Pretend we got a digit or underscore for error recovery purposes
-    error(s"invalid number: found '${current}', expected binary digit or underscore")
-    consume()
-    state = State.BIN_400
-        case State.BIN_300 =>
-            if isBinaryDigit(current) then
-    consume()
-    state = State.BIN_400
-          else
-    // Pretend we got a digit for error recovery purposes
-    error(s"invalid number: found '${current}', expected binary digit")
-    consume()
-    state = State.BIN_400
-        case State.BIN_400 =>
-            if isBinaryDigit(current) then
-    consume()
-          else if current == '_' then
-    consume()
-    state = State.BIN_500
-          else if current == 'L' then
-    consume()
-    state = State.BIN_600
-          else if current == 'u' then
-    consume()
-    state = State.BIN_700
-          else
-    // Accept
-    val end = position
-    val lexeme = input.slice(begin, end)
-    token = Token(Token.Kind.BINARY_INT32_LITERAL, lexeme, position, line, column)
-        case State.BIN_500 =>
-            if isBinaryDigit(current) then
-    consume()
-    state = State.BIN_400
-          else if current == 'L' then
-    consume()
-    state = State.BIN_600
-          else if current == 'u' then
-    consume()
-    state = State.BIN_700
-          else
-    // Pretend we got a digit for error recovery purposes
-    error(s"invalid number: found '${current}', expected binary digit")
-    consume()
-    state = State.BIN_400
-        case State.BIN_600 =>
-            if current == 'u' then
-    consume()
-    state = State.BIN_800
-          else
-    // Accept
-    val end = position
-    val lexeme = input.slice(begin, end)
-    token = Token(Token.Kind.BINARY_INT64_LITERAL, lexeme, position, line, column)
-        case State.BIN_700 =>
-            if current == 'L' then
-    consume()
-    state = State.BIN_800
-          else
-    // Accept
-    val end = position
-    val lexeme = input.slice(begin, end)
-    token = Token(Token.Kind.BINARY_UINT32_LITERAL, lexeme, position, line, column)
-        case State.BIN_800 =>
-    // Accept
-    val end = position
-    val lexeme = input.slice(begin, end)
-    token = Token(Token.Kind.BINARY_UINT64_LITERAL, lexeme, position, line, column)
-        case _ =>
-    // Invalid state. Can only be reached through a lexer bug.
-    print("error: Invalid state.")
-    end while
-            return token
-
-    def octalInteger (): Token =
-    // Note: We arrive at this function after lookahead or
-    // backtracking, so we really should never fail to match the '0o'
-    // portion, unless there is a bug in this program.
-    val begin = position
-    var state = State.OCT_START
-    var token: Token = null
-            while token == null do
-    state match
-        case State.OCT_START =>
-            if current == '0' then
-    consume()
-    state = State.OCT_100
-          else
-    state = State.OCT_ERROR
-        case State.OCT_100 =>
-            if current == 'o' then
-    consume()
-    state = State.OCT_200
-          else
-    state = State.OCT_ERROR
-        case State.OCT_200 =>
-            if isOctalDigit(current) then
-    consume()
-    state = State.OCT_400
-          else if current == '_' then
-    consume()
-    state = State.OCT_300
-          else
-    // Pretend we got a digit or underscore for error recovery purposes
-    error(s"invalid number: found '${current}', expected octal digit or underscore")
-    consume()
-    state = State.OCT_400
-        case State.OCT_300 =>
-            if isOctalDigit(current) then
-    consume()
-    state = State.OCT_400
-        case State.OCT_400 =>
-            if isOctalDigit(current) then
-    consume()
-          else if current == '_' then
-    consume()
-    state = State.OCT_500
-          else if current == 'L' then
-    consume()
-    state = State.OCT_600
-          else if current == 'u' then
-    consume()
-    state = State.OCT_700
-          else
-    // Accept
-    val end = position
-    val lexeme = input.slice(begin, end)
-    token = Token(Token.Kind.OCTAL_INT32_LITERAL, lexeme, position, line, column)
-        case State.OCT_500 =>
-            if isOctalDigit(current) then
-    consume()
-    state = State.OCT_400
-          else if current == 'L' then
-    consume()
-    state = State.OCT_600
-          else if current == 'u' then
-    consume()
-    state = State.OCT_700
-          else
-    // Pretend we got a digit for error recovery purposes
-    error(s"invalid number: found '${current}', expected octal digit")
-    consume()
-    state = State.OCT_400
-        case State.OCT_600 =>
-            if current == 'u' then
-    consume()
-    state = State.OCT_800
-          else
-    // Accept
-    val end = position
-    val lexeme = input.slice(begin, end)
-    token = Token(Token.Kind.OCTAL_INT64_LITERAL, lexeme, position, line, column)
-        case State.OCT_700 =>
-            if current == 'L' then
-    consume()
-    state = State.OCT_800
-          else
-    // Accept
-    val end = position
-    val lexeme = input.slice(begin, end)
-    token = Token(Token.Kind.OCTAL_UINT32_LITERAL, lexeme, position, line, column)
-        case State.OCT_800 =>
-    // Accept
-    val end = position
-    val lexeme = input.slice(begin, end)
-    token = Token(Token.Kind.OCTAL_UINT64_LITERAL, lexeme, position, line, column)
-        case _ =>
-    // Invalid state. Can only be reached through a lexer bug.
-    print("error: Invalid state.")
-    end while
-            return token
-
     def hexadecimalNumber (): Token =
     // This scans for a hexadecimal integer or floating point number.
     val begin = position
