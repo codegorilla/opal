@@ -139,6 +139,7 @@ public class Lexer {
     String lexeme = "";
 
     while (current != EOF) {
+
       if (current == '=') {
         consume();
         if (current == '=') {
@@ -148,373 +149,522 @@ public class Lexer {
         } else {
           kind = Token.Kind.EQUAL;
           lexeme = "=";
+        }
+        return new Token(kind, lexeme, position, line, column);
+      }
+
+      else if (current == '|') {
+        consume();
+        if (current == '|') {
+          consume();
+          kind = Token.Kind.BAR_BAR;
+          lexeme = "||";
+        } else if (current == '=') {
+          consume();
+          kind = Token.Kind.BAR_EQUAL;
+          lexeme = "|=";
+        } else {
+          kind = Token.Kind.BAR;
+          lexeme = "|";
+        }
+        return new Token(kind, lexeme, position, line, column);
+      }
+
+      else if (current == '^') {
+        consume();
+        if (current == '=') {
+          consume();
+          kind = Token.Kind.CARET_EQUAL;
+          lexeme = "^=";
+        } else {
+          kind = Token.Kind.CARET;
+          lexeme = "^";
+        }
+        return new Token(kind, lexeme, position, line, column);
+      }
+
+      else if (current == '&') {
+        consume();
+        if (current == '&') {
+          consume();
+          kind = Token.Kind.AMPERSAND_AMPERSAND;
+          lexeme = "&&";
+        } else if (current == '=') {
+          consume();
+          kind = Token.Kind.AMPERSAND_EQUAL;
+          lexeme = "&=";
+        } else {
+          kind = Token.Kind.AMPERSAND;
+          lexeme = "&";
+        }
+        return new Token(kind, lexeme, position, line, column);
+      }
+
+      else if (current == '>') {
+        consume();
+        if (current == '>') {
+          consume();
+          if (current == '=') {
+            consume();
+            kind = Token.Kind.GREATER_GREATER_EQUAL;
+            lexeme = ">>=";
+          } else {
+            kind = Token.Kind.GREATER_GREATER;
+            lexeme = ">>";
+          }
+        } else if (current == '=') {
+          consume();
+          kind = Token.Kind.GREATER_EQUAL;
+          lexeme = ">=";
+        } else {
+          kind = Token.Kind.GREATER;
+          lexeme = ">";
+        }
+        return new Token(kind, lexeme, position, line, column);
+      }
+
+      else if (current == '<') {
+        consume();
+        if (current == '<') {
+          consume();
+          if (current == '=') {
+            consume();
+            kind = Token.Kind.LESS_LESS_EQUAL;
+            lexeme = "<<=";
+          } else {
+            kind = Token.Kind.LESS_LESS;
+            lexeme = "<<";
+          }
+        } else if (current == '=') {
+          consume();
+          kind = Token.Kind.LESS_EQUAL;
+          lexeme = "<=";
+        } else {
+          kind = Token.Kind.LESS;
+          lexeme = "<";
+        }
+        return new Token(kind, lexeme, position, line, column);
+      }
+
+      else if (current == '+') {
+        consume();
+        if (current == '=') {
+          consume();
+          kind = Token.Kind.PLUS_EQUAL;
+          lexeme = "+=";
+        } else {
+          kind = Token.Kind.PLUS;
+          lexeme = "+";
+        }
+        return new Token(kind, lexeme, position, line, column);
+      }
+
+      else if (current == '-') {
+        consume();
+        if (current == '>') {
+          consume();
+          kind = Token.Kind.MINUS_GREATER;
+          lexeme = "->";
+        } else if (current == '=') {
+          consume();
+          kind = Token.Kind.MINUS_EQUAL;
+          lexeme = "-=";
+        } else {
+          kind = Token.Kind.MINUS;
+          lexeme = "-";
+        }
+        return new Token(kind, lexeme, position, line, column);
+      }
+
+      else if (current == '*') {
+        consume();
+        if (current == '=') {
+          consume();
+          kind = Token.Kind.ASTERISK_EQUAL;
+          lexeme = "*=";
+        } else {
+          kind = Token.Kind.ASTERISK;
+          lexeme = "*";
+        }
+        return new Token(kind, lexeme, position, line, column);
+      }
+
+      // To do: Need to account for comments
+      else if (current == '/') {
+        consume();
+        if (current == '=') {
+          consume();
+          kind = Token.Kind.SLASH_EQUAL;
+          lexeme = "/=";
+          return new Token(kind, lexeme, position, line, column);
+        } else if (current == '/') {
+          // Line comment
+          do {
+            consume();
+          } while (current != '\n' && current != '\r' && current != EOF);
+        } else {
+          kind = Token.Kind.SLASH;
+          lexeme = "/";
           return new Token(kind, lexeme, position, line, column);
         }
       }
-    } // end while
+
+      else if (current == '%') {
+        consume();
+        if (current == '=') {
+          consume();
+          kind = Token.Kind.PERCENT_EQUAL;
+          lexeme = "%=";
+        } else {
+          kind = Token.Kind.PERCENT;
+          lexeme = "%";
+        }
+        return new Token(kind, lexeme, position, line, column);
+      }
+
+      else if (current == '!') {
+        consume();
+        if (current == '=') {
+          consume();
+          kind = Token.Kind.EXCLAMATION_EQUAL;
+          lexeme = "!=";
+        } else {
+          kind = Token.Kind.EXCLAMATION;
+          lexeme = "!";
+        }
+        return new Token(kind, lexeme, position, line, column);
+      }
+
+      else if (current == '~') {
+        consume();
+        if (current == '=') {
+          consume();
+          kind = Token.Kind.TILDE_EQUAL;
+          lexeme = "~=";
+        } else {
+          kind = Token.Kind.TILDE;
+          lexeme = "~";
+        }
+        return new Token(kind, lexeme, position, line, column);
+      }
+
+      else if (current == '"') {
+        // String
+        final var begin = position;
+        consume();
+        while (current != '"' && current != EOF) {
+          // Might need to put some logic in here to increment line
+          // number and reset position if (a newline is encountered
+          consume();
+        }
+        if (current == '"') {
+          consume();
+          final var end = position;
+          final var value = input.substring(begin, end);
+          return new Token(Token.Kind.STRING_LITERAL, value, position, line, column);
+        } else if (current == EOF) {
+          // To do: probably should pretend terminator is there and return token
+          System.out.println("error: missing string terminator");
+        }
+      }
+
+      else if (current == '\'') {
+        // Character
+        final var begin = position;
+        consume();
+        while (current != '\'' && current != EOF) {
+          // Might need to put some logic in here to increment line
+          // number and reset position if (a newline is encountered
+          consume();
+        }
+        if (current == '\'') {
+          consume();
+          final var end = position;
+          final var value = input.substring(begin, end);
+          return new Token(Token.Kind.CHARACTER_LITERAL, value, position, line, column);
+        } else if (current == EOF) {
+          // To) {: probably should pretend terminator is there and return token
+          System.out.println("error: missing character terminator");
+        }
+      }
+
+      else if (current == ':') {
+        consume();
+        return new Token(Token.Kind.COLON, ":", position, line, column);
+      }
+
+      else if (current == ';') {
+        consume();
+        return new Token(Token.Kind.SEMICOLON, ";", position, line, column);
+      }
+
+      else if (current == '.') {
+        consume();
+        if (current == '.') {
+          consume();
+          return new Token(Token.Kind.PERIOD_PERIOD, "..", position, line, column);
+        } else if (Character.isDigit(current)) {
+          return number();
+        } else
+          return new Token(Token.Kind.PERIOD, ".", position, line, column);
+      }
+
+      else if (current == ',') {
+        consume();
+        return new Token(Token.Kind.COMMA, ",", position, line, column);
+      }
+
+      else if (current == '{') {
+        consume();
+        return new Token(Token.Kind.L_BRACE, "{", position, line, column);
+      }
+
+      else if (current == '}') {
+        consume();
+        return new Token(Token.Kind.R_BRACE, "}", position, line, column);
+      }
+
+      else if (current == '[') {
+        consume();
+        return new Token(Token.Kind.L_BRACKET, "[", position, line, column);
+      }
+
+      else if (current == ']') {
+        consume();
+        return new Token(Token.Kind.R_BRACKET, "]", position, line, column);
+      }
+
+      else if (current == '(') {
+        consume();
+        return new Token(Token.Kind.L_PARENTHESIS, ")", position, line, column);
+      }
+
+      else if (current == ')') {
+        consume();
+        return new Token(Token.Kind.R_PARENTHESIS, ")", position, line, column);
+      }
+
+      else if (current == '0') {
+        consume();
+        if (current == 'b') {
+          backup();
+          return binaryInteger();
+        } else if (current == 'o') {
+          backup();
+          return octalInteger();
+        } else if (current == 'x') {
+          backup();
+          return hexadecimalNumber();
+        } else {
+          backup();
+          return number();
+        }
+      }
+
+      else if (current == ' ' || current == '\t') {
+        // Skip spaces and tabs
+        while (current == ' ' || current == '\t') {
+          consume();
+        }
+      }
+
+      else if (current == '\n') {
+        // Skip line feed (LF) characters
+        while (current == '\n') {
+          consume();
+          line += 1;
+          column = 0;
+        }
+      }
+
+      else if (current == '\r') {
+        // skip carriage return + line feed (CR+LF) pairs
+        while (current == '\r') {
+          consume();
+          if (current == '\n') {
+            consume();
+            line += 1;
+            column = 0;
+          } else {
+            // Should return error token here maybe
+            // Found carriage return by itself, which is invalid (except on mac?)
+            System.out.println("error: invalid line ending");
+          }
+        }
+      }
+
+      else if (Character.isLetter(current) || current == '_') {
+        final var begin = position;
+        do {
+          consume();
+        } while ((position < input.length()) && (Character.isLetter(current) || Character.isDigit(current) || current == '_'));
+        // End index of slice is excluded from result
+        final var end = position;
+        lexeme = input.substring(begin, end);
+        if (keywordLookup.containsKey(lexeme))
+          kind = keywordLookup.get(lexeme);
+        else
+          kind = Token.Kind.IDENTIFIER;
+        return new Token(kind, lexeme, position, line, column - lexeme.length() + 1);
+      }
+
+      else if (Character.isDigit(current))
+        return number();
+
+      else
+        System.out.println("ERROR!");
+    }
+
+    // Placeholder to avoid error
+    return new Token(Token.Kind.EOF, "<EOF>", position, line, column);
+
     // Dummy value -- resolve
     return null;
+  }
+
+  private boolean isBinaryDigit (char ch) {
+    return ch == '0' || ch == '1';
+  }
+
+  private boolean isOctalDigit (char ch) {
+    return ch >= '0' && ch <= '7';
+  }
+
+  private boolean isDecimalDigit (char ch) {
+    return ch >= '0' && ch <= '9';
+  }
+
+  private boolean isHexadecimalDigit (char ch) {
+    return (ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'F') || (ch >= 'a' && ch <= 'f');
+  }
+
+  private Token binaryInteger () {
+    // Note: We arrive at this function after lookahead or
+    // backtracking, so we really should never fail to match the '0b'
+    // portion, unless there is a bug in this program.
+    final var begin = position;
+    var state = State.BIN_START;
+    Token token = null;
+    while (token == null) {
+
+      switch (state) {
+        case State.BIN_START:
+          if (current == '0') {
+            consume();
+            state = State.BIN_100;
+          } else
+            state = State.BIN_ERROR;
+          break;
+        case State.BIN_100:
+          if (current == 'b') {
+            consume();
+            state = State.BIN_200;
+          } else
+            state = State.BIN_ERROR;
+          break;
+        case State.BIN_200:
+          consume();
+          if (isBinaryDigit(current)) {
+            consume();
+            state = State.BIN_400;
+          } else if (current == '_') {
+            consume();
+            state = State.BIN_300;
+          } else {
+            // Pretend we got a digit or underscore for error recovery purposes
+            error("invalid number: found '" + current + "', expected binary digit or underscore");
+            consume();
+            state = State.BIN_400;
+          }
+          break;
+        case State.BIN_300:
+          if (isBinaryDigit(current)) {
+            consume();
+            state = State.BIN_400;
+          } else {
+            // Pretend we got a digit for error recovery purposes
+            error("invalid number: found '" + current +"', expected binary digit");
+            consume();
+            state = State.BIN_400;
+          }
+          break;
+        case State.BIN_400:
+          if (isBinaryDigit(current)) {
+            consume();
+          } else if (current == '_') {
+            consume();
+            state = State.BIN_500;
+          } else if (current == 'L') {
+            consume();
+            state = State.BIN_600;
+          } else if (current == 'u') {
+            consume();
+            state = State.BIN_700;
+          } else {
+            // Accept
+            final var end = position;
+            final var lexeme = input.substring(begin, end);
+            token = new Token(Token.Kind.BINARY_INT32_LITERAL, lexeme, position, line, column);
+          }
+          break;
+        case State.BIN_500:
+          if (isBinaryDigit(current)) {
+            consume();
+            state = State.BIN_400;
+          } else if (current == 'L') {
+            consume();
+            state = State.BIN_600;
+          } else if (current == 'u') {
+            consume();
+            state = State.BIN_700;
+          } else {
+            // Pretend we got a digit for error recovery purposes
+            error("invalid number: found '" + current + "', expected binary digit");
+            consume();
+            state = State.BIN_400;
+          }
+          break;
+        case State.BIN_600:
+          if (current == 'u') {
+            consume();
+            state = State.BIN_800;
+          } else {
+            // Accept
+            final var end = position;
+            final var lexeme = input.substring(begin, end);
+            token = new Token(Token.Kind.BINARY_INT64_LITERAL, lexeme, position, line, column);
+          }
+          break;
+        case State.BIN_700:
+          if (current == 'L') {
+            consume();
+            state = State.BIN_800;
+          } else {
+            // Accept
+            final var end = position;
+            final var lexeme = input.substring(begin, end);
+            token = new Token(Token.Kind.BINARY_UINT32_LITERAL, lexeme, position, line, column);
+          }
+          break;
+        case State.BIN_800:
+          // Accept
+          final var end = position;
+          final var lexeme = input.substring(begin, end);
+          token = new Token(Token.Kind.BINARY_UINT64_LITERAL, lexeme, position, line, column);
+          break;
+        default:
+          // Invalid state. Can only be reached through a lexer bug.
+          System.out.println("error: Invalid state.");
+          break;
+      }
+    }
+    return token;
   }
 
 }
 
 
-//    def process (): List[Token] =
-//    // We might eventually require a client to perform the
-//    // construction of this list. For now just have the lexer do it.
-//    var tokens = List[Token]()
-//    var token = getToken()
-//    tokens = token :: tokens
-//    while token.kind != Token.Kind.EOF do
-//    token = getToken()
-//    tokens = token :: tokens
-//            tokens = tokens.reverse
-//    return tokens
-
 /*
-
-    def getToken (): Token =
-
-    var kind: Token.Kind = null
-    var lexeme = ""
-
-    while current != EOF do
-
-            if current == '=' then
-    consume()
-        if current == '=' then
-    consume()
-    kind = Token.Kind.EQUAL_X2
-            lexeme = "=="
-        else
-    kind = Token.Kind.EQUAL
-            lexeme = "="
-        return Token(kind, lexeme, position, line, column)
-
-      else if current == '|' then
-    consume()
-        if current == '|' then
-    consume()
-    kind = Token.Kind.BAR_BAR
-            lexeme = "||"
-        else if current == '=' then
-    consume()
-    kind = Token.Kind.BAR_EQUAL
-            lexeme = "|="
-        else
-    kind = Token.Kind.BAR
-            lexeme = "|"
-        return Token(kind, lexeme, position, line, column)
-
-      else if current == '^' then
-    consume()
-        if current == '=' then
-    consume()
-    kind = Token.Kind.CARET_EQUAL
-            lexeme = "^="
-        else
-    kind = Token.Kind.CARET
-            lexeme = "^"
-        return Token(kind, lexeme, position, line, column)
-
-      else if current == '&' then
-    consume()
-        if current == '&' then
-    consume()
-    kind = Token.Kind.AMPERSAND_AMPERSAND
-            lexeme = "&&"
-        else if current == '=' then
-    consume()
-    kind = Token.Kind.AMPERSAND_EQUAL
-            lexeme = "&="
-        else
-    kind = Token.Kind.AMPERSAND
-            lexeme = "&"
-        return Token(kind, lexeme, position, line, column)
-
-      else if current == '>' then
-    consume()
-        if current == '>' then
-    consume()
-          if current == '=' then
-    consume()
-    kind = Token.Kind.GREATER_GREATER_EQUAL
-            lexeme = ">>="
-          else
-    kind = Token.Kind.GREATER_GREATER
-            lexeme = ">>"
-        else if current == '=' then
-    consume()
-    kind = Token.Kind.GREATER_EQUAL
-            lexeme = ">="
-        else
-    kind = Token.Kind.GREATER
-            lexeme = ">"
-        return Token(kind, lexeme, position, line, column)
-
-      else if current == '<' then
-    consume()
-        if current == '<' then
-    consume()
-          if current == '=' then
-    consume()
-    kind = Token.Kind.LESS_LESS_EQUAL
-            lexeme = "<<="
-          else
-    kind = Token.Kind.LESS_LESS
-            lexeme = "<<"
-        else if current == '=' then
-    consume()
-    kind = Token.Kind.LESS_EQUAL
-            lexeme = "<="
-        else
-    kind = Token.Kind.LESS
-            lexeme = "<"
-        return Token(kind, lexeme, position, line, column)
-
-      else if current == '+' then
-    consume()
-        if current == '=' then
-    consume()
-    kind = Token.Kind.PLUS_EQUAL
-            lexeme = "+="
-        else
-    kind = Token.Kind.PLUS
-            lexeme = "+"
-        return Token(kind, lexeme, position, line, column)
-
-      else if current == '-' then
-    consume()
-        if current == '>' then
-    consume()
-    kind = Token.Kind.MINUS_GREATER
-            lexeme = "->"
-        else if current == '=' then
-    consume()
-    kind = Token.Kind.MINUS_EQUAL
-            lexeme = "-="
-        else
-    kind = Token.Kind.MINUS
-            lexeme = "-"
-        return Token(kind, lexeme, position, line, column)
-
-      else if current == '*' then
-    consume()
-        if current == '=' then
-    consume()
-    kind = Token.Kind.ASTERISK_EQUAL
-            lexeme = "*="
-        else
-    kind = Token.Kind.ASTERISK
-            lexeme = "*"
-        return Token(kind, lexeme, position, line, column)
-
-    // To do: Need to account for comments
-      else if current == '/' then
-    consume()
-        if current == '=' then
-    consume()
-    kind = Token.Kind.SLASH_EQUAL
-            lexeme = "/="
-          return Token(kind, lexeme, position, line, column)
-        else if current == '/' then
-        // Line comment
-    consume()
-          while current != '\n' && current != '\r' && current != EOF do
-    consume()
-        else
-    kind = Token.Kind.SLASH
-            lexeme = "/"
-          return Token(kind, lexeme, position, line, column)
-
-      else if current == '%' then
-    consume()
-        if current == '=' then
-    consume()
-    kind = Token.Kind.PERCENT_EQUAL
-            lexeme = "%="
-        else
-    kind = Token.Kind.PERCENT
-            lexeme = "%"
-        return Token(kind, lexeme, position, line, column)
-
-      else if current == '!' then
-    consume()
-        if current == '=' then
-    consume()
-    kind = Token.Kind.EXCLAMATION_EQUAL
-            lexeme = "!="
-        else
-    kind = Token.Kind.EXCLAMATION
-            lexeme = "!"
-        return Token(kind, lexeme, position, line, column)
-
-      else if current == '~' then
-    consume()
-        if current == '=' then
-    consume()
-    kind = Token.Kind.TILDE_EQUAL
-            lexeme = "~="
-        else
-    kind = Token.Kind.TILDE
-            lexeme = "~"
-        return Token(kind, lexeme, position, line, column)
-
-      else if current == '"' then
-    // String
-    val begin = position
-    consume()
-        while current != '"' && current != EOF do
-    // Might need to put some logic in here to increment line
-    // number and reset position if a newline is encountered
-    consume()
-        if current == '"' then
-    consume()
-    val end = position
-    val value = input.slice(begin, end)
-          return Token(Token.Kind.STRING_LITERAL, value, position, line, column)
-        else if current == EOF then
-    // To do: probably should pretend terminator is there and return token
-    print("error: missing string terminator")
-
-      else if current == '\'' then
-    // Character
-    val begin = position
-    consume()
-        while current != '\'' && current != EOF do
-    // Might need to put some logic in here to increment line
-    // number and reset position if a newline is encountered
-    consume()
-        if current == '\'' then
-    consume()
-    val end = position
-    val value = input.slice(begin, end)
-          return Token(Token.Kind.CHARACTER_LITERAL, value, position, line, column)
-        else if current == EOF then
-    // To do: probably should pretend terminator is there and return token
-    print("error: missing character terminator")
-
-      else if current == ':' then
-    consume()
-        return Token(Token.Kind.COLON, ":", position, line, column)
-
-      else if current == ';' then
-    consume()
-        return Token(Token.Kind.SEMICOLON, ";", position, line, column)
-
-      else if current == '.' then
-    consume()
-        if current == '.' then
-    consume()
-          return Token(Token.Kind.PERIOD_PERIOD, "..", position, line, column)
-        else if current.isDigit then
-          return number()
-        else
-                return Token(Token.Kind.PERIOD, ".", position, line, column)
-
-      else if current == ',' then
-    consume()
-        return Token(Token.Kind.COMMA, ",", position, line, column)
-
-      else if current == '{' then
-    consume()
-        return Token(Token.Kind.L_BRACE, "{", position, line, column)
-
-      else if current == '}' then
-    consume()
-        return Token(Token.Kind.R_BRACE, "}", position, line, column)
-
-      else if current == '[' then
-    consume()
-        return Token(Token.Kind.L_BRACKET, "[", position, line, column)
-
-      else if current == ']' then
-    consume()
-        return Token(Token.Kind.R_BRACKET, "]", position, line, column)
-
-      else if current == '(' then
-    consume()
-        return Token(Token.Kind.L_PARENTHESIS, ")", position, line, column)
-
-      else if current == ')' then
-    consume()
-        return Token(Token.Kind.R_PARENTHESIS, ")", position, line, column)
-
-      else if current == '0' then
-    consume()
-        if current == 'b' then
-    backup()
-          return binaryInteger()
-        else if current == 'o' then
-    backup()
-          return octalInteger()
-        else if current == 'x' then
-    backup()
-          return hexadecimalNumber()
-        else
-    backup()
-          return number()
-
-      else if current == ' ' || current == '\t' then
-    // Skip spaces and tabs
-        while current == ' ' || current == '\t' do
-    consume()
-
-      else if current == '\n' then
-    // Skip line feed (LF) characters
-        while current == '\n' do
-    consume()
-    line += 1
-    column = 0
-
-            else if current == '\r' then
-    // skip carriage return + line feed (CR+LF) pairs
-        while current == '\r' do
-    consume()
-          if current == '\n' then
-    consume()
-    line += 1
-    column = 0
-            else
-    // Should return error token here maybe
-    // Found carriage return by itself, which is invalid (except on mac?)
-    print("error: invalid line ending")
-
-      else if current.isLetter || current == '_' then
-    val begin = position
-    consume()
-        while (position < input.length) && (current.isLetter || current.isDigit || current == '_') do
-    consume()
-    // End index of slice is excluded from result
-    val end = position
-    lexeme = input.slice(begin, end)
-    kind = if keywordLookup.contains(lexeme) then keywordLookup(lexeme) else Token.Kind.IDENTIFIER
-        return Token(kind, lexeme, position, line, column - lexeme.length() + 1)
-
-            else if current.isDigit then
-        return number()
-
-      else
-    print("ERROR!")
-
-    end while
-
-            // Placeholder to avoid error
-            return Token(Token.Kind.EOF, "<EOF>", position, line, column)
-
-    end getToken
-
-    def isBinaryDigit (ch: Char) =
-    ch == '0' || ch == '1'
-
-    def isOctalDigit (ch: Char) =
-    ch >= '0' && ch <= '7'
-
-    def isDecimalDigit (ch: Char) =
-    ch >= '0' && ch <= '9'
-
-    def isHexadecimalDigit (ch: Char) =
-            (ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z') || (ch >= 'z' && ch <= 'z')
 
     def binaryInteger (): Token =
     // Note: We arrive at this function after lookahead or
