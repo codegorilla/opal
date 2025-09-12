@@ -13,5 +13,7 @@ public class Translator {
     System.out.println(out);
 
     var lexer = new Lexer(out);
+    var tokens = lexer.process();
+    System.out.println(tokens);
   }
 }

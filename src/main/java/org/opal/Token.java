@@ -8,7 +8,7 @@ public class Token {
   private int line;
   private int column;
 
-  public Token(Token.Kind kind, String lexeme, int position, int line, int column) {
+  public Token (Token.Kind kind, String lexeme, int position, int line, int column) {
     this.kind = kind;
     this.lexeme = lexeme;
     this.position = position;
@@ -16,24 +16,36 @@ public class Token {
     this.column = column;
   }
 
-  public Token.Kind getKind() {
+  public Token.Kind getKind () {
     return kind;
   }
 
-  public String getLexeme() {
+  public String getLexeme () {
     return lexeme;
   }
 
-  public int getPosition() {
+  public int getPosition () {
     return position;
   }
 
-  public int getLine() {
+  public int getLine () {
     return line;
   }
 
-  public int getColumn() {
+  public int getColumn () {
     return column;
+  }
+
+  public String toString () {
+    return new StringBuilder(32)
+        .append("Token(")
+        .append(kind.toString())
+        .append(",'")
+        .append(lexeme)
+        .append("',")
+        .append(position)
+        .append(")")
+        .toString();
   }
 
   public enum Kind {
