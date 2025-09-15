@@ -17,6 +17,9 @@ public class Translator {
     System.out.println(tokens);
 
     var parser = new Parser(tokens);
-    parser.process();
+    var root = parser.process();
+
+    var pass1 = new Pass1(root);
+    pass1.process();
   }
 }

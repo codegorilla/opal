@@ -3,6 +3,7 @@ package org.opal.ast;
 import java.util.LinkedList;
 
 import org.opal.Token;
+import org.opal.Visitor;
 
 abstract public class AstNode {
 
@@ -25,5 +26,7 @@ abstract public class AstNode {
   public AstNode getChild (int index) {
     return children.get(index);
   }
+
+  public abstract void accept (Visitor v);
 
 }

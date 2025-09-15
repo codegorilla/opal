@@ -1,9 +1,15 @@
 package org.opal.ast;
 
 import org.opal.Token;
+import org.opal.Visitor;
 
 public class PrimitiveType extends AstNode {
   public PrimitiveType (Token token) {
     super(token);
+  }
+
+  @Override
+  public void accept (Visitor v) {
+    v.visit(this);
   }
 }

@@ -1,6 +1,7 @@
 package org.opal.ast;
 
 import org.opal.Token;
+import org.opal.Visitor;
 
 public class VariableDeclaration extends AstNode {
 
@@ -8,4 +9,8 @@ public class VariableDeclaration extends AstNode {
     super(token);
   }
 
+  @Override
+  public void accept (Visitor v) {
+    v.visit(this);
+  }
 }
