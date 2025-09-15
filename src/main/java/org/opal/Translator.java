@@ -6,7 +6,7 @@ public class Translator {
 
   public Translator() {
     var readDir = this.getClass().getClassLoader().getResource("program").getPath();
-    var readPath = Paths.get(readDir + "/hello.opc");
+    var readPath = Paths.get(readDir + "/test.opc");
 
     var reader = new Reader(readPath);
     var out = reader.process();
@@ -15,5 +15,8 @@ public class Translator {
     var lexer = new Lexer(out);
     var tokens = lexer.process();
     System.out.println(tokens);
+
+    var parser = new Parser(tokens);
+    parser.process();
   }
 }
