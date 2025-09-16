@@ -1,16 +1,23 @@
 package org.opal.ast;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.opal.Token;
 import org.opal.Visitor;
 
+// We use a normalized heterogeneous AST design (Parr, 96). This
+// allows for a relatively simple treatment of child nodes, while
+// permitting the ability to annotate some nodes with specialized
+// information.
+
 abstract public class AstNode {
 
-  private Token token;
-  private LinkedList<AstNode> children;
+  private final Token token;
+  private final LinkedList<AstNode> children;
 
   public AstNode () {
+    token = null;
     children = new LinkedList<>();
   }
 
@@ -27,6 +34,13 @@ abstract public class AstNode {
     return children.get(index);
   }
 
-  public abstract void accept (Visitor v);
+  public Iterator<AstNode> getChildren () {
+    return children.iterator();
+  }
 
+  public Token getToken () {
+    return token;
+  }
+
+  public abstract void accept (Visitor v);
 }

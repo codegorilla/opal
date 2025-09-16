@@ -2,6 +2,8 @@ package org.opal;
 
 import org.opal.ast.*;
 
+import java.util.Iterator;
+
 public class Pass1 extends BaseVisitor {
 
   public Pass1 (AstNode input) {
@@ -21,7 +23,11 @@ public class Pass1 extends BaseVisitor {
   // Declarations
 
   public void visit (Declarations node) {
-    System.out.println("Declarations");
+    var children = node.getChildren();
+    while (children.hasNext()) {
+      var child = children.next();
+      child.accept(this);
+    }
   }
 
   public void visit (ImportDeclaration node) {
@@ -34,6 +40,9 @@ public class Pass1 extends BaseVisitor {
 
   public void visit (VariableDeclaration node) {
     System.out.println("Variable Declaration");
+    node.getName().accept(this);
+    node.getTypeSpecifier().accept(this);
+    node.getInitializer().accept(this);
   }
 
   public void visit (VariableName node) {

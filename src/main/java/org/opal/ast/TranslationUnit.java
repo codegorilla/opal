@@ -13,4 +13,5 @@ public class TranslationUnit extends AstNode {
   public void accept (Visitor v) {
     v.visit(this);
   }
+
 }

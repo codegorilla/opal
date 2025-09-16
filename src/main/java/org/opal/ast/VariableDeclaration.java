@@ -13,4 +13,17 @@ public class VariableDeclaration extends AstNode {
   public void accept (Visitor v) {
     v.visit(this);
   }
+
+  public AstNode getName () {
+    return getChild(0);
+  }
+
+  public AstNode getTypeSpecifier () {
+    return getChild(1);
+  }
+
+  public AstNode getInitializer () {
+    return getChild(2);
+  }
+
 }
