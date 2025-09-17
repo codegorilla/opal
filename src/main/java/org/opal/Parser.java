@@ -167,12 +167,10 @@ public class Parser {
     var n = new VariableInitializer();
     if (lookahead.getKind() == Token.Kind.EQUAL) {
       match(Token.Kind.EQUAL);
-      // Put expression here
+      // To do: Put expression here **********
     }
     return n;
   }
-
-  // EXPRESSIONS
 
   // EXPRESSIONS
 
@@ -213,7 +211,7 @@ public class Parser {
       var p = n;
       n = new BinaryExpression(lookahead);
       n.addChild(p);
-      match(kind);
+      match(lookahead.getKind());
       p = logicalOrExpression();
       n.addChild(p);
     }
@@ -282,9 +280,10 @@ public class Parser {
 
   private AstNode equalityExpression () {
     var n = relationalExpression();
+    var kind = lookahead.getKind();
     while (
-        lookahead.getKind() == Token.Kind.EQUAL_EQUAL ||
-        lookahead.getKind() == Token.Kind.EXCLAMATION_EQUAL
+        kind == Token.Kind.EQUAL_EQUAL ||
+        kind == Token.Kind.EXCLAMATION_EQUAL
     ) {
       var p = n;
       n = new BinaryExpression(lookahead);
@@ -297,11 +296,12 @@ public class Parser {
 
   private AstNode relationalExpression () {
     var n = shiftExpression();
+    var kind = lookahead.getKind();
     while (
-        lookahead.getKind() == Token.Kind.GREATER ||
-        lookahead.getKind() == Token.Kind.LESS ||
-        lookahead.getKind() == Token.Kind.GREATER_EQUAL ||
-        lookahead.getKind() == Token.Kind.LESS_EQUAL
+        kind == Token.Kind.GREATER ||
+        kind == Token.Kind.LESS ||
+        kind == Token.Kind.GREATER_EQUAL ||
+        kind == Token.Kind.LESS_EQUAL
     ) {
       var p = n;
       n = new BinaryExpression(lookahead);
@@ -352,7 +352,7 @@ public class Parser {
       var p = n;
       n = new BinaryExpression(lookahead);
       n.addChild(p);
-      match(lookahead.kind);
+      match(lookahead.getKind());
       n.addChild(unaryExpression());
     }
     return n;
