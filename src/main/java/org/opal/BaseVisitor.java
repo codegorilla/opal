@@ -30,6 +30,12 @@ public class BaseVisitor implements Visitor {
 
   public void visit (VariableInitializer node) {}
 
+  // Expressions
+
+  public void visit (Expression node) {}
+
+  public void visit (BinaryExpression node) {}
+
   // Types
 
   public void visit (TypeRoot node) {}

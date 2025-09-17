@@ -13,6 +13,11 @@ public interface Visitor {
   public void visit (VariableTypeSpecifier node);
   public void visit (VariableInitializer node);
 
+  // Expression
+
+  public void visit (Expression node);
+  public void visit (BinaryExpression node);
+
   // Types
   public void visit (TypeRoot node);
   public void visit (ArrayType node);

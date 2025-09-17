@@ -172,6 +172,120 @@ public class Parser {
     return n;
   }
 
+  // EXPRESSIONS
+
+  // EXPRESSIONS
+
+  // The root of every expression sub-tree has an explicit 'expression' AST
+  // node, where the final computed type and other synthesized attributes can be
+  // stored to aid in such things as type-checking.
+
+  private AstNode expression (boolean root) {
+    if (root) {
+      var n = new Expression();
+      n.addChild(assignmentExpression());
+      return n;
+    }
+    else
+      return assignmentExpression();
+  }
+
+  // We may wish to add a 'walrus' operator (:=), which can be used inside a
+  // conditional statement to indicate that the developer truly intends to have
+  // an assignment rather than an equality check.
+
+  private AstNode assignmentExpression () {
+    var n = logicalOrExpression();
+    var kind = lookahead.getKind();
+    while (
+        kind == Token.Kind.EQUAL ||
+        kind == Token.Kind.ASTERISK_EQUAL ||
+        kind == Token.Kind.SLASH_EQUAL ||
+        kind == Token.Kind.PERCENT_EQUAL ||
+        kind == Token.Kind.PLUS_EQUAL ||
+        kind == Token.Kind.MINUS_EQUAL ||
+        kind == Token.Kind.LESS_LESS_EQUAL ||
+        kind == Token.Kind.GREATER_GREATER_EQUAL ||
+        kind == Token.Kind.AMPERSAND_EQUAL ||
+        kind == Token.Kind.CARET_EQUAL ||
+        kind == Token.Kind.BAR_EQUAL
+    ) {
+      var p = n;
+      n = new BinaryExpression(lookahead);
+      n.addChild(p);
+      match(kind);
+      p = logicalOrExpression();
+      n.addChild(p);
+    }
+    return n;
+  }
+
+  private AstNode logicalOrExpression () {
+    var n = logicalAndExpression();
+    while (lookahead.getKind() == Token.Kind.OR) {
+      var p = n;
+      n = new BinaryExpression(lookahead);
+      n.addChild(p);
+      match(Token.Kind.OR);
+      n.addChild(logicalAndExpression());
+    }
+    return n;
+  }
+
+  private AstNode logicalAndExpression () {
+    var n = inclusiveOrExpression();
+    while (lookahead.getKind() == Token.Kind.AND) {
+      var p = n;
+      n = new BinaryExpression(lookahead);
+      n.addChild(p);
+      match(Token.Kind.AND);
+      n.addChild(inclusiveOrExpression());
+    }
+    return n;
+  }
+
+  private AstNode inclusiveOrExpression () {
+    var n = exclusiveOrExpression();
+    while (lookahead.getKind() == Token.Kind.BAR) {
+      var p = n;
+      n = new BinaryExpression(lookahead);
+      n.addChild(p);
+      match(Token.Kind.BAR);
+      n.addChild(exclusiveOrExpression());
+    }
+    return n;
+  }
+
+  private AstNode exclusiveOrExpression () {
+    var n = andExpression();
+    while (lookahead.getKind() == Token.Kind.CARET) {
+      var p = n;
+      n = new BinaryExpression(lookahead);
+      n.addChild(p);
+      match(Token.Kind.CARET);
+      n.addChild(andExpression());
+    }
+    return n;
+  }
+
+  private AstNode andExpression () {
+    var n = equalityExpression();
+    while (lookahead.getKind() == Token.Kind.AMPERSAND) {
+      var p = n;
+      n = new BinaryExpression(lookahead);
+      n.addChild(p);
+      match(Token.Kind.AMPERSAND);
+      n.addChild(equalityExpression());
+    }
+    return n;
+  }
+
+  // Placeholder
+  private AstNode equalityExpression () {
+    return null;
+  }
+
+
   // TYPES
 
   // Type processing is interesting because Cobalt uses a form of the
