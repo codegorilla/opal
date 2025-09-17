@@ -17,6 +17,8 @@ public interface Visitor {
 
   public void visit (Expression node);
   public void visit (BinaryExpression node);
+  public void visit (DereferencingMemberAccess node);
+  public void visit (MemberAccess node);
 
   // Types
   public void visit (TypeRoot node);

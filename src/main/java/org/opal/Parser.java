@@ -280,11 +280,162 @@ public class Parser {
     return n;
   }
 
-  // Placeholder
   private AstNode equalityExpression () {
+    var n = relationalExpression();
+    while (
+        lookahead.getKind() == Token.Kind.EQUAL_EQUAL ||
+        lookahead.getKind() == Token.Kind.EXCLAMATION_EQUAL
+    ) {
+      var p = n;
+      n = new BinaryExpression(lookahead);
+      n.addChild(p);
+      match(lookahead.getKind());
+      n.addChild(relationalExpression());
+    }
+    return n;
+  }
+
+  private AstNode relationalExpression () {
+    var n = shiftExpression();
+    while (
+        lookahead.getKind() == Token.Kind.GREATER ||
+        lookahead.getKind() == Token.Kind.LESS ||
+        lookahead.getKind() == Token.Kind.GREATER_EQUAL ||
+        lookahead.getKind() == Token.Kind.LESS_EQUAL
+    ) {
+      var p = n;
+      n = new BinaryExpression(lookahead);
+      n.addChild(p);
+      match(lookahead.getKind());
+      n.addChild(shiftExpression());
+    }
+    return n;
+  }
+
+  private AstNode shiftExpression () {
+    var n = additiveExpression();
+    while (
+        lookahead.getKind() == Token.Kind.GREATER_GREATER ||
+        lookahead.getKind() == Token.Kind.LESS_LESS
+    ) {
+      var p = n;
+      n = new BinaryExpression(lookahead);
+      n.addChild(p);
+      match(lookahead.getKind());
+      n.addChild(additiveExpression());
+    }
+    return n;
+  }
+
+  private AstNode additiveExpression () {
+    var n = multiplicativeExpression();
+    while (
+        lookahead.getKind() == Token.Kind.PLUS ||
+        lookahead.getKind() == Token.Kind.MINUS
+    ) {
+      var p = n;
+      n = new BinaryExpression(lookahead);
+      n.addChild(p);
+      match(lookahead.getKind());
+      n.addChild(multiplicativeExpression());
+    }
+    return n;
+  }
+
+  private AstNode multiplicativeExpression () {
+    var n = unaryExpression();
+    while (
+    lookahead.getKind() == Token.Kind.ASTERISK ||
+        lookahead.getKind() == Token.Kind.SLASH ||
+        lookahead.getKind() == Token.Kind.PERCENT
+    ) {
+      var p = n;
+      n = new BinaryExpression(lookahead);
+      n.addChild(p);
+      match(lookahead.kind);
+      n.addChild(unaryExpression());
+    }
+    return n;
+  }
+
+  // Why recursion here instead of iteration? Does it matter?
+
+  private AstNode unaryExpression () {
+    AstNode n = null;
+    if (
+        lookahead.getKind() == Token.Kind.ASTERISK ||
+        lookahead.getKind() == Token.Kind.MINUS ||
+        lookahead.getKind() == Token.Kind.PLUS ||
+        lookahead.getKind() == Token.Kind.EXCLAMATION ||
+        lookahead.getKind() == Token.Kind.TILDE
+    ) {
+      n = new BinaryExpression(lookahead);
+      match(lookahead.getKind());
+      n.addChild(unaryExpression());
+    }
+    else
+      n = postfixExpression();
+    return n;
+  }
+
+  // The postfix expression grammar below permits semantically invalid results.
+  // For example, primary expressions can include integer literals, so the
+  // parser will successfully parse '5++', even though that isn't semantically
+  // sound because integer literals are not l-values. This issue is addressed
+  // during a semantic analysis pass (which is how it seems to be dealt with in
+  // C++ and some other languages). Although we might be able to adjust the
+  // grammar to avoid this problem, the for now we will just stick with the
+  // traditional design.
+
+  private AstNode postfixExpression () {
+    var node = primaryExpression();
+    while (
+        lookahead.getKind() == Token.Kind.MINUS_GREATER ||
+        lookahead.getKind() == Token.Kind.PERIOD ||
+        lookahead.getKind() == Token.Kind.L_PARENTHESIS ||
+        lookahead.getKind() == Token.Kind.L_BRACKET
+    ) {
+      switch (lookahead.getKind()) {
+        case Token.Kind.MINUS_GREATER:
+          node = dereferencingMemberAccess(node);
+        case Token.Kind.PERIOD:
+          node = memberAccess(node);
+        case Token.Kind.L_PARENTHESIS:
+          node = routineCall(node);
+        case Token.Kind.L_BRACKET:
+          node = arraySubscript(node);
+        default:
+          System.out.println("Error: No viable alternative in postfixExpression");
+      }
+    }
+    return node;
+  }
+
+  // Placeholder
+  private AstNode primaryExpression () {
     return null;
   }
 
+  private AstNode dereferencingMemberAccess (AstNode nameExpr) {
+    var n = new DereferencingMemberAccess(lookahead);
+    n.addChild(nameExpr);
+    match(Token.Kind.MINUS_GREATER);
+    n.addChild(name());
+    return n;
+  }
+
+  private AstNode memberAccess (AstNode nameExpr) {
+    var n = new MemberAccess(lookahead);
+    n.addChild(nameExpr);
+    match(Token.Kind.PERIOD);
+    n.addChild(name());
+    return n;
+  }
+
+  // Placeholder
+  private AstNode name () {
+    return null;
+  }
 
   // TYPES
 
