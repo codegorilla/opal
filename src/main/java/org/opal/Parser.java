@@ -194,19 +194,18 @@ public class Parser {
 
   private AstNode assignmentExpression () {
     var n = logicalOrExpression();
-    var kind = lookahead.getKind();
     while (
-        kind == Token.Kind.EQUAL ||
-        kind == Token.Kind.ASTERISK_EQUAL ||
-        kind == Token.Kind.SLASH_EQUAL ||
-        kind == Token.Kind.PERCENT_EQUAL ||
-        kind == Token.Kind.PLUS_EQUAL ||
-        kind == Token.Kind.MINUS_EQUAL ||
-        kind == Token.Kind.LESS_LESS_EQUAL ||
-        kind == Token.Kind.GREATER_GREATER_EQUAL ||
-        kind == Token.Kind.AMPERSAND_EQUAL ||
-        kind == Token.Kind.CARET_EQUAL ||
-        kind == Token.Kind.BAR_EQUAL
+        lookahead.getKind() == Token.Kind.EQUAL ||
+        lookahead.getKind() == Token.Kind.ASTERISK_EQUAL ||
+        lookahead.getKind() == Token.Kind.SLASH_EQUAL ||
+        lookahead.getKind() == Token.Kind.PERCENT_EQUAL ||
+        lookahead.getKind() == Token.Kind.PLUS_EQUAL ||
+        lookahead.getKind() == Token.Kind.MINUS_EQUAL ||
+        lookahead.getKind() == Token.Kind.LESS_LESS_EQUAL ||
+        lookahead.getKind() == Token.Kind.GREATER_GREATER_EQUAL ||
+        lookahead.getKind() == Token.Kind.AMPERSAND_EQUAL ||
+        lookahead.getKind() == Token.Kind.CARET_EQUAL ||
+        lookahead.getKind() == Token.Kind.BAR_EQUAL
     ) {
       var p = n;
       n = new BinaryExpression(lookahead);
@@ -280,10 +279,9 @@ public class Parser {
 
   private AstNode equalityExpression () {
     var n = relationalExpression();
-    var kind = lookahead.getKind();
     while (
-        kind == Token.Kind.EQUAL_EQUAL ||
-        kind == Token.Kind.EXCLAMATION_EQUAL
+        lookahead.getKind() == Token.Kind.EQUAL_EQUAL ||
+        lookahead.getKind() == Token.Kind.EXCLAMATION_EQUAL
     ) {
       var p = n;
       n = new BinaryExpression(lookahead);
@@ -296,12 +294,11 @@ public class Parser {
 
   private AstNode relationalExpression () {
     var n = shiftExpression();
-    var kind = lookahead.getKind();
     while (
-        kind == Token.Kind.GREATER ||
-        kind == Token.Kind.LESS ||
-        kind == Token.Kind.GREATER_EQUAL ||
-        kind == Token.Kind.LESS_EQUAL
+        lookahead.getKind() == Token.Kind.GREATER ||
+        lookahead.getKind() == Token.Kind.LESS ||
+        lookahead.getKind() == Token.Kind.GREATER_EQUAL ||
+        lookahead.getKind() == Token.Kind.LESS_EQUAL
     ) {
       var p = n;
       n = new BinaryExpression(lookahead);
@@ -411,11 +408,6 @@ public class Parser {
     return node;
   }
 
-  // Placeholder
-  private AstNode primaryExpression () {
-    return null;
-  }
-
   private AstNode dereferencingMemberAccess (AstNode nameExpr) {
     var n = new DereferencingMemberAccess(lookahead);
     n.addChild(nameExpr);
@@ -429,6 +421,152 @@ public class Parser {
     n.addChild(nameExpr);
     match(Token.Kind.PERIOD);
     n.addChild(name());
+    return n;
+  }
+
+  // Subroutines (or 'routines' for short) may be classified as 'functions',
+  // which return a result; or 'procedures', which do not. Furthermore, routines
+  // that are members of a class are known as 'methods'. However, we do not
+  // distinguish between all these types of routines using different keywords.
+
+  private AstNode routineCall (AstNode nameExpr) {
+    var n = new RoutineCall(lookahead);
+    n.addChild(nameExpr);
+    n.addChild(arguments());
+    return n;
+  }
+
+  // Todo: Maybe change to routineArguments and add routineArgument
+
+  private AstNode arguments () {
+    var n = new Arguments();
+    match(Token.Kind.L_PARENTHESIS);
+    if (lookahead.getKind() != Token.Kind.R_PARENTHESIS) {
+      n.addChild(expression(false));
+      while (lookahead.getKind() == Token.Kind.COMMA) {
+        match(Token.Kind.COMMA);
+        n.addChild(expression(false));
+      }
+    }
+    match(Token.Kind.R_PARENTHESIS);
+    return n;
+  }
+
+  private AstNode arraySubscript (AstNode nameExpr) {
+    var n = new ArraySubscript();
+    n.addChild(nameExpr);
+    match(Token.Kind.L_BRACKET);
+    n.addChild(expression(false));
+    match(Token.Kind.R_BRACKET);
+    return n;
+  }
+
+  private AstNode primaryExpression () {
+    AstNode n = null;
+    var kind = lookahead.getKind();
+    if (
+        kind == Token.Kind.FALSE ||
+        kind == Token.Kind.TRUE ||
+        kind == Token.Kind.CHARACTER_LITERAL ||
+        kind == Token.Kind.FLOAT32_LITERAL ||
+        kind == Token.Kind.FLOAT64_LITERAL ||
+        kind == Token.Kind.INT32_LITERAL ||
+        kind == Token.Kind.INT64_LITERAL ||
+        kind == Token.Kind.NULL ||
+        kind == Token.Kind.STRING_LITERAL ||
+        kind == Token.Kind.UINT32_LITERAL ||
+        kind == Token.Kind.UINT64_LITERAL
+    ) {
+      n = literal();
+    } else if (lookahead.getKind() == Token.Kind.THIS)
+      n = this_();
+    else if (lookahead.getKind() == Token.Kind.IDENTIFIER)
+      n = name();
+    // Defer implementing if expressions
+//    else if (lookahead.getKind() == Token.Kind.IF)
+//      n = ifExpression();
+    else if (lookahead.getKind() == Token.Kind.L_PARENTHESIS)
+      n = parenthesizedExpression();
+    else
+      System.out.println("ERROR - INVALID PRIMARY EXPRESSION");
+    return n;
+  }
+
+  private AstNode literal () {
+    AstNode n = null;
+    if (lookahead.getKind() == Token.Kind.FALSE || lookahead.getKind() == Token.Kind.TRUE)
+      n = booleanLiteral();
+    else if (lookahead.getKind() == Token.Kind.CHARACTER_LITERAL)
+      n = characterLiteral();
+    else if (lookahead.getKind() == Token.Kind.FLOAT32_LITERAL || lookahead.getKind() == Token.Kind.FLOAT64_LITERAL)
+      n = floatingPointLiteral();
+    else if (lookahead.getKind() == Token.Kind.INT32_LITERAL || lookahead.getKind() == Token.Kind.INT64_LITERAL)
+      n = integerLiteral();
+    else if (lookahead.getKind() == Token.Kind.NULL)
+      n = nullLiteral();
+    else if (lookahead.getKind() == Token.Kind.STRING_LITERAL)
+      n = stringLiteral();
+    else if (lookahead.getKind() == Token.Kind.UINT32_LITERAL || lookahead.getKind() == Token.Kind.UINT64_LITERAL)
+      n = unsignedIntegerLiteral();
+    return n;
+  }
+
+  private AstNode booleanLiteral () {
+    var n = new BooleanLiteral(lookahead);
+    consume();
+    return n;
+  }
+
+  private AstNode characterLiteral () {
+    var n = new CharacterLiteral(lookahead);
+    consume();
+    return n;
+  }
+
+  private AstNode floatingPointLiteral () {
+    var n = new FloatingPointLiteral(lookahead);
+    consume();
+    return n;
+  }
+
+  private AstNode integerLiteral () {
+    var n = new IntegerLiteral(lookahead);
+    consume();
+    return n;
+  }
+
+  private AstNode nullLiteral () {
+    var n = new NullLiteral(lookahead);
+    consume();
+    return n;
+  }
+
+  private AstNode stringLiteral () {
+    var n = new StringLiteral(lookahead);
+    consume();
+    return n;
+  }
+
+  private AstNode unsignedIntegerLiteral () {
+    var n = new UnsignedIntegerLiteral(lookahead);
+    consume();
+    return n;
+  }
+
+  // Note: In C++, 'this' is a pointer, but in cppfront, it is not. Its unclear
+  // if we can achieve the same thing in cobalt. For now, just assume it is a
+  // pointer.
+
+  private AstNode this_ () {
+    var n = new This(lookahead);
+    match(Token.Kind.THIS);
+    return n;
+  }
+
+  private AstNode parenthesizedExpression () {
+    match(Token.Kind.L_PARENTHESIS);
+    var n = expression(false);
+    match(Token.Kind.R_PARENTHESIS);
     return n;
   }
 

@@ -19,6 +19,21 @@ public interface Visitor {
   public void visit (BinaryExpression node);
   public void visit (DereferencingMemberAccess node);
   public void visit (MemberAccess node);
+  public void visit (RoutineCall node);
+  public void visit (Arguments node);
+  public void visit (ArraySubscript node);
+
+  // Literals
+  public void visit (BooleanLiteral node);
+  public void visit (CharacterLiteral node);
+  public void visit (FloatingPointLiteral node);
+  public void visit (IntegerLiteral node);
+  public void visit (NullLiteral node);
+  public void visit (StringLiteral node);
+  public void visit (UnsignedIntegerLiteral node);
+
+  // Special
+  public void visit (This node);
 
   // Types
   public void visit (TypeRoot node);
