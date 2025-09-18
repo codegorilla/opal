@@ -1,5 +1,4 @@
 import std;
 
-var hello: int;
-
+var hello: int = 1 + 2.5;
 

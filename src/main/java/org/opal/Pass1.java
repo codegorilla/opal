@@ -55,7 +55,30 @@ public class Pass1 extends BaseVisitor {
 
   public void visit (VariableInitializer node) {
     System.out.println("Variable Initializer");
+    node.getChild(0).accept(this);
   }
+
+  // Expressions
+
+  public void visit (Expression node) {
+    System.out.println("Expression");
+    node.getChild(0).accept(this);
+  }
+
+  public void visit (BinaryExpression node) {
+    System.out.println("Binary Expression");
+    node.getLeft().accept(this);
+    node.getRight().accept(this);
+  }
+
+  public void visit (FloatingPointLiteral node) {
+    System.out.println("Floating Point literal");
+  }
+
+  public void visit (IntegerLiteral node) {
+    System.out.println("Integer literal");
+  }
+
 
   // Types
 

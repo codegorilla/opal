@@ -167,7 +167,7 @@ public class Parser {
     var n = new VariableInitializer();
     if (lookahead.getKind() == Token.Kind.EQUAL) {
       match(Token.Kind.EQUAL);
-      // To do: Put expression here **********
+      n.addChild(expression(true));
     }
     return n;
   }

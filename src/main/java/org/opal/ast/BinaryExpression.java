@@ -14,4 +14,12 @@ public class BinaryExpression extends AstNode {
     v.visit(this);
   }
 
+  public AstNode getLeft () {
+    return getChild(0);
+  }
+
+  public AstNode getRight () {
+    return getChild(1);
+  }
+
 }
