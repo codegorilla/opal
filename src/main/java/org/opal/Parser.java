@@ -117,6 +117,9 @@ public class Parser {
     AstNode n = null;
     if (lookahead.getKind() == Token.Kind.IMPORT)
       n = importDeclaration();
+    else if (lookahead.getKind() == Token.Kind.DEF)
+      ;
+//      n = routineDeclaration();
     else if (lookahead.getKind() == Token.Kind.VAR)
       n = variableDeclaration();
     return n;
@@ -133,6 +136,249 @@ public class Parser {
   private AstNode importName () {
     var n = new ImportName(lookahead);
     match(Token.Kind.IDENTIFIER);
+    return n;
+  }
+
+  // ACCESS SPECIFIERS AND MODIFIERS
+
+  // Callers can explicitly request an empty access specifier. This is useful
+  // for template declarations, where the access specifier is on the template
+  // declaration itself rather than the templated entity. In this case, the
+  // templated entity's AST node will still have an access specifier node, but
+  // it will not have any children. This will be interpreted later to mean that
+  // there is no access specifier. I prefer to handle it this way instead of not
+  // having an access specifier node at all because it avoids having to create
+  // specialized grammar rules for each case. However, I may change this later
+  // if the alternative proves better.
+
+  // Update: Just use the token as the discriminator. A missing token means that
+  // the access specifier was not specified. Also might need to add protected as
+  // another option.
+
+  // Note: Parameter is false by default in scala. But the parameter doesn't seem
+  // to be used.
+
+  private AstNode accessSpecifier (boolean empty) {
+    var n = new AccessSpecifier();
+    if (lookahead.getKind() == Token.Kind.PRIVATE || lookahead.getKind() == Token.Kind.PUBLIC) {
+      n.setToken(lookahead);
+      match(lookahead.getKind());
+    }
+    return n;
+  }
+
+  // According to Parr, there is no need to have an AstNode kind -- you can just
+  // use the token to determine what kind of node it is. This works only for
+  // Simple cases. Sometimes, there is no corresponding token. So for that
+  // reason, we choose to have a AstNode kind field. That said, this means that
+  // sometimes we can leave the kind field generic and distinguish with more
+  // granularity by looking at the token.
+
+  // Todo: We might just want to have one kind of modifier node and let the
+  // token indicate what kind of modifier it is. The problem with this is that
+  // some modifiers are added implicitly (e.g. 'final' in the case of 'val'), so
+  // such modifiers do not actually have tokens. We could create a virtual token
+  // but it would not have a position in the character stream, so it would lack
+  // things like a column and line number.
+
+  private AstNode modifiers () {
+    var n = AstNode(AstNode.Kind.MODIFIERS);
+    while (
+    lookahead.getKind() == Token.Kind.ABSTRACT ||
+        lookahead.getKind() == Token.Kind.CONST ||
+        lookahead.getKind() == Token.Kind.CONSTEXPR ||
+        lookahead.getKind() == Token.Kind.FINAL ||
+        lookahead.getKind() == Token.Kind.OVERRIDE ||
+        lookahead.getKind() == Token.Kind.STATIC ||
+        lookahead.getKind() == Token.Kind.VIRTUAL ||
+        lookahead.getKind() == Token.Kind.VOLATILE
+    ) {
+      System.out.println("Sleeping for ${SLEEP_TIME} seconds in modifiers...");
+    }
+    try {
+      Thread.sleep(SLEEP_TIME);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+//    var modifier =
+    switch (lookahead.getKind()) {
+      case Token.Kind.ABSTRACT:
+        abstractModifier();
+      case Token.Kind.CONST:
+        constModifier();
+      case Token.Kind.CONSTEXPR:
+        constexprModifier();
+      case Token.Kind.FINAL:
+        finalModifier();
+      case Token.Kind.OVERRIDE:
+        overrideModifier();
+      case Token.Kind.STATIC:
+        staticModifier();
+      case Token.Kind.VIRTUAL:
+        virtualModifier();
+      case Token.Kind.VOLATILE:
+        volatileModifier();
+      default:
+        throw new Exception("Parser error: impossible case reached.");
+        n.addChild(modifier);
+    }
+    return n;
+  }
+
+  // I would like the 'final' modifier on variables to be equivalent to using
+  // 'const' in C++ because I want to use the 'const' modifier to mean the same
+  // as 'constexpr' in C++. This might not be possible because 'const' in C++
+  // is not really equivalent to 'final' in Java -- it implies additional
+  // constraints on the code, where it requires other things to be 'const' as
+  // well. It would be strange if we made 'final' require other things to be
+  // 'final' as well, if in that other context, 'final' didn't sound right or
+  // 'final' was already defined to mean something else. If we have to use
+  // 'const' instead of 'final' then we'll need to find something else to use
+  // instead of 'const' for compile-time constants, such as 'comptime'. I have a
+  // natural aversion to 'constexpr' for some reason... it's a bit obtuse for my
+  // taste.
+
+  private AstNode abstractModifier () {
+    var n = AstNode(AstNode.Kind.ABSTRACT_MODIFIER, lookahead);
+    match(Token.Kind.ABSTRACT);
+    return n;
+  }
+
+  private AstNode constModifier () {
+    var n = AstNode(AstNode.Kind.CONST_MODIFIER, lookahead);
+    match(Token.Kind.CONST);
+    return n;
+  }
+
+  private AstNode constexprModifier () {
+    var n = AstNode(AstNode.Kind.CONSTEXPR_MODIFIER, lookahead);
+    match(Token.Kind.CONSTEXPR);
+    return n;
+  }
+
+  private AstNode finalModifier () {
+    var n = AstNode(AstNode.Kind.FINAL_MODIFIER, lookahead);
+    match(Token.Kind.FINAL);
+    return n;
+  }
+
+  private AstNode overrideModifier () {
+    var n = AstNode(AstNode.Kind.OVERRIDE_MODIFIER, lookahead);
+    match(Token.Kind.OVERRIDE);
+    return n;
+  }
+
+  private AstNode staticModifier () {
+    var n = AstNode(AstNode.Kind.STATIC_MODIFIER, lookahead);
+    match(Token.Kind.STATIC);
+    return n;
+  }
+
+  private AstNode virtualModifier () {
+    var n = AstNode(AstNode.Kind.VIRTUAL_MODIFIER, lookahead);
+    match(Token.Kind.VIRTUAL);
+    return n;
+  }
+
+  private AstNode volatileModifier () {
+    var n = AstNode(AstNode.Kind.VOLATILE_MODIFIER, lookahead);
+    match(Token.Kind.VOLATILE);
+    return n;
+  }
+
+  // ROUTINE DECLARATIONS
+
+  // Todo: We need to push another scope onto the scope stack. Keep in mind that
+  // the routine parameters may be in the same exact scope as the routine body
+  // (or top-most block of the routine).
+
+  private AstNode routineDeclaration (AstNode accessSpecifier, AstNode modifiers) {
+    var n = new RoutineDeclaration(lookahead);
+//    var scope = Scope(Scope.Kind.LOCAL);
+//    scope.setEnclosingScope(currentScope);
+//    currentScope = scope;
+//    n.setScope(currentScope);
+    match(Token.Kind.DEF);
+    n.addChild(accessSpecifier);
+    n.addChild(modifiers);
+    n.addChild(routineName());
+    n.addChild(routineParameters());
+    n.addChild(routineReturnType());
+    n.addChild(routineBody());
+//    currentScope = scope.getEnclosingScope();
+    return n;
+  }
+
+  // Todo: Should symbols point to AST node, and/or vice versa? This might come
+  // in handy later on, but wait until its needed before adding the code.
+
+  private AstNode routineName () {
+    var n = new RoutineName(lookahead);
+    match(Token.Kind.IDENTIFIER);
+    //var s = RoutineSymbol(n.getToken().lexeme);
+    //currentScope.define(s);
+    return n;
+  }
+
+  private AstNode routineParameters () {
+    var n = new RoutineParameters();
+    match(Token.Kind.L_PARENTHESIS);
+    if (lookahead.getKind() == Token.Kind.IDENTIFIER)
+      n.addChild(routineParameter());
+    while (lookahead.getKind() == Token.Kind.COMMA) {
+      match(Token.Kind.COMMA);
+      n.addChild(routineParameter());
+    }
+    match(Token.Kind.R_PARENTHESIS);
+    return n;
+  }
+
+  // Routine parameters are for all intents and purposes local variables
+
+  private AstNode routineParameter () {
+    var n = new RoutineParameter();
+    n.addChild(routineParameterName());
+    match(Token.Kind.COLON);
+    n.addChild(typeRoot());
+    return n;
+  }
+
+  private AstNode routineParameterName () {
+    var n = new RoutineParameterName(lookahead);
+    match(Token.Kind.IDENTIFIER);
+    //var s = RoutineParameterSymbol(n.getToken().lexeme);
+    //currentScope.define(s);
+    return n;
+  }
+
+  // We need to decide if we want to use an arrow or a colon for the result
+  // type. C++, python, ruby, swift, ocaml, haskell, and rust all use an arrow,
+  // while scala, kotlin, typescript, and pascal all use a colon. The proper
+  // choice probably depends on whether or not the language in question already
+  // uses colons and/or arrows for other things (and the amount that the symbol
+  // appears in the program text); and whether it would lead to grammar
+  // ambiguities. For now, we will use an arrow.
+
+  // We can either treat this like a type specifier or use it as a passthrough
+  // to a type specifier.
+
+  private AstNode routineReturnType () {
+    var n = new RoutineReturnType();
+    if (lookahead.getKind() == Token.Kind.MINUS_GREATER) {
+      match(Token.Kind.MINUS_GREATER);
+      n.addChild(typeRoot());
+    }
+    return n;
+  }
+
+  // Do we need to distinguish between a top compound statement and a regular
+  // compound statement? The top compound statement does not need to introduce a
+  // new scope.
+
+  private AstNode routineBody () {
+    var n = new RoutineBody();
+    // To do: uncomment
+    //n.addChild(compoundStatement());
     return n;
   }
 
@@ -170,6 +416,13 @@ public class Parser {
       n.addChild(expression(true));
     }
     return n;
+  }
+
+  // STATEMENTS
+
+  // Placeholder
+  private AstNode statement () {
+    return null;
   }
 
   // EXPRESSIONS

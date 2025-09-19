@@ -328,6 +328,10 @@ public class Lexer {
           consume();
           kind = Token.Kind.EXCLAMATION_EQUAL;
           lexeme = "!=";
+        } else if (current == '<') {
+          consume();
+          kind = Token.Kind.EXCLAMATION_LESS;
+          lexeme = "!<";
         } else {
           kind = Token.Kind.EXCLAMATION;
           lexeme = "!";

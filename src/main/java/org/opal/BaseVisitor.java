@@ -18,6 +18,19 @@ public class BaseVisitor implements Visitor {
   public void visit (Declarations node) {}
   public void visit (ImportDeclaration node) {}
   public void visit (ImportName node) {}
+
+  public void visit (AccessSpecifier node) {}
+
+  // Routine declarations
+  public void visit (RoutineDeclaration node) {}
+  public void visit (RoutineName node) {}
+  public void visit (RoutineParameters node) {}
+  public void visit (RoutineParameter node) {}
+  public void visit (RoutineParameterName node) {}
+  public void visit (RoutineReturnType node) {}
+  public void visit (RoutineBody node) {}
+
+  // Variable declarations
   public void visit (VariableDeclaration node) {}
   public void visit (VariableName node) {}
   public void visit (VariableTypeSpecifier node) {}

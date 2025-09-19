@@ -13,7 +13,7 @@ import org.opal.Visitor;
 
 abstract public class AstNode {
 
-  private final Token token;
+  private Token token;
   private final LinkedList<AstNode> children;
 
   public AstNode () {
@@ -40,6 +40,10 @@ abstract public class AstNode {
 
   public Token getToken () {
     return token;
+  }
+
+  public void setToken (Token token) {
+    this.token = token;
   }
 
   public abstract void accept (Visitor v);
