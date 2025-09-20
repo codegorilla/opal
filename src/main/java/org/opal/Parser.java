@@ -113,15 +113,34 @@ public class Parser {
     return n;
   }
 
+  // To do: Implement use declaration
+
   private AstNode declaration () {
     AstNode n = null;
     if (lookahead.getKind() == Token.Kind.IMPORT)
       n = importDeclaration();
-    else if (lookahead.getKind() == Token.Kind.DEF)
-      ;
-//      n = routineDeclaration();
-    else if (lookahead.getKind() == Token.Kind.VAR)
-      n = variableDeclaration();
+    else {
+      var spec = accessSpecifier();
+      if (lookahead.getKind() == Token.Kind.TEMPLATE)
+        ; //n = templateDeclaration();
+      else {
+        var mods = modifiers();
+        switch (lookahead.getKind()) {
+          case Token.Kind.CLASS -> {
+            System.out.println("CLASS TBD");
+            n = null;
+          }
+          case Token.Kind.DEF ->
+            n = routineDeclaration(spec, mods);
+          case Token.Kind.VAL ->
+            n = variableDeclaration(spec, mods);
+          case Token.Kind.VAR ->
+            n = variableDeclaration(spec, mods);
+          default ->
+            n = null;
+        }
+      }
+    }
     return n;
   }
 
@@ -158,7 +177,7 @@ public class Parser {
   // Note: Parameter is false by default in scala. But the parameter doesn't seem
   // to be used.
 
-  private AstNode accessSpecifier (boolean empty) {
+  private AstNode accessSpecifier () {
     var n = new AccessSpecifier();
     if (lookahead.getKind() == Token.Kind.PRIVATE || lookahead.getKind() == Token.Kind.PUBLIC) {
       n.setToken(lookahead);
@@ -179,51 +198,10 @@ public class Parser {
   // some modifiers are added implicitly (e.g. 'final' in the case of 'val'), so
   // such modifiers do not actually have tokens. We could create a virtual token
   // but it would not have a position in the character stream, so it would lack
-  // things like a column and line number.
-
-  private AstNode modifiers () {
-    var n = AstNode(AstNode.Kind.MODIFIERS);
-    while (
-    lookahead.getKind() == Token.Kind.ABSTRACT ||
-        lookahead.getKind() == Token.Kind.CONST ||
-        lookahead.getKind() == Token.Kind.CONSTEXPR ||
-        lookahead.getKind() == Token.Kind.FINAL ||
-        lookahead.getKind() == Token.Kind.OVERRIDE ||
-        lookahead.getKind() == Token.Kind.STATIC ||
-        lookahead.getKind() == Token.Kind.VIRTUAL ||
-        lookahead.getKind() == Token.Kind.VOLATILE
-    ) {
-      System.out.println("Sleeping for ${SLEEP_TIME} seconds in modifiers...");
-    }
-    try {
-      Thread.sleep(SLEEP_TIME);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
-//    var modifier =
-    switch (lookahead.getKind()) {
-      case Token.Kind.ABSTRACT:
-        abstractModifier();
-      case Token.Kind.CONST:
-        constModifier();
-      case Token.Kind.CONSTEXPR:
-        constexprModifier();
-      case Token.Kind.FINAL:
-        finalModifier();
-      case Token.Kind.OVERRIDE:
-        overrideModifier();
-      case Token.Kind.STATIC:
-        staticModifier();
-      case Token.Kind.VIRTUAL:
-        virtualModifier();
-      case Token.Kind.VOLATILE:
-        volatileModifier();
-      default:
-        throw new Exception("Parser error: impossible case reached.");
-        n.addChild(modifier);
-    }
-    return n;
-  }
+  // things like a column and line number. Another issue is the might need to
+  // handle modifiers that have arguments, such as 'alignas'. However, the
+  // visitor pattern allows custom node types so these issues might not be a
+  // problem.
 
   // I would like the 'final' modifier on variables to be equivalent to using
   // 'const' in C++ because I want to use the 'const' modifier to mean the same
@@ -238,51 +216,27 @@ public class Parser {
   // natural aversion to 'constexpr' for some reason... it's a bit obtuse for my
   // taste.
 
-  private AstNode abstractModifier () {
-    var n = AstNode(AstNode.Kind.ABSTRACT_MODIFIER, lookahead);
-    match(Token.Kind.ABSTRACT);
-    return n;
-  }
-
-  private AstNode constModifier () {
-    var n = AstNode(AstNode.Kind.CONST_MODIFIER, lookahead);
-    match(Token.Kind.CONST);
-    return n;
-  }
-
-  private AstNode constexprModifier () {
-    var n = AstNode(AstNode.Kind.CONSTEXPR_MODIFIER, lookahead);
-    match(Token.Kind.CONSTEXPR);
-    return n;
-  }
-
-  private AstNode finalModifier () {
-    var n = AstNode(AstNode.Kind.FINAL_MODIFIER, lookahead);
-    match(Token.Kind.FINAL);
-    return n;
-  }
-
-  private AstNode overrideModifier () {
-    var n = AstNode(AstNode.Kind.OVERRIDE_MODIFIER, lookahead);
-    match(Token.Kind.OVERRIDE);
-    return n;
-  }
-
-  private AstNode staticModifier () {
-    var n = AstNode(AstNode.Kind.STATIC_MODIFIER, lookahead);
-    match(Token.Kind.STATIC);
-    return n;
-  }
-
-  private AstNode virtualModifier () {
-    var n = AstNode(AstNode.Kind.VIRTUAL_MODIFIER, lookahead);
-    match(Token.Kind.VIRTUAL);
-    return n;
-  }
-
-  private AstNode volatileModifier () {
-    var n = AstNode(AstNode.Kind.VOLATILE_MODIFIER, lookahead);
-    match(Token.Kind.VOLATILE);
+  private AstNode modifiers () {
+    var n = new Modifiers();
+    while (
+      lookahead.getKind() == Token.Kind.ABSTRACT  ||
+      lookahead.getKind() == Token.Kind.CONST     ||
+      lookahead.getKind() == Token.Kind.CONSTEXPR ||
+      lookahead.getKind() == Token.Kind.FINAL     ||
+      lookahead.getKind() == Token.Kind.OVERRIDE  ||
+      lookahead.getKind() == Token.Kind.STATIC    ||
+      lookahead.getKind() == Token.Kind.VIRTUAL   ||
+      lookahead.getKind() == Token.Kind.VOLATILE
+    ) {
+      var p = new Modifier(lookahead);
+      match(lookahead.getKind());
+      try {
+        System.out.println("Sleeping for ${SLEEP_TIME} seconds in modifiers...");
+        Thread.sleep(SLEEP_TIME);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+    }
     return n;
   }
 
@@ -384,7 +338,9 @@ public class Parser {
 
   // VARIABLE DECLARATIONS
 
-  private AstNode variableDeclaration () {
+  // To do: Handle access specifier and modifiers
+
+  private AstNode variableDeclaration (AstNode accessSpecifier, AstNode modifiers) {
     var n = new VariableDeclaration(lookahead);
     match(Token.Kind.VAR);
     n.addChild(variableName());

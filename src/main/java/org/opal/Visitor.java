@@ -10,6 +10,8 @@ public interface Visitor {
   public void visit (ImportName node);
 
   public void visit (AccessSpecifier node);
+  public void visit (Modifiers node);
+  public void visit (Modifier node);
 
   // Routine declarations
   public void visit (RoutineDeclaration node);

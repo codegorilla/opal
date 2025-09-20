@@ -1,4 +1,4 @@
 import std;
 
-var hello: int = 1 + 2.5;
+const var hello: int = 1 + 2.5;
 
