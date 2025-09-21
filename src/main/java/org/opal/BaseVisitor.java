@@ -14,16 +14,18 @@ public class BaseVisitor implements Visitor {
 
   public void process () {}
 
+  // DECLARATIONS
+
+  // General declarations
   public void visit (TranslationUnit node) {}
-
-  // Declarations
   public void visit (Declarations node) {}
-  public void visit (ImportDeclaration node) {}
-  public void visit (ImportName node) {}
-
   public void visit (AccessSpecifier node) {}
   public void visit (Modifiers node) {}
   public void visit (Modifier node) {}
+
+  // Import declarations
+  public void visit (ImportDeclaration node) {}
+  public void visit (ImportName node) {}
 
   // Routine declarations
   public void visit (RoutineDeclaration node) {}
@@ -40,7 +42,8 @@ public class BaseVisitor implements Visitor {
   public void visit (VariableTypeSpecifier node) {}
   public void visit (VariableInitializer node) {}
 
-  // Statements
+  // STATEMENTS
+
   public void visit (BreakStatement node) {}
   public void visit (CompoundStatement node) {}
   public void visit (ContinueStatement node) {}
@@ -50,7 +53,8 @@ public class BaseVisitor implements Visitor {
   public void visit (UntilStatement node) {}
   public void visit (WhileStatement node) {}
 
-  // Expressions
+  // EXPRESSIONS
+
   public void visit (Expression node) {}
   public void visit (BinaryExpression node) {}
   public void visit (DereferencingMemberAccess node) {}
@@ -71,7 +75,8 @@ public class BaseVisitor implements Visitor {
   // Special
   public void visit (This node) {}
 
-  // Types
+  // TYPES
+
   public void visit (TypeRoot node) {}
   public void visit (ArrayType node) {}
   public void visit (NominalType node) {}
