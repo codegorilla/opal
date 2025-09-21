@@ -1,8 +1,7 @@
 package org.opal;
 
 import org.opal.ast.*;
-
-import java.util.Iterator;
+import org.opal.ast.declaration.*;
 
 public class Pass1 extends BaseVisitor {
 

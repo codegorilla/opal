@@ -1,11 +1,12 @@
-package org.opal.ast;
+package org.opal.ast.declaration;
 
 import org.opal.Token;
 import org.opal.Visitor;
+import org.opal.ast.AstNode;
 
-public class VariableName extends AstNode {
+public class RoutineName extends AstNode {
 
-  public VariableName (Token token) {
+  public RoutineName (Token token) {
     super(token);
   }
 
@@ -13,4 +14,5 @@ public class VariableName extends AstNode {
   public void accept (Visitor v) {
     v.visit(this);
   }
+
 }

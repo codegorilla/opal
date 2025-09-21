@@ -1,6 +1,7 @@
 package org.opal;
 
 import org.opal.ast.*;
+import org.opal.ast.declaration.*;
 import org.opal.ast.statement.*;
 
 public interface Visitor {

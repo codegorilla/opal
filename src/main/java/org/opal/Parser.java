@@ -4,6 +4,7 @@ package org.opal;
 import java.util.LinkedList;
 
 import org.opal.ast.*;
+import org.opal.ast.declaration.*;
 import org.opal.ast.statement.*;
 
 import org.opal.symbol.Scope;
