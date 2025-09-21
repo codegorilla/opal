@@ -1,3 +1,7 @@
 import std;
 
 const var hello: int = 1 + 2.5;
+
+def myfun () {
+  var a: int = 1;
+}

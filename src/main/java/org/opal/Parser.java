@@ -440,6 +440,7 @@ public class Parser {
 
   private AstNode compoundStatement () {
     var n = new CompoundStatement(lookahead);
+    match(Token.Kind.L_BRACE);
     while (lookahead.getKind() != Token.Kind.R_BRACE) {
       n.addChild(statement());
       try {
