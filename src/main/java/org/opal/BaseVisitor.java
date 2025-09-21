@@ -38,6 +38,12 @@ public class BaseVisitor implements Visitor {
   public void visit (VariableTypeSpecifier node) {}
   public void visit (VariableInitializer node) {}
 
+  // Statements
+  public void visit (BreakStatement node) {}
+  public void visit (CompoundStatement node) {}
+  public void visit (ContinueStatement node) {}
+  public void visit (ExpressionStatement node) {}
+
   // Expressions
   public void visit (Expression node) {}
   public void visit (BinaryExpression node) {}

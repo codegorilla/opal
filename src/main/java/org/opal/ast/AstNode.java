@@ -34,6 +34,10 @@ abstract public class AstNode {
     return children.get(index);
   }
 
+  public int getChildCount () {
+    return children.size();
+  }
+
   public Iterator<AstNode> getChildren () {
     return children.iterator();
   }

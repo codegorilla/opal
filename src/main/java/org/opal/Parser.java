@@ -230,8 +230,9 @@ public class Parser {
     ) {
       var p = new Modifier(lookahead);
       match(lookahead.getKind());
+      n.addChild(p);
       try {
-        System.out.println("Sleeping for ${SLEEP_TIME} seconds in modifiers...");
+        System.out.println("Sleeping for " + SLEEP_TIME + " seconds in modifiers...");
         Thread.sleep(SLEEP_TIME);
       } catch (InterruptedException e) {
         throw new RuntimeException(e);
@@ -331,18 +332,20 @@ public class Parser {
 
   private AstNode routineBody () {
     var n = new RoutineBody();
-    // To do: uncomment
-    //n.addChild(compoundStatement());
+    n.addChild(compoundStatement());
     return n;
   }
 
   // VARIABLE DECLARATIONS
 
-  // To do: Handle access specifier and modifiers
+  // To do: Local variables shouldn't have access specifiers. Because children can be accessed by name, we'll probably
+  // need a separate local variable node type. For now, just handle global variables.
 
   private AstNode variableDeclaration (AstNode accessSpecifier, AstNode modifiers) {
     var n = new VariableDeclaration(lookahead);
     match(Token.Kind.VAR);
+    n.addChild(accessSpecifier);
+    n.addChild(modifiers);
     n.addChild(variableName());
     n.addChild(variableTypeSpecifier());
     n.addChild(variableInitializer());
@@ -376,9 +379,120 @@ public class Parser {
 
   // STATEMENTS
 
-  // Placeholder
+  // Notice that we don't include 'if' in the first set for expression
+  // statements. This is because we want send the parser towards the statement
+  // version of 'if'.
+
   private AstNode statement () {
-    return null;
+    AstNode n = null;
+    Token.Kind kind = lookahead.getKind();
+    if (
+      kind == Token.Kind.BREAK ||
+      kind == Token.Kind.L_BRACE ||
+      kind == Token.Kind.CONTINUE
+    ) {
+      n = standardStatement();
+    } else if (
+      kind == Token.Kind.CLASS ||
+      kind == Token.Kind.DEF ||
+      kind == Token.Kind.VAR
+    ) {
+      n = declarationStatement();
+    } else if (
+      kind == Token.Kind.FALSE ||
+      kind == Token.Kind.TRUE ||
+      kind == Token.Kind.CHARACTER_LITERAL ||
+      kind == Token.Kind.FLOAT32_LITERAL ||
+      kind == Token.Kind.FLOAT64_LITERAL ||
+      kind == Token.Kind.INT32_LITERAL ||
+      kind == Token.Kind.INT64_LITERAL ||
+      kind == Token.Kind.NULL ||
+      kind == Token.Kind.STRING_LITERAL ||
+      kind == Token.Kind.UINT32_LITERAL ||
+      kind == Token.Kind.UINT64_LITERAL
+    ) {
+      n = expressionStatement();
+    }
+    return n;
+  }
+
+  private AstNode standardStatement () {
+    AstNode n = null;
+    Token.Kind kind = lookahead.getKind();
+    switch (kind) {
+      case Token.Kind.BREAK ->
+        n = breakStatement();
+      case Token.Kind.L_BRACE ->
+        n = compoundStatement();
+      case Token.Kind.CONTINUE ->
+        n = continueStatement();
+      default ->
+      {}
+    }
+    return n;
+  }
+
+  private AstNode breakStatement () {
+    var n = new BreakStatement(lookahead);
+    match(Token.Kind.BREAK);
+    return n;
+  }
+
+  private AstNode compoundStatement () {
+    var n = new CompoundStatement(lookahead);
+    while (lookahead.getKind() != Token.Kind.R_BRACE) {
+      n.addChild(statement());
+      try {
+        System.out.println("Sleeping for " + SLEEP_TIME + " seconds in compoundStatement...");
+        Thread.sleep(SLEEP_TIME);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    match(Token.Kind.R_BRACE);
+    return n;
+  }
+
+  private AstNode continueStatement () {
+    var n = new ContinueStatement(lookahead);
+    match(Token.Kind.CONTINUE);
+    return n;
+  }
+
+  // For now we only support variable declaration statements (i.e. local
+  // variables). I do not think cobalt needs local classes since they have
+  // significant limitations in C++ and only niche use cases. I would like to
+  // have nested routines, but since C++ doesn't have them, I need to research
+  // the feasibility of that idea. We might be able to compile nested routines
+  // into C++ lambda functions.
+
+  // It seems that we can just use the existing variableDeclaration production
+  // but if we need to distinguish between local and global variables, then we
+  // might need a separate production. Alternatively, we could use a flag to
+  // signify one or the other. Or we can defer the question to later phases.
+
+  // Should this just be a passthrough or do we want dedicated AST nodes at the
+  // root of all statement sub-trees?
+
+  private AstNode declarationStatement () {
+    AstNode n = null;
+    var mods = modifiers();
+    var kind = lookahead.getKind();
+    if (kind == Token.Kind.VAL || kind == Token.Kind.VAR)
+      n = variableDeclaration(null, mods);
+    // To do: Need error checking here
+    return n;
+  }
+
+  // The expression statement is primarily just a passthrough, but we want a
+  // dedicated AST node at the root of all statement sub-trees.
+  // NOTE: IS ABOVE TRUE?
+
+  private AstNode expressionStatement () {
+    var n = new ExpressionStatement();
+    n.addChild(expression(true));
+    match(Token.Kind.SEMICOLON);
+    return n;
   }
 
   // EXPRESSIONS

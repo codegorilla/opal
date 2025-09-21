@@ -14,16 +14,24 @@ public class VariableDeclaration extends AstNode {
     v.visit(this);
   }
 
-  public AstNode getName () {
+  public AstNode getAccessSpecifier () {
     return getChild(0);
   }
 
-  public AstNode getTypeSpecifier () {
+  public AstNode getModifiers () {
     return getChild(1);
   }
 
-  public AstNode getInitializer () {
+  public AstNode getName () {
     return getChild(2);
+  }
+
+  public AstNode getTypeSpecifier () {
+    return getChild(3);
+  }
+
+  public AstNode getInitializer () {
+    return getChild(4);
   }
 
 }
