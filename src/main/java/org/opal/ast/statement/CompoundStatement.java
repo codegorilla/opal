@@ -1,7 +1,8 @@
-package org.opal.ast;
+package org.opal.ast.statement;
 
 import org.opal.Token;
 import org.opal.Visitor;
+import org.opal.ast.AstNode;
 
 public class CompoundStatement extends AstNode {
 

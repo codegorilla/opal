@@ -1,6 +1,7 @@
 package org.opal;
 
 import org.opal.ast.*;
+import org.opal.ast.statement.*;
 
 public interface Visitor {
   // Declarations
@@ -32,7 +33,11 @@ public interface Visitor {
   public void visit (BreakStatement node);
   public void visit (CompoundStatement node);
   public void visit (ContinueStatement node);
+  public void visit (DoStatement node);
   public void visit (ExpressionStatement node);
+  public void visit (ReturnStatement node);
+  public void visit (UntilStatement node);
+  public void visit (WhileStatement node);
 
   // Expressions
 

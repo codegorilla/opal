@@ -4,6 +4,7 @@ package org.opal;
 import java.util.LinkedList;
 
 import org.opal.ast.*;
+import org.opal.ast.statement.*;
 
 import org.opal.symbol.Scope;
 import org.opal.symbol.PrimitiveTypeSymbol;
@@ -426,6 +427,16 @@ public class Parser {
         n = compoundStatement();
       case Token.Kind.CONTINUE ->
         n = continueStatement();
+      case Token.Kind.DO ->
+        n = doStatement();
+//      case Token.Kind.IF ->
+//        n = ifStatement();
+      case Token.Kind.RETURN ->
+        n = returnStatement();
+      case Token.Kind.UNTIL ->
+        n = untilStatement();
+      case Token.Kind.WHILE ->
+        n = whileStatement();
       default ->
       {}
     }
@@ -457,6 +468,157 @@ public class Parser {
   private AstNode continueStatement () {
     var n = new ContinueStatement(lookahead);
     match(Token.Kind.CONTINUE);
+    return n;
+  }
+
+  // The do statement is flexible and can either be a "do while" or a "do until"
+  // statement, depending on what follows the 'do' keyword.
+
+  private AstNode doStatement () {
+    var n = new DoStatement(lookahead);
+    match(Token.Kind.DO);
+    if (lookahead.getKind() == Token.Kind.UNTIL)
+      n.addChild(untilStatement());
+    else if (lookahead.getKind() == Token.Kind.WHILE)
+      n.addChild(whileStatement());
+    return n;
+  }
+
+  /*
+  private AstNode ifStatement () {
+    val n = AstNode(AstNode.Kind.IF_STATEMENT, lookahead)
+    match_(Token.Kind.IF)
+    n.addChild(ifCondition())
+    n.addChild(ifBody())
+    if lookahead.kind == Token.Kind.ELSE then
+    n.addChild(elseClause())
+    return n
+  }
+
+  private AstNode ifCondition () {
+    match_(Token.Kind.L_PARENTHESIS)
+    val n = expression(root = true)
+    match_(Token.Kind.R_PARENTHESIS)
+    return n
+  }
+
+  private AstNode ifBody () {
+    var n:AstNode = null
+    if lookahead.kind == Token.Kind.L_BRACE then
+      n = compoundStatement()
+    else
+    // Insert fabricated compound statement
+    n = AstNode(AstNode.Kind.COMPOUND_STATEMENT)
+    n.addChild(statement())
+    return n
+  }
+
+  private AstNode elseClause () {
+    val n = AstNode(AstNode.Kind.ELSE_CLAUSE, lookahead)
+    match_(Token.Kind.ELSE)
+    n.addChild(elseBody())
+    return n
+  }
+
+  private AstNode elseBody () {
+    var n:AstNode = null
+    if lookahead.kind == Token.Kind.L_BRACE then
+      n = compoundStatement()
+    else
+    // Insert fabricated compound statement
+    n = AstNode(AstNode.Kind.COMPOUND_STATEMENT)
+    n.addChild(statement())
+    return n
+  }
+  */
+
+  private AstNode returnStatement () {
+    var n = new ReturnStatement(lookahead);
+    match(Token.Kind.RETURN);
+    // Should we explicitly check FIRST, or is it ok to just check FOLLOW?
+    if (lookahead.getKind() != Token.Kind.SEMICOLON) {
+      n.addChild(expression(true));
+      match(Token.Kind.SEMICOLON);
+    }
+    return n;
+  }
+
+  // C++ doesn't have 'until' statements, but I would like to have them. I often
+  // need an "until (done) doSomething();" loop. Yes, that requirement can be
+  // met by a 'while' statement such as "while (!done) doSomething();" but I
+  // prefer to have the option to use either one. If the 'until' statement
+  // proves controversial or unpopular (or is deemed to not be orthogonal
+  // enough) then it can be removed later.
+
+  private AstNode untilStatement () {
+    var n = new UntilStatement(lookahead);
+    match(Token.Kind.UNTIL);
+    n.addChild(untilCondition());
+    n.addChild(untilBody());
+    return n;
+  }
+
+  // In C++26 the condition can be an expression or a declaration. For now, we
+  // will only support expressions, and use the rule as a passthrough.
+
+  // We can handle transformation to a 'while' statement here by inserting an
+  // AST node that complements the expression. However, the parser should not
+  // concern itself with the details of the target language. The lack of an
+  // 'until' statement is a concern of the target language, so we will leave it
+  // up to a separate transformation or generation phase to make that change.
+
+  private AstNode untilCondition () {
+    match(Token.Kind.L_PARENTHESIS);
+    var n = expression(true);
+    match(Token.Kind.R_PARENTHESIS);
+    return n;
+  }
+
+  // Notice that fabricated AST nodes do not have tokens. This could be a
+  // source of bugs, so we need to be careful.
+
+  private AstNode untilBody () {
+    AstNode n = null;
+    if (lookahead.getKind() == Token.Kind.L_BRACE)
+      n = statement();
+    else {
+      // Insert fabricated compound statement
+      n = new CompoundStatement(null);
+      n.addChild(statement());
+    }
+    return n;
+  }
+
+  private AstNode whileStatement () {
+    var n = new UntilStatement(lookahead);
+    match(Token.Kind.UNTIL);
+    n.addChild(whileCondition());
+    n.addChild(whileBody());
+    return n;
+  }
+
+  // In C++26 the condition can be an expression or a declaration. For now, we
+  // will only support expressions, and use the rule as a passthrough.
+
+  private AstNode whileCondition () {
+    match(Token.Kind.L_PARENTHESIS);
+    var n = expression(true);
+    match(Token.Kind.R_PARENTHESIS);
+    return n;
+  }
+
+  // Notice that fabricated AST nodes do not have tokens. This could be a
+  // source of bugs, so we need to be careful.
+
+  private AstNode whileBody () {
+    AstNode n = null;
+    if (lookahead.getKind() == Token.Kind.L_BRACE)
+      n = statement();
+    else {
+      // Insert fabricated compound statement
+      n = new CompoundStatement(null);
+      n.addChild(statement());
+    }
     return n;
   }
 
