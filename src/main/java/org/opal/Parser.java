@@ -389,28 +389,34 @@ public class Parser {
     AstNode n = null;
     Token.Kind kind = lookahead.getKind();
     if (
-      kind == Token.Kind.BREAK ||
-      kind == Token.Kind.L_BRACE ||
-      kind == Token.Kind.CONTINUE
+      kind == Token.Kind.BREAK     ||
+      kind == Token.Kind.L_BRACE   ||
+      kind == Token.Kind.CONTINUE  ||
+      kind == Token.Kind.DO        ||
+      kind == Token.Kind.SEMICOLON ||
+      kind == Token.Kind.IF        ||
+      kind == Token.Kind.RETURN    ||
+      kind == Token.Kind.UNTIL     ||
+      kind == Token.Kind.WHILE
     ) {
       n = standardStatement();
     } else if (
       kind == Token.Kind.CLASS ||
-      kind == Token.Kind.DEF ||
+      kind == Token.Kind.DEF   ||
       kind == Token.Kind.VAR
     ) {
       n = declarationStatement();
     } else if (
-      kind == Token.Kind.FALSE ||
-      kind == Token.Kind.TRUE ||
+      kind == Token.Kind.FALSE             ||
+      kind == Token.Kind.TRUE              ||
       kind == Token.Kind.CHARACTER_LITERAL ||
-      kind == Token.Kind.FLOAT32_LITERAL ||
-      kind == Token.Kind.FLOAT64_LITERAL ||
-      kind == Token.Kind.INT32_LITERAL ||
-      kind == Token.Kind.INT64_LITERAL ||
-      kind == Token.Kind.NULL ||
-      kind == Token.Kind.STRING_LITERAL ||
-      kind == Token.Kind.UINT32_LITERAL ||
+      kind == Token.Kind.FLOAT32_LITERAL   ||
+      kind == Token.Kind.FLOAT64_LITERAL   ||
+      kind == Token.Kind.INT32_LITERAL     ||
+      kind == Token.Kind.INT64_LITERAL     ||
+      kind == Token.Kind.NULL              ||
+      kind == Token.Kind.STRING_LITERAL    ||
+      kind == Token.Kind.UINT32_LITERAL    ||
       kind == Token.Kind.UINT64_LITERAL
     ) {
       n = expressionStatement();
@@ -434,12 +440,12 @@ public class Parser {
         n = continueStatement();
       case Token.Kind.DO ->
         n = doStatement();
+      case Token.Kind.SEMICOLON ->
+        n = emptyStatement();
       case Token.Kind.IF ->
         n = ifStatement();
       case Token.Kind.RETURN ->
         n = returnStatement();
-      case Token.Kind.SEMICOLON ->
-        n = emptyStatement();
       case Token.Kind.UNTIL ->
         n = untilStatement();
       case Token.Kind.WHILE ->
