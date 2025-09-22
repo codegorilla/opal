@@ -40,7 +40,10 @@ public interface Visitor {
   public void visit (CompoundStatement node);
   public void visit (ContinueStatement node);
   public void visit (DoStatement node);
+  public void visit (ElseClause node);
+  public void visit (EmptyStatement node);
   public void visit (ExpressionStatement node);
+  public void visit (IfStatement node);
   public void visit (ReturnStatement node);
   public void visit (UntilStatement node);
   public void visit (WhileStatement node);

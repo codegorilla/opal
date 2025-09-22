@@ -414,9 +414,13 @@ public class Parser {
       kind == Token.Kind.UINT64_LITERAL
     ) {
       n = expressionStatement();
+    } else {
+      System.out.println("Error: invalid statement");
     }
     return n;
   }
+
+  // To do: Implement for and foreach statements
 
   private AstNode standardStatement () {
     AstNode n = null;
@@ -430,10 +434,12 @@ public class Parser {
         n = continueStatement();
       case Token.Kind.DO ->
         n = doStatement();
-//      case Token.Kind.IF ->
-//        n = ifStatement();
+      case Token.Kind.IF ->
+        n = ifStatement();
       case Token.Kind.RETURN ->
         n = returnStatement();
+      case Token.Kind.SEMICOLON ->
+        n = emptyStatement();
       case Token.Kind.UNTIL ->
         n = untilStatement();
       case Token.Kind.WHILE ->
@@ -485,53 +491,76 @@ public class Parser {
     return n;
   }
 
-  /*
+  // Note: Microsoft calls this a "null statement", but the offical C++ standard
+  // (latest ISO/IEC 14882:2023) has always used the term "empty statement". I
+  // like the official term more.
+
+  // Update: The situation might be a little more complex, see ISO/IEC IS 14882
+  // Draft C++ standard, N3092.
+
+  // Note: Empty statements may be a type of expression statement under C++
+  // rules. I am not sure how much sense that makes because an expression
+  // statement should presumably evaluate to some value, but a null statement
+  // does not. (On the other hand, a procedure call is considered an expression
+  // statement and also does not evaluate to a value.)
+
+  // An empty statement could theoretically produce no AST node at all, since it
+  // is a "noop". However, this may be useful to do because it will provide a
+  // more faithful translation to C++. It will be optimized out by C++ anyways.
+
+  private AstNode emptyStatement () {
+    var n = new EmptyStatement(lookahead);
+    match(Token.Kind.SEMICOLON);
+    return n;
+  }
+
   private AstNode ifStatement () {
-    val n = AstNode(AstNode.Kind.IF_STATEMENT, lookahead)
-    match_(Token.Kind.IF)
-    n.addChild(ifCondition())
-    n.addChild(ifBody())
-    if lookahead.kind == Token.Kind.ELSE then
-    n.addChild(elseClause())
-    return n
+    var n = new IfStatement(lookahead);
+    match(Token.Kind.IF);
+    n.addChild(ifCondition());
+    n.addChild(ifBody());
+    if (lookahead.getKind() == Token.Kind.ELSE)
+      n.addChild(elseClause());
+    return n;
   }
 
   private AstNode ifCondition () {
-    match_(Token.Kind.L_PARENTHESIS)
-    val n = expression(root = true)
-    match_(Token.Kind.R_PARENTHESIS)
-    return n
+    match(Token.Kind.L_PARENTHESIS);
+    var n = expression(true);
+    match(Token.Kind.R_PARENTHESIS);
+    return n;
   }
 
   private AstNode ifBody () {
-    var n:AstNode = null
-    if lookahead.kind == Token.Kind.L_BRACE then
-      n = compoundStatement()
-    else
-    // Insert fabricated compound statement
-    n = AstNode(AstNode.Kind.COMPOUND_STATEMENT)
-    n.addChild(statement())
-    return n
+    AstNode n = null;
+    if (lookahead.getKind() == Token.Kind.L_BRACE)
+      n = compoundStatement();
+    else {
+      // Insert fabricated compound statement
+      n = new CompoundStatement(null);
+      n.addChild(statement());
+    }
+    return n;
   }
 
   private AstNode elseClause () {
-    val n = AstNode(AstNode.Kind.ELSE_CLAUSE, lookahead)
-    match_(Token.Kind.ELSE)
-    n.addChild(elseBody())
-    return n
+    var n = new ElseClause(lookahead);
+    match(Token.Kind.ELSE);
+    n.addChild(elseBody());
+    return n;
   }
 
   private AstNode elseBody () {
-    var n:AstNode = null
-    if lookahead.kind == Token.Kind.L_BRACE then
-      n = compoundStatement()
-    else
-    // Insert fabricated compound statement
-    n = AstNode(AstNode.Kind.COMPOUND_STATEMENT)
-    n.addChild(statement())
-    return n
+    AstNode n = null;
+    if (lookahead.getKind() == Token.Kind.L_BRACE)
+      n = compoundStatement();
+    else {
+      // Insert fabricated compound statement
+      n = new CompoundStatement(null);
+      n.addChild(statement());
+    }
+    return n;
   }
-  */
 
   private AstNode returnStatement () {
     var n = new ReturnStatement(lookahead);
