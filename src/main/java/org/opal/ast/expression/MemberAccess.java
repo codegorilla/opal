@@ -1,10 +1,12 @@
-package org.opal.ast;
+package org.opal.ast.expression;
 
 import org.opal.Token;
 import org.opal.Visitor;
+import org.opal.ast.AstNode;
 
-public class ArrayType extends AstNode {
-  public ArrayType (Token token) {
+public class MemberAccess extends AstNode {
+
+  public MemberAccess(Token token) {
     super(token);
   }
 
@@ -12,4 +14,5 @@ public class ArrayType extends AstNode {
   public void accept (Visitor v) {
     v.visit(this);
   }
+
 }

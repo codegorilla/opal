@@ -1,6 +1,7 @@
-package org.opal.ast;
+package org.opal.ast.type;
 
 import org.opal.Visitor;
+import org.opal.ast.AstNode;
 
 public class TypeRoot extends AstNode {
   public TypeRoot () {

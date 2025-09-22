@@ -1,6 +1,7 @@
-package org.opal.ast;
+package org.opal.ast.expression;
 
 import org.opal.Visitor;
+import org.opal.ast.AstNode;
 
 public class ArraySubscript extends AstNode {
 

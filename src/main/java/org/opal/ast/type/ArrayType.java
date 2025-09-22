@@ -1,11 +1,11 @@
-package org.opal.ast;
+package org.opal.ast.type;
 
 import org.opal.Token;
 import org.opal.Visitor;
+import org.opal.ast.AstNode;
 
-public class IntegerLiteral extends AstNode {
-
-  public IntegerLiteral (Token token) {
+public class ArrayType extends AstNode {
+  public ArrayType (Token token) {
     super(token);
   }
 
@@ -13,5 +13,4 @@ public class IntegerLiteral extends AstNode {
   public void accept (Visitor v) {
     v.visit(this);
   }
-
 }

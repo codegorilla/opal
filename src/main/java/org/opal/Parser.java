@@ -5,7 +5,9 @@ import java.util.LinkedList;
 
 import org.opal.ast.*;
 import org.opal.ast.declaration.*;
+import org.opal.ast.expression.*;
 import org.opal.ast.statement.*;
+import org.opal.ast.type.*;
 
 import org.opal.symbol.Scope;
 import org.opal.symbol.PrimitiveTypeSymbol;
@@ -459,6 +461,7 @@ public class Parser {
   private AstNode breakStatement () {
     var n = new BreakStatement(lookahead);
     match(Token.Kind.BREAK);
+    match(Token.Kind.SEMICOLON);
     return n;
   }
 
@@ -481,6 +484,7 @@ public class Parser {
   private AstNode continueStatement () {
     var n = new ContinueStatement(lookahead);
     match(Token.Kind.CONTINUE);
+    match(Token.Kind.SEMICOLON);
     return n;
   }
 

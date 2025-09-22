@@ -2,6 +2,11 @@ package org.opal;
 
 import org.opal.ast.*;
 import org.opal.ast.declaration.*;
+import org.opal.ast.expression.BinaryExpression;
+import org.opal.ast.expression.Expression;
+import org.opal.ast.expression.FloatingPointLiteral;
+import org.opal.ast.expression.IntegerLiteral;
+import org.opal.ast.type.*;
 
 public class Pass1 extends BaseVisitor {
 

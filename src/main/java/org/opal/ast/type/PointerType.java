@@ -1,11 +1,11 @@
-package org.opal.ast;
+package org.opal.ast.type;
 
 import org.opal.Token;
 import org.opal.Visitor;
+import org.opal.ast.AstNode;
 
-public class RoutineCall extends AstNode {
-
-  public RoutineCall (Token token) {
+public class PointerType extends AstNode {
+  public PointerType (Token token) {
     super(token);
   }
 
@@ -13,5 +13,4 @@ public class RoutineCall extends AstNode {
   public void accept (Visitor v) {
     v.visit(this);
   }
-
 }

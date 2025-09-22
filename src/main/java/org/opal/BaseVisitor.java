@@ -2,7 +2,9 @@ package org.opal;
 
 import org.opal.ast.*;
 import org.opal.ast.declaration.*;
+import org.opal.ast.expression.*;
 import org.opal.ast.statement.*;
+import org.opal.ast.type.*;
 
 public class BaseVisitor implements Visitor {
 
