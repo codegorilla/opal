@@ -11,13 +11,13 @@ import com.beust.jcommander.JCommander;
 
 public class Main {
   public static void main(String[] args) {
-    System.out.println("Hello and welcome!");
-    var translator = new Translator();
     var jArgs = new Args();
     JCommander.newBuilder()
       .addObject(jArgs)
       .build()
       .parse(args);
+    var name = jArgs.getName();
+    var translator = new Translator(name);
     System.out.println("OUTPUT: " + jArgs.getName());
   }
 }
