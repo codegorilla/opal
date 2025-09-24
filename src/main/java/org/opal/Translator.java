@@ -17,14 +17,14 @@ public class Translator {
       System.exit(1);
     }
     var filePaths = getFilePaths(packagePath);
-    // For each file, load and process
+    // To do: For each file, load and process
     for (var filePath : filePaths) {
       loadFile(filePath);
     }
   }
 
   private Set<Path> getFilePaths (Path packagePath) {
-    // Given a package path
+    // Given a package path, return a list of all files in the package
     final var OPAL_EXTENSION = ".opc";
     try (var filePaths = Files.list(packagePath)) {
       return filePaths
