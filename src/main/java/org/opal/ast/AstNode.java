@@ -41,8 +41,14 @@ abstract public class AstNode {
     return children.size();
   }
 
+  /*
   public Iterator<AstNode> getChildren () {
     return children.iterator();
+  }
+  */
+
+  public Iterable<AstNode> getChildren () {
+    return children;
   }
 
   public ST getST () {

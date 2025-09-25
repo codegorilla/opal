@@ -14,4 +14,8 @@ public class TranslationUnit extends AstNode {
     v.visit(this);
   }
 
+  public AstNode getDeclarations () {
+    return getChild(0);
+  }
+
 }

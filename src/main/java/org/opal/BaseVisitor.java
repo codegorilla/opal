@@ -25,6 +25,10 @@ public class BaseVisitor implements Visitor {
   public void visit (Modifiers node) {}
   public void visit (Modifier node) {}
 
+  // Package declarations
+  public void visit (PackageDeclaration node) {}
+  public void visit (PackageName node) {}
+
   // Import declarations
   public void visit (ImportDeclaration node) {}
   public void visit (ImportName node) {}

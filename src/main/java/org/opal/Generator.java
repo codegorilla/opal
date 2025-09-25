@@ -28,31 +28,38 @@ public class Generator extends BaseVisitor {
   public void process () {
     root.accept(this);
     var st = root.getST();
-    System.out.println(st.render());
+    //System.out.println(st.render());
   }
 
   public void visit (TranslationUnit node) {
-    System.out.println("Translation unit");
-    var st = group.getInstanceOf("translationUnit");
-    node.setST(st);
-//    st.add("packageDeclaration", packageDeclaration(current.getChild(0)))
+    node.getDeclarations().accept(this);
+//    var st = group.getInstanceOf("translationUnit");
+//    st.add("packageDeclaration", packageDeclaration(node.getChild(0)))
+//    node.setST(st);
 //    for child <- current.getChildren() do
 //      st.add("declaration", declaration(child))
 //    var child = node.getChild(0);
 //    child.accept(this);
   }
 
-  /*
-
   // Declarations
 
   public void visit (Declarations node) {
     var children = node.getChildren();
-    while (children.hasNext()) {
-      var child = children.next();
+    for (var child : children) {
       child.accept(this);
+      node.templates.add(child.getST());
     }
   }
+
+  public void visit (PackageDeclaration node) {
+    System.out.println("GOT TO PACKAGE DECL");
+
+  }
+
+
+
+  /*
 
   public void visit (ImportDeclaration node) {
     System.out.println("Import Declaration");

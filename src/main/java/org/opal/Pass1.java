@@ -20,7 +20,7 @@ public class Pass1 extends BaseVisitor {
 
   public void visit (TranslationUnit node) {
     System.out.println("Translation unit");
-    var child = node.getChild(0);
+    var child = node.getDeclarations();
     child.accept(this);
   }
 
@@ -28,10 +28,19 @@ public class Pass1 extends BaseVisitor {
 
   public void visit (Declarations node) {
     var children = node.getChildren();
-    while (children.hasNext()) {
-      var child = children.next();
+    for (var child : children) {
       child.accept(this);
+      node.templates.add(child.getST());
     }
+  }
+
+  public void visit (PackageDeclaration node) {
+    System.out.println("Package Declaration");
+    node.getPackageName().accept(this);
+  }
+
+  public void visit (PackageName node) {
+    System.out.println("Package Name");
   }
 
   public void visit (ImportDeclaration node) {

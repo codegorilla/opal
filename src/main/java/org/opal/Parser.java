@@ -123,6 +123,8 @@ public class Parser {
     AstNode n = null;
     if (lookahead.getKind() == Token.Kind.IMPORT)
       n = importDeclaration();
+    else if (lookahead.getKind() == Token.Kind.PACKAGE)
+      n = packageDeclaration();
     else {
       var spec = accessSpecifier();
       if (lookahead.getKind() == Token.Kind.TEMPLATE)
@@ -145,6 +147,20 @@ public class Parser {
         }
       }
     }
+    return n;
+  }
+
+  private AstNode packageDeclaration () {
+    var n = new PackageDeclaration(lookahead);
+    match(Token.Kind.PACKAGE);
+    n.addChild(packageName());
+    match(Token.Kind.SEMICOLON);
+    return n;
+  }
+
+  private AstNode packageName () {
+    var n = new PackageName(lookahead);
+    match(Token.Kind.IDENTIFIER);
     return n;
   }
 
