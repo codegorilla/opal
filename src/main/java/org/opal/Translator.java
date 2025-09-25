@@ -56,6 +56,8 @@ public class Translator {
     var root = parser.process();
     var pass1 = new Pass1(root);
     pass1.process();
+    var generator = new Generator(root);
+    generator.process();
   }
 
 }

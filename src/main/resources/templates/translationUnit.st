@@ -1,0 +1,4 @@
+translationUnit () ::=  <<
+import std;
+namespace {}
+>>
