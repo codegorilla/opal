@@ -3,6 +3,8 @@ package org.opal.ast;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import org.stringtemplate.v4.*;
+
 import org.opal.Token;
 import org.opal.Visitor;
 
@@ -13,6 +15,7 @@ import org.opal.Visitor;
 
 abstract public class AstNode {
 
+  private ST st;
   private Token token;
   private final LinkedList<AstNode> children;
 
@@ -40,6 +43,14 @@ abstract public class AstNode {
 
   public Iterator<AstNode> getChildren () {
     return children.iterator();
+  }
+
+  public ST getST () {
+    return st;
+  }
+
+  public void setST (ST st) {
+    this.st = st;
   }
 
   public Token getToken () {

@@ -19,25 +19,22 @@ public class Generator extends BaseVisitor {
   private final URL templateDirectoryUrl;
   private final STGroupDir group;
 
-  private HashMap<AstNode, ST> templateMap;
-
   public Generator (AstNode input) {
     super(input);
     templateDirectoryUrl = this.getClass().getClassLoader().getResource("templates");
     group = new STGroupDir(templateDirectoryUrl);
-    templateMap = new HashMap<>();
   }
 
   public void process () {
     root.accept(this);
-    var st = templateMap.get(root);
+    var st = root.getST();
     System.out.println(st.render());
   }
 
   public void visit (TranslationUnit node) {
     System.out.println("Translation unit");
     var st = group.getInstanceOf("translationUnit");
-    templateMap.put(node, st);
+    node.setST(st);
 //    st.add("packageDeclaration", packageDeclaration(current.getChild(0)))
 //    for child <- current.getChildren() do
 //      st.add("declaration", declaration(child))
