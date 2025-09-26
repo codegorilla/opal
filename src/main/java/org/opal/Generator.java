@@ -3,16 +3,14 @@ package org.opal;
 import org.opal.ast.AstNode;
 import org.opal.ast.TranslationUnit;
 import org.opal.ast.declaration.*;
+
 import org.opal.ast.expression.BinaryExpression;
 import org.opal.ast.expression.Expression;
 import org.opal.ast.expression.FloatingPointLiteral;
 import org.opal.ast.expression.IntegerLiteral;
-import org.opal.ast.type.*;
-
 import org.stringtemplate.v4.*;
 
 import java.net.URL;
-import java.util.HashMap;
 
 public class Generator extends ResultBaseVisitor <ST> {
 
@@ -38,6 +36,7 @@ public class Generator extends ResultBaseVisitor <ST> {
     st.add("packageDeclaration", visit(node.packageDeclaration()));
     st.add("importDeclarations", visit(node.importDeclarations()));
     st.add("declarations", visit(node.declarations()));
+    System.out.println("---");
     System.out.println(st.render());
     return null;
   }
@@ -116,14 +115,12 @@ public class Generator extends ResultBaseVisitor <ST> {
 
   public ST visit (VariableDeclaration node) {
     var st = group.getInstanceOf("declaration/variableDeclaration");
-    System.out.println(node.getToken());
     st.add("variableAccessSpecifier", visit(node.accessSpecifier()));
     st.add("declarator", visit(node.variableName()));
-    return st;
-
 //    node.getModifiers().accept(this);
 //    node.getTypeSpecifier().accept(this);
-//    node.getInitializer().accept(this);
+    st.add("initializer", visit(node.variableInitializer()));
+    return st;
   }
 
   public ST visit (VariableName node) {
@@ -134,38 +131,53 @@ public class Generator extends ResultBaseVisitor <ST> {
 
   /*
 
-  public void visit (VariableTypeSpecifier node) {
+  public ST visit (VariableTypeSpecifier node) {
     System.out.println("Variable Type Specifier");
   }
 
-  public void visit (VariableInitializer node) {
-    System.out.println("Variable Initializer");
-    node.getChild(0).accept(this);
+  */
+
+  public ST visit (VariableInitializer node) {
+    var st = group.getInstanceOf("declaration/variableInitializer");
+    st.add("expression", visit(node.expression()));
+    return st;
   }
 
-  // Expressions
+  // EXPRESSIONS
 
-  public void visit (Expression node) {
-    System.out.println("Expression");
-    node.getChild(0).accept(this);
+  public ST visit (Expression node) {
+    var st = group.getInstanceOf("expression/expression");
+    st.add("value", visit(node.getChild(0)));
+    return st;
   }
 
-  public void visit (BinaryExpression node) {
-    System.out.println("Binary Expression");
-    node.getLeft().accept(this);
-    node.getRight().accept(this);
+  // Perhaps if we know this is the root node, we don't need parenthesis.
+
+  public ST visit (BinaryExpression node) {
+    var st = group.getInstanceOf("expression/binaryExpression");
+    st.add("operation", node.getToken().getLexeme());
+    st.add("leftExpr",  visit(node.left()));
+    st.add("rightExpr", visit(node.right()));
+    return st;
   }
 
-  public void visit (FloatingPointLiteral node) {
-    System.out.println("Floating Point literal");
+  // Do we need separate string templates for each literal type? It does not appear so.
+
+  public ST visit (FloatingPointLiteral node) {
+    var st = group.getInstanceOf("expression/expression");
+    st.add("value", node.getToken().getLexeme());
+    return st;
   }
 
-  public void visit (IntegerLiteral node) {
-    System.out.println("Integer literal");
+  public ST visit (IntegerLiteral node) {
+    var st = group.getInstanceOf("expression/expression");
+    st.add("value", node.getToken().getLexeme());
+    return st;
   }
 
+  /*
 
-  // Types
+  // TYPES
 
   public void visit (TypeRoot node) {
     System.out.println("TypeRoot");

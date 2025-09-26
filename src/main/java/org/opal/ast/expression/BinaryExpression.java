@@ -21,11 +21,11 @@ public class BinaryExpression extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode getLeft () {
+  public AstNode left () {
     return getChild(0);
   }
 
-  public AstNode getRight () {
+  public AstNode right () {
     return getChild(1);
   }
 

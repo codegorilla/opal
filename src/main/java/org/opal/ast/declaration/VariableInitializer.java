@@ -19,4 +19,8 @@ public class VariableInitializer extends AstNode {
     return v.visit(this);
   }
 
+  public AstNode expression () {
+    return getChild(0);
+  }
+
 }

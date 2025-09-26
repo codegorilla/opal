@@ -37,7 +37,7 @@ public class VariableDeclaration extends AstNode {
     return getChild(3);
   }
 
-  public AstNode getInitializer () {
+  public AstNode variableInitializer () {
     return getChild(4);
   }
 

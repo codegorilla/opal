@@ -64,7 +64,7 @@ public class Pass1 extends BaseVisitor {
 //    node.getModifiers().accept(this);
 //    node.getName().accept(this);
 //    node.getTypeSpecifier().accept(this);
-//    node.getInitializer().accept(this);
+//    node.variableInitializer().accept(this);
 //  }
 
   public void visit (VariableName node) {
@@ -89,8 +89,8 @@ public class Pass1 extends BaseVisitor {
 
   public void visit (BinaryExpression node) {
     System.out.println("Binary Expression");
-    node.getLeft().accept(this);
-    node.getRight().accept(this);
+    node.left().accept(this);
+    node.right().accept(this);
   }
 
   public void visit (FloatingPointLiteral node) {
