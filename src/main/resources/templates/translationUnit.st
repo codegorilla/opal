@@ -1,6 +1,10 @@
-translationUnit (packageDeclaration, declarations) ::=  <<
+translationUnit (packageDeclaration, importDeclarations, declarations) ::=  <<
 <packageDeclaration>
+
 import std;
-namespace {}
+<importDeclarations>
+
+namespace {
 <declarations>
+}
 >>

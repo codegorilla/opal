@@ -35,15 +35,20 @@ public class Generator extends ResultBaseVisitor <ST> {
 
   public ST visit (TranslationUnit node) {
     var st = group.getInstanceOf("translationUnit");
-    st.add("packageDeclaration", visit(node.getPackageDeclaration()));
-    st.add("declarations", visit(node.getDeclarations()));
+    st.add("packageDeclaration", visit(node.packageDeclaration()));
+    st.add("importDeclarations", visit(node.importDeclarations()));
+    st.add("declarations", visit(node.declarations()));
     System.out.println(st.render());
     return null;
   }
 
+  // DECLARATIONS
+
+  // Package declaration is special in that there is only one, and it must appear at the top of the translation unit.
+
   public ST visit (PackageDeclaration node) {
     var st = group.getInstanceOf("declaration/packageDeclaration");
-    st.add("packageName", visit(node.getPackageName()));
+    st.add("packageName", visit(node.packageName()));
     return st;
   }
 
@@ -55,9 +60,24 @@ public class Generator extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // Declarations
+  public ST visit (ImportDeclarations node) {
+    var st = group.getInstanceOf("declaration/importDeclarations");
+    for (var child : node.getChildren())
+      st.add("importDeclaration", visit(child));
+    return st;
+  }
 
-  // Use list of templates, or a template containing templates?
+  public ST visit (ImportDeclaration node) {
+    var st = group.getInstanceOf("declaration/importDeclaration");
+    st.add("importName", visit(node.importName()));
+    return st;
+  }
+
+  public ST visit (ImportName node) {
+    var st = group.getInstanceOf("declaration/importName");
+    st.add("name", node.getToken().getLexeme());
+    return st;
+  }
 
   public ST visit (Declarations node) {
     var st = group.getInstanceOf("declaration/declarations");

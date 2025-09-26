@@ -7,7 +7,7 @@ import org.opal.ast.AstNode;
 
 public class PackageName extends AstNode {
 
-  public PackageName(Token token) {
+  public PackageName (Token token) {
     super(token);
   }
 

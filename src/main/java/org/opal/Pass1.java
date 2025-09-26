@@ -20,7 +20,7 @@ public class Pass1 extends BaseVisitor {
 
   public void visit (TranslationUnit node) {
     System.out.println("Translation unit");
-    var child = node.getDeclarations();
+    var child = node.declarations();
     child.accept(this);
   }
 
@@ -35,7 +35,7 @@ public class Pass1 extends BaseVisitor {
 
   public void visit (PackageDeclaration node) {
     System.out.println("Package Declaration");
-    node.getPackageName().accept(this);
+    node.packageName().accept(this);
   }
 
   public void visit (PackageName node) {

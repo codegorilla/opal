@@ -21,7 +21,7 @@ public class PackageDeclaration extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode getPackageName () {
+  public AstNode packageName () {
     return getChild(0);
   }
 

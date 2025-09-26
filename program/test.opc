@@ -1,6 +1,7 @@
 package main;
 
-import std;
+import math;
+import stdlib;
 
 const var hello: int = 1 + 2.5;
 

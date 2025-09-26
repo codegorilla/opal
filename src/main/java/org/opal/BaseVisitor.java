@@ -30,6 +30,7 @@ public class BaseVisitor implements Visitor {
   public void visit (PackageName node) {}
 
   // Import declarations
+  public void visit (ImportDeclarations node) {}
   public void visit (ImportDeclaration node) {}
   public void visit (ImportName node) {}
 

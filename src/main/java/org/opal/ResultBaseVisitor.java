@@ -20,179 +20,78 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
   // DECLARATIONS
 
   // General declarations
-  public T visit (TranslationUnit node) {
-     return null;
-  }
-  public T visit (Declarations node) {
-     return null;
-  }
-  public T visit (AccessSpecifier node) {
-     return null;
-  }
-  public T visit (Modifiers node) {
-     return null;
-  }
-  public T visit (Modifier node) {
-     return null;
-  }
+  public T visit (TranslationUnit node) { return null; }
+  public T visit (Declarations node) { return null; }
+  public T visit (AccessSpecifier node) { return null; }
+  public T visit (Modifiers node) { return null; }
+  public T visit (Modifier node) { return null; }
 
   // Package declarations
-  public T visit (PackageDeclaration node) {
-     return null;
-  }
-  public T visit (PackageName node) {
-     return null;
-  }
+  public T visit (PackageDeclaration node) { return null; }
+  public T visit (PackageName node) { return null; }
 
   // Import declarations
-  public T visit (ImportDeclaration node) {
-     return null;
-  }
-  public T visit (ImportName node) {
-     return null;
-  }
+  public T visit (ImportDeclarations node) { return null; }
+  public T visit (ImportDeclaration node) { return null; }
+  public T visit (ImportName node) { return null; }
 
   // Routine declarations
-  public T visit (RoutineDeclaration node) {
-     return null;
-  }
-  public T visit (RoutineName node) {
-     return null;
-  }
-  public T visit (RoutineParameters node) {
-     return null;
-  }
-  public T visit (RoutineParameter node) {
-     return null;
-  }
-  public T visit (RoutineParameterName node) {
-     return null;
-  }
-  public T visit (RoutineReturnType node) {
-     return null;
-  }
-  public T visit (RoutineBody node) {
-     return null;
-  }
+  public T visit (RoutineDeclaration node) { return null; }
+  public T visit (RoutineName node) { return null; }
+  public T visit (RoutineParameters node) { return null; }
+  public T visit (RoutineParameter node) { return null; }
+  public T visit (RoutineParameterName node) { return null; }
+  public T visit (RoutineReturnType node) { return null; }
+  public T visit (RoutineBody node) { return null; }
 
   // Variable declarations
-  public T visit (VariableDeclaration node) {
-     return null;
-  }
-  public T visit (VariableName node) {
-     return null;
-  }
-  public T visit (VariableTypeSpecifier node) {
-     return null;
-  }
-  public T visit (VariableInitializer node) {
-     return null;
-  }
+  public T visit (VariableDeclaration node) { return null; }
+  public T visit (VariableName node) { return null; }
+  public T visit (VariableTypeSpecifier node) { return null; }
+  public T visit (VariableInitializer node) { return null; }
 
   // STATEMENTS
 
-  public T visit (BreakStatement node) {
-     return null;
-  }
-  public T visit (CompoundStatement node) {
-     return null;
-  }
-  public T visit (ContinueStatement node) {
-     return null;
-  }
-  public T visit (DoStatement node) {
-     return null;
-  }
-  public T visit (ElseClause node) {
-     return null;
-  }
-  public T visit (EmptyStatement node) {
-     return null;
-  }
-  public T visit (ExpressionStatement node) {
-     return null;
-  }
-  public T visit (IfStatement node) {
-     return null;
-  }
-  public T visit (ReturnStatement node) {
-     return null;
-  }
-  public T visit (UntilStatement node) {
-     return null;
-  }
-  public T visit (WhileStatement node) {
-     return null;
-  }
+  public T visit (BreakStatement node) { return null; }
+  public T visit (CompoundStatement node) { return null; }
+  public T visit (ContinueStatement node) { return null; }
+  public T visit (DoStatement node) { return null; }
+  public T visit (ElseClause node) { return null; }
+  public T visit (EmptyStatement node) { return null; }
+  public T visit (ExpressionStatement node) { return null; }
+  public T visit (IfStatement node) { return null; }
+  public T visit (ReturnStatement node) { return null; }
+  public T visit (UntilStatement node) { return null; }
+  public T visit (WhileStatement node) { return null; }
 
   // EXPRESSIONS
 
-  public T visit (Expression node) {
-     return null;
-  }
-  public T visit (BinaryExpression node) {
-     return null;
-  }
-  public T visit (DereferencingMemberAccess node) {
-     return null;
-  }
-  public T visit (MemberAccess node) {
-     return null;
-  }
-  public T visit (RoutineCall node) {
-     return null;
-  }
-  public T visit (Arguments node) {
-     return null;
-  }
-  public T visit (ArraySubscript node) {
-     return null;
-  }
+  public T visit (Expression node) { return null; }
+  public T visit (BinaryExpression node) { return null; }
+  public T visit (DereferencingMemberAccess node) { return null; }
+  public T visit (MemberAccess node) { return null; }
+  public T visit (RoutineCall node) { return null; }
+  public T visit (Arguments node) { return null; }
+  public T visit (ArraySubscript node) { return null; }
 
   // Literals
-  public T visit (BooleanLiteral node) {
-     return null;
-  }
-  public T visit (CharacterLiteral node) {
-     return null;
-  }
-  public T visit (FloatingPointLiteral node) {
-     return null;
-  }
-  public T visit (IntegerLiteral node) {
-     return null;
-  }
-  public T visit (NullLiteral node) {
-     return null;
-  }
-  public T visit (StringLiteral node) {
-     return null;
-  }
-  public T visit (UnsignedIntegerLiteral node) {
-     return null;
-  }
+  public T visit (BooleanLiteral node) { return null; }
+  public T visit (CharacterLiteral node) { return null; }
+  public T visit (FloatingPointLiteral node) { return null; }
+  public T visit (IntegerLiteral node) { return null; }
+  public T visit (NullLiteral node) { return null; }
+  public T visit (StringLiteral node) { return null; }
+  public T visit (UnsignedIntegerLiteral node) { return null; }
 
   // Special
-  public T visit (This node) {
-     return null;
-  }
+  public T visit (This node) { return null; }
 
   // TYPES
 
-  public T visit (TypeRoot node) {
-     return null;
-  }
-  public T visit (ArrayType node) {
-     return null;
-  }
-  public T visit (NominalType node) {
-     return null;
-  }
-  public T visit (PointerType node) {
-     return null;
-  }
-  public T visit (PrimitiveType node) {
-     return null;
-  }
+  public T visit (TypeRoot node) { return null; }
+  public T visit (ArrayType node) { return null; }
+  public T visit (NominalType node) { return null; }
+  public T visit (PointerType node) { return null; }
+  public T visit (PrimitiveType node) { return null; }
 
 }

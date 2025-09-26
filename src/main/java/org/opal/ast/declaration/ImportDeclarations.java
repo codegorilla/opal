@@ -5,11 +5,9 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class ImportDeclaration extends AstNode {
+public class ImportDeclarations extends AstNode {
 
-  public ImportDeclaration (Token token) {
-    super(token);
-  }
+  public ImportDeclarations () {}
 
   @Override
   public void accept (Visitor v) {
@@ -21,8 +19,7 @@ public class ImportDeclaration extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode importName () {
-    return getChild(0);
+  public Iterable<AstNode> importDeclarations () {
+    return getChildren();
   }
-
 }

@@ -90,8 +90,6 @@ public class Parser {
     builtinScope.define(new PrimitiveTypeSymbol("void"));
   }
 
-  //  Visitor pattern?
-
   private AstNode translationUnit () {
     var n = new TranslationUnit(lookahead);
     var scope = new Scope(Scope.Kind.GLOBAL);
@@ -99,9 +97,13 @@ public class Parser {
     currentScope = scope;
     //n.setScope(currentScope);
     n.addChild(packageDeclaration());
+    if (lookahead.getKind() == Token.Kind.IMPORT)
+      n.addChild(importDeclarations());
     n.addChild(declarations());
     return n;
   }
+
+  // DECLARATIONS
 
   // Package declaration is special in that there is only one, and it must appear at the top of the translation unit.
 
@@ -115,6 +117,27 @@ public class Parser {
 
   private AstNode packageName () {
     var n = new PackageName(lookahead);
+    match(Token.Kind.IDENTIFIER);
+    return n;
+  }
+
+  private AstNode importDeclarations () {
+    var n = new ImportDeclarations();
+    while (lookahead.getKind() == Token.Kind.IMPORT)
+      n.addChild(importDeclaration());
+    return n;
+  }
+
+  private AstNode importDeclaration () {
+    var n = new ImportDeclaration(lookahead);
+    match(Token.Kind.IMPORT);
+    n.addChild(importName());
+    match(Token.Kind.SEMICOLON);
+    return n;
+  }
+
+  private AstNode importName () {
+    var n = new ImportName(lookahead);
     match(Token.Kind.IDENTIFIER);
     return n;
   }
@@ -138,11 +161,11 @@ public class Parser {
 
   private AstNode declaration () {
     AstNode n = null;
-    if (lookahead.getKind() == Token.Kind.IMPORT)
-      n = importDeclaration();
+//    if (lookahead.getKind() == Token.Kind.IMPORT)
+//      n = importDeclaration();
 //    else if (lookahead.getKind() == Token.Kind.PACKAGE)
 //      n = packageDeclaration();
-    else {
+//    else {
       var spec = accessSpecifier();
       if (lookahead.getKind() == Token.Kind.TEMPLATE)
         ; //n = templateDeclaration();
@@ -163,23 +186,10 @@ public class Parser {
             n = null;
         }
       }
-    }
+//    }
     return n;
   }
 
-  private AstNode importDeclaration () {
-    var n = new ImportDeclaration(lookahead);
-    match(Token.Kind.IMPORT);
-    n.addChild(importName());
-    match(Token.Kind.SEMICOLON);
-    return n;
-  }
-
-  private AstNode importName () {
-    var n = new ImportName(lookahead);
-    match(Token.Kind.IDENTIFIER);
-    return n;
-  }
 
   // ACCESS SPECIFIERS AND MODIFIERS
 
