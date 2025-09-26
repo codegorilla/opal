@@ -161,7 +161,7 @@ public class Parser {
 
   private AstNode declaration () {
     AstNode n = null;
-    var spec = accessSpecifier1();
+    var spec = accessSpecifier();
     if (lookahead.getKind() == Token.Kind.TEMPLATE)
       ; //n = templateDeclaration();
     else {
@@ -204,16 +204,16 @@ public class Parser {
   // Note: Parameter is false by default in scala. But the parameter doesn't seem
   // to be used.
 
-  private AstNode accessSpecifier () {
-    var n = new AccessSpecifier();
-    if (lookahead.getKind() == Token.Kind.PRIVATE || lookahead.getKind() == Token.Kind.PUBLIC) {
-      n.setToken(lookahead);
-      match(lookahead.getKind());
-    }
-    return n;
-  }
+//  private AstNode accessSpecifier () {
+//    var n = new AccessSpecifier();
+//    if (lookahead.getKind() == Token.Kind.PRIVATE || lookahead.getKind() == Token.Kind.PUBLIC) {
+//      n.setToken(lookahead);
+//      match(lookahead.getKind());
+//    }
+//    return n;
+//  }
 
-  private AccessSpecifier accessSpecifier1 () {
+  private AccessSpecifier accessSpecifier () {
     var n = new AccessSpecifier();
     if (lookahead.getKind() == Token.Kind.PRIVATE || lookahead.getKind() == Token.Kind.PUBLIC) {
       n.setToken(lookahead);
@@ -283,7 +283,7 @@ public class Parser {
   // the routine parameters may be in the same exact scope as the routine body
   // (or top-most block of the routine).
 
-  private AstNode routineDeclaration (AstNode accessSpecifier, AstNode modifiers) {
+  private AstNode routineDeclaration (AccessSpecifier accessSpecifier, AstNode modifiers) {
     var n = new RoutineDeclaration(lookahead);
 //    var scope = Scope(Scope.Kind.LOCAL);
 //    scope.setEnclosingScope(currentScope);
@@ -380,10 +380,11 @@ public class Parser {
   private AstNode variableDeclaration (AccessSpecifier accessSpecifier, AstNode modifiers) {
     var n = new VariableDeclaration(lookahead);
     match(Token.Kind.VAR);
+    if (accessSpecifier != null) {
+      accessSpecifier.setParent(n);
+      accessSpecifier.setKind(AccessSpecifier.VARIABLE);
+    }
     n.addChild(accessSpecifier);
-    // EXPERIMENT
-    accessSpecifier.setParent(n);
-    // END EXPERIMENT
     n.addChild(modifiers);
     n.addChild(variableName());
     n.addChild(variableTypeSpecifier());

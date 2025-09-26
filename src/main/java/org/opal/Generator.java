@@ -106,6 +106,8 @@ public class Generator extends ResultBaseVisitor <ST> {
     var p = node.getParent();
     if (p instanceof VariableDeclaration)
       System.out.println("THIS IS AN INSTANCE OF A VARIABLE DECLARATION!");
+    if (node.getKind() == AccessSpecifier.VARIABLE)
+      System.out.println("THIS IS AN INSTANCE OF A VARIABLE DECLARATION!");
     return st;
   }
 
