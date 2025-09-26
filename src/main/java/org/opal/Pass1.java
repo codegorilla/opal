@@ -89,8 +89,8 @@ public class Pass1 extends BaseVisitor {
 
   public void visit (BinaryExpression node) {
     System.out.println("Binary Expression");
-    node.left().accept(this);
-    node.right().accept(this);
+    node.leftExpression().accept(this);
+    node.rightExpression().accept(this);
   }
 
   public void visit (FloatingPointLiteral node) {

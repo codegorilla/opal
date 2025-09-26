@@ -59,6 +59,7 @@ public interface Visitor {
 
   public void visit (Expression node);
   public void visit (BinaryExpression node);
+  public void visit (UnaryExpression node);
   public void visit (DereferencingMemberAccess node);
   public void visit (MemberAccess node);
   public void visit (RoutineCall node);

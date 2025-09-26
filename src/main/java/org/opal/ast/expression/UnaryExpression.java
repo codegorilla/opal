@@ -5,9 +5,9 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class BinaryExpression extends AstNode {
+public class UnaryExpression extends AstNode {
 
-  public BinaryExpression (Token token) {
+  public UnaryExpression (Token token) {
     super(token);
   }
 
@@ -21,12 +21,8 @@ public class BinaryExpression extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode leftExpression () {
+  public AstNode expression () {
     return getChild(0);
-  }
-
-  public AstNode rightExpression () {
-    return getChild(1);
   }
 
 }

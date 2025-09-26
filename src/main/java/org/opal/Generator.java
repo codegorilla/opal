@@ -4,10 +4,7 @@ import org.opal.ast.AstNode;
 import org.opal.ast.TranslationUnit;
 import org.opal.ast.declaration.*;
 
-import org.opal.ast.expression.BinaryExpression;
-import org.opal.ast.expression.Expression;
-import org.opal.ast.expression.FloatingPointLiteral;
-import org.opal.ast.expression.IntegerLiteral;
+import org.opal.ast.expression.*;
 import org.stringtemplate.v4.*;
 
 import java.net.URL;
@@ -156,8 +153,15 @@ public class Generator extends ResultBaseVisitor <ST> {
   public ST visit (BinaryExpression node) {
     var st = group.getInstanceOf("expression/binaryExpression");
     st.add("operation", node.getToken().getLexeme());
-    st.add("leftExpr",  visit(node.left()));
-    st.add("rightExpr", visit(node.right()));
+    st.add("leftExpression",  visit(node.leftExpression()));
+    st.add("rightExpression", visit(node.rightExpression()));
+    return st;
+  }
+
+  public ST visit (UnaryExpression node) {
+    var st = group.getInstanceOf("expression/unaryExpression");
+    st.add("operation", node.getToken().getLexeme());
+    st.add("expression",  visit(node.expression()));
     return st;
   }
 

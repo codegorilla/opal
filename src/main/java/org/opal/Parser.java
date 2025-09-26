@@ -840,8 +840,8 @@ public class Parser {
   private AstNode equalityExpression () {
     var n = relationalExpression();
     while (
-        lookahead.getKind() == Token.Kind.EQUAL_EQUAL ||
-        lookahead.getKind() == Token.Kind.EXCLAMATION_EQUAL
+      lookahead.getKind() == Token.Kind.EQUAL_EQUAL ||
+      lookahead.getKind() == Token.Kind.EXCLAMATION_EQUAL
     ) {
       var p = n;
       n = new BinaryExpression(lookahead);
@@ -855,10 +855,10 @@ public class Parser {
   private AstNode relationalExpression () {
     var n = shiftExpression();
     while (
-        lookahead.getKind() == Token.Kind.GREATER ||
-        lookahead.getKind() == Token.Kind.LESS ||
-        lookahead.getKind() == Token.Kind.GREATER_EQUAL ||
-        lookahead.getKind() == Token.Kind.LESS_EQUAL
+      lookahead.getKind() == Token.Kind.GREATER ||
+      lookahead.getKind() == Token.Kind.LESS ||
+      lookahead.getKind() == Token.Kind.GREATER_EQUAL ||
+      lookahead.getKind() == Token.Kind.LESS_EQUAL
     ) {
       var p = n;
       n = new BinaryExpression(lookahead);
@@ -872,8 +872,8 @@ public class Parser {
   private AstNode shiftExpression () {
     var n = additiveExpression();
     while (
-        lookahead.getKind() == Token.Kind.GREATER_GREATER ||
-        lookahead.getKind() == Token.Kind.LESS_LESS
+      lookahead.getKind() == Token.Kind.GREATER_GREATER ||
+      lookahead.getKind() == Token.Kind.LESS_LESS
     ) {
       var p = n;
       n = new BinaryExpression(lookahead);
@@ -887,8 +887,8 @@ public class Parser {
   private AstNode additiveExpression () {
     var n = multiplicativeExpression();
     while (
-        lookahead.getKind() == Token.Kind.PLUS ||
-        lookahead.getKind() == Token.Kind.MINUS
+      lookahead.getKind() == Token.Kind.PLUS ||
+      lookahead.getKind() == Token.Kind.MINUS
     ) {
       var p = n;
       n = new BinaryExpression(lookahead);
@@ -902,9 +902,9 @@ public class Parser {
   private AstNode multiplicativeExpression () {
     var n = unaryExpression();
     while (
-    lookahead.getKind() == Token.Kind.ASTERISK ||
-        lookahead.getKind() == Token.Kind.SLASH ||
-        lookahead.getKind() == Token.Kind.PERCENT
+      lookahead.getKind() == Token.Kind.ASTERISK ||
+      lookahead.getKind() == Token.Kind.SLASH ||
+      lookahead.getKind() == Token.Kind.PERCENT
     ) {
       var p = n;
       n = new BinaryExpression(lookahead);
@@ -920,13 +920,13 @@ public class Parser {
   private AstNode unaryExpression () {
     AstNode n = null;
     if (
-        lookahead.getKind() == Token.Kind.ASTERISK ||
-        lookahead.getKind() == Token.Kind.MINUS ||
-        lookahead.getKind() == Token.Kind.PLUS ||
-        lookahead.getKind() == Token.Kind.EXCLAMATION ||
-        lookahead.getKind() == Token.Kind.TILDE
+      lookahead.getKind() == Token.Kind.ASTERISK ||
+      lookahead.getKind() == Token.Kind.MINUS ||
+      lookahead.getKind() == Token.Kind.PLUS ||
+      lookahead.getKind() == Token.Kind.EXCLAMATION ||
+      lookahead.getKind() == Token.Kind.TILDE
     ) {
-      n = new BinaryExpression(lookahead);
+      n = new UnaryExpression(lookahead);
       match(lookahead.getKind());
       n.addChild(unaryExpression());
     }
@@ -947,10 +947,10 @@ public class Parser {
   private AstNode postfixExpression () {
     var node = primaryExpression();
     while (
-        lookahead.getKind() == Token.Kind.MINUS_GREATER ||
-        lookahead.getKind() == Token.Kind.PERIOD ||
-        lookahead.getKind() == Token.Kind.L_PARENTHESIS ||
-        lookahead.getKind() == Token.Kind.L_BRACKET
+      lookahead.getKind() == Token.Kind.MINUS_GREATER ||
+      lookahead.getKind() == Token.Kind.PERIOD ||
+      lookahead.getKind() == Token.Kind.L_PARENTHESIS ||
+      lookahead.getKind() == Token.Kind.L_BRACKET
     ) {
       switch (lookahead.getKind()) {
         case Token.Kind.MINUS_GREATER:
