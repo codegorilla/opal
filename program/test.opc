@@ -3,7 +3,7 @@ package main;
 import math;
 import stdlib;
 
-const var hello: int = 1 + 2.5;
+public var hello: int = 1 + 2.5;
 
 def myfun () {
   var a: int = 1;

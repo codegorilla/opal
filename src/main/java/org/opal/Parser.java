@@ -161,32 +161,26 @@ public class Parser {
 
   private AstNode declaration () {
     AstNode n = null;
-//    if (lookahead.getKind() == Token.Kind.IMPORT)
-//      n = importDeclaration();
-//    else if (lookahead.getKind() == Token.Kind.PACKAGE)
-//      n = packageDeclaration();
-//    else {
-      var spec = accessSpecifier();
-      if (lookahead.getKind() == Token.Kind.TEMPLATE)
-        ; //n = templateDeclaration();
-      else {
-        var mods = modifiers();
-        switch (lookahead.getKind()) {
-          case Token.Kind.CLASS -> {
-            System.out.println("CLASS TBD");
-            n = null;
-          }
-          case Token.Kind.DEF ->
-            n = routineDeclaration(spec, mods);
-          case Token.Kind.VAL ->
-            n = variableDeclaration(spec, mods);
-          case Token.Kind.VAR ->
-            n = variableDeclaration(spec, mods);
-          default ->
-            n = null;
+    var spec = accessSpecifier();
+    if (lookahead.getKind() == Token.Kind.TEMPLATE)
+      ; //n = templateDeclaration();
+    else {
+      var mods = modifiers();
+      switch (lookahead.getKind()) {
+        case Token.Kind.CLASS -> {
+          System.out.println("CLASS TBD");
+          n = null;
         }
+        case Token.Kind.DEF ->
+          n = routineDeclaration(spec, mods);
+        case Token.Kind.VAL ->
+          n = variableDeclaration(spec, mods);
+        case Token.Kind.VAR ->
+          n = variableDeclaration(spec, mods);
+        default ->
+          n = null;
       }
-//    }
+    }
     return n;
   }
 

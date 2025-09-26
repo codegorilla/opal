@@ -81,42 +81,50 @@ public class Generator extends ResultBaseVisitor <ST> {
 
   public ST visit (Declarations node) {
     var st = group.getInstanceOf("declaration/declarations");
-    var children = node.getChildren();
-    for (var child : children)
+    for (var child : node.getChildren())
       st.add("declaration", visit(child));
     return st;
   }
 
-  /*
+  // VARIABLE DECLARATIONS
 
-  public void visit (ImportDeclaration node) {
-    System.out.println("Import Declaration");
+  // Access specifier should exist, but if it is implicit, then it won't have a token unless we artificially add one
+  // during semantic analysis.
+
+  public ST visit (AccessSpecifier node) {
+    ST st = null;
+    var token = node.getToken();
+    if (token != null && token.getKind() == Token.Kind.PUBLIC) {
+      st = group.getInstanceOf("declaration/accessSpecifier");
+      st.add("value", "export");
+    }
+    return st;
   }
 
-  public void visit (ImportName node) {
-    System.out.println("Import Name");
-  }
-
-  public void visit (AccessSpecifier node) {
-    System.out.println("Access Specifier");
-  }
-
-  public void visit (Modifiers node) {
+  public ST visit (Modifiers node) {
     System.out.println("Modifiers");
+    return null;
   }
 
-  public void visit (VariableDeclaration node) {
-    System.out.println("Variable Declaration");
-    node.getAccessSpecifier().accept(this);
-    node.getModifiers().accept(this);
-    node.getName().accept(this);
-    node.getTypeSpecifier().accept(this);
-    node.getInitializer().accept(this);
+  public ST visit (VariableDeclaration node) {
+    var st = group.getInstanceOf("declaration/variableDeclaration");
+    System.out.println(node.getToken());
+    st.add("variableAccessSpecifier", visit(node.accessSpecifier()));
+    st.add("declarator", visit(node.variableName()));
+    return st;
+
+//    node.getModifiers().accept(this);
+//    node.getTypeSpecifier().accept(this);
+//    node.getInitializer().accept(this);
   }
 
-  public void visit (VariableName node) {
-    System.out.println("Variable Name");
+  public ST visit (VariableName node) {
+    var st = group.getInstanceOf("declaration/variableName");
+    st.add("name", node.getToken().getLexeme());
+    return st;
   }
+
+  /*
 
   public void visit (VariableTypeSpecifier node) {
     System.out.println("Variable Type Specifier");

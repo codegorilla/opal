@@ -58,14 +58,14 @@ public class Pass1 extends BaseVisitor {
     System.out.println("Modifiers");
   }
 
-  public void visit (VariableDeclaration node) {
-    System.out.println("Variable Declaration");
-    node.getAccessSpecifier().accept(this);
-    node.getModifiers().accept(this);
-    node.getName().accept(this);
-    node.getTypeSpecifier().accept(this);
-    node.getInitializer().accept(this);
-  }
+//  public void visit (VariableDeclaration node) {
+//    System.out.println("Variable Declaration");
+//    node.getAccessSpecifier().accept(this);
+//    node.getModifiers().accept(this);
+//    node.getName().accept(this);
+//    node.getTypeSpecifier().accept(this);
+//    node.getInitializer().accept(this);
+//  }
 
   public void visit (VariableName node) {
     System.out.println("Variable Name");

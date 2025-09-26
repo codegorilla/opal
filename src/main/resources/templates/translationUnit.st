@@ -5,6 +5,6 @@ import std;
 <importDeclarations>
 
 namespace {
-<declarations>
+  <declarations>
 }
 >>
