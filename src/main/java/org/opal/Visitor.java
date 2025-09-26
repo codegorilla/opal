@@ -20,7 +20,7 @@ public interface Visitor {
   // Package declarations
   public void visit (PackageDeclaration node);
   public void visit (PackageName node);
-
+  
   // Import declarations
   public void visit (ImportDeclaration node);
   public void visit (ImportName node);

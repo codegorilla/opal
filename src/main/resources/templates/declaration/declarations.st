@@ -1,0 +1,3 @@
+declarations (declaration) ::= <<
+<declaration><\n>
+>>

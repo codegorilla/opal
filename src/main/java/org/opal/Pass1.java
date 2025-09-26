@@ -30,7 +30,6 @@ public class Pass1 extends BaseVisitor {
     var children = node.getChildren();
     for (var child : children) {
       child.accept(this);
-      node.templates.add(child.getST());
     }
   }
 

@@ -14,7 +14,7 @@ import org.stringtemplate.v4.*;
 import java.net.URL;
 import java.util.HashMap;
 
-public class Generator extends BaseVisitor {
+public class Generator extends ResultBaseVisitor <ST> {
 
   private final URL templateDirectoryUrl;
   private final STGroupDir group;
@@ -27,37 +27,45 @@ public class Generator extends BaseVisitor {
 
   public void process () {
     root.accept(this);
-    var st = root.getST();
-    //System.out.println(st.render());
   }
 
-  public void visit (TranslationUnit node) {
-    node.getDeclarations().accept(this);
-//    var st = group.getInstanceOf("translationUnit");
-//    st.add("packageDeclaration", packageDeclaration(node.getChild(0)))
-//    node.setST(st);
-//    for child <- current.getChildren() do
-//      st.add("declaration", declaration(child))
-//    var child = node.getChild(0);
-//    child.accept(this);
+  public ST visit (AstNode node) {
+    return node.accept(this);
+  }
+
+  public ST visit (TranslationUnit node) {
+    var st = group.getInstanceOf("translationUnit");
+    st.add("packageDeclaration", visit(node.getPackageDeclaration()));
+    st.add("declarations", visit(node.getDeclarations()));
+    System.out.println(st.render());
+    return null;
+  }
+
+  public ST visit (PackageDeclaration node) {
+    var st = group.getInstanceOf("declaration/packageDeclaration");
+    st.add("packageName", visit(node.getPackageName()));
+    return st;
+  }
+
+  // For now just support single word package names
+
+  public ST visit (PackageName node) {
+    var st = group.getInstanceOf("declaration/packageName");
+    st.add("name", node.getToken().getLexeme());
+    return st;
   }
 
   // Declarations
 
-  public void visit (Declarations node) {
+  // Use list of templates, or a template containing templates?
+
+  public ST visit (Declarations node) {
+    var st = group.getInstanceOf("declaration/declarations");
     var children = node.getChildren();
-    for (var child : children) {
-      child.accept(this);
-      node.templates.add(child.getST());
-    }
+    for (var child : children)
+      st.add("declaration", visit(child));
+    return st;
   }
-
-  public void visit (PackageDeclaration node) {
-    System.out.println("GOT TO PACKAGE DECL");
-
-  }
-
-
 
   /*
 
