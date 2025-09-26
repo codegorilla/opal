@@ -103,6 +103,9 @@ public class Generator extends ResultBaseVisitor <ST> {
       st = group.getInstanceOf("declaration/accessSpecifier");
       st.add("value", "export");
     }
+    var p = node.getParent();
+    if (p instanceof VariableDeclaration)
+      System.out.println("THIS IS AN INSTANCE OF A VARIABLE DECLARATION!");
     return st;
   }
 

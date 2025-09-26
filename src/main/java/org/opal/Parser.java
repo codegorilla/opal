@@ -161,7 +161,7 @@ public class Parser {
 
   private AstNode declaration () {
     AstNode n = null;
-    var spec = accessSpecifier();
+    var spec = accessSpecifier1();
     if (lookahead.getKind() == Token.Kind.TEMPLATE)
       ; //n = templateDeclaration();
     else {
@@ -205,6 +205,15 @@ public class Parser {
   // to be used.
 
   private AstNode accessSpecifier () {
+    var n = new AccessSpecifier();
+    if (lookahead.getKind() == Token.Kind.PRIVATE || lookahead.getKind() == Token.Kind.PUBLIC) {
+      n.setToken(lookahead);
+      match(lookahead.getKind());
+    }
+    return n;
+  }
+
+  private AccessSpecifier accessSpecifier1 () {
     var n = new AccessSpecifier();
     if (lookahead.getKind() == Token.Kind.PRIVATE || lookahead.getKind() == Token.Kind.PUBLIC) {
       n.setToken(lookahead);
@@ -368,10 +377,13 @@ public class Parser {
   // To do: Local variables shouldn't have access specifiers. Because children can be accessed by name, we'll probably
   // need a separate local variable node type. For now, just handle global variables.
 
-  private AstNode variableDeclaration (AstNode accessSpecifier, AstNode modifiers) {
+  private AstNode variableDeclaration (AccessSpecifier accessSpecifier, AstNode modifiers) {
     var n = new VariableDeclaration(lookahead);
     match(Token.Kind.VAR);
     n.addChild(accessSpecifier);
+    // EXPERIMENT
+    accessSpecifier.setParent(n);
+    // END EXPERIMENT
     n.addChild(modifiers);
     n.addChild(variableName());
     n.addChild(variableTypeSpecifier());

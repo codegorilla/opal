@@ -6,6 +6,8 @@ import org.opal.ast.AstNode;
 
 public class AccessSpecifier extends AstNode {
 
+  AstNode parent = null;
+
   public AccessSpecifier() {
     super();
   }
@@ -18,5 +20,13 @@ public class AccessSpecifier extends AstNode {
   @Override
   public <T> T accept (ResultVisitor<T> v) {
     return v.visit(this);
+  }
+
+  public AstNode getParent () {
+    return parent;
+  }
+
+  public void setParent (AstNode parent) {
+    this.parent = parent;
   }
 }
