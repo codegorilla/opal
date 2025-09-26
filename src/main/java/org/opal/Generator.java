@@ -91,6 +91,11 @@ public class Generator extends ResultBaseVisitor <ST> {
   // Access specifier should exist, but if it is implicit, then it won't have a token unless we artificially add one
   // during semantic analysis.
 
+  // If we want different behavior for variables vs. routines, then we need to find a way to differentiate access
+  // specifiers. The problem is that the access specifier is encountered in the parser before we know which construct
+  // it belongs to. So we must defer differentiation. Nevertheless, we can either mark it in the parser from within the
+  // corresponding construct rule or we can use a separate semantic analysis pass.
+
   public ST visit (AccessSpecifier node) {
     ST st = null;
     var token = node.getToken();

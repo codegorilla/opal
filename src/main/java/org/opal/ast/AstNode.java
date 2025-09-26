@@ -15,7 +15,6 @@ import org.opal.ResultVisitor;
 
 public abstract class AstNode {
 
-//  private ST st;
   private Token token;
   private final LinkedList<AstNode> children;
 
@@ -40,24 +39,10 @@ public abstract class AstNode {
   public int getChildCount () {
     return children.size();
   }
-
-  /*
-  public Iterator<AstNode> getChildren () {
-    return children.iterator();
-  }
-  */
-
+  
   public Iterable<AstNode> getChildren () {
     return children;
   }
-
-//  public ST getST () {
-//    return st;
-//  }
-//
-//  public void setST (ST st) {
-//    this.st = st;
-//  }
 
   public Token getToken () {
     return token;
