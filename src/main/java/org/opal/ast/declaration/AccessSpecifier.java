@@ -6,8 +6,6 @@ import org.opal.ast.AstNode;
 
 public class AccessSpecifier extends AstNode {
 
-  AstNode parent = null;
-
   public static final int NONE = 0;
   public static final int VARIABLE = 1;
   public static final int ROUTINE = 2;
@@ -34,13 +32,5 @@ public class AccessSpecifier extends AstNode {
 
   public void setKind (int kind) {
     this.kind = kind;
-  }
-
-  public AstNode getParent () {
-    return parent;
-  }
-
-  public void setParent (AstNode parent) {
-    this.parent = parent;
   }
 }

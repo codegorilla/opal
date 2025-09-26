@@ -94,7 +94,7 @@ public class Generator extends ResultBaseVisitor <ST> {
   // If we want different behavior for variables vs. routines, then we need to find a way to differentiate access
   // specifiers. The problem is that the access specifier is encountered in the parser before we know which construct
   // it belongs to. So we must defer differentiation. Nevertheless, we can either mark it in the parser from within the
-  // corresponding construct rule or we can use a separate semantic analysis pass.
+  // corresponding construct rule or we can use a separate semantic analysis pass. We could also use K>1 lookahead.
 
   public ST visit (AccessSpecifier node) {
     ST st = null;
@@ -103,11 +103,9 @@ public class Generator extends ResultBaseVisitor <ST> {
       st = group.getInstanceOf("declaration/accessSpecifier");
       st.add("value", "export");
     }
-    var p = node.getParent();
-    if (p instanceof VariableDeclaration)
-      System.out.println("THIS IS AN INSTANCE OF A VARIABLE DECLARATION!");
-    if (node.getKind() == AccessSpecifier.VARIABLE)
-      System.out.println("THIS IS AN INSTANCE OF A VARIABLE DECLARATION!");
+    // This is how we can tell what kind of access specifier we have.
+//    if (node.getKind() == AccessSpecifier.VARIABLE)
+//      System.out.println("THIS IS AN INSTANCE OF A VARIABLE DECLARATION!");
     return st;
   }
 

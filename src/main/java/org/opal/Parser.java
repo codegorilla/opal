@@ -380,10 +380,8 @@ public class Parser {
   private AstNode variableDeclaration (AccessSpecifier accessSpecifier, AstNode modifiers) {
     var n = new VariableDeclaration(lookahead);
     match(Token.Kind.VAR);
-    if (accessSpecifier != null) {
-      accessSpecifier.setParent(n);
+    if (accessSpecifier != null)
       accessSpecifier.setKind(AccessSpecifier.VARIABLE);
-    }
     n.addChild(accessSpecifier);
     n.addChild(modifiers);
     n.addChild(variableName());
