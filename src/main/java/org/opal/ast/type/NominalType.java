@@ -5,7 +5,8 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class NominalType extends AstNode {
+public class NominalType extends Type {
+
   public NominalType (Token token) {
     super(token);
   }

@@ -5,6 +5,8 @@ import org.opal.ast.TranslationUnit;
 import org.opal.ast.declaration.*;
 
 import org.opal.ast.expression.*;
+import org.opal.ast.type.PrimitiveType;
+import org.opal.ast.type.Type;
 import org.stringtemplate.v4.*;
 
 import java.net.URL;
@@ -110,12 +112,14 @@ public class Generator extends ResultBaseVisitor <ST> {
     return null;
   }
 
+  // Change variableAccessSpecifier to accessSpecifier for consistency?
+
   public ST visit (VariableDeclaration node) {
     var st = group.getInstanceOf("declaration/variableDeclaration");
     st.add("variableAccessSpecifier", visit(node.accessSpecifier()));
     st.add("declarator", visit(node.variableName()));
 //    node.getModifiers().accept(this);
-//    node.getTypeSpecifier().accept(this);
+    st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
     st.add("initializer", visit(node.variableInitializer()));
     return st;
   }
@@ -126,13 +130,11 @@ public class Generator extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  /*
-
   public ST visit (VariableTypeSpecifier node) {
-    System.out.println("Variable Type Specifier");
+    var st = group.getInstanceOf("declaration/variableTypeSpecifier");
+    st.add("type", visit(node.type()));
+    return st;
   }
-
-  */
 
   public ST visit (VariableInitializer node) {
     var st = group.getInstanceOf("declaration/variableInitializer");
@@ -179,14 +181,10 @@ public class Generator extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  /*
 
   // TYPES
 
-  public void visit (TypeRoot node) {
-    System.out.println("TypeRoot");
-  }
-
+  /*
   public void visit (ArrayType node) {
     System.out.println("ArrayType");
   }
@@ -198,10 +196,12 @@ public class Generator extends ResultBaseVisitor <ST> {
   public void visit (PointerType node) {
     System.out.println("PointerType");
   }
+  */
 
-  public void visit (PrimitiveType node) {
-    System.out.println("PrimitiveType");
+  public ST visit (PrimitiveType node) {
+    var st = group.getInstanceOf("type/primitiveType");
+    st.add("name", node.getToken().getLexeme());
+    return st;
   }
 
-  */
 }

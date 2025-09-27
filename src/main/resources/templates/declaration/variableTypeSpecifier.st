@@ -1,0 +1,3 @@
+variableTypeSpecifier (type) ::= <<
+<type>
+>>

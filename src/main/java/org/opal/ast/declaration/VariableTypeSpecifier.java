@@ -1,10 +1,11 @@
 package org.opal.ast.declaration;
 
+import org.opal.ast.AstNode;
 import org.opal.ResultVisitor;
 import org.opal.Visitor;
-import org.opal.ast.AstNode;
 
 public class VariableTypeSpecifier extends AstNode {
+
   public VariableTypeSpecifier() {
     super();
   }
@@ -19,4 +20,7 @@ public class VariableTypeSpecifier extends AstNode {
     return v.visit(this);
   }
 
+  public AstNode type () {
+    return getChild(0);
+  }
 }

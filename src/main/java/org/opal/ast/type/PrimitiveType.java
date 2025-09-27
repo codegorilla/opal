@@ -5,7 +5,8 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class PrimitiveType extends AstNode {
+public class PrimitiveType extends Type {
+
   public PrimitiveType (Token token) {
     super(token);
   }

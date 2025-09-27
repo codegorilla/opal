@@ -33,7 +33,7 @@ public class VariableDeclaration extends AstNode {
     return getChild(2);
   }
 
-  public AstNode getTypeSpecifier () {
+  public AstNode variableTypeSpecifier () {
     return getChild(3);
   }
 

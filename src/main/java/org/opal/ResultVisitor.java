@@ -80,6 +80,7 @@ public interface ResultVisitor <T> {
 
   // TYPES
 
+  public T visit (Type node);
   public T visit (TypeRoot node);
   public T visit (ArrayType node);
   public T visit (NominalType node);

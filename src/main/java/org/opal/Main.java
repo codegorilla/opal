@@ -18,6 +18,5 @@ public class Main {
       .parse(args);
     var name = jArgs.getName();
     var translator = new Translator(name);
-    System.out.println("OUTPUT: " + jArgs.getName());
   }
 }

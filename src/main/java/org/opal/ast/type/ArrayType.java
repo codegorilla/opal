@@ -5,7 +5,8 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class ArrayType extends AstNode {
+public class ArrayType extends Type {
+
   public ArrayType (Token token) {
     super(token);
   }

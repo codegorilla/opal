@@ -21,7 +21,7 @@ public class Parser {
   private Token lookahead;
 
   // Used to pass nodes up and down during tree traversal
-  private final LinkedList<AstNode> stack;
+  private final LinkedList<Type> stack;
 
   // Used for symbol table operations. Cobalt requires a symbol table during
   // parsing in order to disambiguate a few grammar rules. We cannot wait until
@@ -330,7 +330,7 @@ public class Parser {
     var n = new RoutineParameter();
     n.addChild(routineParameterName());
     match(Token.Kind.COLON);
-    n.addChild(typeRoot());
+    n.addChild(type(true));
     return n;
   }
 
@@ -357,7 +357,7 @@ public class Parser {
     var n = new RoutineReturnType();
     if (lookahead.getKind() == Token.Kind.MINUS_GREATER) {
       match(Token.Kind.MINUS_GREATER);
-      n.addChild(typeRoot());
+      n.addChild(type(true));
     }
     return n;
   }
@@ -401,7 +401,7 @@ public class Parser {
     var n = new VariableTypeSpecifier();
     if (lookahead.getKind() == Token.Kind.COLON) {
       match(Token.Kind.COLON);
-      n.addChild(typeRoot());
+      n.addChild(type(true));
     }
     return n;
   }
@@ -1145,13 +1145,19 @@ public class Parser {
 
   // Do we need a separate typeRoot node, or can we just use type_?
 
-  private AstNode typeRoot () {
-    var n = new TypeRoot();
-    n.addChild(type());
-    return n;
+//  private AstNode typeRoot () {
+//    var n = new TypeRoot();
+//    n.addChild(type());
+//    return n;
+//  }
+
+  // Will we ever use this?
+
+  private Type type () {
+    return type(false);
   }
 
-  private AstNode type () {
+  private Type type (boolean root) {
     directType();
     // Need to remove items from parsing stack and construct final type. With
     // just arrays and pointers it should be easy. Once other types are added,
@@ -1163,26 +1169,19 @@ public class Parser {
       n = stack.pop();
       n.addChild(p);
     }
-    // Now trace through the type expression and print it out
-    // while n.getChildCount() != 0 do
-    //   println(n)
-    //   if n.getKind() == AstNode.Kind.ARRAY_TYPE then
-    //     n = n.getChild(1)
-    //   else if n.getKind() == AstNode.Kind.POINTER_TYPE then
-    //     n = n.getChild(0)
-    // println(n)
+    n.setRoot(root);
     return n;
   }
 
   private void directType () {
     System.out.println("DIRECT_TYPE");
     // Build left type fragment
-    var leftFragment = new LinkedList<AstNode>();
+    var leftFragment = new LinkedList<Type>();
     while (lookahead.getKind() == Token.Kind.ASTERISK) {
       leftFragment.push(pointerType());
     }
     // Build center type fragment
-    AstNode centerFragment = null;
+    Type centerFragment = null;
     if (lookahead.getKind() == Token.Kind.CARET) {
 //      // TBD
 //      centerFragment = routinePointerType();
@@ -1237,7 +1236,7 @@ public class Parser {
       match(Token.Kind.R_PARENTHESIS);
     }
     // Build right type fragment
-    var rightFragment = new LinkedList<AstNode>();
+    var rightFragment = new LinkedList<Type>();
     while (lookahead.getKind() == Token.Kind.L_BRACKET) {
       rightFragment.offer(arrayType());
       // Move type fragments to parsing stack in "spiral rule" order
@@ -1252,7 +1251,7 @@ public class Parser {
 
   }
 
-  private AstNode arrayType () {
+  private Type arrayType () {
     var n = new ArrayType(lookahead);
     match(Token.Kind.L_BRACKET);
     if (lookahead.getKind() != Token.Kind.R_BRACKET) {
@@ -1262,7 +1261,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode nominalType () {
+  private Type nominalType () {
     var n = new NominalType(lookahead);
     match(Token.Kind.IDENTIFIER);
     System.out.println("FOUND NOMINAL TYPE");
@@ -1271,13 +1270,13 @@ public class Parser {
     return n;
   }
 
-  private AstNode pointerType () {
+  private Type pointerType () {
     var n = new PointerType(lookahead);
     match(Token.Kind.ASTERISK);
     return n;
   }
 
-  private AstNode primitiveType () {
+  private Type primitiveType () {
     var n = new PrimitiveType(lookahead);
     match(lookahead.getKind());
     return n;
