@@ -1170,16 +1170,19 @@ public class Parser {
       n.addChild(p);
     }
     n.setRoot(root);
+    // Print type
+    System.out.println("***");
+    System.out.println(n);
+    System.out.println(n.getChild(0));
+    System.out.println("***");
     return n;
   }
 
   private void directType () {
-    System.out.println("DIRECT_TYPE");
     // Build left type fragment
     var leftFragment = new LinkedList<Type>();
-    while (lookahead.getKind() == Token.Kind.ASTERISK) {
+    while (lookahead.getKind() == Token.Kind.ASTERISK)
       leftFragment.push(pointerType());
-    }
     // Build center type fragment
     Type centerFragment = null;
     if (lookahead.getKind() == Token.Kind.CARET) {
@@ -1187,21 +1190,21 @@ public class Parser {
 //      centerFragment = routinePointerType();
     }
     else if (
-        lookahead.getKind() == Token.Kind.BOOL    ||
-        lookahead.getKind() == Token.Kind.INT     ||
-        lookahead.getKind() == Token.Kind.INT8    ||
-        lookahead.getKind() == Token.Kind.INT16   ||
-        lookahead.getKind() == Token.Kind.INT32   ||
-        lookahead.getKind() == Token.Kind.INT64   ||
-        lookahead.getKind() == Token.Kind.UINT    ||
-        lookahead.getKind() == Token.Kind.UINT8   ||
-        lookahead.getKind() == Token.Kind.UINT16  ||
-        lookahead.getKind() == Token.Kind.UINT32  ||
-        lookahead.getKind() == Token.Kind.UINT64  ||
-        lookahead.getKind() == Token.Kind.FLOAT   ||
-        lookahead.getKind() == Token.Kind.FLOAT32 ||
-        lookahead.getKind() == Token.Kind.FLOAT64 ||
-        lookahead.getKind() == Token.Kind.VOID)
+      lookahead.getKind() == Token.Kind.BOOL    ||
+      lookahead.getKind() == Token.Kind.INT     ||
+      lookahead.getKind() == Token.Kind.INT8    ||
+      lookahead.getKind() == Token.Kind.INT16   ||
+      lookahead.getKind() == Token.Kind.INT32   ||
+      lookahead.getKind() == Token.Kind.INT64   ||
+      lookahead.getKind() == Token.Kind.UINT    ||
+      lookahead.getKind() == Token.Kind.UINT8   ||
+      lookahead.getKind() == Token.Kind.UINT16  ||
+      lookahead.getKind() == Token.Kind.UINT32  ||
+      lookahead.getKind() == Token.Kind.UINT64  ||
+      lookahead.getKind() == Token.Kind.FLOAT   ||
+      lookahead.getKind() == Token.Kind.FLOAT32 ||
+      lookahead.getKind() == Token.Kind.FLOAT64 ||
+      lookahead.getKind() == Token.Kind.VOID)
     {
       centerFragment = primitiveType();
     }
@@ -1237,18 +1240,14 @@ public class Parser {
     }
     // Build right type fragment
     var rightFragment = new LinkedList<Type>();
-    while (lookahead.getKind() == Token.Kind.L_BRACKET) {
+    while (lookahead.getKind() == Token.Kind.L_BRACKET)
       rightFragment.offer(arrayType());
-      // Move type fragments to parsing stack in "spiral rule" order
-    }
-    while (!rightFragment.isEmpty()) {
+    // Move type fragments to parsing stack in "spiral rule" order
+    while (!rightFragment.isEmpty())
       stack.push(rightFragment.poll());
-    }
-    while (!leftFragment.isEmpty()) {
+    while (!leftFragment.isEmpty())
       stack.push(leftFragment.pop());
-    }
     stack.push(centerFragment);
-
   }
 
   private Type arrayType () {

@@ -3,10 +3,9 @@ package org.opal;
 import org.opal.ast.AstNode;
 import org.opal.ast.TranslationUnit;
 import org.opal.ast.declaration.*;
-
 import org.opal.ast.expression.*;
-import org.opal.ast.type.PrimitiveType;
-import org.opal.ast.type.Type;
+import org.opal.ast.type.*;
+
 import org.stringtemplate.v4.*;
 
 import java.net.URL;
@@ -193,10 +192,13 @@ public class Generator extends ResultBaseVisitor <ST> {
     System.out.println("NominalType");
   }
 
-  public void visit (PointerType node) {
-    System.out.println("PointerType");
-  }
   */
+
+  public ST visit (PointerType node) {
+    var st = group.getInstanceOf("type/pointerType");
+    st.add("type", visit(node.pointee()));
+    return st;
+  }
 
   public ST visit (PrimitiveType node) {
     var st = group.getInstanceOf("type/primitiveType");
