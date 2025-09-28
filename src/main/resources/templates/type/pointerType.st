@@ -1,3 +1,3 @@
-pointerType (type) ::= <<
-(*<type>)
+pointerType (baseType) ::= <<
+(*<baseType>)
 >>

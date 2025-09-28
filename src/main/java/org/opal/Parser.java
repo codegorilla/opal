@@ -1143,15 +1143,7 @@ public class Parser {
   // language rather than complicating AST node class definition with parent
   // links. We can re-think this in the future if we wish.
 
-  // Do we need a separate typeRoot node, or can we just use type_?
-
-//  private AstNode typeRoot () {
-//    var n = new TypeRoot();
-//    n.addChild(type());
-//    return n;
-//  }
-
-  // Will we ever use this?
+  // Will we ever use this type() function?
 
   private Type type () {
     return type(false);
@@ -1170,7 +1162,6 @@ public class Parser {
       n.addChild(p);
     }
     n.setRoot(root);
-    // Print type
     System.out.println("***");
     System.out.println(n);
     System.out.println(n.getChild(0));
@@ -1179,34 +1170,55 @@ public class Parser {
   }
 
   private void directType () {
-    // Build left type fragment
-    var leftFragment = new LinkedList<Type>();
+    var left   = leftFragment();
+    var center = centerFragment();
+    var right  = rightFragment();
+    // Move type fragments to parsing stack in "spiral rule" order
+    while (!right.isEmpty())
+      stack.push(right.poll());
+    while (!left.isEmpty())
+      stack.push(left.pop());
+    stack.push(center);
+  }
+
+  private LinkedList<Type> leftFragment () {
+    var fragment = new LinkedList<Type>();
     while (lookahead.getKind() == Token.Kind.ASTERISK)
-      leftFragment.push(pointerType());
-    // Build center type fragment
-    Type centerFragment = null;
-    if (lookahead.getKind() == Token.Kind.CARET) {
-//      // TBD
-//      centerFragment = routinePointerType();
+      fragment.push(pointerType());
+    return fragment;
+  }
+
+  private LinkedList<Type> rightFragment () {
+    var fragment = new LinkedList<Type>();
+    while (lookahead.getKind() == Token.Kind.L_BRACKET)
+      fragment.offer(arrayType());
+    return fragment;
+  }
+
+  private Type centerFragment () {
+    Type fragment = null;
+    var kind = lookahead.getKind();
+    if (kind == Token.Kind.CARET) {
+//      fragment = routinePointerType();
     }
     else if (
-      lookahead.getKind() == Token.Kind.BOOL    ||
-      lookahead.getKind() == Token.Kind.INT     ||
-      lookahead.getKind() == Token.Kind.INT8    ||
-      lookahead.getKind() == Token.Kind.INT16   ||
-      lookahead.getKind() == Token.Kind.INT32   ||
-      lookahead.getKind() == Token.Kind.INT64   ||
-      lookahead.getKind() == Token.Kind.UINT    ||
-      lookahead.getKind() == Token.Kind.UINT8   ||
-      lookahead.getKind() == Token.Kind.UINT16  ||
-      lookahead.getKind() == Token.Kind.UINT32  ||
-      lookahead.getKind() == Token.Kind.UINT64  ||
-      lookahead.getKind() == Token.Kind.FLOAT   ||
-      lookahead.getKind() == Token.Kind.FLOAT32 ||
-      lookahead.getKind() == Token.Kind.FLOAT64 ||
-      lookahead.getKind() == Token.Kind.VOID)
-    {
-      centerFragment = primitiveType();
+      kind == Token.Kind.BOOL    ||
+      kind == Token.Kind.INT     ||
+      kind == Token.Kind.INT8    ||
+      kind == Token.Kind.INT16   ||
+      kind == Token.Kind.INT32   ||
+      kind == Token.Kind.INT64   ||
+      kind == Token.Kind.UINT    ||
+      kind == Token.Kind.UINT8   ||
+      kind == Token.Kind.UINT16  ||
+      kind == Token.Kind.UINT32  ||
+      kind == Token.Kind.UINT64  ||
+      kind == Token.Kind.FLOAT   ||
+      kind == Token.Kind.FLOAT32 ||
+      kind == Token.Kind.FLOAT64 ||
+      kind == Token.Kind.VOID
+    ) {
+      fragment = primitiveType();
     }
     else if (lookahead.getKind() == Token.Kind.IDENTIFIER) {
       // Need to look up name in symbol table to tell what kind it is (e.g.
@@ -1224,30 +1236,21 @@ public class Parser {
       // if symbol == null then
       //   // Nominal types include classes and enums. They do NOT include
       //   // primitive types or template types.
-      //   centerFragment = nominalType()
+      //   fragment = nominalType()
       // else
       //   if symbol.getKind() == Symbol.Kind.CLASS_TEMPLATE then
-      //     centerFragment = templateType()
+      //     fragment = templateType()
       //   else
-      //     centerFragment = nominalType()
-      centerFragment = nominalType();
+      //     fragment = nominalType()
+      fragment = nominalType();
     }
     else if (lookahead.getKind() == Token.Kind.L_PARENTHESIS) {
       match(Token.Kind.L_PARENTHESIS);
       directType();
-      centerFragment = stack.pop();
+      fragment = stack.pop();
       match(Token.Kind.R_PARENTHESIS);
     }
-    // Build right type fragment
-    var rightFragment = new LinkedList<Type>();
-    while (lookahead.getKind() == Token.Kind.L_BRACKET)
-      rightFragment.offer(arrayType());
-    // Move type fragments to parsing stack in "spiral rule" order
-    while (!rightFragment.isEmpty())
-      stack.push(rightFragment.poll());
-    while (!leftFragment.isEmpty())
-      stack.push(leftFragment.pop());
-    stack.push(centerFragment);
+    return fragment;
   }
 
   private Type arrayType () {

@@ -21,7 +21,7 @@ public class PointerType extends Type {
     return v.visit(this);
   }
 
-  public AstNode pointee () {
+  public AstNode baseType () {
     return getChild(0);
   }
 

@@ -1,0 +1,3 @@
+arrayType (baseType) ::= <<
+(<baseType>[])
+>>

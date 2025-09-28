@@ -180,23 +180,23 @@ public class Generator extends ResultBaseVisitor <ST> {
     return st;
   }
 
-
   // TYPES
 
-  /*
-  public void visit (ArrayType node) {
-    System.out.println("ArrayType");
+  public ST visit (ArrayType node) {
+    var st = group.getInstanceOf("type/arrayType");
+    st.add("baseType", visit(node.baseType()));
+    return st;
   }
 
-  public void visit (NominalType node) {
-    System.out.println("NominalType");
+  public ST visit (NominalType node) {
+    var st = group.getInstanceOf("type/nominalType");
+    st.add("name", node.getToken().getLexeme());
+    return st;
   }
-
-  */
 
   public ST visit (PointerType node) {
     var st = group.getInstanceOf("type/pointerType");
-    st.add("type", visit(node.pointee()));
+    st.add("baseType", visit(node.baseType()));
     return st;
   }
 
