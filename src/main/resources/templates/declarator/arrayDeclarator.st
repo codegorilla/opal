@@ -1,0 +1,3 @@
+arrayDeclarator (directDeclarator) ::= <<
+(<directDeclarator>[])
+>>

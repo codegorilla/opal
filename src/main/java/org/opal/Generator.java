@@ -9,11 +9,15 @@ import org.opal.ast.type.*;
 import org.stringtemplate.v4.*;
 
 import java.net.URL;
+import java.util.LinkedList;
 
 public class Generator extends ResultBaseVisitor <ST> {
 
   private final URL templateDirectoryUrl;
   private final STGroupDir group;
+
+  // Stack for transforming variable name to declarator. Is there only ever 1-2 things on the stack at a time?
+  private final LinkedList<ST> stack = new LinkedList<>();
 
   public Generator (AstNode input) {
     super(input);
@@ -113,26 +117,42 @@ public class Generator extends ResultBaseVisitor <ST> {
 
   // Change variableAccessSpecifier to accessSpecifier for consistency?
 
+  // In C++, any pointer or raw array portions of the type specifier are transferred to the name to form a so-called
+  // "declarator".
+
   public ST visit (VariableDeclaration node) {
     var st = group.getInstanceOf("declaration/variableDeclaration");
     st.add("variableAccessSpecifier", visit(node.accessSpecifier()));
-    st.add("declarator", visit(node.variableName()));
+    visit(node.variableName());
+    visit(node.variableTypeSpecifier());
+    // Get translated type specifier and declarator from stack. The type specifier should be something basic like 'int'.
+    st.add("typeSpecifier", stack.pop());
+    st.add("declarator", stack.pop());
 //    node.getModifiers().accept(this);
-    st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
     st.add("initializer", visit(node.variableInitializer()));
     return st;
   }
 
+  // The variable name becomes a "simple declarator", which is the core of the overall C++ declarator that gets built
+  // up. A C++ declaration is of the form "typeSpecifier declarator", which is essentially the reverse of the cobolt
+  // declaration of the form "var variableName: typeSpecifier" (setting aside the fact that the term "type specifier"
+  // has a different interpretation between the two). Due to the need to swap the variable name with the base type from
+  // the type specifier, and that the base type may be several levels down in the type expression tree, we will use an
+  // explicit stack to facilitate the exchange.
+
   public ST visit (VariableName node) {
     var st = group.getInstanceOf("declaration/variableName");
     st.add("name", node.getToken().getLexeme());
-    return st;
+    stack.push(st);
+    return null;
   }
 
   public ST visit (VariableTypeSpecifier node) {
-    var st = group.getInstanceOf("declaration/variableTypeSpecifier");
-    st.add("type", visit(node.type()));
-    return st;
+//    var st = group.getInstanceOf("declaration/variableTypeSpecifier");
+//    st.add("type", visit(node.type()));
+//    return st;
+    visit(node.type());
+    return null;
   }
 
   public ST visit (VariableInitializer node) {
@@ -184,8 +204,10 @@ public class Generator extends ResultBaseVisitor <ST> {
 
   public ST visit (ArrayType node) {
     var st = group.getInstanceOf("type/arrayType");
-    st.add("baseType", visit(node.baseType()));
-    return st;
+    st.add("baseType", stack.pop());
+    stack.push(st);
+    visit(node.baseType());
+    return null;
   }
 
   public ST visit (NominalType node) {
@@ -194,16 +216,22 @@ public class Generator extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  // It is possible that some pointer and array types do not get transformed into declarators, but I need to research
+  // how it is possible for the code to determine which rule to follow and when.
+
   public ST visit (PointerType node) {
     var st = group.getInstanceOf("type/pointerType");
-    st.add("baseType", visit(node.baseType()));
-    return st;
+    st.add("baseType", stack.pop());
+    stack.push(st);
+    visit(node.baseType());
+    return null;
   }
 
   public ST visit (PrimitiveType node) {
     var st = group.getInstanceOf("type/primitiveType");
     st.add("name", node.getToken().getLexeme());
-    return st;
+    stack.push(st);
+    return null;
   }
 
 }

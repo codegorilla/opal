@@ -1162,9 +1162,10 @@ public class Parser {
       n.addChild(p);
     }
     n.setRoot(root);
+    // If program crashes, check here, this is just for testing.
     System.out.println("***");
     System.out.println(n);
-    System.out.println(n.getChild(0));
+//    System.out.println(n.getChild(0));
     System.out.println("***");
     return n;
   }
@@ -1263,12 +1264,12 @@ public class Parser {
     return n;
   }
 
+  // Need to eventually allow for type parameters. (This would allow
+  // us to know that this was a class type, if that matters.)
+
   private Type nominalType () {
     var n = new NominalType(lookahead);
     match(Token.Kind.IDENTIFIER);
-    System.out.println("FOUND NOMINAL TYPE");
-    // Need to eventually allow for type parameters. (This would allow
-    // us to know that this was a class type, if that matters.)
     return n;
   }
 
@@ -1283,7 +1284,5 @@ public class Parser {
     match(lookahead.getKind());
     return n;
   }
-
-
 
 }
