@@ -215,7 +215,8 @@ public class Generator extends ResultBaseVisitor <ST> {
   public ST visit (NominalType node) {
     var st = group.getInstanceOf("type/nominalType");
     st.add("name", node.getToken().getLexeme());
-    return st;
+    stack.push(st);
+    return null;
   }
 
   public ST visit (PointerType node) {

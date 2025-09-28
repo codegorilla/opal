@@ -1222,12 +1222,12 @@ public class Parser {
       fragment = primitiveType();
     }
     else if (lookahead.getKind() == Token.Kind.IDENTIFIER) {
-      // Need to look up name in symbol table to tell what kind it is (e.g.
-      // class, template). If it is defined as a class, then a left bracket
-      // following indicates an array of that class type. If it is not defined
-      // at all, then assume it is a class and treat it as such. If it is
-      // defined as a class template, then a left bracket following denotes
-      // class template parameters.
+      // Update: If using angle brackets (e.g. "<>") then I don't know if we still need to consult the symbol table.
+
+      // Need to look up name in symbol table to tell what kind it is (e.g. class, template). If it is defined as a
+      // class, then a left bracket following indicates an array of that class type. If it is not defined at all, then
+      // assume it is a class and treat it as such. If it is defined as a class template, then a left bracket following
+      // denotes class template parameters.
 
       // Todo: Hard-coded "Token here". This needs to be fixed.
       // COMMENTED WHEN DOING SCOPES - NEEDS FIX
@@ -1270,6 +1270,10 @@ public class Parser {
   private Type nominalType () {
     var n = new NominalType(lookahead);
     match(Token.Kind.IDENTIFIER);
+    if (lookahead.getKind() == Token.Kind.LESS) {
+      match(Token.Kind.LESS);
+      match(Token.Kind.GREATER);
+    }
     return n;
   }
 
