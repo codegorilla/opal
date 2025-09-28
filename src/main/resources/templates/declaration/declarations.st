@@ -1,3 +1,3 @@
 declarations (declaration) ::= <<
-<declaration><\n>
+<declaration; separator="\n">
 >>
