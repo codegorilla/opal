@@ -141,7 +141,7 @@ public class Generator extends ResultBaseVisitor <ST> {
   // explicit stack to facilitate the exchange.
 
   public ST visit (VariableName node) {
-    var st = group.getInstanceOf("declaration/variableName");
+    var st = group.getInstanceOf("declarator/simpleDeclarator");
     st.add("name", node.getToken().getLexeme());
     stack.push(st);
     return null;
@@ -202,9 +202,14 @@ public class Generator extends ResultBaseVisitor <ST> {
 
   // TYPES
 
+  // It is possible that some pointer and array types do not get transformed into declarators, but I need to research
+  // how it is possible for the code to determine which rule to follow and when. We might be able to use different AST
+  // node types such as TopLevelArrayType, TopLevelPointerType, NestedArrayType, and/or NestedPointerType. Or we could
+  // mark certain AST nodes to distinguish them.
+
   public ST visit (ArrayType node) {
-    var st = group.getInstanceOf("type/arrayType");
-    st.add("baseType", stack.pop());
+    var st = group.getInstanceOf("declarator/arrayDeclarator");
+    st.add("directDeclarator", stack.pop());
     stack.push(st);
     visit(node.baseType());
     return null;
@@ -216,12 +221,9 @@ public class Generator extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // It is possible that some pointer and array types do not get transformed into declarators, but I need to research
-  // how it is possible for the code to determine which rule to follow and when.
-
   public ST visit (PointerType node) {
-    var st = group.getInstanceOf("type/pointerType");
-    st.add("baseType", stack.pop());
+    var st = group.getInstanceOf("declarator/pointerDeclarator");
+    st.add("directDeclarator", stack.pop());
     stack.push(st);
     visit(node.baseType());
     return null;
