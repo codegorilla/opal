@@ -219,6 +219,35 @@ public class Generator extends ResultBaseVisitor <ST> {
     return null;
   }
 
+  public ST visit (TemplateInstantiation node) {
+    var st = group.getInstanceOf("type/templateInstantiation");
+    visit(node.getChild(0));
+    visit(node.getChild(1));
+    st.add("arguments", stack.pop());
+    st.add("name", stack.pop());
+    stack.push(st);
+    return null;
+  }
+
+  public ST visit (TemplateArguments node) {
+    var st = group.getInstanceOf("type/templateArguments");
+    // There should be a loop here, but assume only one child for now
+    visit(node.getChild(0));
+    st.add("argument", stack.pop());
+    stack.push(st);
+    return null;
+  }
+
+  public ST visit (TemplateArgument node) {
+    var st = group.getInstanceOf("type/templateArgument");
+    visit(node.getChild(0));
+    st.add("type", stack.pop());
+    stack.push(st);
+    return null;
+  }
+
+  // Template argument is a passthrough, but maybe we will just add a node for it for conceptual simplicity.
+
   public ST visit (PointerType node) {
     var st = group.getInstanceOf("declarator/pointerDeclarator");
     st.add("directDeclarator", stack.pop());

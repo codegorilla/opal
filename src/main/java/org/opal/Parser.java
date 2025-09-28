@@ -1268,12 +1268,43 @@ public class Parser {
   // us to know that this was a class type, if that matters.)
 
   private Type nominalType () {
-    var n = new NominalType(lookahead);
+    Type n = new NominalType(lookahead);
     match(Token.Kind.IDENTIFIER);
-    if (lookahead.getKind() == Token.Kind.LESS) {
-      match(Token.Kind.LESS);
-      match(Token.Kind.GREATER);
-    }
+    if (lookahead.getKind() == Token.Kind.LESS)
+      n = templateInstantiation(n);
+    return n;
+  }
+
+  // Should the template instantiation token be the opening angle bracket? That will also be used by the template
+  // arguments node.
+
+  private Type templateInstantiation (Type nomType) {
+    var n = new TemplateInstantiation(lookahead);
+    n.addChild(nomType);
+    n.addChild(templateArguments());
+    return n;
+  }
+
+  private AstNode templateArguments () {
+    var n = new TemplateArguments(lookahead);
+    match(Token.Kind.LESS);
+    n.addChild(templateArgument());
+    match(Token.Kind.GREATER);
+    return n;
+  }
+
+  // A template argument may either be a type or an expression, which creates a parsing problem for LL(k) grammar. How
+  // do we know whether we should parse X in Some<X> as a type or an expression? The answer is that we look up the
+  // template in the symbol table. The template definition tells us the kind of each type parameter, i.e. whether it is
+  // a type or expression. The parser proceeds based on this information.
+
+  // For now, just assume it is a type.
+
+  // Should template argument have token? It will wind up being the same token used by its content.
+
+  private AstNode templateArgument () {
+    var n = new TemplateArgument(lookahead);
+    n.addChild(type());
     return n;
   }
 

@@ -87,4 +87,8 @@ public interface Visitor {
   public void visit (PointerType node);
   public void visit (PrimitiveType node);
 
+  public void visit (TemplateInstantiation node);
+  public void visit (TemplateArguments node);
+  public void visit (TemplateArgument node);
+
 }

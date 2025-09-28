@@ -5,7 +5,9 @@ import stdlib;
 
 public var hello: *(*int)[] = -1 + 2.5;
 
-public var x: List<> = 1;
+public var x: List = 1;
+
+public var x: List<int> = 2;
 
 //def myfun () {
 //  var a: int = 1;

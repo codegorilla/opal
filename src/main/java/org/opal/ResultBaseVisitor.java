@@ -96,4 +96,8 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
   public T visit (PointerType node) { return null; }
   public T visit (PrimitiveType node) { return null; }
 
+  public T visit (TemplateInstantiation node) { return null; }
+  public T visit (TemplateArguments node) { return null; }
+  public T visit (TemplateArgument node) { return null; }
+
 }

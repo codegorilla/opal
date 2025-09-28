@@ -87,4 +87,8 @@ public interface ResultVisitor <T> {
   public T visit (PointerType node);
   public T visit (PrimitiveType node);
 
+  public T visit (TemplateInstantiation node);
+  public T visit (TemplateArguments node);
+  public T visit (TemplateArgument node);
+
 }
