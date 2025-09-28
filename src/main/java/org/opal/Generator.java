@@ -125,7 +125,7 @@ public class Generator extends ResultBaseVisitor <ST> {
     st.add("variableAccessSpecifier", visit(node.accessSpecifier()));
     visit(node.variableName());
     visit(node.variableTypeSpecifier());
-    // Get translated type specifier and declarator from stack. The type specifier should be something basic like 'int'.
+    // Get translated type specifier and declarator from stack
     st.add("typeSpecifier", stack.pop());
     st.add("declarator", stack.pop());
 //    node.getModifiers().accept(this);
@@ -148,9 +148,6 @@ public class Generator extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (VariableTypeSpecifier node) {
-//    var st = group.getInstanceOf("declaration/variableTypeSpecifier");
-//    st.add("type", visit(node.type()));
-//    return st;
     visit(node.type());
     return null;
   }
