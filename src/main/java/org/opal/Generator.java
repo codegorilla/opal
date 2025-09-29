@@ -13,6 +13,8 @@ import java.util.LinkedList;
 
 public class Generator extends ResultBaseVisitor <ST> {
 
+  boolean inTA = false;
+
   private final URL templateDirectoryUrl;
   private final STGroupDir group;
 
@@ -238,21 +240,51 @@ public class Generator extends ResultBaseVisitor <ST> {
     return null;
   }
 
+  // We use inTA to gell whether or not we are inside of a template argument because pointers are handled differently
+  // depending on whether or not we are.
+
   public ST visit (TemplateArgument node) {
+    inTA = true;
     var st = group.getInstanceOf("type/templateArgument");
     visit(node.getChild(0));
     st.add("type", stack.pop());
     stack.push(st);
+    inTA = false;
     return null;
   }
 
-  // Template argument is a passthrough, but maybe we will just add a node for it for conceptual simplicity.
+//  public ST visit (PointerType node) {
+//    var st = group.getInstanceOf("declarator/pointerDeclarator");
+//    st.add("directDeclarator", stack.pop());
+//    stack.push(st);
+//    visit(node.baseType());
+//    return null;
+//  }
+
+  // We need to be able to tell if we are inside template arguments. This could be done by using parent links or by
+  // pushing nodes onto a stack and traversing the stack.
 
   public ST visit (PointerType node) {
+    if (!inTA)
+      pointer(node);
+    else
+      pointerTA(node);
+    return null;
+  }
+
+  public ST pointer (PointerType node) {
     var st = group.getInstanceOf("declarator/pointerDeclarator");
     st.add("directDeclarator", stack.pop());
     stack.push(st);
     visit(node.baseType());
+    return null;
+  }
+
+  public ST pointerTA (PointerType node) {
+    var st = group.getInstanceOf("type/pointerType");
+    visit(node.baseType());
+    st.add("baseType", stack.pop());
+    stack.push(st);
     return null;
   }
 
