@@ -19,6 +19,9 @@ public class Generator extends ResultBaseVisitor <ST> {
   // Stack for transforming variable name to declarator. Is there only ever 1-2 things on the stack at a time?
   private final LinkedList<ST> stack = new LinkedList<>();
 
+  // Stack for keeping track of current node path
+  private final LinkedList<AstNode> ancestorStack = new LinkedList<>();
+
   public Generator (AstNode input) {
     super(input);
     templateDirectoryUrl = this.getClass().getClassLoader().getResource("templates");
@@ -26,11 +29,14 @@ public class Generator extends ResultBaseVisitor <ST> {
   }
 
   public void process () {
-    root.accept(this);
+    visit(root);
   }
 
   public ST visit (AstNode node) {
-    return node.accept(this);
+    ancestorStack.push(node);
+    var st = node.accept(this);
+    ancestorStack.pop();
+    return st;
   }
 
   public ST visit (TranslationUnit node) {
@@ -262,12 +268,13 @@ public class Generator extends ResultBaseVisitor <ST> {
 
   public ST visit (PointerType node) {
     var found = false;
-    AstNode n = node;
-    while (!found && n != null && !(n instanceof TranslationUnit)) {
-      System.out.println("traversing upwards..." + n.toString());
-      n = n.getParent();
-      if (n instanceof TemplateArgument)
+    for (var ancestor : ancestorStack) {
+      if (ancestor instanceof TemplateArgument) {
+        System.out.println("Inside a template argument");
         found = true;
+        break;
+      }
+      System.out.println(ancestor);
     }
     if (!found)
       pointer(node);

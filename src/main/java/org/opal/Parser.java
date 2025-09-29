@@ -1160,18 +1160,11 @@ public class Parser {
       var p = n;
       n = stack.pop();
       n.addChild(p);
-      p.setParent(n);
     }
     n.setRoot(root);
     // If program crashes, check here, this is just for testing.
     System.out.println("***");
     System.out.println(n);
-//    System.out.println(n.getChild(0));
-//    System.out.println(n.getChild(0).getChild(0));
-//    System.out.println(n.getChild(0).getChild(0).getChild(0));
-//    System.out.println(n.getChild(0).getChild(0).getChild(0).getParent());
-//    System.out.println(n.getChild(0).getChild(0).getChild(0).getParent().getParent());
-//    System.out.println(n.getChild(0).getChild(0).getChild(0).getParent().getParent().getParent());
     System.out.println("***");
     return n;
   }
@@ -1315,7 +1308,6 @@ public class Parser {
     var n = new TemplateArgument(lookahead);
     var p = type();
     n.addChild(p);
-    p.setParent(n);
     return n;
   }
 
