@@ -3,13 +3,13 @@ package main;
 import math;
 import stdlib;
 
-public var hello: *(*int)[] = -1 + 2.5;
+//public var hello: *(*int)[] = -1 + 2.5;
 
-public var x: List = 1;
+//public var x: List = 1;
 
-public var x: List<*int> = 2;
+public var x: List<**int> = 2;
 
-public var y: *int = 1;
+public var y: *int[] = 1;
 
 //def myfun () {
 //  var a: int = 1;

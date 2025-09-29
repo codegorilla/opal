@@ -13,8 +13,6 @@ import java.util.LinkedList;
 
 public class Generator extends ResultBaseVisitor <ST> {
 
-  boolean inTA = false;
-
   private final URL templateDirectoryUrl;
   private final STGroupDir group;
 
@@ -240,16 +238,11 @@ public class Generator extends ResultBaseVisitor <ST> {
     return null;
   }
 
-  // We use inTA to gell whether or not we are inside of a template argument because pointers are handled differently
-  // depending on whether or not we are.
-
   public ST visit (TemplateArgument node) {
-    inTA = true;
     var st = group.getInstanceOf("type/templateArgument");
     visit(node.getChild(0));
     st.add("type", stack.pop());
     stack.push(st);
-    inTA = false;
     return null;
   }
 
@@ -264,8 +257,19 @@ public class Generator extends ResultBaseVisitor <ST> {
   // We need to be able to tell if we are inside template arguments. This could be done by using parent links or by
   // pushing nodes onto a stack and traversing the stack.
 
+  // Need to change decision to base it on whether it has a TA ancestor, which is found by traversing up the AST until
+  // one is found or the root node is reached.
+
   public ST visit (PointerType node) {
-    if (!inTA)
+    var found = false;
+    AstNode n = node;
+    while (!found && n != null && !(n instanceof TranslationUnit)) {
+      System.out.println("traversing upwards..." + n.toString());
+      n = n.getParent();
+      if (n instanceof TemplateArgument)
+        found = true;
+    }
+    if (!found)
       pointer(node);
     else
       pointerTA(node);

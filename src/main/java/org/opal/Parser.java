@@ -1160,12 +1160,18 @@ public class Parser {
       var p = n;
       n = stack.pop();
       n.addChild(p);
+      p.setParent(n);
     }
     n.setRoot(root);
     // If program crashes, check here, this is just for testing.
     System.out.println("***");
     System.out.println(n);
 //    System.out.println(n.getChild(0));
+//    System.out.println(n.getChild(0).getChild(0));
+//    System.out.println(n.getChild(0).getChild(0).getChild(0));
+//    System.out.println(n.getChild(0).getChild(0).getChild(0).getParent());
+//    System.out.println(n.getChild(0).getChild(0).getChild(0).getParent().getParent());
+//    System.out.println(n.getChild(0).getChild(0).getChild(0).getParent().getParent().getParent());
     System.out.println("***");
     return n;
   }
@@ -1293,18 +1299,23 @@ public class Parser {
     return n;
   }
 
-  // A template argument may either be a type or an expression, which creates a parsing problem for LL(k) grammar. How
-  // do we know whether we should parse X in Some<X> as a type or an expression? The answer is that we look up the
-  // template in the symbol table. The template definition tells us the kind of each type parameter, i.e. whether it is
-  // a type or expression. The parser proceeds based on this information.
+  // A template argument may either be a type or an expression, which creates a
+  // parsing problem for LL(k) grammar. How do we know whether we should parse
+  // X in Some<X> as a type or an expression? The answer is that we look up the
+  // template in the symbol table. The template definition tells us the kind of
+  // each type parameter, i.e. whether it is a type or expression. The parser
+  // proceeds based on this information.
 
   // For now, just assume it is a type.
 
-  // Should template argument have token? It will wind up being the same token used by its content.
+  // Should template argument have token? It will wind up being the same token
+  // used by its content.
 
   private AstNode templateArgument () {
     var n = new TemplateArgument(lookahead);
-    n.addChild(type());
+    var p = type();
+    n.addChild(p);
+    p.setParent(n);
     return n;
   }
 
