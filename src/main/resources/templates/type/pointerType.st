@@ -1,3 +1,3 @@
 pointerType (baseType) ::= <<
-(*<baseType>)
+(<baseType>*)
 >>

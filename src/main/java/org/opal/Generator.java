@@ -252,34 +252,22 @@ public class Generator extends ResultBaseVisitor <ST> {
     return null;
   }
 
-//  public ST visit (PointerType node) {
-//    var st = group.getInstanceOf("declarator/pointerDeclarator");
-//    st.add("directDeclarator", stack.pop());
-//    stack.push(st);
-//    visit(node.baseType());
-//    return null;
-//  }
-
   // We need to be able to tell if we are inside template arguments. This could be done by using parent links or by
-  // pushing nodes onto a stack and traversing the stack.
+  // pushing nodes onto a stack and traversing the stack until a template argument is found or the root node is reached.
 
-  // Need to change decision to base it on whether it has a TA ancestor, which is found by traversing up the AST until
-  // one is found or the root node is reached.
+  // To do: Another thing we need to do is determine what kind of template argument it is. If it is a type argument,
+  // then we need to parse it as a type; whereas if it is a non-type argument (e.g. variable), then we need to parse it
+  // as an expression. This determination can be made via symbol table lookup, but for now just assume it is a type
+  // argument.
 
   public ST visit (PointerType node) {
-    var found = false;
     for (var ancestor : ancestorStack) {
       if (ancestor instanceof TemplateArgument) {
-        System.out.println("Inside a template argument");
-        found = true;
-        break;
+        pointerTA(node);
+        return null;
       }
-      System.out.println(ancestor);
     }
-    if (!found)
-      pointer(node);
-    else
-      pointerTA(node);
+    pointer(node);
     return null;
   }
 
