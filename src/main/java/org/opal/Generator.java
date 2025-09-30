@@ -16,7 +16,8 @@ public class Generator extends ResultBaseVisitor <ST> {
   private final URL templateDirectoryUrl;
   private final STGroupDir group;
 
-  // Stack for transforming variable name to declarator. Is there only ever 1-2 things on the stack at a time?
+  // Stack for facilitating out-of-order operations. For example, we need to swap the base type for the variable name in
+  // order to form a declarator. We also need to invert the order in which arrays and pointers are processed.
   private final LinkedList<ST> stack = new LinkedList<>();
 
   // Stack for keeping track of current node path
