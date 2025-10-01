@@ -25,4 +25,12 @@ public class RoutineDeclaration extends AstNode {
     return getChild(0);
   }
 
+  public AstNode routineName () {
+    return getChild(2);
+  }
+
+  public AstNode routineParameters () {
+    return getChild(3);
+  }
+
 }

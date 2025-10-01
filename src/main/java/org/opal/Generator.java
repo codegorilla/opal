@@ -122,6 +122,34 @@ public class Generator extends ResultBaseVisitor <ST> {
     return null;
   }
 
+  public ST visit (RoutineDeclaration node) {
+    var st = group.getInstanceOf("declaration/functionDeclaration");
+    st.add("functionName", visit(node.routineName()));
+    st.add("functionParameters", visit(node.routineParameters()));
+//    st.add("functionReturnType", visit(node.routineReturnType()));
+    return st;
+  }
+
+  public ST visit (RoutineName node) {
+    var st = group.getInstanceOf("declaration/functionName");
+    st.add("identifier", node.getToken().getLexeme());
+    return st;
+  }
+
+  public ST visit (RoutineParameters node) {
+    var st = group.getInstanceOf("declaration/functionParameters");
+    for (var child : node.getChildren())
+      st.add("functionParameter", visit(child));
+    return st;
+  }
+
+  public ST visit (RoutineParameter node) {
+    var st = group.getInstanceOf("declaration/functionParameter");
+    st.add("typeSpecifier", "int");
+    st.add("declarator", "x");
+    return st;
+  }
+
   // Change variableAccessSpecifier to accessSpecifier for consistency?
 
   // In C++, any pointer or raw array portions of the type specifier are transferred to the name to form a so-called
@@ -271,6 +299,10 @@ public class Generator extends ResultBaseVisitor <ST> {
     pointer(node);
     return null;
   }
+
+  // To do: See if we can eliminate gratuitous parenthesis. If the PointerType node is at the top of the expression tree
+  // then we don't need parentheses. There may be other situations too, such as consecutive pointers and consecutive
+  // arrays.
 
   public ST pointer (PointerType node) {
     var st = group.getInstanceOf("declarator/pointerDeclarator");

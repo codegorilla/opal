@@ -14,7 +14,7 @@ import org.opal.symbol.PrimitiveTypeSymbol;
 
 public class Parser {
 
-  private final int SLEEP_TIME = 100;
+  private final int SLEEP_TIME = 10;
 
   private final LinkedList<Token> input;
   private int position;
