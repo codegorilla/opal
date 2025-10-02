@@ -11,6 +11,6 @@ public var x: List<**int> = 2;
 
 public var y: *int[] = 1;
 
-def myfun (x: int) {
-  var a: int = 1;
+def myfun (s: float, t: uint32) -> int16 {
+  var a: float = 1;
 }

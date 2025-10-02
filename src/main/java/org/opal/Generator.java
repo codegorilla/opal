@@ -50,7 +50,9 @@ public class Generator extends ResultBaseVisitor <ST> {
     return null;
   }
 
-  // DECLARATIONS
+  // DECLARATIONS **************************************************
+
+  // PACKAGE DECLARATIONS
 
   // Package declaration is special in that there is only one, and it must appear at the top of the translation unit.
 
@@ -67,6 +69,8 @@ public class Generator extends ResultBaseVisitor <ST> {
     st.add("name", node.getToken().getLexeme());
     return st;
   }
+
+  // IMPORT DECLARATIONS
 
   public ST visit (ImportDeclarations node) {
     var st = group.getInstanceOf("declaration/importDeclarations");
@@ -87,14 +91,14 @@ public class Generator extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  // COMMON DECLARATIONS
+
   public ST visit (Declarations node) {
     var st = group.getInstanceOf("declaration/declarations");
     for (var child : node.getChildren())
       st.add("declaration", visit(child));
     return st;
   }
-
-  // VARIABLE DECLARATIONS
 
   // Access specifier should exist, but if it is implicit, then it won't have a token unless we artificially add one
   // during semantic analysis.
@@ -122,11 +126,13 @@ public class Generator extends ResultBaseVisitor <ST> {
     return null;
   }
 
+  // ROUTINE DECLARATIONS
+
   public ST visit (RoutineDeclaration node) {
     var st = group.getInstanceOf("declaration/functionDeclaration");
     st.add("functionName", visit(node.routineName()));
     st.add("functionParameters", visit(node.routineParameters()));
-//    st.add("functionReturnType", visit(node.routineReturnType()));
+    st.add("functionReturnType", visit(node.routineReturnType()));
     return st;
   }
 
@@ -145,10 +151,36 @@ public class Generator extends ResultBaseVisitor <ST> {
 
   public ST visit (RoutineParameter node) {
     var st = group.getInstanceOf("declaration/functionParameter");
-    st.add("typeSpecifier", "int");
-    st.add("declarator", "x");
+    visit(node.routineParameterName());
+    visit(node.routineParameterTypeSpecifier());
+    st.add("typeSpecifier", stack.pop());
+    st.add("declarator", stack.pop());
     return st;
   }
+
+  public ST visit(RoutineParameterName node) {
+    var st = group.getInstanceOf("declarator/simpleDeclarator");
+    st.add("name", node.getToken().getLexeme());
+    stack.push(st);
+    return null;
+  }
+
+  public ST visit (RoutineParameterTypeSpecifier node) {
+    var st = group.getInstanceOf("declaration/functionParameterTypeSpecifier");
+    visit(node.type());
+    st.add("type", stack.pop());
+    stack.push(st);
+    return null;
+  }
+
+  public ST visit (RoutineReturnType node) {
+    var st = group.getInstanceOf("declaration/functionReturnType");
+    visit(node.type());
+    st.add("type", stack.pop());
+    return st;
+  }
+
+  // VARIABLE DECLARATIONS
 
   // Change variableAccessSpecifier to accessSpecifier for consistency?
 
@@ -183,7 +215,10 @@ public class Generator extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (VariableTypeSpecifier node) {
+    var st = group.getInstanceOf("declaration/variableTypeSpecifier");
     visit(node.type());
+    st.add("type", stack.pop());
+    stack.push(st);
     return null;
   }
 

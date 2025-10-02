@@ -20,4 +20,12 @@ public class RoutineParameter extends AstNode {
     return v.visit(this);
   }
 
+  public AstNode routineParameterName () {
+    return getChild(0);
+  }
+
+  public AstNode routineParameterTypeSpecifier () {
+    return getChild(1);
+  }
+
 }

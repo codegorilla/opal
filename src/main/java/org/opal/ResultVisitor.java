@@ -32,6 +32,7 @@ public interface ResultVisitor <T> {
   public T visit (RoutineParameters node);
   public T visit (RoutineParameter node);
   public T visit (RoutineParameterName node);
+  public T visit (RoutineParameterTypeSpecifier node);
   public T visit (RoutineReturnType node);
   public T visit (RoutineBody node);
 

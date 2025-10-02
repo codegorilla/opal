@@ -20,4 +20,8 @@ public class RoutineReturnType extends AstNode {
     return v.visit(this);
   }
 
+  public AstNode type () {
+    return getChild(0);
+  }
+
 }

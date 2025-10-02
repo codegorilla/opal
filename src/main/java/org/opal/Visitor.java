@@ -32,6 +32,7 @@ public interface Visitor {
   public void visit (RoutineParameters node);
   public void visit (RoutineParameter node);
   public void visit (RoutineParameterName node);
+  public void visit (RoutineParameterTypeSpecifier node);
   public void visit (RoutineReturnType node);
   public void visit (RoutineBody node);
 

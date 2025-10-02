@@ -1,0 +1,3 @@
+functionReturnType (type) ::= <<
+-> <type>
+>>

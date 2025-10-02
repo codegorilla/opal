@@ -5,9 +5,9 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class RoutineDeclaration extends AstNode {
+public class RoutineParameterTypeSpecifier extends AstNode {
 
-  public RoutineDeclaration (Token token) {
+  public RoutineParameterTypeSpecifier (Token token) {
     super(token);
   }
 
@@ -21,20 +21,8 @@ public class RoutineDeclaration extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode getName () {
+  public AstNode type () {
     return getChild(0);
-  }
-
-  public AstNode routineName () {
-    return getChild(2);
-  }
-
-  public AstNode routineParameters () {
-    return getChild(3);
-  }
-
-  public AstNode routineReturnType () {
-    return getChild(4);
   }
 
 }

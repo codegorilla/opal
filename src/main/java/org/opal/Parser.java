@@ -329,8 +329,7 @@ public class Parser {
   private AstNode routineParameter () {
     var n = new RoutineParameter();
     n.addChild(routineParameterName());
-    match(Token.Kind.COLON);
-    n.addChild(type(true));
+    n.addChild(routineParameterTypeSpecifier());
     return n;
   }
 
@@ -339,6 +338,13 @@ public class Parser {
     match(Token.Kind.IDENTIFIER);
     //var s = RoutineParameterSymbol(n.getToken().lexeme);
     //currentScope.define(s);
+    return n;
+  }
+
+  private AstNode routineParameterTypeSpecifier () {
+    var n = new RoutineParameterTypeSpecifier(lookahead);
+    match(Token.Kind.COLON);
+    n.addChild(type(true));
     return n;
   }
 
