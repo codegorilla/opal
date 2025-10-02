@@ -204,15 +204,6 @@ public class Parser {
   // Note: Parameter is false by default in scala. But the parameter doesn't seem
   // to be used.
 
-//  private AstNode accessSpecifier () {
-//    var n = new AccessSpecifier();
-//    if (lookahead.getKind() == Token.Kind.PRIVATE || lookahead.getKind() == Token.Kind.PUBLIC) {
-//      n.setToken(lookahead);
-//      match(lookahead.getKind());
-//    }
-//    return n;
-//  }
-
   private AccessSpecifier accessSpecifier () {
     var n = new AccessSpecifier();
     if (lookahead.getKind() == Token.Kind.PRIVATE || lookahead.getKind() == Token.Kind.PUBLIC) {
@@ -283,6 +274,9 @@ public class Parser {
   // the routine parameters may be in the same exact scope as the routine body
   // (or top-most block of the routine).
 
+  // For now, there are no local routines, so no need to distinguish between
+  // global and local routines.
+
   private AstNode routineDeclaration (AccessSpecifier accessSpecifier, AstNode modifiers) {
     var n = new RoutineDeclaration(lookahead);
 //    var scope = Scope(Scope.Kind.LOCAL);
@@ -290,6 +284,8 @@ public class Parser {
 //    currentScope = scope;
 //    n.setScope(currentScope);
     match(Token.Kind.DEF);
+    // Use 'instanceof' on parent to check kind instead of static final variables
+    //accessSpecifier.setKind(AccessSpecifier.ROUTINE);
     n.addChild(accessSpecifier);
     n.addChild(modifiers);
     n.addChild(routineName());
@@ -380,15 +376,18 @@ public class Parser {
 
   // VARIABLE DECLARATIONS
 
-  // To do: Local variables shouldn't have access specifiers. Because children can be accessed by name, we'll probably
-  // need a separate local variable node type. For now, just handle global variables.
+  // To do: Local variables don't have access specifiers. Because children can be accessed by name, we need a separate
+  // local variable node type.
 
   private AstNode variableDeclaration (AccessSpecifier accessSpecifier, AstNode modifiers) {
-    var n = new VariableDeclaration(lookahead);
+    AstNode n;
+    if (accessSpecifier != null) {
+      n = new VariableDeclaration(lookahead);
+      n.addChild(accessSpecifier);
+    }
+    else
+      n = new LocalVariableDeclaration(lookahead);
     match(Token.Kind.VAR);
-    if (accessSpecifier != null)
-      accessSpecifier.setKind(AccessSpecifier.VARIABLE);
-    n.addChild(accessSpecifier);
     n.addChild(modifiers);
     n.addChild(variableName());
     n.addChild(variableTypeSpecifier());

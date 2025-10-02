@@ -34,6 +34,10 @@ public abstract class AstNode {
     children.add(node);
   }
 
+  public boolean hasChildren () {
+    return !children.isEmpty();
+  }
+
   public AstNode getChild (int index) {
     return children.get(index);
   }
