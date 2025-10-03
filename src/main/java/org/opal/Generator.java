@@ -273,11 +273,26 @@ public class Generator extends ResultBaseVisitor <ST> {
   // mark certain AST nodes to distinguish them.
 
   public ST visit (ArrayType node) {
+//    for (var ancestor : ancestorStack) {
+//      if (ancestor instanceof TemplateArgument)
+//        return arrayTA(node);
+//      System.out.println(ancestor);
+//    }
+    return array(node);
+  }
+
+  public ST array (ArrayType node) {
     var st = group.getInstanceOf("declarator/arrayDeclarator");
     st.add("directDeclarator", stack.pop());
     stack.push(st);
     return visit(node.baseType());
   }
+
+//  public ST arrayTA (ArrayType node) {
+//    var st = group.getInstanceOf("type/arrayType");
+//    st.add("baseType", visit(node.baseType()));
+//    return st;
+//  }
 
   public ST visit (NominalType node) {
     var st = group.getInstanceOf("type/nominalType");
@@ -287,29 +302,22 @@ public class Generator extends ResultBaseVisitor <ST> {
 
   public ST visit (TemplateInstantiation node) {
     var st = group.getInstanceOf("type/templateInstantiation");
-    visit(node.getChild(0));
-    visit(node.getChild(1));
-    st.add("arguments", stack.pop());
-    st.add("name", stack.pop());
-    stack.push(st);
-    return null;
+    st.add("name", visit(node.getChild(0)));
+    st.add("arguments", visit(node.getChild(1)));
+    return st;
   }
 
   public ST visit (TemplateArguments node) {
     var st = group.getInstanceOf("type/templateArguments");
     // There should be a loop here, but assume only one child for now
-    visit(node.getChild(0));
-    st.add("argument", stack.pop());
-    stack.push(st);
-    return null;
+    st.add("argument", visit(node.getChild(0)));
+    return st;
   }
 
   public ST visit (TemplateArgument node) {
     var st = group.getInstanceOf("type/templateArgument");
-    visit(node.getChild(0));
-    st.add("type", stack.pop());
-    stack.push(st);
-    return null;
+    st.add("type", visit(node.getChild(0)));
+    return st;
   }
 
   // We need to be able to tell if we are inside template arguments. This could be done by using parent links or by
@@ -341,11 +349,11 @@ public class Generator extends ResultBaseVisitor <ST> {
 
   public ST pointerTA (PointerType node) {
     var st = group.getInstanceOf("type/pointerType");
-    visit(node.baseType());
-    st.add("baseType", stack.pop());
-    stack.push(st);
-    return null;
+    st.add("baseType", visit(node.baseType()));
+    return st;
   }
+
+  // Goes on stack if template argument?
 
   public ST visit (PrimitiveType node) {
     var st = group.getInstanceOf("type/primitiveType");

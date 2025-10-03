@@ -5,11 +5,20 @@ import stdlib;
 
 //public var hello: *(*int)[] = -1 + 2.5;
 
-public var x: (**List)[] = 1;
+//public var x: (**List)[] = 1;
 
-//public var x: List<**int> = 2;
+//public var x: List<*int[]> = 2;
 
-public var y: (*int[])[] = 1;
+// Array of pointer to int
+public var t: *int[] = 1;
+
+// Pointer to array of int
+public var t: (*int)[] = 1;
+
+public var t: List<int> = 1;
+
+public var t: List<*int> = 1;
+
 
 //public def myfun (s: float, t: uint32) -> int {
 //  var a: float = 1;
