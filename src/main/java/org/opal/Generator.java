@@ -187,13 +187,14 @@ public class Generator extends ResultBaseVisitor <ST> {
   // In C++, any pointer or raw array portions of the type specifier are transferred to the name to form a so-called
   // "declarator".
 
+  // The variable name is placed on a stack, transformed into a declarator, and then retrieved from the stack. Since
+  // the stack never has more than one element, it doesn't actually need to be a stack.
+
   public ST visit (VariableDeclaration node) {
     var st = group.getInstanceOf("declaration/variableDeclaration");
     st.add("variableAccessSpecifier", visit(node.accessSpecifier()));
-    visit(node.variableName());
-    visit(node.variableTypeSpecifier());
-    // Get translated type specifier and declarator from stack
-    st.add("typeSpecifier", stack.pop());
+    stack.push(visit(node.variableName()));
+    st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
     st.add("declarator", stack.pop());
 //    node.getModifiers().accept(this);
     st.add("initializer", visit(node.variableInitializer()));
@@ -210,16 +211,13 @@ public class Generator extends ResultBaseVisitor <ST> {
   public ST visit (VariableName node) {
     var st = group.getInstanceOf("declarator/simpleDeclarator");
     st.add("name", node.getToken().getLexeme());
-    stack.push(st);
-    return null;
+    return st;
   }
 
   public ST visit (VariableTypeSpecifier node) {
     var st = group.getInstanceOf("declaration/variableTypeSpecifier");
-    visit(node.type());
-    st.add("type", stack.pop());
-    stack.push(st);
-    return null;
+    st.add("type", visit(node.type()));
+    return st;
   }
 
   public ST visit (VariableInitializer node) {
@@ -278,15 +276,13 @@ public class Generator extends ResultBaseVisitor <ST> {
     var st = group.getInstanceOf("declarator/arrayDeclarator");
     st.add("directDeclarator", stack.pop());
     stack.push(st);
-    visit(node.baseType());
-    return null;
+    return visit(node.baseType());
   }
 
   public ST visit (NominalType node) {
     var st = group.getInstanceOf("type/nominalType");
     st.add("name", node.getToken().getLexeme());
-    stack.push(st);
-    return null;
+    return st;
   }
 
   public ST visit (TemplateInstantiation node) {
@@ -326,13 +322,10 @@ public class Generator extends ResultBaseVisitor <ST> {
 
   public ST visit (PointerType node) {
     for (var ancestor : ancestorStack) {
-      if (ancestor instanceof TemplateArgument) {
-        pointerTA(node);
-        return null;
-      }
+      if (ancestor instanceof TemplateArgument)
+        return pointerTA(node);
     }
-    pointer(node);
-    return null;
+    return pointer(node);
   }
 
   // To do: See if we can eliminate gratuitous parenthesis. If the PointerType node is at the top of the expression tree
@@ -343,8 +336,7 @@ public class Generator extends ResultBaseVisitor <ST> {
     var st = group.getInstanceOf("declarator/pointerDeclarator");
     st.add("directDeclarator", stack.pop());
     stack.push(st);
-    visit(node.baseType());
-    return null;
+    return visit(node.baseType());
   }
 
   public ST pointerTA (PointerType node) {
@@ -358,8 +350,7 @@ public class Generator extends ResultBaseVisitor <ST> {
   public ST visit (PrimitiveType node) {
     var st = group.getInstanceOf("type/primitiveType");
     st.add("name", node.getToken().getLexeme());
-    stack.push(st);
-    return null;
+    return st;
   }
 
 }
