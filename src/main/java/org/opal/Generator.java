@@ -272,6 +272,8 @@ public class Generator extends ResultBaseVisitor <ST> {
   public ST visit (ArrayType node) {
     var st = group.getInstanceOf("declarator/arrayDeclarator");
     st.add("directDeclarator", stack.pop());
+    if (node.getChildCount() == 2)
+      st.add("expression", visit(node.expression()));
     stack.push(st);
     return visit(node.baseType());
   }

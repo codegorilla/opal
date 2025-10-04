@@ -1,3 +1,3 @@
-arrayDeclarator (directDeclarator) ::= <<
-(<directDeclarator>[])
+arrayDeclarator (directDeclarator, expression) ::= <<
+(<directDeclarator>[<expression>])
 >>

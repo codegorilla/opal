@@ -10,14 +10,14 @@ import stdlib;
 //public var x: List<*int[]> = 2;
 
 // Array of pointer to int
-//public var t: *int[] = 1;
+public var t: *int[] = 1;
 
 // Pointer to array of int
-//public var t: (*int)[] = 1;
+public var t: (*int)[5] = 1;
 
 //public var t: *List<*int, *int[]> = 1;
 
-//public var t: (*List<*(*int)[]>)[] = 1;
+public var t: (*List<*(*int)[]>)[] = 1;
 
 
 public def myfun (s: float, t: uint32) -> *int {
