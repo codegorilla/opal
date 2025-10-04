@@ -1289,10 +1289,16 @@ public class Parser {
     return n;
   }
 
+  // For now just assume all template arguments are types
+
   private AstNode templateArguments () {
     var n = new TemplateArguments(lookahead);
     match(Token.Kind.LESS);
     n.addChild(templateArgument());
+    while (lookahead.getKind() == Token.Kind.COMMA) {
+      match(Token.Kind.COMMA);
+      n.addChild(templateArgument());
+    }
     match(Token.Kind.GREATER);
     return n;
   }

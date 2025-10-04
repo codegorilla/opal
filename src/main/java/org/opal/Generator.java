@@ -289,8 +289,8 @@ public class Generator extends ResultBaseVisitor <ST> {
 
   public ST visit (TemplateArguments node) {
     var st = group.getInstanceOf("type/templateArguments");
-    // There should be a loop here, but assume only one child for now
-    st.add("argument", visit(node.getChild(0)));
+    for (var child : node.getChildren())
+      st.add("argument", visit(child));
     return st;
   }
 
