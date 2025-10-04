@@ -741,16 +741,18 @@ public class Parser {
 
   // The root of every expression sub-tree has an explicit 'expression' AST
   // node, where the final computed type and other synthesized attributes can be
-  // stored to aid in such things as type-checking.
+  // stored to aid in such things as type-checking. This might not actually be
+  // necessary. We can use 'instanceof' to know if any expression node is the
+  // root expression node or not.
 
   private AstNode expression (boolean root) {
+    var n = assignmentExpression();
     if (root) {
-      var n = new Expression();
-      n.addChild(assignmentExpression());
-      return n;
+      var p = n;
+      n = new Expression();
+      n.addChild(p);
     }
-    else
-      return assignmentExpression();
+    return n;
   }
 
   // We may wish to add a 'walrus' operator (:=), which can be used inside a
@@ -1262,14 +1264,11 @@ public class Parser {
     var n = new ArrayType(lookahead);
     match(Token.Kind.L_BRACKET);
     if (lookahead.getKind() != Token.Kind.R_BRACKET) {
-      //n.addChild(expression(root=true));
+      n.addChild(expression(true));
     }
     match(Token.Kind.R_BRACKET);
     return n;
   }
-
-  // Need to eventually allow for type parameters. (This would allow
-  // us to know that this was a class type, if that matters.)
 
   private Type nominalType () {
     Type n = new NominalType(lookahead);
@@ -1293,6 +1292,10 @@ public class Parser {
     var n = new TemplateArguments(lookahead);
     match(Token.Kind.LESS);
     n.addChild(templateArgument());
+    while (lookahead.getKind() == Token.Kind.COMMA) {
+      match(Token.Kind.COMMA);
+      n.addChild(templateArgument());
+    }
     match(Token.Kind.GREATER);
     return n;
   }
@@ -1308,6 +1311,8 @@ public class Parser {
 
   // Should template argument have token? It will wind up being the same token
   // used by its content.
+
+  // I think we need to keep track of whether it is a root node here
 
   private AstNode templateArgument () {
     var n = new TemplateArgument(lookahead);

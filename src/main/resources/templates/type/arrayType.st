@@ -1,3 +1,5 @@
-arrayType (baseType) ::= <<
+// Not used
+
+_arrayType (baseType) ::= <<
 (<baseType>[])
 >>

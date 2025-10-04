@@ -1,3 +1,5 @@
-pointerType (baseType) ::= <<
+// Not used
+
+_pointerType (baseType) ::= <<
 (<baseType>*)
 >>

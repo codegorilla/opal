@@ -1,3 +1,3 @@
-templateArgument (type) ::= <<
-<type>
+templateArgument (type, declarator) ::= <<
+  <type> <declarator>
 >>

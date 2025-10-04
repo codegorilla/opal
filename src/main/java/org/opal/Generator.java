@@ -152,8 +152,7 @@ public class Generator extends ResultBaseVisitor <ST> {
   public ST visit (RoutineParameter node) {
     var st = group.getInstanceOf("declaration/functionParameter");
     visit(node.routineParameterName());
-    visit(node.routineParameterTypeSpecifier());
-    st.add("typeSpecifier", stack.pop());
+    st.add("typeSpecifier", visit(node.routineParameterTypeSpecifier()));
     st.add("declarator", stack.pop());
     return st;
   }
@@ -167,17 +166,20 @@ public class Generator extends ResultBaseVisitor <ST> {
 
   public ST visit (RoutineParameterTypeSpecifier node) {
     var st = group.getInstanceOf("declaration/functionParameterTypeSpecifier");
-    visit(node.type());
-    st.add("type", stack.pop());
-    stack.push(st);
-    return null;
+    st.add("type", visit(node.type()));
+    return st;
   }
 
   public ST visit (RoutineReturnType node) {
     var st = group.getInstanceOf("declaration/functionReturnType");
-    visit(node.type());
-    st.add("type", stack.pop());
+    stack.push(emptyDeclarator());
+    st.add("type", visit(node.type()));
+    st.add("declarator", stack.pop());
     return st;
+  }
+
+  private ST emptyDeclarator () {
+    return new ST("");
   }
 
   // VARIABLE DECLARATIONS
@@ -187,13 +189,14 @@ public class Generator extends ResultBaseVisitor <ST> {
   // In C++, any pointer or raw array portions of the type specifier are transferred to the name to form a so-called
   // "declarator".
 
+  // The variable name is placed on a stack, transformed into a declarator, and then retrieved from the stack. Since
+  // the stack never has more than one element, it doesn't actually need to be a stack.
+
   public ST visit (VariableDeclaration node) {
     var st = group.getInstanceOf("declaration/variableDeclaration");
     st.add("variableAccessSpecifier", visit(node.accessSpecifier()));
-    visit(node.variableName());
-    visit(node.variableTypeSpecifier());
-    // Get translated type specifier and declarator from stack
-    st.add("typeSpecifier", stack.pop());
+    stack.push(visit(node.variableName()));
+    st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
     st.add("declarator", stack.pop());
 //    node.getModifiers().accept(this);
     st.add("initializer", visit(node.variableInitializer()));
@@ -210,16 +213,13 @@ public class Generator extends ResultBaseVisitor <ST> {
   public ST visit (VariableName node) {
     var st = group.getInstanceOf("declarator/simpleDeclarator");
     st.add("name", node.getToken().getLexeme());
-    stack.push(st);
-    return null;
+    return st;
   }
 
   public ST visit (VariableTypeSpecifier node) {
     var st = group.getInstanceOf("declaration/variableTypeSpecifier");
-    visit(node.type());
-    st.add("type", stack.pop());
-    stack.push(st);
-    return null;
+    st.add("type", visit(node.type()));
+    return st;
   }
 
   public ST visit (VariableInitializer node) {
@@ -269,55 +269,48 @@ public class Generator extends ResultBaseVisitor <ST> {
 
   // TYPES
 
-  // It is possible that some pointer and array types do not get transformed into declarators, but I need to research
-  // how it is possible for the code to determine which rule to follow and when. We might be able to use different AST
-  // node types such as TopLevelArrayType, TopLevelPointerType, NestedArrayType, and/or NestedPointerType. Or we could
-  // mark certain AST nodes to distinguish them.
-
   public ST visit (ArrayType node) {
     var st = group.getInstanceOf("declarator/arrayDeclarator");
     st.add("directDeclarator", stack.pop());
+    if (node.getChildCount() == 2)
+      st.add("expression", visit(node.expression()));
     stack.push(st);
-    visit(node.baseType());
-    return null;
+    return visit(node.baseType());
   }
 
   public ST visit (NominalType node) {
     var st = group.getInstanceOf("type/nominalType");
     st.add("name", node.getToken().getLexeme());
-    stack.push(st);
-    return null;
+    return st;
   }
 
   public ST visit (TemplateInstantiation node) {
     var st = group.getInstanceOf("type/templateInstantiation");
-    visit(node.getChild(0));
-    visit(node.getChild(1));
-    st.add("arguments", stack.pop());
-    st.add("name", stack.pop());
-    stack.push(st);
-    return null;
+    st.add("name", visit(node.getChild(0)));
+    st.add("arguments", visit(node.getChild(1)));
+    return st;
   }
 
   public ST visit (TemplateArguments node) {
     var st = group.getInstanceOf("type/templateArguments");
-    // There should be a loop here, but assume only one child for now
-    visit(node.getChild(0));
-    st.add("argument", stack.pop());
-    stack.push(st);
-    return null;
+    for (var child : node.getChildren())
+      st.add("argument", visit(child));
+    return st;
   }
 
   public ST visit (TemplateArgument node) {
+    // Put empty declarator on the stack
+    stack.push(new ST(""));
     var st = group.getInstanceOf("type/templateArgument");
-    visit(node.getChild(0));
-    st.add("type", stack.pop());
-    stack.push(st);
-    return null;
+    st.add("type", visit(node.getChild(0)));
+    st.add("declarator", stack.pop());
+    return st;
   }
 
   // We need to be able to tell if we are inside template arguments. This could be done by using parent links or by
   // pushing nodes onto a stack and traversing the stack until a template argument is found or the root node is reached.
+  // Update: Doesn't seem to be needed anymore. We push an empty declarator, so it can be treated the same regardless
+  // of whether we are in template or not.
 
   // To do: Another thing we need to do is determine what kind of template argument it is. If it is a type argument,
   // then we need to parse it as a type; whereas if it is a non-type argument (e.g. variable), then we need to parse it
@@ -325,41 +318,20 @@ public class Generator extends ResultBaseVisitor <ST> {
   // argument.
 
   public ST visit (PointerType node) {
-    for (var ancestor : ancestorStack) {
-      if (ancestor instanceof TemplateArgument) {
-        pointerTA(node);
-        return null;
-      }
-    }
-    pointer(node);
-    return null;
+    var st = group.getInstanceOf("declarator/pointerDeclarator");
+    st.add("directDeclarator", stack.pop());
+    stack.push(st);
+    return visit(node.baseType());
   }
 
   // To do: See if we can eliminate gratuitous parenthesis. If the PointerType node is at the top of the expression tree
   // then we don't need parentheses. There may be other situations too, such as consecutive pointers and consecutive
   // arrays.
 
-  public ST pointer (PointerType node) {
-    var st = group.getInstanceOf("declarator/pointerDeclarator");
-    st.add("directDeclarator", stack.pop());
-    stack.push(st);
-    visit(node.baseType());
-    return null;
-  }
-
-  public ST pointerTA (PointerType node) {
-    var st = group.getInstanceOf("type/pointerType");
-    visit(node.baseType());
-    st.add("baseType", stack.pop());
-    stack.push(st);
-    return null;
-  }
-
   public ST visit (PrimitiveType node) {
     var st = group.getInstanceOf("type/primitiveType");
     st.add("name", node.getToken().getLexeme());
-    stack.push(st);
-    return null;
+    return st;
   }
 
 }
