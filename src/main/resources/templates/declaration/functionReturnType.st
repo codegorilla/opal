@@ -1,3 +1,3 @@
-functionReturnType (type) ::= <<
--> <type>
+functionReturnType (type, declarator) ::= <<
+-> <type> <declarator>
 >>

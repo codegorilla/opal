@@ -15,11 +15,11 @@ import stdlib;
 // Pointer to array of int
 //public var t: (*int)[] = 1;
 
-public var t: *List<*int, *int[]> = 1;
+//public var t: *List<*int, *int[]> = 1;
 
 //public var t: (*List<*(*int)[]>)[] = 1;
 
 
-//public def myfun (s: float, t: uint32) -> int {
-//  var a: float = 1;
-//}
+public def myfun (s: float, t: uint32) -> *int {
+  //var a: float = 1;
+}

@@ -152,8 +152,7 @@ public class Generator extends ResultBaseVisitor <ST> {
   public ST visit (RoutineParameter node) {
     var st = group.getInstanceOf("declaration/functionParameter");
     visit(node.routineParameterName());
-    visit(node.routineParameterTypeSpecifier());
-    st.add("typeSpecifier", stack.pop());
+    st.add("typeSpecifier", visit(node.routineParameterTypeSpecifier()));
     st.add("declarator", stack.pop());
     return st;
   }
@@ -167,17 +166,20 @@ public class Generator extends ResultBaseVisitor <ST> {
 
   public ST visit (RoutineParameterTypeSpecifier node) {
     var st = group.getInstanceOf("declaration/functionParameterTypeSpecifier");
-    visit(node.type());
-    st.add("type", stack.pop());
-    stack.push(st);
-    return null;
+    st.add("type", visit(node.type()));
+    return st;
   }
 
   public ST visit (RoutineReturnType node) {
     var st = group.getInstanceOf("declaration/functionReturnType");
-    visit(node.type());
-    st.add("type", stack.pop());
+    stack.push(emptyDeclarator());
+    st.add("type", visit(node.type()));
+    st.add("declarator", stack.pop());
     return st;
+  }
+
+  private ST emptyDeclarator () {
+    return new ST("");
   }
 
   // VARIABLE DECLARATIONS
