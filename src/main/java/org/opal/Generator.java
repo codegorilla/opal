@@ -267,32 +267,12 @@ public class Generator extends ResultBaseVisitor <ST> {
 
   // TYPES
 
-  // It is possible that some pointer and array types do not get transformed into declarators, but I need to research
-  // how it is possible for the code to determine which rule to follow and when. We might be able to use different AST
-  // node types such as TopLevelArrayType, TopLevelPointerType, NestedArrayType, and/or NestedPointerType. Or we could
-  // mark certain AST nodes to distinguish them.
-
   public ST visit (ArrayType node) {
-//    for (var ancestor : ancestorStack) {
-//      if (ancestor instanceof TemplateArgument)
-//        return arrayTA(node);
-//      System.out.println(ancestor);
-//    }
-    return array(node);
-  }
-
-  public ST array (ArrayType node) {
     var st = group.getInstanceOf("declarator/arrayDeclarator");
     st.add("directDeclarator", stack.pop());
     stack.push(st);
     return visit(node.baseType());
   }
-
-//  public ST arrayTA (ArrayType node) {
-//    var st = group.getInstanceOf("type/arrayType");
-//    st.add("baseType", visit(node.baseType()));
-//    return st;
-//  }
 
   public ST visit (NominalType node) {
     var st = group.getInstanceOf("type/nominalType");
@@ -315,13 +295,18 @@ public class Generator extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (TemplateArgument node) {
+    // Put empty declarator on the stack
+    stack.push(new ST(""));
     var st = group.getInstanceOf("type/templateArgument");
     st.add("type", visit(node.getChild(0)));
+    st.add("declarator", stack.pop());
     return st;
   }
 
   // We need to be able to tell if we are inside template arguments. This could be done by using parent links or by
   // pushing nodes onto a stack and traversing the stack until a template argument is found or the root node is reached.
+  // Update: Doesn't seem to be needed anymore. We push an empty declarator, so it can be treated the same regardless
+  // of whether we are in template or not.
 
   // To do: Another thing we need to do is determine what kind of template argument it is. If it is a type argument,
   // then we need to parse it as a type; whereas if it is a non-type argument (e.g. variable), then we need to parse it
@@ -329,31 +314,15 @@ public class Generator extends ResultBaseVisitor <ST> {
   // argument.
 
   public ST visit (PointerType node) {
-    for (var ancestor : ancestorStack) {
-      if (ancestor instanceof TemplateArgument)
-        return pointerTA(node);
-    }
-    return pointer(node);
-  }
-
-  // To do: See if we can eliminate gratuitous parenthesis. If the PointerType node is at the top of the expression tree
-  // then we don't need parentheses. There may be other situations too, such as consecutive pointers and consecutive
-  // arrays.
-
-  public ST pointer (PointerType node) {
     var st = group.getInstanceOf("declarator/pointerDeclarator");
     st.add("directDeclarator", stack.pop());
     stack.push(st);
     return visit(node.baseType());
   }
 
-  public ST pointerTA (PointerType node) {
-    var st = group.getInstanceOf("type/pointerType");
-    st.add("baseType", visit(node.baseType()));
-    return st;
-  }
-
-  // Goes on stack if template argument?
+  // To do: See if we can eliminate gratuitous parenthesis. If the PointerType node is at the top of the expression tree
+  // then we don't need parentheses. There may be other situations too, such as consecutive pointers and consecutive
+  // arrays.
 
   public ST visit (PrimitiveType node) {
     var st = group.getInstanceOf("type/primitiveType");

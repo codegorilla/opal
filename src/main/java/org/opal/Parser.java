@@ -1309,6 +1309,8 @@ public class Parser {
   // Should template argument have token? It will wind up being the same token
   // used by its content.
 
+  // I think we need to keep track of whether it is a root node here
+
   private AstNode templateArgument () {
     var n = new TemplateArgument(lookahead);
     var p = type();

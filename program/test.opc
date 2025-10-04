@@ -17,7 +17,7 @@ public var t: (*int)[] = 1;
 
 public var t: List<int> = 1;
 
-public var t: List<*int> = 1;
+public var t: (*List<*(*int)[]>)[] = 1;
 
 
 //public def myfun (s: float, t: uint32) -> int {
