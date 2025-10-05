@@ -11,6 +11,8 @@ import org.stringtemplate.v4.*;
 import java.net.URL;
 import java.util.LinkedList;
 
+// The purpose of this pass is to create a module interface unit.
+
 public class Generator1 extends ResultBaseVisitor <ST> {
 
   private final URL templateDirectoryUrl;
@@ -108,6 +110,10 @@ public class Generator1 extends ResultBaseVisitor <ST> {
   // it belongs to. So we must defer differentiation. Nevertheless, we can either mark it in the parser from within the
   // corresponding construct rule or we can use a separate semantic analysis pass. We could also use K>1 lookahead.
 
+  // If the access specifier is PUBLIC then this translates to an exported
+  // entity that appears in the package interface unit. Otherwise, it appears
+  // in the package implementation unit.
+
   public ST visit (AccessSpecifier node) {
     ST st = null;
     var token = node.getToken();
@@ -184,23 +190,27 @@ public class Generator1 extends ResultBaseVisitor <ST> {
 
   // VARIABLE DECLARATIONS
 
-  // Change variableAccessSpecifier to accessSpecifier for consistency?
+  // In C++, any pointer or raw array portions of the type specifier are
+  // transferred to the name to form a so-called "declarator".
 
-  // In C++, any pointer or raw array portions of the type specifier are transferred to the name to form a so-called
-  // "declarator".
-
-  // The variable name is placed on a stack, transformed into a declarator, and then retrieved from the stack. Since
-  // the stack never has more than one element, it doesn't actually need to be a stack.
+  // The variable name is placed on a stack, transformed into a declarator, and
+  // then retrieved from the stack. Since the stack never has more than one
+  // element, it doesn't actually need to be a stack.
 
   public ST visit (VariableDeclaration node) {
-    var st = group.getInstanceOf("declaration/variableDeclaration");
-    st.add("variableAccessSpecifier", visit(node.accessSpecifier()));
-    stack.push(visit(node.variableName()));
-    st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
-    st.add("declarator", stack.pop());
+    var token = node.accessSpecifier().getToken();
+    if (token != null && token.getKind() == Token.Kind.PUBLIC) {
+      var st = group.getInstanceOf("declaration/variableDeclaration");
+      st.add("accessSpecifier", visit(node.accessSpecifier()));
+      stack.push(visit(node.variableName()));
+      st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
+      st.add("declarator", stack.pop());
 //    node.getModifiers().accept(this);
-    st.add("initializer", visit(node.variableInitializer()));
-    return st;
+      st.add("initializer", visit(node.variableInitializer()));
+      return st;
+    }
+    else
+      return null;
   }
 
   // The variable name becomes a "simple declarator", which is the core of the overall C++ declarator that gets built

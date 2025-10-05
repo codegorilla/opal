@@ -1,5 +1,5 @@
-variableDeclaration (variableAccessSpecifier, variableModifiers, typeSpecifier, declarator, initializer) ::= <%
-<if(variableAccessSpecifier)><variableAccessSpecifier> <endif>
+variableDeclaration (accessSpecifier, variableModifiers, typeSpecifier, declarator, initializer) ::= <%
+<if(accessSpecifier)><accessSpecifier> <endif>
 <if(variableModifiers)><variableModifiers; separator=" "> <endif>
 <typeSpecifier> <declarator> = <initializer>;
 %>

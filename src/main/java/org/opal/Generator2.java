@@ -11,6 +11,8 @@ import org.stringtemplate.v4.STGroupDir;
 import java.net.URL;
 import java.util.LinkedList;
 
+// The purpose of this pass is to create a module implementation unit.
+
 public class Generator2 extends ResultBaseVisitor <ST> {
 
   private final URL templateDirectoryUrl;
@@ -43,7 +45,6 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   public ST visit (TranslationUnit node) {
     var st = group.getInstanceOf("translationUnit");
     st.add("packageDeclaration", visit(node.packageDeclaration()));
-    st.add("importDeclarations", visit(node.importDeclarations()));
     st.add("declarations", visit(node.declarations()));
     System.out.println("---");
     System.out.println(st.render());
@@ -70,27 +71,6 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // IMPORT DECLARATIONS
-
-  public ST visit (ImportDeclarations node) {
-    var st = group.getInstanceOf("declaration/importDeclarations");
-    for (var child : node.getChildren())
-      st.add("importDeclaration", visit(child));
-    return st;
-  }
-
-  public ST visit (ImportDeclaration node) {
-    var st = group.getInstanceOf("declaration/importDeclaration");
-    st.add("importName", visit(node.importName()));
-    return st;
-  }
-
-  public ST visit (ImportName node) {
-    var st = group.getInstanceOf("declaration/importName");
-    st.add("name", node.getToken().getLexeme());
-    return st;
-  }
-
   // COMMON DECLARATIONS
 
   public ST visit (Declarations node) {
@@ -108,6 +88,7 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   // it belongs to. So we must defer differentiation. Nevertheless, we can either mark it in the parser from within the
   // corresponding construct rule or we can use a separate semantic analysis pass. We could also use K>1 lookahead.
 
+  /*
   public ST visit (AccessSpecifier node) {
     ST st = null;
     var token = node.getToken();
@@ -120,6 +101,7 @@ public class Generator2 extends ResultBaseVisitor <ST> {
 //      System.out.println("THIS IS AN INSTANCE OF A VARIABLE DECLARATION!");
     return st;
   }
+  */
 
   public ST visit (Modifiers node) {
     System.out.println("Modifiers");
@@ -184,8 +166,6 @@ public class Generator2 extends ResultBaseVisitor <ST> {
 
   // VARIABLE DECLARATIONS
 
-  // Change variableAccessSpecifier to accessSpecifier for consistency?
-
   // In C++, any pointer or raw array portions of the type specifier are transferred to the name to form a so-called
   // "declarator".
 
@@ -193,14 +173,18 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   // the stack never has more than one element, it doesn't actually need to be a stack.
 
   public ST visit (VariableDeclaration node) {
-    var st = group.getInstanceOf("declaration/variableDeclaration");
-    st.add("variableAccessSpecifier", visit(node.accessSpecifier()));
-    stack.push(visit(node.variableName()));
-    st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
-    st.add("declarator", stack.pop());
+    var token = node.accessSpecifier().getToken();
+    if (token == null || token.getKind() == Token.Kind.PRIVATE) {
+      var st = group.getInstanceOf("declaration/variableDeclaration");
+      stack.push(visit(node.variableName()));
+      st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
+      st.add("declarator", stack.pop());
 //    node.getModifiers().accept(this);
-    st.add("initializer", visit(node.variableInitializer()));
-    return st;
+      st.add("initializer", visit(node.variableInitializer()));
+      return st;
+    }
+    else
+      return null;
   }
 
   // The variable name becomes a "simple declarator", which is the core of the overall C++ declarator that gets built

@@ -1,3 +1,0 @@
-importDeclaration (importName) ::= <<
-import <importName>;
->>

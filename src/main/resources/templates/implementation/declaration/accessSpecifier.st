@@ -1,3 +1,0 @@
-accessSpecifier (value) ::= <<
-<value>
->>
