@@ -216,15 +216,14 @@ public class Generator1 extends ResultBaseVisitor <ST> {
   // transferred to the name to form a so-called "declarator".
 
   // The variable name is placed on a stack, transformed into a declarator, and
-  // then retrieved from the stack. Since the stack never has more than one
-  // element, it doesn't actually need to be a stack.
+  // then retrieved from the stack.
 
   // The variable name becomes a "simple declarator", which is the core of the overall C++ declarator that gets built
-  // up. A C++ declaration is of the form "typeSpecifier declarator", which is essentially the reverse of the cobolt
+  // up. A C++ declaration is of the form "typeSpecifier declarator", which is essentially the reverse of the cobalt
   // declaration of the form "var variableName: typeSpecifier" (setting aside the fact that the term "type specifier"
-  // has a different interpretation between the two). Due to the need to swap the variable name with the base type from
-  // the type specifier, and that the base type may be several levels down in the type expression tree, we will use an
-  // explicit stack to facilitate the exchange.
+  // has a different interpretation between the two). Due to the need to swap the variable name with the leaf base type
+  // from the type specifier, and that the leaf base type may be several levels down in the type expression tree, we
+  // will use an explicit stack to facilitate the exchange.
 
   public ST visit (VariableName node) {
     var st = group.getInstanceOf("declarator/simpleDeclarator");
