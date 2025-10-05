@@ -20,4 +20,8 @@ public class RoutineBody extends AstNode {
     return v.visit(this);
   }
 
+  public AstNode compoundStatement () {
+    return getChild(0);
+  }
+
 }

@@ -41,4 +41,8 @@ public class RoutineDeclaration extends AstNode {
     return getChild(4);
   }
 
+  public AstNode routineBody () {
+    return getChild(5);
+  }
+
 }

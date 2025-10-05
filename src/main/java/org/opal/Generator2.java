@@ -4,6 +4,7 @@ import org.opal.ast.AstNode;
 import org.opal.ast.TranslationUnit;
 import org.opal.ast.declaration.*;
 import org.opal.ast.expression.*;
+import org.opal.ast.statement.*;
 import org.opal.ast.type.*;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroupDir;
@@ -11,7 +12,7 @@ import org.stringtemplate.v4.STGroupDir;
 import java.net.URL;
 import java.util.LinkedList;
 
-// The purpose of this pass is to create a module implementation unit.
+// The purpose of this pass is to create function prototypes within a module implementation unit.
 
 public class Generator2 extends ResultBaseVisitor <ST> {
 
@@ -24,6 +25,8 @@ public class Generator2 extends ResultBaseVisitor <ST> {
 
   // Stack for keeping track of current node path
   private final LinkedList<AstNode> ancestorStack = new LinkedList<>();
+
+  private int pass = 2;
 
   public Generator2 (AstNode input) {
     super(input);
@@ -111,10 +114,28 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   // ROUTINE DECLARATIONS
 
   public ST visit (RoutineDeclaration node) {
-    var st = group.getInstanceOf("declaration/functionDeclaration");
+    var st = switch (pass) {
+      case 1 -> routineDeclarationPass1(node);
+      case 2 -> routineDeclarationPass2(node);
+      default -> null;
+    };
+    return st;
+  }
+
+  private ST routineDeclarationPass1 (RoutineDeclaration node) {
+      var st = group.getInstanceOf("declaration/functionDeclaration");
+      st.add("functionName", visit(node.routineName()));
+      st.add("functionParameters", visit(node.routineParameters()));
+      st.add("functionReturnType", visit(node.routineReturnType()));
+      return st;
+  }
+
+  private ST routineDeclarationPass2 (RoutineDeclaration node) {
+    var st = group.getInstanceOf("declaration/functionDefinition");
     st.add("functionName", visit(node.routineName()));
     st.add("functionParameters", visit(node.routineParameters()));
     st.add("functionReturnType", visit(node.routineReturnType()));
+    st.add("functionBody", visit(node.routineBody()));
     return st;
   }
 
@@ -157,6 +178,12 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     stack.push(emptyDeclarator());
     st.add("type", visit(node.type()));
     st.add("declarator", stack.pop());
+    return st;
+  }
+
+  public ST visit (RoutineBody node) {
+    var st = group.getInstanceOf("declaration/functionBody");
+    st.add("compoundStatement", visit(node.compoundStatement()));
     return st;
   }
 
@@ -209,6 +236,25 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   public ST visit (VariableInitializer node) {
     var st = group.getInstanceOf("declaration/variableInitializer");
     st.add("expression", visit(node.expression()));
+    return st;
+  }
+
+  // STATEMENTS
+
+  public ST visit (CompoundStatement node) {
+    var st = group.getInstanceOf("statement/compoundStatement");
+    for (var child : node.getChildren())
+      st.add("statement", visit(child));
+    return st;
+  }
+
+  public ST visit (BreakStatement node) {
+    var st = group.getInstanceOf("statement/breakStatement");
+    return st;
+  }
+
+  public ST visit (ContinueStatement node) {
+    var st = group.getInstanceOf("statement/continueStatement");
     return st;
   }
 

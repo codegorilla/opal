@@ -25,7 +25,8 @@ var t: *int[] = 1;
 
 
 public def myfun1 (s: float, t: uint32) -> *int {
-  //var a: float = 1;
+  break;
+  var a: float = 1;
 }
 
 private def myfun2 (s: float, t: uint32) -> *int {
