@@ -647,8 +647,9 @@ public class Parser {
   // up to a separate transformation or generation phase to make that change.
 
   private AstNode untilCondition () {
+    var n = new UntilCondition(lookahead);
     match(Token.Kind.L_PARENTHESIS);
-    var n = expression(true);
+    n.addChild(expression(true));
     match(Token.Kind.R_PARENTHESIS);
     return n;
   }
@@ -657,20 +658,19 @@ public class Parser {
   // source of bugs, so we need to be careful.
 
   private AstNode untilBody () {
-    AstNode n = null;
     if (lookahead.getKind() == Token.Kind.L_BRACE)
-      n = statement();
+      return statement();
     else {
       // Insert fabricated compound statement
-      n = new CompoundStatement(null);
+      var n = new CompoundStatement(null);
       n.addChild(statement());
+      return n;
     }
-    return n;
   }
 
   private AstNode whileStatement () {
-    var n = new UntilStatement(lookahead);
-    match(Token.Kind.UNTIL);
+    var n = new WhileStatement(lookahead);
+    match(Token.Kind.WHILE);
     n.addChild(whileCondition());
     n.addChild(whileBody());
     return n;
@@ -680,8 +680,9 @@ public class Parser {
   // will only support expressions, and use the rule as a passthrough.
 
   private AstNode whileCondition () {
+    var n = new WhileCondition(lookahead);
     match(Token.Kind.L_PARENTHESIS);
-    var n = expression(true);
+    n.addChild(expression(true));
     match(Token.Kind.R_PARENTHESIS);
     return n;
   }
@@ -690,15 +691,14 @@ public class Parser {
   // source of bugs, so we need to be careful.
 
   private AstNode whileBody () {
-    AstNode n = null;
     if (lookahead.getKind() == Token.Kind.L_BRACE)
-      n = statement();
+      return statement();
     else {
       // Insert fabricated compound statement
-      n = new CompoundStatement(null);
+      var n = new CompoundStatement(null);
       n.addChild(statement());
+      return n;
     }
-    return n;
   }
 
   // For now we only support variable declaration statements (i.e. local

@@ -55,7 +55,9 @@ public interface ResultVisitor <T> {
   public T visit (IfStatement node);
   public T visit (ReturnStatement node);
   public T visit (UntilStatement node);
+  public T visit (UntilCondition node);
   public T visit (WhileStatement node);
+  public T visit (WhileCondition node);
 
   // EXPRESSIONS
 

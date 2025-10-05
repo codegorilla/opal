@@ -21,4 +21,12 @@ public class UntilStatement extends AstNode {
     return v.visit(this);
   }
 
+  public AstNode untilCondition () {
+    return getChild(0);
+  }
+
+  public AstNode untilBody () {
+    return getChild(1);
+  }
+
 }

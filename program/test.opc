@@ -27,6 +27,11 @@ var t: *int[] = 1;
 public def myfun1 (s: float, t: uint32) -> *int {
   break;
   continue;
+  return 1;
+  while (1)
+    return 1;
+  until (1)
+    return 1;
   var a: float = 1;
 }
 

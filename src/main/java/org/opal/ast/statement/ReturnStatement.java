@@ -21,4 +21,8 @@ public class ReturnStatement extends AstNode {
     return v.visit(this);
   }
 
+  public AstNode expression () {
+    return getChild(0);
+  }
+
 }

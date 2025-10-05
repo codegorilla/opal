@@ -64,7 +64,9 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
   public T visit (IfStatement node) { return null; }
   public T visit (ReturnStatement node) { return null; }
   public T visit (UntilStatement node) { return null; }
+  public T visit (UntilCondition node) { return null; }
   public T visit (WhileStatement node) { return null; }
+  public T visit (WhileCondition node) { return null; }
 
   // EXPRESSIONS
 

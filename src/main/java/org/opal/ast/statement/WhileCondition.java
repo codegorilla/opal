@@ -5,9 +5,9 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class WhileStatement extends AstNode {
+public class WhileCondition extends AstNode {
 
-  public WhileStatement (Token token) {
+  public WhileCondition (Token token) {
     super(token);
   }
 
@@ -21,12 +21,8 @@ public class WhileStatement extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode whileCondition () {
+  public AstNode expression () {
     return getChild(0);
-  }
-
-  public AstNode whileBody () {
-    return getChild(1);
   }
 
 }

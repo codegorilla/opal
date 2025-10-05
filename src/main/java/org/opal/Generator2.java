@@ -258,6 +258,46 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  // To do: Check if there is actually an expression since it is optional.
+
+  public ST visit (ReturnStatement node) {
+    var st = group.getInstanceOf("statement/returnStatement");
+    if (node.hasChildren())
+      st.add("expression", visit(node.expression()));
+    return st;
+  }
+
+  // While body is a passthrough
+
+  public ST visit (UntilStatement node) {
+    var st = group.getInstanceOf("statement/untilStatement");
+    st.add("untilCondition", visit(node.untilCondition()));
+    st.add("untilBody", visit(node.untilBody()));
+    return st;
+  }
+
+  public ST visit (UntilCondition node) {
+    var st = group.getInstanceOf("statement/untilCondition");
+    st.add("expression", visit(node.expression()));
+    return st;
+  }
+
+  // While body is a passthrough
+
+  public ST visit (WhileStatement node) {
+    var st = group.getInstanceOf("statement/whileStatement");
+    st.add("whileCondition", visit(node.whileCondition()));
+    st.add("whileBody", visit(node.whileBody()));
+    return st;
+  }
+
+  public ST visit (WhileCondition node) {
+    var st = group.getInstanceOf("statement/whileCondition");
+    st.add("expression", visit(node.expression()));
+    return st;
+  }
+
+
   // EXPRESSIONS
 
   public ST visit (Expression node) {
