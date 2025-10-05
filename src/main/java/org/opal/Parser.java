@@ -574,22 +574,22 @@ public class Parser {
   }
 
   private AstNode ifCondition () {
+    var n = new IfCondition(lookahead);
     match(Token.Kind.L_PARENTHESIS);
-    var n = expression(true);
+    n.addChild(expression(true));
     match(Token.Kind.R_PARENTHESIS);
     return n;
   }
 
   private AstNode ifBody () {
-    AstNode n = null;
     if (lookahead.getKind() == Token.Kind.L_BRACE)
-      n = compoundStatement();
+      return compoundStatement();
     else {
       // Insert fabricated compound statement
-      n = new CompoundStatement(null);
+      var n = new CompoundStatement(null);
       n.addChild(statement());
+      return n;
     }
-    return n;
   }
 
   private AstNode elseClause () {
@@ -600,15 +600,16 @@ public class Parser {
   }
 
   private AstNode elseBody () {
-    AstNode n = null;
-    if (lookahead.getKind() == Token.Kind.L_BRACE)
-      n = compoundStatement();
+    if (lookahead.getKind() == Token.Kind.IF)
+      return ifStatement();
+    else if (lookahead.getKind() == Token.Kind.L_BRACE)
+      return compoundStatement();
     else {
       // Insert fabricated compound statement
-      n = new CompoundStatement(null);
+      var n = new CompoundStatement(null);
       n.addChild(statement());
+      return n;
     }
-    return n;
   }
 
   private AstNode returnStatement () {

@@ -5,9 +5,9 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class ElseClause extends AstNode {
+public class IfCondition extends AstNode {
 
-  public ElseClause (Token token) {
+  public IfCondition (Token token) {
     super(token);
   }
 
@@ -21,7 +21,7 @@ public class ElseClause extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode elseBody () {
+  public AstNode expression () {
     return getChild(0);
   }
 

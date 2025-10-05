@@ -258,6 +258,29 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  // If body is a passthrough
+
+  public ST visit (IfStatement node) {
+    var st = group.getInstanceOf("statement/ifStatement");
+    st.add("ifCondition", visit(node.ifCondition()));
+    st.add("ifBody", visit(node.ifBody()));
+    if (node.getChildCount() == 3)
+      st.add("elseClause", visit(node.elseClause()));
+    return st;
+  }
+
+  public ST visit (IfCondition node) {
+    var st = group.getInstanceOf("statement/ifCondition");
+    st.add("expression", visit(node.expression()));
+    return st;
+  }
+
+  public ST visit (ElseClause node) {
+    var st = group.getInstanceOf("statement/elseClause");
+    st.add("elseBody", visit(node.elseBody()));
+    return st;
+  }
+
   // To do: Check if there is actually an expression since it is optional.
 
   public ST visit (ReturnStatement node) {
@@ -267,7 +290,7 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // While body is a passthrough
+  // Until body is a passthrough
 
   public ST visit (UntilStatement node) {
     var st = group.getInstanceOf("statement/untilStatement");
@@ -296,7 +319,6 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     st.add("expression", visit(node.expression()));
     return st;
   }
-
 
   // EXPRESSIONS
 

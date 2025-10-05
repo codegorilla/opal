@@ -21,4 +21,16 @@ public class IfStatement extends AstNode {
     return v.visit(this);
   }
 
+  public AstNode ifCondition () {
+    return getChild(0);
+  }
+
+  public AstNode ifBody () {
+    return getChild(1);
+  }
+
+  public AstNode elseClause () {
+    return getChild(2);
+  }
+
 }

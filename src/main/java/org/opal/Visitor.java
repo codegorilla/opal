@@ -53,6 +53,7 @@ public interface Visitor {
   public void visit (EmptyStatement node);
   public void visit (ExpressionStatement node);
   public void visit (IfStatement node);
+  public void visit (IfCondition node);
   public void visit (ReturnStatement node);
   public void visit (UntilStatement node);
   public void visit (UntilCondition node);

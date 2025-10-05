@@ -53,6 +53,7 @@ public interface ResultVisitor <T> {
   public T visit (EmptyStatement node);
   public T visit (ExpressionStatement node);
   public T visit (IfStatement node);
+  public T visit (IfCondition node);
   public T visit (ReturnStatement node);
   public T visit (UntilStatement node);
   public T visit (UntilCondition node);
