@@ -1,0 +1,3 @@
+pointerDeclarator (directDeclarator) ::= <<
+(*<directDeclarator>)
+>>

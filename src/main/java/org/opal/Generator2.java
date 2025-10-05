@@ -5,13 +5,13 @@ import org.opal.ast.TranslationUnit;
 import org.opal.ast.declaration.*;
 import org.opal.ast.expression.*;
 import org.opal.ast.type.*;
-
-import org.stringtemplate.v4.*;
+import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroupDir;
 
 import java.net.URL;
 import java.util.LinkedList;
 
-public class Generator extends ResultBaseVisitor <ST> {
+public class Generator2 extends ResultBaseVisitor <ST> {
 
   private final URL templateDirectoryUrl;
   private final STGroupDir group;
@@ -23,9 +23,9 @@ public class Generator extends ResultBaseVisitor <ST> {
   // Stack for keeping track of current node path
   private final LinkedList<AstNode> ancestorStack = new LinkedList<>();
 
-  public Generator (AstNode input) {
+  public Generator2 (AstNode input) {
     super(input);
-    templateDirectoryUrl = this.getClass().getClassLoader().getResource("templates");
+    templateDirectoryUrl = this.getClass().getClassLoader().getResource("templates/implementation");
     group = new STGroupDir(templateDirectoryUrl);
   }
 
