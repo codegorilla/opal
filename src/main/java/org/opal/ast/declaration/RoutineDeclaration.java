@@ -21,8 +21,12 @@ public class RoutineDeclaration extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode getName () {
+  public AstNode accessSpecifier () {
     return getChild(0);
+  }
+
+  public AstNode modifiers () {
+    return getChild(1);
   }
 
   public AstNode routineName () {

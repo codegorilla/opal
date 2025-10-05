@@ -135,11 +135,17 @@ public class Generator1 extends ResultBaseVisitor <ST> {
   // ROUTINE DECLARATIONS
 
   public ST visit (RoutineDeclaration node) {
-    var st = group.getInstanceOf("declaration/functionDeclaration");
-    st.add("functionName", visit(node.routineName()));
-    st.add("functionParameters", visit(node.routineParameters()));
-    st.add("functionReturnType", visit(node.routineReturnType()));
-    return st;
+    var token = node.accessSpecifier().getToken();
+    if (token != null && token.getKind() == Token.Kind.PUBLIC) {
+      var st = group.getInstanceOf("declaration/functionDeclaration");
+      st.add("accessSpecifier", visit(node.accessSpecifier()));
+      st.add("functionName", visit(node.routineName()));
+      st.add("functionParameters", visit(node.routineParameters()));
+      st.add("functionReturnType", visit(node.routineReturnType()));
+      return st;
+    }
+    else
+      return null;
   }
 
   public ST visit (RoutineName node) {
@@ -190,13 +196,6 @@ public class Generator1 extends ResultBaseVisitor <ST> {
 
   // VARIABLE DECLARATIONS
 
-  // In C++, any pointer or raw array portions of the type specifier are
-  // transferred to the name to form a so-called "declarator".
-
-  // The variable name is placed on a stack, transformed into a declarator, and
-  // then retrieved from the stack. Since the stack never has more than one
-  // element, it doesn't actually need to be a stack.
-
   public ST visit (VariableDeclaration node) {
     var token = node.accessSpecifier().getToken();
     if (token != null && token.getKind() == Token.Kind.PUBLIC) {
@@ -212,6 +211,13 @@ public class Generator1 extends ResultBaseVisitor <ST> {
     else
       return null;
   }
+
+  // In C++, any pointer or raw array portions of the type specifier are
+  // transferred to the name to form a so-called "declarator".
+
+  // The variable name is placed on a stack, transformed into a declarator, and
+  // then retrieved from the stack. Since the stack never has more than one
+  // element, it doesn't actually need to be a stack.
 
   // The variable name becomes a "simple declarator", which is the core of the overall C++ declarator that gets built
   // up. A C++ declaration is of the form "typeSpecifier declarator", which is essentially the reverse of the cobolt
