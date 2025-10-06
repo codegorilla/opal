@@ -219,9 +219,11 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   public ST visit (LocalVariableDeclaration node) {
     var st = group.getInstanceOf("declaration/localVariableDeclaration");
     stack.push(visit(node.variableName()));
-    st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
+    if (node.variableTypeSpecifier() != null)
+      st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
     st.add("declarator", stack.pop());
-    st.add("initializer", visit(node.variableInitializer()));
+    if (node.variableInitializer() != null)
+      st.add("initializer", visit(node.variableInitializer()));
     return st;
   }
 
