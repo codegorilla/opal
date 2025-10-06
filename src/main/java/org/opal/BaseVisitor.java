@@ -89,6 +89,7 @@ public class BaseVisitor implements Visitor {
   public void visit (UnsignedIntegerLiteral node) {}
 
   // Special
+  public void visit (Name node) {}
   public void visit (This node) {}
 
   // TYPES

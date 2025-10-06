@@ -10,12 +10,12 @@ import stdlib;
 //public var x: List<*int[]> = 2;
 
 // Array of pointer to int
-public var s: *int[] = 10;
+//public var s: *int[] = 10;
 
-var t: *int[] = 1;
+//var t: *int[] = 1;
 
-var z1: int = 1;
-var z2: int;
+//var z1: int = 1;
+//var z2: int;
 
 // Pointer to array of int
 //public var t: (*int)[5] = 1;
@@ -42,10 +42,16 @@ public def myfun1 (s: float, t: uint32) -> *int {
   else
     return 3;
   var a: float = 10;
+
+//  do while (t < 10) {
+//    var x: int = 1;
+    t = 1;
+//  }
+
 }
 
 private def myfun2 (s: float, t: uint32) -> *int {
-  var a: int = 1;
+  //var a: int = 1;
 }
 
 def myfun3 (s: float, t: uint32) -> *int {

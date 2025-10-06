@@ -459,7 +459,8 @@ public class Parser {
       kind == Token.Kind.NULL              ||
       kind == Token.Kind.STRING_LITERAL    ||
       kind == Token.Kind.UINT32_LITERAL    ||
-      kind == Token.Kind.UINT64_LITERAL
+      kind == Token.Kind.UINT64_LITERAL    ||
+      kind == Token.Kind.IDENTIFIER
     ) {
       n = expressionStatement();
     } else {
@@ -777,6 +778,7 @@ public class Parser {
         lookahead.getKind() == Token.Kind.BAR_EQUAL
     ) {
       var p = n;
+      System.out.println("HERE PAR ASSIGN EXPR");
       n = new BinaryExpression(lookahead);
       n.addChild(p);
       match(lookahead.getKind());
@@ -1049,8 +1051,10 @@ public class Parser {
       n = literal();
     } else if (lookahead.getKind() == Token.Kind.THIS)
       n = this_();
-    else if (lookahead.getKind() == Token.Kind.IDENTIFIER)
+    else if (lookahead.getKind() == Token.Kind.IDENTIFIER) {
+      // Test this -- is this not working?
       n = name();
+    }
     // Defer implementing if expressions
 //    else if (lookahead.getKind() == Token.Kind.IF)
 //      n = ifExpression();
@@ -1139,9 +1143,10 @@ public class Parser {
     return n;
   }
 
-  // Placeholder
   private AstNode name () {
-    return null;
+    var n = new Name(lookahead);
+    match(Token.Kind.IDENTIFIER);
+    return n;
   }
 
   // TYPES **************************************************

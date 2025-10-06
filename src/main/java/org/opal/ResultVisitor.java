@@ -81,6 +81,7 @@ public interface ResultVisitor <T> {
   public T visit (UnsignedIntegerLiteral node);
 
   // Special
+  public T visit (Name node);
   public T visit (This node);
 
   // TYPES

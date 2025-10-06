@@ -275,6 +275,12 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  public ST visit (ExpressionStatement node) {
+    var st = group.getInstanceOf("statement/expressionStatement");
+    st.add("expression", visit(node.expression()));
+    return st;
+  }
+
   // If body is a passthrough
 
   public ST visit (IfStatement node) {
@@ -340,7 +346,6 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   public ST visit (Expression node) {
     var st = group.getInstanceOf("expression/expression");
     st.add("value", visit(node.getChild(0)));
-//    1 > 10 ? true : false;
     return st;
   }
 
@@ -358,6 +363,12 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     var st = group.getInstanceOf("expression/unaryExpression");
     st.add("operation", node.getToken().getLexeme());
     st.add("expression",  visit(node.expression()));
+    return st;
+  }
+
+  public ST visit (Name node) {
+    var st = group.getInstanceOf("expression/name");
+    st.add("value", node.getToken().getLexeme());
     return st;
   }
 

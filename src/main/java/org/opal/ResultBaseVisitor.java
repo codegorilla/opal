@@ -90,6 +90,7 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
   public T visit (UnsignedIntegerLiteral node) { return null; }
 
   // Special
+  public T visit (Name node) { return null; }
   public T visit (This node) { return null; }
 
   // TYPES

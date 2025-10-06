@@ -1,13 +1,14 @@
-package org.opal.ast.statement;
+package org.opal.ast.expression;
 
 import org.opal.ResultVisitor;
+import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class ExpressionStatement extends AstNode {
+public class Name extends AstNode {
 
-  public ExpressionStatement() {
-    super();
+  public Name (Token token) {
+    super(token);
   }
 
   @Override
@@ -18,10 +19,6 @@ public class ExpressionStatement extends AstNode {
   @Override
   public <T> T accept (ResultVisitor<T> v) {
     return v.visit(this);
-  }
-
-  public AstNode expression () {
-    return getChild(0);
   }
 
 }
