@@ -57,7 +57,8 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
   public T visit (BreakStatement node) { return null; }
   public T visit (CompoundStatement node) { return null; }
   public T visit (ContinueStatement node) { return null; }
-  public T visit (DoStatement node) { return null; }
+  public T visit (DoUntilStatement node) { return null; }
+  public T visit (DoWhileStatement node) { return null; }
   public T visit (ElseClause node) { return null; }
   public T visit (EmptyStatement node) { return null; }
   public T visit (ExpressionStatement node) { return null; }

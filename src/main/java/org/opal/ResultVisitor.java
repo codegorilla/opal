@@ -48,7 +48,8 @@ public interface ResultVisitor <T> {
   public T visit (BreakStatement node);
   public T visit (CompoundStatement node);
   public T visit (ContinueStatement node);
-  public T visit (DoStatement node);
+  public T visit (DoUntilStatement node);
+  public T visit (DoWhileStatement node);
   public T visit (ElseClause node);
   public T visit (EmptyStatement node);
   public T visit (ExpressionStatement node);

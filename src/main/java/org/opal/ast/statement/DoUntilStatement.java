@@ -5,9 +5,9 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class DoStatement extends AstNode {
+public class DoUntilStatement extends AstNode {
 
-  public DoStatement (Token token) {
+  public DoUntilStatement (Token token) {
     super(token);
   }
 
@@ -19,6 +19,14 @@ public class DoStatement extends AstNode {
   @Override
   public <T> T accept (ResultVisitor<T> v) {
     return v.visit(this);
+  }
+
+  public AstNode untilCondition () {
+    return getChild(0);
+  }
+
+  public AstNode untilBody () {
+    return getChild(1);
   }
 
 }

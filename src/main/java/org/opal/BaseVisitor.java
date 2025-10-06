@@ -56,7 +56,8 @@ public class BaseVisitor implements Visitor {
   public void visit (BreakStatement node) {}
   public void visit (CompoundStatement node) {}
   public void visit (ContinueStatement node) {}
-  public void visit (DoStatement node) {}
+  public void visit (DoWhileStatement node) {}
+  public void visit (DoUntilStatement node) {}
   public void visit (ElseClause node) {}
   public void visit (EmptyStatement node) {}
   public void visit (ExpressionStatement node) {}

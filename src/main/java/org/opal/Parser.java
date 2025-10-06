@@ -533,12 +533,30 @@ public class Parser {
   // statement, depending on what follows the 'do' keyword.
 
   private AstNode doStatement () {
-    var n = new DoStatement(lookahead);
+    AstNode n = null;
     match(Token.Kind.DO);
     if (lookahead.getKind() == Token.Kind.UNTIL)
-      n.addChild(untilStatement());
+      n = doUntilStatement();
     else if (lookahead.getKind() == Token.Kind.WHILE)
-      n.addChild(whileStatement());
+      n = doWhileStatement();
+    else
+      System.out.println("Error - invalid do statement");
+    return n;
+  }
+
+  private AstNode doUntilStatement () {
+    var n = new DoUntilStatement(lookahead);
+    match(Token.Kind.UNTIL);
+    n.addChild(untilCondition());
+    n.addChild(untilBody());
+    return n;
+  }
+
+  private AstNode doWhileStatement () {
+    var n = new DoWhileStatement(lookahead);
+    match(Token.Kind.WHILE);
+    n.addChild(whileCondition());
+    n.addChild(whileBody());
     return n;
   }
 

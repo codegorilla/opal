@@ -275,6 +275,12 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  // To do
+
+  public ST visit(DoWhileStatement node) {
+    return null;
+  }
+
   public ST visit (ExpressionStatement node) {
     var st = group.getInstanceOf("statement/expressionStatement");
     st.add("expression", visit(node.expression()));
