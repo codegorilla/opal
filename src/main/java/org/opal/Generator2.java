@@ -275,10 +275,18 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // To do
+  public ST visit(DoUntilStatement node) {
+    var st = group.getInstanceOf("statement/doUntilStatement");
+    st.add("untilCondition", visit(node.untilCondition()));
+    st.add("untilBody", visit(node.untilBody()));
+    return st;
+  }
 
   public ST visit(DoWhileStatement node) {
-    return null;
+    var st = group.getInstanceOf("statement/doWhileStatement");
+    st.add("whileCondition", visit(node.whileCondition()));
+    st.add("whileBody", visit(node.whileBody()));
+    return st;
   }
 
   public ST visit (ExpressionStatement node) {

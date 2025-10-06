@@ -45,7 +45,12 @@ public def myfun1 (s: float, t: uint32) -> *int {
 
   x = 1;
 
-  do while (t < 10) {
+  do while (t <= 10) {
+    var x: int = 1;
+    t = 1;
+  }
+
+  do until (t > 10) {
     var x: int = 1;
     t = 1;
   }
