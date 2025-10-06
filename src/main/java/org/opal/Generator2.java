@@ -204,14 +204,25 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     if (token == null || token.getKind() == Token.Kind.PRIVATE) {
       var st = group.getInstanceOf("declaration/variableDeclaration");
       stack.push(visit(node.variableName()));
-      st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
+      if (node.variableTypeSpecifier() != null)
+        st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
       st.add("declarator", stack.pop());
 //    node.getModifiers().accept(this);
-      st.add("initializer", visit(node.variableInitializer()));
+      if (node.variableInitializer() != null)
+        st.add("initializer", visit(node.variableInitializer()));
       return st;
     }
     else
       return null;
+  }
+
+  public ST visit (LocalVariableDeclaration node) {
+    var st = group.getInstanceOf("declaration/localVariableDeclaration");
+    stack.push(visit(node.variableName()));
+    st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
+    st.add("declarator", stack.pop());
+    st.add("initializer", visit(node.variableInitializer()));
+    return st;
   }
 
   // The variable name becomes a "simple declarator", which is the core of the overall C++ declarator that gets built
@@ -234,12 +245,16 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (VariableInitializer node) {
-    var st = group.getInstanceOf("declaration/variableInitializer");
-    st.add("expression", visit(node.expression()));
-    return st;
+    if (node.hasChildren()) {
+      var st = group.getInstanceOf("declaration/variableInitializer");
+      st.add("expression", visit(node.expression()));
+      return st;
+    }
+    else
+      return null;
   }
 
-  // STATEMENTS
+  // STATEMENTS **************************************************
 
   public ST visit (CompoundStatement node) {
     var st = group.getInstanceOf("statement/compoundStatement");
@@ -281,8 +296,6 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // To do: Check if there is actually an expression since it is optional.
-
   public ST visit (ReturnStatement node) {
     var st = group.getInstanceOf("statement/returnStatement");
     if (node.hasChildren())
@@ -320,11 +333,12 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // EXPRESSIONS
+  // EXPRESSIONS **************************************************
 
   public ST visit (Expression node) {
     var st = group.getInstanceOf("expression/expression");
     st.add("value", visit(node.getChild(0)));
+//    1 > 10 ? true : false;
     return st;
   }
 
@@ -359,7 +373,7 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // TYPES
+  // TYPES **************************************************
 
   public ST visit (ArrayType node) {
     var st = group.getInstanceOf("declarator/arrayDeclarator");

@@ -1,13 +1,14 @@
 package org.opal.ast.declaration;
 
+import org.opal.Token;
 import org.opal.ast.AstNode;
 import org.opal.ResultVisitor;
 import org.opal.Visitor;
 
 public class VariableTypeSpecifier extends AstNode {
 
-  public VariableTypeSpecifier() {
-    super();
+  public VariableTypeSpecifier (Token token) {
+    super(token);
   }
 
   @Override

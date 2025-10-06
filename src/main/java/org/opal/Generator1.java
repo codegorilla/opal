@@ -202,10 +202,12 @@ public class Generator1 extends ResultBaseVisitor <ST> {
       var st = group.getInstanceOf("declaration/variableDeclaration");
       st.add("accessSpecifier", visit(node.accessSpecifier()));
       stack.push(visit(node.variableName()));
-      st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
+      if (node.variableTypeSpecifier() != null)
+        st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
       st.add("declarator", stack.pop());
 //    node.getModifiers().accept(this);
-      st.add("initializer", visit(node.variableInitializer()));
+      if (node.variableInitializer() != null)
+        st.add("initializer", visit(node.variableInitializer()));
       return st;
     }
     else
@@ -243,7 +245,7 @@ public class Generator1 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // EXPRESSIONS
+  // EXPRESSIONS **************************************************
 
   public ST visit (Expression node) {
     var st = group.getInstanceOf("expression/expression");
@@ -282,7 +284,7 @@ public class Generator1 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // TYPES
+  // TYPES **************************************************
 
   public ST visit (ArrayType node) {
     var st = group.getInstanceOf("declarator/arrayDeclarator");

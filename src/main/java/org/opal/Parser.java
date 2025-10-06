@@ -103,7 +103,7 @@ public class Parser {
     return n;
   }
 
-  // DECLARATIONS
+  // DECLARATIONS **************************************************
 
   // Package declaration is special in that there is only one, and it must appear at the top of the translation unit.
 
@@ -183,7 +183,6 @@ public class Parser {
     }
     return n;
   }
-
 
   // ACCESS SPECIFIERS AND MODIFIERS
 
@@ -379,19 +378,25 @@ public class Parser {
   // To do: Local variables don't have access specifiers. Because children can be accessed by name, we need a separate
   // local variable node type.
 
+  // We put null values into the list of children to ensure a constant node
+  // count and node order.
+
   private AstNode variableDeclaration (AccessSpecifier accessSpecifier, AstNode modifiers) {
     AstNode n;
     if (accessSpecifier != null) {
       n = new VariableDeclaration(lookahead);
       n.addChild(accessSpecifier);
     }
-    else
+    else {
+      // The local variable declaration node type exists primarily because the
+      // number of children is different so it makes code generation easier.
       n = new LocalVariableDeclaration(lookahead);
+    }
     match(Token.Kind.VAR);
     n.addChild(modifiers);
     n.addChild(variableName());
-    n.addChild(variableTypeSpecifier());
-    n.addChild(variableInitializer());
+    n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier() : null);
+    n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer() : null);
     match(Token.Kind.SEMICOLON);
     return n;
   }
@@ -403,24 +408,20 @@ public class Parser {
   }
 
   private AstNode variableTypeSpecifier () {
-    var n = new VariableTypeSpecifier();
-    if (lookahead.getKind() == Token.Kind.COLON) {
-      match(Token.Kind.COLON);
-      n.addChild(type(true));
-    }
+    var n = new VariableTypeSpecifier(lookahead);
+    match(Token.Kind.COLON);
+    n.addChild(type(true));
     return n;
   }
 
   private AstNode variableInitializer () {
-    var n = new VariableInitializer();
-    if (lookahead.getKind() == Token.Kind.EQUAL) {
-      match(Token.Kind.EQUAL);
-      n.addChild(expression(true));
-    }
+    var n = new VariableInitializer(lookahead);
+    match(Token.Kind.EQUAL);
+    n.addChild(expression(true));
     return n;
   }
 
-  // STATEMENTS
+  // STATEMENTS **************************************************
 
   // Notice that we don't include 'if' in the first set for expression
   // statements. This is because we want send the parser towards the statement
@@ -738,7 +739,7 @@ public class Parser {
     return n;
   }
 
-  // EXPRESSIONS
+  // EXPRESSIONS **************************************************
 
   // The root of every expression sub-tree has an explicit 'expression' AST
   // node, where the final computed type and other synthesized attributes can be
@@ -1143,7 +1144,7 @@ public class Parser {
     return null;
   }
 
-  // TYPES
+  // TYPES **************************************************
 
   // Type processing is interesting because Cobalt uses a form of the
   // C-declaration style, so parsing types requires following the "spiral rule".
