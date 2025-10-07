@@ -33,4 +33,20 @@ public class ForStatement extends AstNode {
     return getChild(2);
   }
 
+  public AstNode forBody () {
+    return getChild(3);
+  }
+
+  public boolean hasForCondExpression () {
+    return getChild(1) != null;
+  }
+
+  public boolean hasForInitExpression () {
+    return getChild(0) != null;
+  }
+
+  public boolean hasForLoopExpression () {
+    return getChild(2) != null;
+  }
+
 }

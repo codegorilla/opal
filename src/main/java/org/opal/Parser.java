@@ -627,8 +627,10 @@ public class Parser {
     match(Token.Kind.FOR);
     match(Token.Kind.L_PARENTHESIS);
     n.addChild(lookahead.getKind() != Token.Kind.SEMICOLON ? forInitExpression() : null);
+    match(Token.Kind.SEMICOLON);
     n.addChild(lookahead.getKind() != Token.Kind.SEMICOLON ? forCondExpression() : null);
-    n.addChild(lookahead.getKind() != Token.Kind.SEMICOLON ? forLoopExpression() : null);
+    match(Token.Kind.SEMICOLON);
+    n.addChild(lookahead.getKind() != Token.Kind.R_PARENTHESIS ? forLoopExpression() : null);
     match(Token.Kind.R_PARENTHESIS);
     n.addChild(forBody());
     return n;
@@ -639,23 +641,20 @@ public class Parser {
   private AstNode forInitExpression () {
     var n = new ForInitExpression();
     n.addChild(expression(true));
-    match(Token.Kind.SEMICOLON);
     return n;
   }
 
   private AstNode forCondExpression () {
     var n = new ForCondExpression();
     n.addChild(expression(true));
-    match(Token.Kind.SEMICOLON);
     return n;
   }
 
   // To do: There can be multiple loop expressions separated by commas.
 
   private AstNode forLoopExpression () {
-    var n = new ForCondExpression();
+    var n = new ForLoopExpression();
     n.addChild(expression(true));
-    match(Token.Kind.SEMICOLON);
     return n;
   }
 

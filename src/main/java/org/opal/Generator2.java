@@ -54,7 +54,7 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return null;
   }
 
-  // DECLARATIONS **************************************************
+  // DECLARATIONS *************************************************************
 
   // PACKAGE DECLARATIONS
 
@@ -256,7 +256,7 @@ public class Generator2 extends ResultBaseVisitor <ST> {
       return null;
   }
 
-  // STATEMENTS **************************************************
+  // STATEMENTS ***************************************************************
 
   public ST visit (CompoundStatement node) {
     var st = group.getInstanceOf("statement/compoundStatement");
@@ -293,6 +293,30 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     var st = group.getInstanceOf("statement/expressionStatement");
     st.add("expression", visit(node.expression()));
     return st;
+  }
+
+  public ST visit (ForStatement node) {
+    var st = group.getInstanceOf("statement/forStatement");
+    if (node.hasForInitExpression())
+      st.add("forInitExpression", visit(node.forInitExpression()));
+    if (node.hasForCondExpression())
+      st.add("forCondExpression", visit(node.forCondExpression()));
+    if (node.hasForLoopExpression())
+      st.add("forLoopExpression", visit(node.forLoopExpression()));
+    st.add("forBody", visit(node.forBody()));
+    return st;
+  }
+
+  public ST visit (ForInitExpression node) {
+    return visit(node.expression());
+  }
+
+  public ST visit (ForCondExpression node) {
+    return visit(node.expression());
+  }
+
+  public ST visit (ForLoopExpression node) {
+    return visit(node.expression());
   }
 
   // If body is a passthrough
@@ -355,7 +379,7 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // EXPRESSIONS **************************************************
+  // EXPRESSIONS **************************************************************
 
   public ST visit (Expression node) {
     var st = group.getInstanceOf("expression/expression");
@@ -400,7 +424,7 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // TYPES **************************************************
+  // TYPES ********************************************************************
 
   public ST visit (ArrayType node) {
     var st = group.getInstanceOf("declarator/arrayDeclarator");
