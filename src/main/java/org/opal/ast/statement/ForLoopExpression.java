@@ -7,8 +7,8 @@ import org.opal.ast.AstNode;
 
 public class ForLoopExpression extends AstNode {
 
-  public ForLoopExpression (Token token) {
-    super(token);
+  public ForLoopExpression () {
+    super();
   }
 
   @Override
@@ -20,5 +20,9 @@ public class ForLoopExpression extends AstNode {
   public <T> T accept (ResultVisitor<T> v) {
     return v.visit(this);
   }
-  
+
+  public AstNode expression () {
+    return getChild(0);
+  }
+
 }

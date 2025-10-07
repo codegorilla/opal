@@ -55,6 +55,10 @@ public def myfun1 (s: float, t: uint32) -> *int {
     t = 1;
   }
 
+  for (x = 0; x < 10; x += 1) {
+    t = 1;
+  }
+
 }
 
 private def myfun2 (s: float, t: uint32) -> *int {

@@ -435,6 +435,7 @@ public class Parser {
       kind == Token.Kind.L_BRACE   ||
       kind == Token.Kind.CONTINUE  ||
       kind == Token.Kind.DO        ||
+      kind == Token.Kind.FOR       ||
       kind == Token.Kind.SEMICOLON ||
       kind == Token.Kind.IF        ||
       kind == Token.Kind.RETURN    ||
@@ -485,6 +486,8 @@ public class Parser {
         n = doStatement();
       case Token.Kind.SEMICOLON ->
         n = emptyStatement();
+      case Token.Kind.FOR ->
+        n = forStatement();
       case Token.Kind.IF ->
         n = ifStatement();
       case Token.Kind.RETURN ->
@@ -622,21 +625,38 @@ public class Parser {
   private AstNode forStatement () {
     var n = new ForStatement(lookahead);
     match(Token.Kind.FOR);
-    n.addChild(forControl());
+    match(Token.Kind.L_PARENTHESIS);
+    n.addChild(lookahead.getKind() != Token.Kind.SEMICOLON ? forInitExpression() : null);
+    n.addChild(lookahead.getKind() != Token.Kind.SEMICOLON ? forCondExpression() : null);
+    n.addChild(lookahead.getKind() != Token.Kind.SEMICOLON ? forLoopExpression() : null);
+    match(Token.Kind.R_PARENTHESIS);
     n.addChild(forBody());
     return n;
   }
 
-  private AstNode forControl () {
-    match(Token.Kind.L_PARENTHESIS);
-    // Technically, these expressions can be empty. Perhaps this is why null
-    // statements are really expressions. We can research that and tidy up the
-    // grammar later.
-//    n.addChild(forInitExpression());
-//    n.addChild(forCondExpression());
-//    n.addChild(forLoopExpression());
-    match(Token.Kind.R_PARENTHESIS);
-    return null; // Fix
+  // To do: There can be multiple init expressions separated by commas.
+
+  private AstNode forInitExpression () {
+    var n = new ForInitExpression();
+    n.addChild(expression(true));
+    match(Token.Kind.SEMICOLON);
+    return n;
+  }
+
+  private AstNode forCondExpression () {
+    var n = new ForCondExpression();
+    n.addChild(expression(true));
+    match(Token.Kind.SEMICOLON);
+    return n;
+  }
+
+  // To do: There can be multiple loop expressions separated by commas.
+
+  private AstNode forLoopExpression () {
+    var n = new ForCondExpression();
+    n.addChild(expression(true));
+    match(Token.Kind.SEMICOLON);
+    return n;
   }
 
   private AstNode forBody () {

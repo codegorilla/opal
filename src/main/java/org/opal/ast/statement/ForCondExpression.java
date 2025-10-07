@@ -7,8 +7,8 @@ import org.opal.ast.AstNode;
 
 public class ForCondExpression extends AstNode {
 
-  public ForCondExpression (Token token) {
-    super(token);
+  public ForCondExpression () {
+    super();
   }
 
   @Override
@@ -20,5 +20,9 @@ public class ForCondExpression extends AstNode {
   public <T> T accept (ResultVisitor<T> v) {
     return v.visit(this);
   }
-  
+
+  public AstNode expression () {
+    return getChild(0);
+  }
+
 }

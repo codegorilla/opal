@@ -7,8 +7,8 @@ import org.opal.ast.AstNode;
 
 public class ForInitExpression extends AstNode {
 
-  public ForInitExpression (Token token) {
-    super(token);
+  public ForInitExpression () {
+    super();
   }
 
   @Override
@@ -19,6 +19,10 @@ public class ForInitExpression extends AstNode {
   @Override
   public <T> T accept (ResultVisitor<T> v) {
     return v.visit(this);
+  }
+
+  public AstNode expression () {
+    return getChild(0);
   }
 
 }
