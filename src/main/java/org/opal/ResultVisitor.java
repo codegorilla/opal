@@ -53,6 +53,10 @@ public interface ResultVisitor <T> {
   public T visit (ElseClause node);
   public T visit (EmptyStatement node);
   public T visit (ExpressionStatement node);
+  public T visit (ForStatement node);
+  public T visit (ForInitExpression node);
+  public T visit (ForCondExpression node);
+  public T visit (ForLoopExpression node);
   public T visit (IfStatement node);
   public T visit (IfCondition node);
   public T visit (ReturnStatement node);

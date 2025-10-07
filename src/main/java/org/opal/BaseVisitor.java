@@ -61,6 +61,10 @@ public class BaseVisitor implements Visitor {
   public void visit (ElseClause node) {}
   public void visit (EmptyStatement node) {}
   public void visit (ExpressionStatement node) {}
+  public void visit (ForStatement node) {}
+  public void visit (ForInitExpression node) {}
+  public void visit (ForCondExpression node) {}
+  public void visit (ForLoopExpression node) {}
   public void visit (IfStatement node) {}
   public void visit (IfCondition node) {}
   public void visit (ReturnStatement node) {}

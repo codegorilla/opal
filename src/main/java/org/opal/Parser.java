@@ -529,6 +529,31 @@ public class Parser {
     return n;
   }
 
+  // For now we only support variable declaration statements (i.e. local
+  // variables). I do not think cobalt needs local classes since they have
+  // significant limitations in C++ and only niche use cases. I would like to
+  // have nested routines, but since C++ doesn't have them, I need to research
+  // the feasibility of that idea. We might be able to compile nested routines
+  // into C++ lambda functions.
+
+  // It seems that we can just use the existing variableDeclaration production
+  // but if we need to distinguish between local and global variables, then we
+  // might need a separate production. Alternatively, we could use a flag to
+  // signify one or the other. Or we can defer the question to later phases.
+
+  // Should this just be a passthrough or do we want dedicated AST nodes at the
+  // root of all statement sub-trees?
+
+  private AstNode declarationStatement () {
+    AstNode n = null;
+    var mods = modifiers();
+    var kind = lookahead.getKind();
+    if (kind == Token.Kind.VAL || kind == Token.Kind.VAR)
+      n = variableDeclaration(null, mods);
+    // To do: Need error checking here
+    return n;
+  }
+
   // The do statement is flexible and can either be a "do while" or a "do until"
   // statement, depending on what follows the 'do' keyword.
 
@@ -581,6 +606,48 @@ public class Parser {
     var n = new EmptyStatement(lookahead);
     match(Token.Kind.SEMICOLON);
     return n;
+  }
+
+  // The expression statement is primarily just a passthrough, but we want a
+  // dedicated AST node at the root of all statement sub-trees.
+  // NOTE: IS ABOVE TRUE?
+
+  private AstNode expressionStatement () {
+    var n = new ExpressionStatement();
+    n.addChild(expression(true));
+    match(Token.Kind.SEMICOLON);
+    return n;
+  }
+
+  private AstNode forStatement () {
+    var n = new ForStatement(lookahead);
+    match(Token.Kind.FOR);
+    n.addChild(forControl());
+    n.addChild(forBody());
+    return n;
+  }
+
+  private AstNode forControl () {
+    match(Token.Kind.L_PARENTHESIS);
+    // Technically, these expressions can be empty. Perhaps this is why null
+    // statements are really expressions. We can research that and tidy up the
+    // grammar later.
+//    n.addChild(forInitExpression());
+//    n.addChild(forCondExpression());
+//    n.addChild(forLoopExpression());
+    match(Token.Kind.R_PARENTHESIS);
+    return null; // Fix
+  }
+
+  private AstNode forBody () {
+    if (lookahead.getKind() == Token.Kind.L_BRACE)
+      return compoundStatement();
+    else {
+      // Insert fabricated compound statement
+      var n = new CompoundStatement(null);
+      n.addChild(statement());
+      return n;
+    }
   }
 
   private AstNode ifStatement () {
@@ -720,42 +787,6 @@ public class Parser {
       n.addChild(statement());
       return n;
     }
-  }
-
-  // For now we only support variable declaration statements (i.e. local
-  // variables). I do not think cobalt needs local classes since they have
-  // significant limitations in C++ and only niche use cases. I would like to
-  // have nested routines, but since C++ doesn't have them, I need to research
-  // the feasibility of that idea. We might be able to compile nested routines
-  // into C++ lambda functions.
-
-  // It seems that we can just use the existing variableDeclaration production
-  // but if we need to distinguish between local and global variables, then we
-  // might need a separate production. Alternatively, we could use a flag to
-  // signify one or the other. Or we can defer the question to later phases.
-
-  // Should this just be a passthrough or do we want dedicated AST nodes at the
-  // root of all statement sub-trees?
-
-  private AstNode declarationStatement () {
-    AstNode n = null;
-    var mods = modifiers();
-    var kind = lookahead.getKind();
-    if (kind == Token.Kind.VAL || kind == Token.Kind.VAR)
-      n = variableDeclaration(null, mods);
-    // To do: Need error checking here
-    return n;
-  }
-
-  // The expression statement is primarily just a passthrough, but we want a
-  // dedicated AST node at the root of all statement sub-trees.
-  // NOTE: IS ABOVE TRUE?
-
-  private AstNode expressionStatement () {
-    var n = new ExpressionStatement();
-    n.addChild(expression(true));
-    match(Token.Kind.SEMICOLON);
-    return n;
   }
 
   // EXPRESSIONS **************************************************
