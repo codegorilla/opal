@@ -55,12 +55,12 @@ public def myfun1 (s: float, t: uint32) -> *int {
     t = 1;
   }
 
-  for (x = 0; x < 10; x += 1) {
-    t = 1;
+  for (i=0; i<10; i+=1) {
+    // Do something
   }
 
-  for (;;) {
-    t = 1;
+  foreach (i in list) {
+    // Do something
   }
 
 }

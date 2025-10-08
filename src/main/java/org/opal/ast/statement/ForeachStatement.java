@@ -1,13 +1,14 @@
 package org.opal.ast.statement;
 
 import org.opal.ResultVisitor;
+import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class ForCondExpression extends AstNode {
+public class ForeachStatement extends AstNode {
 
-  public ForCondExpression () {
-    super();
+  public ForeachStatement (Token token) {
+    super(token);
   }
 
   @Override
@@ -20,8 +21,16 @@ public class ForCondExpression extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode expression () {
+  public AstNode forInitExpression () {
     return getChild(0);
   }
 
+  public AstNode forLoopExpression () {
+    return getChild(2);
+  }
+
+  public AstNode forBody () {
+    return getChild(3);
+  }
+  
 }

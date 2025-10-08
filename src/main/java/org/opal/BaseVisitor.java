@@ -65,6 +65,7 @@ public class BaseVisitor implements Visitor {
   public void visit (ForInitExpression node) {}
   public void visit (ForCondExpression node) {}
   public void visit (ForLoopExpression node) {}
+  public void visit (ForeachStatement node) {}
   public void visit (IfStatement node) {}
   public void visit (IfCondition node) {}
   public void visit (ReturnStatement node) {}

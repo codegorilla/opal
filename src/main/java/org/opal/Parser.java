@@ -14,7 +14,7 @@ import org.opal.symbol.PrimitiveTypeSymbol;
 
 public class Parser {
 
-  private final int SLEEP_TIME = 10;
+  private final int SLEEP_TIME = 100;
 
   private final LinkedList<Token> input;
   private int position;
@@ -436,6 +436,7 @@ public class Parser {
       kind == Token.Kind.CONTINUE  ||
       kind == Token.Kind.DO        ||
       kind == Token.Kind.FOR       ||
+      kind == Token.Kind.FOREACH   ||
       kind == Token.Kind.SEMICOLON ||
       kind == Token.Kind.IF        ||
       kind == Token.Kind.RETURN    ||
@@ -488,6 +489,8 @@ public class Parser {
         n = emptyStatement();
       case Token.Kind.FOR ->
         n = forStatement();
+      case Token.Kind.FOREACH ->
+        n = foreachStatement();
       case Token.Kind.IF ->
         n = ifStatement();
       case Token.Kind.RETURN ->
@@ -659,6 +662,35 @@ public class Parser {
   }
 
   private AstNode forBody () {
+    if (lookahead.getKind() == Token.Kind.L_BRACE)
+      return compoundStatement();
+    else {
+      // Insert fabricated compound statement
+      var n = new CompoundStatement(null);
+      n.addChild(statement());
+      return n;
+    }
+  }
+
+  private AstNode foreachStatement () {
+    var n = new ForeachStatement(lookahead);
+    match(Token.Kind.FOREACH);
+    match(Token.Kind.L_PARENTHESIS);
+    n.addChild(foreachName());
+    match(Token.Kind.IN);
+    n.addChild(expression(true));
+    match(Token.Kind.R_PARENTHESIS);
+    n.addChild(foreachBody());
+    return n;
+  }
+
+  private AstNode foreachName () {
+    var n = new Name(lookahead);
+    match(Token.Kind.IDENTIFIER);
+    return n;
+  }
+
+  private AstNode foreachBody () {
     if (lookahead.getKind() == Token.Kind.L_BRACE)
       return compoundStatement();
     else {
