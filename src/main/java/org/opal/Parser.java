@@ -14,7 +14,7 @@ import org.opal.symbol.PrimitiveTypeSymbol;
 
 public class Parser {
 
-  private final int SLEEP_TIME = 100;
+  private final int SLEEP_TIME = 10;
 
   private final LinkedList<Token> input;
   private int position;
@@ -566,12 +566,14 @@ public class Parser {
   private AstNode doStatement () {
     AstNode n = null;
     match(Token.Kind.DO);
-    if (lookahead.getKind() == Token.Kind.UNTIL)
-      n = doUntilStatement();
-    else if (lookahead.getKind() == Token.Kind.WHILE)
-      n = doWhileStatement();
-    else
-      System.out.println("Error - invalid do statement");
+    switch (lookahead.getKind()) {
+      case Token.Kind.UNTIL ->
+        n = doUntilStatement();
+      case Token.Kind.WHILE ->
+        n = doWhileStatement();
+      default ->
+        System.out.println("Error - invalid do statement");
+    }
     return n;
   }
 
@@ -629,11 +631,11 @@ public class Parser {
     var n = new ForStatement(lookahead);
     match(Token.Kind.FOR);
     match(Token.Kind.L_PARENTHESIS);
-    n.addChild(lookahead.getKind() != Token.Kind.SEMICOLON ? forInitExpression() : null);
+    n.addChild(lookahead.getKind() != Token.Kind.SEMICOLON ? forInitializer() : null);
     match(Token.Kind.SEMICOLON);
-    n.addChild(lookahead.getKind() != Token.Kind.SEMICOLON ? forCondExpression() : null);
+    n.addChild(lookahead.getKind() != Token.Kind.SEMICOLON ? forCondition() : null);
     match(Token.Kind.SEMICOLON);
-    n.addChild(lookahead.getKind() != Token.Kind.R_PARENTHESIS ? forLoopExpression() : null);
+    n.addChild(lookahead.getKind() != Token.Kind.R_PARENTHESIS ? forUpdate() : null);
     match(Token.Kind.R_PARENTHESIS);
     n.addChild(forBody());
     return n;
@@ -641,22 +643,22 @@ public class Parser {
 
   // To do: There can be multiple init expressions separated by commas.
 
-  private AstNode forInitExpression () {
-    var n = new ForInitExpression();
+  private AstNode forInitializer () {
+    var n = new ForInitializer();
     n.addChild(expression(true));
     return n;
   }
 
-  private AstNode forCondExpression () {
-    var n = new ForCondExpression();
+  private AstNode forCondition () {
+    var n = new ForCondition();
     n.addChild(expression(true));
     return n;
   }
 
   // To do: There can be multiple loop expressions separated by commas.
 
-  private AstNode forLoopExpression () {
-    var n = new ForLoopExpression();
+  private AstNode forUpdate () {
+    var n = new ForUpdate();
     n.addChild(expression(true));
     return n;
   }

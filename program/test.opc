@@ -61,6 +61,7 @@ public def myfun1 (s: float, t: uint32) -> *int {
 
   foreach (i in list) {
     // Do something
+    t = 1;
   }
 
 }

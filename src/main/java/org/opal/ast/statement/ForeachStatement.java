@@ -21,16 +21,16 @@ public class ForeachStatement extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode forInitExpression () {
+  public AstNode name () {
     return getChild(0);
   }
 
-  public AstNode forLoopExpression () {
+  public AstNode expression () {
+    return getChild(1);
+  }
+
+  public AstNode foreachBody () {
     return getChild(2);
   }
 
-  public AstNode forBody () {
-    return getChild(3);
-  }
-  
 }

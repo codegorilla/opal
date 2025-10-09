@@ -4,9 +4,9 @@ import org.opal.ResultVisitor;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class ForLoopExpression extends AstNode {
+public class ForInitializer extends AstNode {
 
-  public ForLoopExpression () {
+  public ForInitializer () {
     super();
   }
 

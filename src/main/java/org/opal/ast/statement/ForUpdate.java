@@ -4,9 +4,9 @@ import org.opal.ResultVisitor;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class ForCondExpression extends AstNode {
+public class ForUpdate extends AstNode {
 
-  public ForCondExpression () {
+  public ForUpdate () {
     super();
   }
 

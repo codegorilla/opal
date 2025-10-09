@@ -307,16 +307,24 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  public ST visit (ForInitExpression node) {
+  public ST visit (ForInitializer node) {
     return visit(node.expression());
   }
 
-  public ST visit (ForCondExpression node) {
+  public ST visit (ForCondition node) {
     return visit(node.expression());
   }
 
-  public ST visit (ForLoopExpression node) {
+  public ST visit (ForUpdate node) {
     return visit(node.expression());
+  }
+
+  public ST visit (ForeachStatement node) {
+    var st = group.getInstanceOf("statement/foreachStatement");
+    st.add("name", visit(node.name()));
+    st.add("expression", visit(node.expression()));
+    st.add("foreachBody", visit(node.foreachBody()));
+    return st;
   }
 
   // If body is a passthrough
