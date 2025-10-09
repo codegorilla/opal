@@ -3,6 +3,11 @@ package main;
 import math;
 import stdlib;
 
+
+def main (argc: int, argv: *char[]) -> int {
+
+}
+
 //public var hello: *(*int)[] = -1 + 2.5;
 
 //public var x: (**List)[] = 1;

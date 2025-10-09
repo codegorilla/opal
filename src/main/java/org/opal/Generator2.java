@@ -134,7 +134,8 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     var st = group.getInstanceOf("declaration/functionDefinition");
     st.add("functionName", visit(node.routineName()));
     st.add("functionParameters", visit(node.routineParameters()));
-    st.add("functionReturnType", visit(node.routineReturnType()));
+    if (node.hasRoutineReturnType())
+      st.add("functionReturnType", visit(node.routineReturnType()));
     st.add("functionBody", visit(node.routineBody()));
     return st;
   }

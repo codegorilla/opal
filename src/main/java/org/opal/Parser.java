@@ -276,6 +276,8 @@ public class Parser {
   // For now, there are no local routines, so no need to distinguish between
   // global and local routines.
 
+  // To do: Need to handle no return type
+
   private AstNode routineDeclaration (AccessSpecifier accessSpecifier, AstNode modifiers) {
     var n = new RoutineDeclaration(lookahead);
 //    var scope = Scope(Scope.Kind.LOCAL);
@@ -289,7 +291,7 @@ public class Parser {
     n.addChild(modifiers);
     n.addChild(routineName());
     n.addChild(routineParameters());
-    n.addChild(routineReturnType());
+    n.addChild((lookahead.getKind() == Token.Kind.MINUS_GREATER) ? routineReturnType() : null);
     n.addChild(routineBody());
 //    currentScope = scope.getEnclosingScope();
     return n;

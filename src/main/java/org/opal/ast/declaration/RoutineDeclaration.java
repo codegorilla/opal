@@ -25,6 +25,10 @@ public class RoutineDeclaration extends AstNode {
     return getChild(0);
   }
 
+  public boolean hasRoutineReturnType () {
+    return getChild(4) != null;
+  }
+
   public AstNode modifiers () {
     return getChild(1);
   }
