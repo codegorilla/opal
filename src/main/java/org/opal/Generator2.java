@@ -13,6 +13,8 @@ import java.util.LinkedList;
 
 // The purpose of this pass is to create a module interface unit.
 
+// To do: Public/private dichotomy needs to be handled correctly.
+
 public class Generator2 extends ResultBaseVisitor <ST> {
 
   private final URL templateDirectoryUrl;

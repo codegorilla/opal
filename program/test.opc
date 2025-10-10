@@ -8,73 +8,10 @@ def main (argc: int, argv: *char[]) -> int {
 
 }
 
-//public var hello: *(*int)[] = -1 + 2.5;
-
-//public var x: (**List)[] = 1;
-
-//public var x: List<*int[]> = 2;
-
-// Array of pointer to int
-//public var s: *int[] = 10;
-
-//var t: *int[] = 1;
-
-//var z1: int = 1;
-//var z2: int;
-
-// Pointer to array of int
-//public var t: (*int)[5] = 1;
-
-//public var u: *List<*int, *int[]> = 1;
-
-//var v: *List<*int, *int[]> = 1;
-
-//public var t: (*List<*(*int)[]>)[] = 1;
-
-
 public def myfun1 (s: float, t: uint32) -> *int {
+
+  x.y;
+
   break;
-  continue;
-  return 1;
-  while (1)
-    return 1;
-  until (1)
-    return 1;
-  if (1)
-    return 1;
-  else if (2)
-    return 2;
-  else
-    return 3;
-  var a: float = 10;
 
-  x = 1;
-
-  do while (t <= 10) {
-    var x: int = 1;
-    t = 1;
-  }
-
-  do until (t > 10) {
-    var x: int = 1;
-    t = 1;
-  }
-
-  for (i=0; i<10; i+=1) {
-    // Do something
-  }
-
-  foreach (i in list) {
-    // Do something
-    t = 1;
-  }
-
-}
-
-private def myfun2 (s: float, t: uint32) -> *int {
-  //var a: int = 1;
-}
-
-def myfun3 (s: float, t: uint32) -> *int {
-  //var a: float = 1;
 }

@@ -1068,15 +1068,15 @@ public class Parser {
       lookahead.getKind() == Token.Kind.L_BRACKET
     ) {
       switch (lookahead.getKind()) {
-        case Token.Kind.MINUS_GREATER:
+        case Token.Kind.MINUS_GREATER ->
           node = dereferencingMemberAccess(node);
-        case Token.Kind.PERIOD:
+        case Token.Kind.PERIOD ->
           node = memberAccess(node);
-        case Token.Kind.L_PARENTHESIS:
+        case Token.Kind.L_PARENTHESIS ->
           node = routineCall(node);
-        case Token.Kind.L_BRACKET:
+        case Token.Kind.L_BRACKET ->
           node = arraySubscript(node);
-        default:
+        default ->
           System.out.println("Error: No viable alternative in postfixExpression");
       }
     }
@@ -1091,10 +1091,14 @@ public class Parser {
     return n;
   }
 
+  // To do: We might need to use the symbol table to determine if the member is
+  // an object, package, or type. This is to support static members and implicit
+  // namespacing of packages.
+
   private AstNode memberAccess (AstNode nameExpr) {
     var n = new MemberAccess(lookahead);
-    n.addChild(nameExpr);
     match(Token.Kind.PERIOD);
+    n.addChild(nameExpr);
     n.addChild(name());
     return n;
   }

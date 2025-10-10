@@ -20,6 +20,8 @@ import java.util.HashMap;
 // implement opal's design of having its "entry point" main function defined
 // inside of its main module.
 
+// To do: Only generate entry point code if the main package is being compiled.
+
 public class Generator1 extends BaseVisitor {
 
   private final URL templateDirectoryUrl;
