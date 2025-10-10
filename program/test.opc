@@ -5,6 +5,7 @@ import stdlib;
 
 
 def main (argc: int, argv: *char[]) -> int {
+//def main () -> int {
 
 }
 

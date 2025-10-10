@@ -4,16 +4,17 @@ import org.opal.ast.AstNode;
 import org.opal.ast.TranslationUnit;
 import org.opal.ast.declaration.*;
 import org.opal.ast.expression.*;
+import org.opal.ast.statement.*;
 import org.opal.ast.type.*;
-
-import org.stringtemplate.v4.*;
+import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroupDir;
 
 import java.net.URL;
 import java.util.LinkedList;
 
-// The purpose of this pass is to create a module interface unit.
+// The purpose of this pass is to create function prototypes within a module implementation unit.
 
-public class Generator2 extends ResultBaseVisitor <ST> {
+public class Generator3 extends ResultBaseVisitor <ST> {
 
   private final URL templateDirectoryUrl;
   private final STGroupDir group;
@@ -25,9 +26,11 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   // Stack for keeping track of current node path
   private final LinkedList<AstNode> ancestorStack = new LinkedList<>();
 
-  public Generator2 (AstNode input) {
+  private int pass = 2;
+
+  public Generator3 (AstNode input) {
     super(input);
-    templateDirectoryUrl = this.getClass().getClassLoader().getResource("templates/interface");
+    templateDirectoryUrl = this.getClass().getClassLoader().getResource("templates/implementation");
     group = new STGroupDir(templateDirectoryUrl);
   }
 
@@ -45,14 +48,13 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   public ST visit (TranslationUnit node) {
     var st = group.getInstanceOf("translationUnit");
     st.add("packageDeclaration", visit(node.packageDeclaration()));
-    st.add("importDeclarations", visit(node.importDeclarations()));
     st.add("declarations", visit(node.declarations()));
     System.out.println("---");
     System.out.println(st.render());
     return null;
   }
 
-  // DECLARATIONS **************************************************
+  // DECLARATIONS *************************************************************
 
   // PACKAGE DECLARATIONS
 
@@ -68,27 +70,6 @@ public class Generator2 extends ResultBaseVisitor <ST> {
 
   public ST visit (PackageName node) {
     var st = group.getInstanceOf("declaration/packageName");
-    st.add("name", node.getToken().getLexeme());
-    return st;
-  }
-
-  // IMPORT DECLARATIONS
-
-  public ST visit (ImportDeclarations node) {
-    var st = group.getInstanceOf("declaration/importDeclarations");
-    for (var child : node.getChildren())
-      st.add("importDeclaration", visit(child));
-    return st;
-  }
-
-  public ST visit (ImportDeclaration node) {
-    var st = group.getInstanceOf("declaration/importDeclaration");
-    st.add("importName", visit(node.importName()));
-    return st;
-  }
-
-  public ST visit (ImportName node) {
-    var st = group.getInstanceOf("declaration/importName");
     st.add("name", node.getToken().getLexeme());
     return st;
   }
@@ -110,10 +91,7 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   // it belongs to. So we must defer differentiation. Nevertheless, we can either mark it in the parser from within the
   // corresponding construct rule or we can use a separate semantic analysis pass. We could also use K>1 lookahead.
 
-  // If the access specifier is PUBLIC then this translates to an exported
-  // entity that appears in the package interface unit. Otherwise, it appears
-  // in the package implementation unit.
-
+  /*
   public ST visit (AccessSpecifier node) {
     ST st = null;
     var token = node.getToken();
@@ -126,6 +104,7 @@ public class Generator2 extends ResultBaseVisitor <ST> {
 //      System.out.println("THIS IS AN INSTANCE OF A VARIABLE DECLARATION!");
     return st;
   }
+  */
 
   public ST visit (Modifiers node) {
     System.out.println("Modifiers");
@@ -135,17 +114,30 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   // ROUTINE DECLARATIONS
 
   public ST visit (RoutineDeclaration node) {
-    var token = node.accessSpecifier().getToken();
-    if (token != null && token.getKind() == Token.Kind.PUBLIC) {
+    var st = switch (pass) {
+      case 1 -> routineDeclarationPass1(node);
+      case 2 -> routineDeclarationPass2(node);
+      default -> null;
+    };
+    return st;
+  }
+
+  private ST routineDeclarationPass1 (RoutineDeclaration node) {
       var st = group.getInstanceOf("declaration/functionDeclaration");
-      st.add("accessSpecifier", visit(node.accessSpecifier()));
       st.add("functionName", visit(node.routineName()));
       st.add("functionParameters", visit(node.routineParameters()));
       st.add("functionReturnType", visit(node.routineReturnType()));
       return st;
-    }
-    else
-      return null;
+  }
+
+  private ST routineDeclarationPass2 (RoutineDeclaration node) {
+    var st = group.getInstanceOf("declaration/functionDefinition");
+    st.add("functionName", visit(node.routineName()));
+    st.add("functionParameters", visit(node.routineParameters()));
+    if (node.hasRoutineReturnType())
+      st.add("functionReturnType", visit(node.routineReturnType()));
+    st.add("functionBody", visit(node.routineBody()));
+    return st;
   }
 
   public ST visit (RoutineName node) {
@@ -190,17 +182,28 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  public ST visit (RoutineBody node) {
+    var st = group.getInstanceOf("declaration/functionBody");
+    st.add("compoundStatement", visit(node.compoundStatement()));
+    return st;
+  }
+
   private ST emptyDeclarator () {
     return new ST("");
   }
 
   // VARIABLE DECLARATIONS
 
+  // In C++, any pointer or raw array portions of the type specifier are transferred to the name to form a so-called
+  // "declarator".
+
+  // The variable name is placed on a stack, transformed into a declarator, and then retrieved from the stack. Since
+  // the stack never has more than one element, it doesn't actually need to be a stack.
+
   public ST visit (VariableDeclaration node) {
     var token = node.accessSpecifier().getToken();
-    if (token != null && token.getKind() == Token.Kind.PUBLIC) {
+    if (token == null || token.getKind() == Token.Kind.PRIVATE) {
       var st = group.getInstanceOf("declaration/variableDeclaration");
-      st.add("accessSpecifier", visit(node.accessSpecifier()));
       stack.push(visit(node.variableName()));
       if (node.variableTypeSpecifier() != null)
         st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
@@ -214,18 +217,23 @@ public class Generator2 extends ResultBaseVisitor <ST> {
       return null;
   }
 
-  // In C++, any pointer or raw array portions of the type specifier are
-  // transferred to the name to form a so-called "declarator".
-
-  // The variable name is placed on a stack, transformed into a declarator, and
-  // then retrieved from the stack.
+  public ST visit (LocalVariableDeclaration node) {
+    var st = group.getInstanceOf("declaration/localVariableDeclaration");
+    stack.push(visit(node.variableName()));
+    if (node.variableTypeSpecifier() != null)
+      st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
+    st.add("declarator", stack.pop());
+    if (node.variableInitializer() != null)
+      st.add("initializer", visit(node.variableInitializer()));
+    return st;
+  }
 
   // The variable name becomes a "simple declarator", which is the core of the overall C++ declarator that gets built
-  // up. A C++ declaration is of the form "typeSpecifier declarator", which is essentially the reverse of the cobalt
+  // up. A C++ declaration is of the form "typeSpecifier declarator", which is essentially the reverse of the cobolt
   // declaration of the form "var variableName: typeSpecifier" (setting aside the fact that the term "type specifier"
-  // has a different interpretation between the two). Due to the need to swap the variable name with the leaf base type
-  // from the type specifier, and that the leaf base type may be several levels down in the type expression tree, we
-  // will use an explicit stack to facilitate the exchange.
+  // has a different interpretation between the two). Due to the need to swap the variable name with the base type from
+  // the type specifier, and that the base type may be several levels down in the type expression tree, we will use an
+  // explicit stack to facilitate the exchange.
 
   public ST visit (VariableName node) {
     var st = group.getInstanceOf("declarator/simpleDeclarator");
@@ -240,12 +248,147 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (VariableInitializer node) {
-    var st = group.getInstanceOf("declaration/variableInitializer");
+    if (node.hasChildren()) {
+      var st = group.getInstanceOf("declaration/variableInitializer");
+      st.add("expression", visit(node.expression()));
+      return st;
+    }
+    else
+      return null;
+  }
+
+  // STATEMENTS ***************************************************************
+
+  public ST visit (CompoundStatement node) {
+    var st = group.getInstanceOf("statement/compoundStatement");
+    for (var child : node.getChildren())
+      st.add("statement", visit(child));
+    return st;
+  }
+
+  public ST visit (BreakStatement node) {
+    var st = group.getInstanceOf("statement/breakStatement");
+    return st;
+  }
+
+  public ST visit (ContinueStatement node) {
+    var st = group.getInstanceOf("statement/continueStatement");
+    return st;
+  }
+
+  public ST visit(DoUntilStatement node) {
+    var st = group.getInstanceOf("statement/doUntilStatement");
+    st.add("untilCondition", visit(node.untilCondition()));
+    st.add("untilBody", visit(node.untilBody()));
+    return st;
+  }
+
+  public ST visit(DoWhileStatement node) {
+    var st = group.getInstanceOf("statement/doWhileStatement");
+    st.add("whileCondition", visit(node.whileCondition()));
+    st.add("whileBody", visit(node.whileBody()));
+    return st;
+  }
+
+  public ST visit (ExpressionStatement node) {
+    var st = group.getInstanceOf("statement/expressionStatement");
     st.add("expression", visit(node.expression()));
     return st;
   }
 
-  // EXPRESSIONS **************************************************
+  public ST visit (ForStatement node) {
+    var st = group.getInstanceOf("statement/forStatement");
+    if (node.hasForInitExpression())
+      st.add("forInitExpression", visit(node.forInitExpression()));
+    if (node.hasForCondExpression())
+      st.add("forCondExpression", visit(node.forCondExpression()));
+    if (node.hasForLoopExpression())
+      st.add("forLoopExpression", visit(node.forLoopExpression()));
+    st.add("forBody", visit(node.forBody()));
+    return st;
+  }
+
+  public ST visit (ForInitializer node) {
+    return visit(node.expression());
+  }
+
+  public ST visit (ForCondition node) {
+    return visit(node.expression());
+  }
+
+  public ST visit (ForUpdate node) {
+    return visit(node.expression());
+  }
+
+  public ST visit (ForeachStatement node) {
+    var st = group.getInstanceOf("statement/foreachStatement");
+    st.add("name", visit(node.name()));
+    st.add("expression", visit(node.expression()));
+    st.add("foreachBody", visit(node.foreachBody()));
+    return st;
+  }
+
+  // If body is a passthrough
+
+  public ST visit (IfStatement node) {
+    var st = group.getInstanceOf("statement/ifStatement");
+    st.add("ifCondition", visit(node.ifCondition()));
+    st.add("ifBody", visit(node.ifBody()));
+    if (node.getChildCount() == 3)
+      st.add("elseClause", visit(node.elseClause()));
+    return st;
+  }
+
+  public ST visit (IfCondition node) {
+    var st = group.getInstanceOf("statement/ifCondition");
+    st.add("expression", visit(node.expression()));
+    return st;
+  }
+
+  public ST visit (ElseClause node) {
+    var st = group.getInstanceOf("statement/elseClause");
+    st.add("elseBody", visit(node.elseBody()));
+    return st;
+  }
+
+  public ST visit (ReturnStatement node) {
+    var st = group.getInstanceOf("statement/returnStatement");
+    if (node.hasChildren())
+      st.add("expression", visit(node.expression()));
+    return st;
+  }
+
+  // Until body is a passthrough
+
+  public ST visit (UntilStatement node) {
+    var st = group.getInstanceOf("statement/untilStatement");
+    st.add("untilCondition", visit(node.untilCondition()));
+    st.add("untilBody", visit(node.untilBody()));
+    return st;
+  }
+
+  public ST visit (UntilCondition node) {
+    var st = group.getInstanceOf("statement/untilCondition");
+    st.add("expression", visit(node.expression()));
+    return st;
+  }
+
+  // While body is a passthrough
+
+  public ST visit (WhileStatement node) {
+    var st = group.getInstanceOf("statement/whileStatement");
+    st.add("whileCondition", visit(node.whileCondition()));
+    st.add("whileBody", visit(node.whileBody()));
+    return st;
+  }
+
+  public ST visit (WhileCondition node) {
+    var st = group.getInstanceOf("statement/whileCondition");
+    st.add("expression", visit(node.expression()));
+    return st;
+  }
+
+  // EXPRESSIONS **************************************************************
 
   public ST visit (Expression node) {
     var st = group.getInstanceOf("expression/expression");
@@ -270,6 +413,12 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  public ST visit (Name node) {
+    var st = group.getInstanceOf("expression/name");
+    st.add("value", node.getToken().getLexeme());
+    return st;
+  }
+
   // Do we need separate string templates for each literal type? It does not appear so.
 
   public ST visit (FloatingPointLiteral node) {
@@ -284,7 +433,7 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // TYPES **************************************************
+  // TYPES ********************************************************************
 
   public ST visit (ArrayType node) {
     var st = group.getInstanceOf("declarator/arrayDeclarator");
