@@ -1,3 +1,0 @@
-routineArguments (argument) ::= <<
-(<argument; separator=", ">)
->>
