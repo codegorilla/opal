@@ -10,7 +10,7 @@ def main (argc: int, argv: *char[]) -> int {
 
 public def myfun1 (s: float, t: uint32) -> *int {
 
-  x.y;
+  var t: int = x.y.z;
 
   break;
 
