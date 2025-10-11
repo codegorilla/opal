@@ -415,17 +415,24 @@ public class Generator3 extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  public ST visit (ArraySubscript node) {
+    var st = group.getInstanceOf("expression/arraySubscript");
+    st.add("array", visit(node.array()));
+    st.add("subscript", visit(node.subscript()));
+    return st;
+  }
+
   public ST visit (DereferencingMemberAccess node) {
     var st = group.getInstanceOf("expression/dereferencingMemberAccess");
-    st.add("object", visit(node.getChild(0)));
-    st.add("member", visit(node.getChild(1)));
+    st.add("object", visit(node.object()));
+    st.add("member", visit(node.member()));
     return st;
   }
 
   public ST visit (MemberAccess node) {
     var st = group.getInstanceOf("expression/memberAccess");
-    st.add("object", visit(node.getChild(0)));
-    st.add("member", visit(node.getChild(1)));
+    st.add("object", visit(node.object()));
+    st.add("member", visit(node.member()));
     return st;
   }
 

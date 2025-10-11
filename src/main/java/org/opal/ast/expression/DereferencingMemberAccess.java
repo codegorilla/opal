@@ -21,4 +21,12 @@ public class DereferencingMemberAccess extends AstNode {
     return v.visit(this);
   }
 
+  public AstNode object () {
+    return getChild(0);
+  }
+
+  public AstNode member () {
+    return getChild(1);
+  }
+
 }

@@ -1062,24 +1062,33 @@ public class Parser {
   private AstNode postfixExpression () {
     var node = primaryExpression();
     while (
+      lookahead.getKind() == Token.Kind.L_BRACKET ||
       lookahead.getKind() == Token.Kind.MINUS_GREATER ||
       lookahead.getKind() == Token.Kind.PERIOD ||
-      lookahead.getKind() == Token.Kind.L_PARENTHESIS ||
-      lookahead.getKind() == Token.Kind.L_BRACKET
+      lookahead.getKind() == Token.Kind.L_PARENTHESIS
     ) {
       switch (lookahead.getKind()) {
+        case Token.Kind.L_BRACKET ->
+          node = arraySubscript(node);
         case Token.Kind.MINUS_GREATER ->
           node = dereferencingMemberAccess(node);
         case Token.Kind.PERIOD ->
           node = memberAccess(node);
         case Token.Kind.L_PARENTHESIS ->
           node = routineCall(node);
-        case Token.Kind.L_BRACKET ->
-          node = arraySubscript(node);
         default ->
           System.out.println("Error: No viable alternative in postfixExpression");
       }
     }
+    return node;
+  }
+
+  private AstNode arraySubscript (AstNode nameExpr) {
+    var node = new ArraySubscript(lookahead);
+    match(Token.Kind.L_BRACKET);
+    node.addChild(nameExpr);
+    node.addChild(expression(false));
+    match(Token.Kind.R_BRACKET);
     return node;
   }
 
@@ -1128,15 +1137,6 @@ public class Parser {
       }
     }
     match(Token.Kind.R_PARENTHESIS);
-    return n;
-  }
-
-  private AstNode arraySubscript (AstNode nameExpr) {
-    var n = new ArraySubscript();
-    n.addChild(nameExpr);
-    match(Token.Kind.L_BRACKET);
-    n.addChild(expression(false));
-    match(Token.Kind.R_BRACKET);
     return n;
   }
 

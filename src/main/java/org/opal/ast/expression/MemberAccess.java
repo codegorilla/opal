@@ -7,7 +7,7 @@ import org.opal.ast.AstNode;
 
 public class MemberAccess extends AstNode {
 
-  public MemberAccess(Token token) {
+  public MemberAccess (Token token) {
     super(token);
   }
 
@@ -19,6 +19,14 @@ public class MemberAccess extends AstNode {
   @Override
   public <T> T accept (ResultVisitor<T> v) {
     return v.visit(this);
+  }
+
+  public AstNode object () {
+    return getChild(0);
+  }
+
+  public AstNode member () {
+    return getChild(1);
   }
 
 }
