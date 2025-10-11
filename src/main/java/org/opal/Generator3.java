@@ -438,12 +438,23 @@ public class Generator3 extends ResultBaseVisitor <ST> {
 
   public ST visit (RoutineCall node) {
     var st = group.getInstanceOf("expression/routineCall");
-    st.add("object", visit(node.getChild(0)));
-    //st.add("member", visit(node.member()));
+    st.add("name", visit(node.name()));
+    st.add("arguments", visit(node.routineArguments()));
     return st;
   }
 
+  public ST visit (RoutineArguments node) {
+    var st = group.getInstanceOf("expression/routineArguments");
+    for (var child : node.getChildren())
+      st.add("argument", visit(child));
+    return st;
+  }
 
+  public ST visit (RoutineArgument node) {
+    var st = group.getInstanceOf("expression/routineArgument");
+    st.add("expression", visit(node.expression()));
+    return st;
+  }
 
   public ST visit (Name node) {
     var st = group.getInstanceOf("expression/name");

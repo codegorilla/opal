@@ -21,7 +21,7 @@ public class RoutineArguments extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode argument () {
+  public AstNode routineArgument () {
     return getChild(0);
   }
 

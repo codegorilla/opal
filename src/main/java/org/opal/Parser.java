@@ -1118,30 +1118,35 @@ public class Parser {
   // distinguish between all these types of routines using different keywords.
 
   private AstNode routineCall (AstNode nameExpr) {
-    var n = new RoutineCall(lookahead);
-    n.addChild(nameExpr);
-    n.addChild(routineArguments());
-    return n;
+    var node = new RoutineCall(lookahead);
+    node.addChild(nameExpr);
+    node.addChild(routineArguments());
+    return node;
   }
 
   // Todo: Maybe change to routineArguments and add routineArgument
 
   private AstNode routineArguments () {
-    var n = new RoutineArguments(lookahead);
+    var node = new RoutineArguments(lookahead);
     match(Token.Kind.L_PARENTHESIS);
     if (lookahead.getKind() != Token.Kind.R_PARENTHESIS) {
-      n.addChild(routineArgument());
+      node.addChild(routineArgument());
       while (lookahead.getKind() == Token.Kind.COMMA) {
         match(Token.Kind.COMMA);
-        n.addChild(routineArgument());
+        node.addChild(routineArgument());
       }
     }
     match(Token.Kind.R_PARENTHESIS);
-    return n;
+    return node;
   }
 
+  // This could just be a passthrough, but we create a dedicated node to be
+  // consistent with other parts of the parser (e.g. template argument).
+
   private AstNode routineArgument () {
-     return expression(false);
+    var n = new RoutineArgument();
+    n.addChild(expression(false));
+    return n;
   }
 
   private AstNode primaryExpression () {
@@ -1435,8 +1440,7 @@ public class Parser {
 
   private AstNode templateArgument () {
     var n = new TemplateArgument(lookahead);
-    var p = type();
-    n.addChild(p);
+    n.addChild(type());
     return n;
   }
 

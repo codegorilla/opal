@@ -15,7 +15,7 @@ public def myfun1 (s: float, t: uint32) -> *int {
   var s: int = x->y->z;
   var t: int = x.y.z;
 
-  std.println();
+  std.println(1, 2);
 
   List.setMethod();
 

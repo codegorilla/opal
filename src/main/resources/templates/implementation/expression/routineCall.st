@@ -1,3 +1,3 @@
-routineCall (object, member) ::= <<
-<object>()
+routineCall (name, arguments) ::= <<
+<name><arguments>
 >>

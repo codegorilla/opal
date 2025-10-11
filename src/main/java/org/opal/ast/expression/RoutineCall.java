@@ -21,4 +21,12 @@ public class RoutineCall extends AstNode {
     return v.visit(this);
   }
 
+  public AstNode name () {
+    return getChild(0);
+  }
+
+  public AstNode routineArguments () {
+    return getChild(1);
+  }
+
 }
