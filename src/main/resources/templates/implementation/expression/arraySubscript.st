@@ -1,3 +1,3 @@
-arraySubscript (array, subscript) ::= <<
-<array>[<subscript>]
+arraySubscript (name, subscript) ::= <<
+<name>[<subscript>]
 >>

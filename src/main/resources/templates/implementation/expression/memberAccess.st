@@ -1,3 +1,3 @@
-memberAccess (object, member) ::= <<
-<object>.<member>
+memberAccess (name, member) ::= <<
+<name>.<member>
 >>

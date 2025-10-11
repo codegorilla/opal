@@ -417,21 +417,21 @@ public class Generator3 extends ResultBaseVisitor <ST> {
 
   public ST visit (ArraySubscript node) {
     var st = group.getInstanceOf("expression/arraySubscript");
-    st.add("array", visit(node.array()));
+    st.add("name", visit(node.name()));
     st.add("subscript", visit(node.subscript()));
     return st;
   }
 
   public ST visit (DereferencingMemberAccess node) {
     var st = group.getInstanceOf("expression/dereferencingMemberAccess");
-    st.add("object", visit(node.object()));
+    st.add("name", visit(node.name()));
     st.add("member", visit(node.member()));
     return st;
   }
 
   public ST visit (MemberAccess node) {
     var st = group.getInstanceOf("expression/memberAccess");
-    st.add("object", visit(node.object()));
+    st.add("name", visit(node.name()));
     st.add("member", visit(node.member()));
     return st;
   }
@@ -445,8 +445,8 @@ public class Generator3 extends ResultBaseVisitor <ST> {
 
   public ST visit (RoutineArguments node) {
     var st = group.getInstanceOf("expression/functionArguments");
-    for (var child : node.getChildren())
-      st.add("argument", visit(child));
+    for (var routineArgument : node.getChildren())
+      st.add("argument", visit(routineArgument));
     return st;
   }
 

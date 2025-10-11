@@ -1,3 +1,3 @@
-dereferencingMemberAccess (object, member) ::= <<
-<object>-><member>
+dereferencingMemberAccess (name, member) ::= <<
+<name>-><member>
 >>

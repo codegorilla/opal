@@ -21,7 +21,7 @@ public class ArraySubscript extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode array () {
+  public AstNode name () {
     return getChild(0);
   }
 
