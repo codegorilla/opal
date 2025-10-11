@@ -122,6 +122,8 @@ public class Generator3 extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  // To do: Might need to put conditional on the return type
+
   private ST routineDeclarationPass1 (RoutineDeclaration node) {
       var st = group.getInstanceOf("declaration/functionDeclaration");
       st.add("functionName", visit(node.routineName()));
@@ -298,12 +300,12 @@ public class Generator3 extends ResultBaseVisitor <ST> {
 
   public ST visit (ForStatement node) {
     var st = group.getInstanceOf("statement/forStatement");
-    if (node.hasForInitExpression())
-      st.add("forInitExpression", visit(node.forInitExpression()));
-    if (node.hasForCondExpression())
-      st.add("forCondExpression", visit(node.forCondExpression()));
-    if (node.hasForLoopExpression())
-      st.add("forLoopExpression", visit(node.forLoopExpression()));
+    if (node.hasForInitializer())
+      st.add("forInitializer", visit(node.forInitializer()));
+    if (node.hasForCondition())
+      st.add("forCondition", visit(node.forCondition()));
+    if (node.hasForUpdate())
+      st.add("forUpdate", visit(node.forUpdate()));
     st.add("forBody", visit(node.forBody()));
     return st;
   }

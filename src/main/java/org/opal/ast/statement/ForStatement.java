@@ -21,15 +21,15 @@ public class ForStatement extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode forCondExpression () {
+  public AstNode forCondition () {
     return getChild(1);
   }
 
-  public AstNode forInitExpression () {
+  public AstNode forInitializer () {
     return getChild(0);
   }
 
-  public AstNode forLoopExpression () {
+  public AstNode forUpdate () {
     return getChild(2);
   }
 
@@ -37,15 +37,15 @@ public class ForStatement extends AstNode {
     return getChild(3);
   }
 
-  public boolean hasForCondExpression () {
+  public boolean hasForCondition () {
     return getChild(1) != null;
   }
 
-  public boolean hasForInitExpression () {
+  public boolean hasForInitializer () {
     return getChild(0) != null;
   }
 
-  public boolean hasForLoopExpression () {
+  public boolean hasForUpdate () {
     return getChild(2) != null;
   }
 

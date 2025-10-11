@@ -1,3 +1,3 @@
-forStatement (forInitExpression, forCondExpression, forLoopExpression, forBody) ::= <<
-for (<forInitExpression>; <forCondExpression>; <forLoopExpression>) <forBody>
+forStatement (forInitializer, forCondition, forUpdate, forBody) ::= <<
+for (<forInitializer>; <forCondition>; <forUpdate>) <forBody>
 >>
