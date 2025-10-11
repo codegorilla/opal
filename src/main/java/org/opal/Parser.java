@@ -1084,11 +1084,11 @@ public class Parser {
   }
 
   private AstNode dereferencingMemberAccess (AstNode nameExpr) {
-    var n = new DereferencingMemberAccess(lookahead);
-    n.addChild(nameExpr);
+    var node = new DereferencingMemberAccess(lookahead);
     match(Token.Kind.MINUS_GREATER);
-    n.addChild(name());
-    return n;
+    node.addChild(nameExpr);
+    node.addChild(name());
+    return node;
   }
 
   // To do: We might need to use the symbol table to determine if the member is
@@ -1096,11 +1096,11 @@ public class Parser {
   // namespacing of packages.
 
   private AstNode memberAccess (AstNode nameExpr) {
-    var n = new MemberAccess(lookahead);
+    var node = new MemberAccess(lookahead);
     match(Token.Kind.PERIOD);
-    n.addChild(nameExpr);
-    n.addChild(name());
-    return n;
+    node.addChild(nameExpr);
+    node.addChild(name());
+    return node;
   }
 
   // Subroutines (or 'routines' for short) may be classified as 'functions',
