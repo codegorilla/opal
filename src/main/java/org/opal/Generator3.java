@@ -462,7 +462,17 @@ public class Generator3 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // Do we need separate string templates for each literal type? It does not appear so.
+  public ST visit (NullLiteral node) {
+    var st = group.getInstanceOf("expression/expression");
+    st.add("value", "nullptr");
+    return st;
+  }
+
+  public ST visit (BooleanLiteral node) {
+    var st = group.getInstanceOf("expression/expression");
+    st.add("value", node.getToken().getLexeme());
+    return st;
+  }
 
   public ST visit (FloatingPointLiteral node) {
     var st = group.getInstanceOf("expression/expression");
