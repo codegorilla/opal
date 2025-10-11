@@ -83,7 +83,8 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
   public T visit (DereferencingMemberAccess node) { return null; }
   public T visit (MemberAccess node) { return null; }
   public T visit (RoutineCall node) { return null; }
-  public T visit (Arguments node) { return null; }
+  public T visit (RoutineArguments node) { return null; }
+  public T visit (RoutineArgument node) { return null; }
   public T visit (ArraySubscript node) { return null; }
 
   // Literals

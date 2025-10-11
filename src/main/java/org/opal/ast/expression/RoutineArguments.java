@@ -1,13 +1,14 @@
 package org.opal.ast.expression;
 
 import org.opal.ResultVisitor;
+import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class Arguments extends AstNode {
+public class RoutineArguments extends AstNode {
 
-  public Arguments () {
-    super();
+  public RoutineArguments (Token token) {
+    super(token);
   }
 
   @Override
@@ -18,6 +19,10 @@ public class Arguments extends AstNode {
   @Override
   public <T> T accept (ResultVisitor<T> v) {
     return v.visit(this);
+  }
+
+  public AstNode argument () {
+    return getChild(0);
   }
 
 }

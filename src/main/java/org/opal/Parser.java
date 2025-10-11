@@ -1120,24 +1120,28 @@ public class Parser {
   private AstNode routineCall (AstNode nameExpr) {
     var n = new RoutineCall(lookahead);
     n.addChild(nameExpr);
-    n.addChild(arguments());
+    n.addChild(routineArguments());
     return n;
   }
 
   // Todo: Maybe change to routineArguments and add routineArgument
 
-  private AstNode arguments () {
-    var n = new Arguments();
+  private AstNode routineArguments () {
+    var n = new RoutineArguments(lookahead);
     match(Token.Kind.L_PARENTHESIS);
     if (lookahead.getKind() != Token.Kind.R_PARENTHESIS) {
-      n.addChild(expression(false));
+      n.addChild(routineArgument());
       while (lookahead.getKind() == Token.Kind.COMMA) {
         match(Token.Kind.COMMA);
-        n.addChild(expression(false));
+        n.addChild(routineArgument());
       }
     }
     match(Token.Kind.R_PARENTHESIS);
     return n;
+  }
+
+  private AstNode routineArgument () {
+     return expression(false);
   }
 
   private AstNode primaryExpression () {

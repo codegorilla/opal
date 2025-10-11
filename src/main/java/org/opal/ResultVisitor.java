@@ -74,7 +74,8 @@ public interface ResultVisitor <T> {
   public T visit (DereferencingMemberAccess node);
   public T visit (MemberAccess node);
   public T visit (RoutineCall node);
-  public T visit (Arguments node);
+  public T visit (RoutineArguments node);
+  public T visit (RoutineArgument node);
   public T visit (ArraySubscript node);
 
   // Literals

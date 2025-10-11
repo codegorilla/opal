@@ -74,7 +74,8 @@ public interface Visitor {
   public void visit (DereferencingMemberAccess node);
   public void visit (MemberAccess node);
   public void visit (RoutineCall node);
-  public void visit (Arguments node);
+  public void visit (RoutineArguments node);
+  public void visit (RoutineArgument node);
   public void visit (ArraySubscript node);
 
   // Literals
