@@ -139,6 +139,7 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     var token = node.exportSpecifier().getToken();
     if (token == null) {
       var st = group.getInstanceOf("declaration/classDeclaration");
+      st.add("className", visit(node.className()));
       return st;
     }
     else
