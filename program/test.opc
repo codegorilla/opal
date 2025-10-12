@@ -21,7 +21,9 @@ public def myfun1 (s: float, t: uint32) -> *int {
 
   var t: int = 0;
 
-  var a: int[] = "hello";
+  var a: char[] = "hello";
+
+  var x: char = 'b';
 
   loop (i=0; i<10; i+=1) {
     x.setWidth(i);
