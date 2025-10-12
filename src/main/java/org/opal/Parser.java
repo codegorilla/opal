@@ -315,9 +315,10 @@ public class Parser {
   private AstNode baseClasses () {
     var n = new BaseClasses(lookahead);
     n.addChild(baseClass());
-    while (lookahead.getKind() == Token.Kind.COMMA)
+    while (lookahead.getKind() == Token.Kind.COMMA) {
       match(Token.Kind.COMMA);
-    n.addChild(baseClass());
+      n.addChild(baseClass());
+    }
     return n;
   }
 

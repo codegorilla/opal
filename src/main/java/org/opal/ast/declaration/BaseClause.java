@@ -21,4 +21,8 @@ public class BaseClause extends AstNode {
     return v.visit(this);
   }
 
+  public AstNode baseClasses () {
+    return getChild(0);
+  }
+
 }

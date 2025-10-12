@@ -6,6 +6,5 @@ classDeclaration (
 ) ::= <%
 export class <className><\ >
 <if(classModifiers)><classModifiers; separator=" "> <endif>
-<baseClause>
-<classBody>;
+<baseClause> <classBody>;
 %>

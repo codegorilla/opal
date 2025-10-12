@@ -140,6 +140,9 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     if (token == null) {
       var st = group.getInstanceOf("declaration/classDeclaration");
       st.add("className", visit(node.className()));
+      if (node.hasBaseClause()) {
+        st.add("baseClause", visit(node.baseClause()));
+      }
       st.add("classBody", visit(node.classBody()));
       return st;
     }
@@ -153,9 +156,27 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  public ST visit (BaseClause node) {
+    var st = group.getInstanceOf("declaration/baseClause");
+    st.add("baseClasses", visit(node.baseClasses()));
+    return st;
+  }
+
+  public ST visit (BaseClasses node) {
+    var st = group.getInstanceOf("declaration/baseClasses");
+    for (var child : node.getChildren())
+      st.add("baseClass", visit(child));
+    return st;
+  }
+
+  public ST visit (BaseClass node) {
+    var st = group.getInstanceOf("declaration/baseClass");
+    st.add("name", node.getToken().getLexeme());
+    return st;
+  }
+
   public ST visit (ClassBody node) {
     var st = group.getInstanceOf("declaration/classBody");
-//    st.add("identifier", node.getToken().getLexeme());
     return st;
   }
 

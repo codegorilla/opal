@@ -41,4 +41,8 @@ public class ClassDeclaration extends AstNode {
     return getChild(4);
   }
 
+  public boolean hasBaseClause () {
+    return getChild(3) != null;
+  }
+
 }
