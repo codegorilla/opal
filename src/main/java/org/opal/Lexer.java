@@ -74,6 +74,7 @@ public class Lexer {
     keywordLookup.put("import", Token.Kind.IMPORT);
     keywordLookup.put("in", Token.Kind.IN);
     keywordLookup.put("include", Token.Kind.INCLUDE);
+    keywordLookup.put("loop", Token.Kind.LOOP);
     keywordLookup.put("module", Token.Kind.MODULE);
     keywordLookup.put("new", Token.Kind.NEW);
     keywordLookup.put("nil", Token.Kind.NIL);

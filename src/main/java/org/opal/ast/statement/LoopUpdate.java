@@ -4,9 +4,9 @@ import org.opal.ResultVisitor;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class ForInitializer extends AstNode {
+public class LoopUpdate extends AstNode {
 
-  public ForInitializer () {
+  public LoopUpdate () {
     super();
   }
 

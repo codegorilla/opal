@@ -4,9 +4,9 @@ import org.opal.ResultVisitor;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class ForCondition extends AstNode {
+public class LoopInitializer extends AstNode {
 
-  public ForCondition () {
+  public LoopInitializer () {
     super();
   }
 

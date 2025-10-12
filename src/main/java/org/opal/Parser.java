@@ -437,7 +437,7 @@ public class Parser {
       kind == Token.Kind.L_BRACE   ||
       kind == Token.Kind.CONTINUE  ||
       kind == Token.Kind.DO        ||
-      kind == Token.Kind.FOR       ||
+      kind == Token.Kind.LOOP      ||
       kind == Token.Kind.FOREACH   ||
       kind == Token.Kind.SEMICOLON ||
       kind == Token.Kind.IF        ||
@@ -489,8 +489,8 @@ public class Parser {
         n = doStatement();
       case Token.Kind.SEMICOLON ->
         n = emptyStatement();
-      case Token.Kind.FOR ->
-        n = forStatement();
+      case Token.Kind.LOOP ->
+        n = loopStatement();
       case Token.Kind.FOREACH ->
         n = foreachStatement();
       case Token.Kind.IF ->
@@ -629,43 +629,52 @@ public class Parser {
     return n;
   }
 
-  private AstNode forStatement () {
-    var n = new ForStatement(lookahead);
-    match(Token.Kind.FOR);
+  private AstNode loopStatement () {
+    var n = new LoopStatement(lookahead);
+    match(Token.Kind.LOOP);
+    if (lookahead.getKind() == Token.Kind.L_PARENTHESIS)
+      n.addChild(loopControl());
+    else
+      n.addChild(null);
+    n.addChild(loopBody());
+    return n;
+  }
+
+  private AstNode loopControl () {
+    var n = new LoopControl(lookahead);
     match(Token.Kind.L_PARENTHESIS);
-    n.addChild(lookahead.getKind() != Token.Kind.SEMICOLON ? forInitializer() : null);
+    n.addChild(lookahead.getKind() != Token.Kind.SEMICOLON ? loopInitializer() : null);
     match(Token.Kind.SEMICOLON);
-    n.addChild(lookahead.getKind() != Token.Kind.SEMICOLON ? forCondition() : null);
+    n.addChild(lookahead.getKind() != Token.Kind.SEMICOLON ? loopCondition() : null);
     match(Token.Kind.SEMICOLON);
-    n.addChild(lookahead.getKind() != Token.Kind.R_PARENTHESIS ? forUpdate() : null);
+    n.addChild(lookahead.getKind() != Token.Kind.R_PARENTHESIS ? loopUpdate() : null);
     match(Token.Kind.R_PARENTHESIS);
-    n.addChild(forBody());
     return n;
   }
 
   // To do: There can be multiple init expressions separated by commas.
 
-  private AstNode forInitializer () {
-    var n = new ForInitializer();
+  private AstNode loopInitializer () {
+    var n = new LoopInitializer();
     n.addChild(expression(true));
     return n;
   }
 
-  private AstNode forCondition () {
-    var n = new ForCondition();
+  private AstNode loopCondition () {
+    var n = new LoopCondition();
     n.addChild(expression(true));
     return n;
   }
 
   // To do: There can be multiple loop expressions separated by commas.
 
-  private AstNode forUpdate () {
-    var n = new ForUpdate();
+  private AstNode loopUpdate () {
+    var n = new LoopUpdate();
     n.addChild(expression(true));
     return n;
   }
 
-  private AstNode forBody () {
+  private AstNode loopBody () {
     if (lookahead.getKind() == Token.Kind.L_BRACE)
       return compoundStatement();
     else {

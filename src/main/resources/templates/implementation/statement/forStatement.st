@@ -1,3 +1,3 @@
-forStatement (forInitializer, forCondition, forUpdate, forBody) ::= <<
-for (<forInitializer>; <forCondition>; <forUpdate>) <forBody>
+forStatement (forControl, forBody) ::= <<
+for <forControl> <forBody>
 >>

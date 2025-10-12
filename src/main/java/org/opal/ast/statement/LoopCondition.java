@@ -4,9 +4,9 @@ import org.opal.ResultVisitor;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class ForUpdate extends AstNode {
+public class LoopCondition extends AstNode {
 
-  public ForUpdate () {
+  public LoopCondition () {
     super();
   }
 
