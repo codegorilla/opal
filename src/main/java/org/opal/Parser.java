@@ -285,7 +285,7 @@ public class Parser {
     n.addChild(exportSpecifier);
     n.addChild(modifiers);
     n.addChild(className());
-    n.addChild((lookahead.getKind() == Token.Kind.EXTENDS) ? baseClause() : null);
+    n.addChild((lookahead.getKind() == Token.Kind.EXTENDS) ? classExtendsClause() : null);
     n.addChild(classBody());
     return n;
   }
@@ -301,8 +301,8 @@ public class Parser {
     return n;
   }
 
-  private AstNode baseClause () {
-    var n = new BaseClause(lookahead);
+  private AstNode classExtendsClause () {
+    var n = new ClassExtendsClause(lookahead);
     match(Token.Kind.EXTENDS);
     n.addChild(baseClasses());
     return n;

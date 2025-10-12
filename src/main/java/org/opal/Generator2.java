@@ -140,8 +140,8 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     if (token == null) {
       var st = group.getInstanceOf("declaration/classDeclaration");
       st.add("className", visit(node.className()));
-      if (node.hasBaseClause()) {
-        st.add("baseClause", visit(node.baseClause()));
+      if (node.hasClassExtendsClause()) {
+        st.add("classExtendsClause", visit(node.classExtendsClause()));
       }
       st.add("classBody", visit(node.classBody()));
       return st;
@@ -156,8 +156,8 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  public ST visit (BaseClause node) {
-    var st = group.getInstanceOf("declaration/baseClause");
+  public ST visit (ClassExtendsClause node) {
+    var st = group.getInstanceOf("declaration/classExtendsClause");
     st.add("baseClasses", visit(node.baseClasses()));
     return st;
   }

@@ -1,3 +1,0 @@
-baseClause (baseClasses) ::= <<
-: <baseClasses>
->>

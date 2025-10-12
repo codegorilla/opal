@@ -5,9 +5,9 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class BaseClause extends AstNode {
+public class ClassExtendsClause extends AstNode {
 
-  public BaseClause (Token token) {
+  public ClassExtendsClause (Token token) {
     super(token);
   }
 

@@ -1,10 +1,10 @@
 classDeclaration (
   classModifiers,
   className,
-  baseClause,
+  classExtendsClause,
   classBody
 ) ::= <%
 export class <className><\ >
 <if(classModifiers)><classModifiers; separator=" "> <endif>
-<baseClause> <classBody>;
+<classExtendsClause> <classBody>;
 %>

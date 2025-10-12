@@ -33,7 +33,7 @@ public class ClassDeclaration extends AstNode {
     return getChild(2);
   }
 
-  public AstNode baseClause () {
+  public AstNode classExtendsClause () {
     return getChild(3);
   }
 
@@ -41,7 +41,7 @@ public class ClassDeclaration extends AstNode {
     return getChild(4);
   }
 
-  public boolean hasBaseClause () {
+  public boolean hasClassExtendsClause () {
     return getChild(3) != null;
   }
 
