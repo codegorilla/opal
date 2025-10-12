@@ -133,6 +133,18 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return null;
   }
 
+  // CLASS DECLARATIONS
+
+  public ST visit (ClassDeclaration node) {
+    var token = node.exportSpecifier().getToken();
+    if (token == null) {
+      var st = group.getInstanceOf("declaration/classDeclaration");
+      return st;
+    }
+    else
+      return null;
+  }
+
   // ROUTINE DECLARATIONS
 
   public ST visit (RoutineDeclaration node) {

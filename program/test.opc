@@ -5,6 +5,9 @@ import stdlib;
 
 var x: int = 1;
 
+class Token extends Object {
+}
+
 def main (argc: int, argv: *char[]) -> int {
 
 }

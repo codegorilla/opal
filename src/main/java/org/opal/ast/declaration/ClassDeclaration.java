@@ -33,8 +33,12 @@ public class ClassDeclaration extends AstNode {
     return getChild(2);
   }
 
+  public AstNode baseClause () {
+    return getChild(3);
+  }
+
   public AstNode classBody () {
-    return getChild(5);
+    return getChild(4);
   }
 
 }

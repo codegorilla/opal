@@ -172,9 +172,7 @@ public class Parser {
           n = classDeclaration(spec, mods);
         case Token.Kind.DEF ->
           n = routineDeclaration(spec, mods);
-        case Token.Kind.VAL ->
-          n = variableDeclaration(spec, mods);
-        case Token.Kind.VAR ->
+        case Token.Kind.VAL, Token.Kind.VAR ->
           n = variableDeclaration(spec, mods);
         default ->
           n = null;
@@ -283,11 +281,71 @@ public class Parser {
 
   private AstNode classDeclaration (ExportSpecifier exportSpecifier, AstNode modifiers) {
     var n = new ClassDeclaration(lookahead);
+    match(Token.Kind.CLASS);
+    n.addChild(exportSpecifier);
+    n.addChild(modifiers);
+    n.addChild(className());
+    n.addChild((lookahead.getKind() == Token.Kind.EXTENDS) ? baseClause() : null);
+    n.addChild(classBody());
+    return n;
+  }
+
+  // Todo: Should symbols point to AST node, and/or vice versa? This might come
+  // in handy later on, but wait until its needed before adding the code.
+
+  private AstNode className () {
+    var n = new ClassName(lookahead);
+    match(Token.Kind.IDENTIFIER);
+    //var s = ClassSymbol(n.getToken().lexeme);
+    //currentScope.define(s);
+    return n;
+  }
+
+  private AstNode baseClause () {
+    var n = new BaseClause(lookahead);
+    match(Token.Kind.EXTENDS);
+    n.addChild(baseClasses());
+    return n;
+  }
+
+  // For now, we only support public (i.e. "is-a") inheritance. Private (i.e.
+  // "is-implemented-in-terms-of") inheritance is NOT supported. Most use cases
+  // of private inheritance are better met by composition instead.
+
+  private AstNode baseClasses () {
+    var n = new BaseClasses(lookahead);
+    n.addChild(baseClass());
+    while (lookahead.getKind() == Token.Kind.COMMA)
+      match(Token.Kind.COMMA);
+    n.addChild(baseClass());
+    return n;
+  }
+
+  // To do: Move this to base class name
+
+  private AstNode baseClass () {
+    var n = new BaseClass(lookahead);
+    match(Token.Kind.IDENTIFIER);
+    return n;
+  }
+
+  // The token here is simply the curly brace '{'. Do we need to track this?
+  // It will depend on whether or not this sort of thing helps with error
+  // reporting and debugging.
+
+  private AstNode classBody () {
+    var n = new ClassBody(lookahead);
+    match(Token.Kind.L_BRACE);
+    while (lookahead.getKind() != Token.Kind.R_BRACE)
+      ;
+//      n.addChild(classMember());
+    match(Token.Kind.R_BRACE);
     return n;
   }
 
 
-    // ROUTINE DECLARATIONS
+
+  // ROUTINE DECLARATIONS
 
   // Todo: We need to push another scope onto the scope stack. Keep in mind that
   // the routine parameters may be in the same exact scope as the routine body

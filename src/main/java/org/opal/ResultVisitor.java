@@ -30,6 +30,10 @@ public interface ResultVisitor <T> {
   // Class declarations
   public T visit (ClassDeclaration node);
   public T visit (ClassName node);
+  public T visit (ClassBody node);
+  public T visit (BaseClause node);
+  public T visit (BaseClasses node);
+  public T visit (BaseClass node);
 
   // Routine declarations
   public T visit (RoutineDeclaration node);
