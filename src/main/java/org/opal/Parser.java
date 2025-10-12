@@ -1131,8 +1131,6 @@ public class Parser {
     return node;
   }
 
-  // Todo: Maybe change to routineArguments and add routineArgument
-
   private AstNode routineArguments () {
     var node = new RoutineArguments(lookahead);
     match(Token.Kind.L_PARENTHESIS);

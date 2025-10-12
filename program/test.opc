@@ -17,15 +17,14 @@ public def myfun1 (s: float, t: uint32) -> *int {
   var s: int = x->y->z;
   var t: int = x.y.z;
 
-  std.println(1, null);
+  std.println("hello", null);
+
+  var t: int = 0;
+
+  var a: int[] = "hello";
 
   loop (i=0; i<10; i+=1) {
     x.setWidth(i);
-  }
-
-  loop {
-    println(1);
-    break;
   }
 
   for (i in list) {

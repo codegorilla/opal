@@ -495,6 +495,12 @@ public class Generator3 extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  public ST visit (StringLiteral node) {
+    var st = group.getInstanceOf("expression/expression");
+    st.add("value", node.getToken().getLexeme());
+    return st;
+  }
+
   // TYPES ********************************************************************
 
   public ST visit (ArrayType node) {
