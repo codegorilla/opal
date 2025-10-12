@@ -168,10 +168,8 @@ public class Parser {
     else {
       var mods = modifiers();
       switch (lookahead.getKind()) {
-        case Token.Kind.CLASS -> {
-          System.out.println("CLASS TBD");
-          n = null;
-        }
+        case Token.Kind.CLASS ->
+          n = classDeclaration(spec, mods);
         case Token.Kind.DEF ->
           n = routineDeclaration(spec, mods);
         case Token.Kind.VAL ->
@@ -281,7 +279,15 @@ public class Parser {
     return n;
   }
 
-  // ROUTINE DECLARATIONS
+  // CLASS DECLARATIONS
+
+  private AstNode classDeclaration (ExportSpecifier exportSpecifier, AstNode modifiers) {
+    var n = new ClassDeclaration(lookahead);
+    return n;
+  }
+
+
+    // ROUTINE DECLARATIONS
 
   // Todo: We need to push another scope onto the scope stack. Keep in mind that
   // the routine parameters may be in the same exact scope as the routine body

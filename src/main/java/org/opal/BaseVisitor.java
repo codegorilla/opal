@@ -35,6 +35,10 @@ public class BaseVisitor implements Visitor {
   public void visit (ImportDeclaration node) {}
   public void visit (ImportName node) {}
 
+  // Class declarations
+  public void visit (ClassDeclaration node) {}
+  public void visit (ClassName node) {}
+
   // Routine declarations
   public void visit (RoutineDeclaration node) {}
   public void visit (RoutineName node) {}

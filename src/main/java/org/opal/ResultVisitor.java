@@ -27,6 +27,10 @@ public interface ResultVisitor <T> {
   public T visit (ImportDeclaration node);
   public T visit (ImportName node);
 
+  // Class declarations
+  public T visit (ClassDeclaration node);
+  public T visit (ClassName node);
+
   // Routine declarations
   public T visit (RoutineDeclaration node);
   public T visit (RoutineName node);
