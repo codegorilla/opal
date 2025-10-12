@@ -140,11 +140,25 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     if (token == null) {
       var st = group.getInstanceOf("declaration/classDeclaration");
       st.add("className", visit(node.className()));
+      st.add("classBody", visit(node.classBody()));
       return st;
     }
     else
       return null;
   }
+
+  public ST visit (ClassName node) {
+    var st = group.getInstanceOf("declaration/className");
+    st.add("identifier", node.getToken().getLexeme());
+    return st;
+  }
+
+  public ST visit (ClassBody node) {
+    var st = group.getInstanceOf("declaration/classBody");
+//    st.add("identifier", node.getToken().getLexeme());
+    return st;
+  }
+
 
   // ROUTINE DECLARATIONS
 
