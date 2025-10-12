@@ -105,7 +105,8 @@ public class Parser {
 
   // DECLARATIONS **************************************************
 
-  // Package declaration is special in that there is only one, and it must appear at the top of the translation unit.
+  // Package declaration is special in that there is only one, and it must
+  // appear at the top of the translation unit.
 
   private AstNode packageDeclaration () {
     var n = new PackageDeclaration(lookahead);
@@ -161,7 +162,7 @@ public class Parser {
 
   private AstNode declaration () {
     AstNode n = null;
-    var spec = accessSpecifier();
+    var spec = exportSpecifier();
     if (lookahead.getKind() == Token.Kind.TEMPLATE)
       ; //n = templateDeclaration();
     else {
@@ -184,7 +185,7 @@ public class Parser {
     return n;
   }
 
-  // ACCESS SPECIFIERS AND MODIFIERS
+  // ACCESS SPECIFIERS, EXPORT SPECIFIERS, AND MODIFIERS
 
   // Callers can explicitly request an empty access specifier. This is useful
   // for template declarations, where the access specifier is on the template
@@ -203,11 +204,24 @@ public class Parser {
   // Note: Parameter is false by default in scala. But the parameter doesn't seem
   // to be used.
 
-  private AccessSpecifier accessSpecifier () {
-    var n = new AccessSpecifier();
-    if (lookahead.getKind() == Token.Kind.PRIVATE || lookahead.getKind() == Token.Kind.PUBLIC) {
+
+//  private AccessSpecifier accessSpecifier () {
+//    var n = new AccessSpecifier();
+//    if (lookahead.getKind() == Token.Kind.PRIVATE || lookahead.getKind() == Token.Kind.PUBLIC) {
+//      n.setToken(lookahead);
+//      match(lookahead.getKind());
+//    }
+//    return n;
+//  }
+
+  // entities may be declared as private, indicating that they are not
+  // exported. Otherwise, they are considered public and exported.
+
+  private ExportSpecifier exportSpecifier () {
+    var n = new ExportSpecifier();
+    if (lookahead.getKind() == Token.Kind.PRIVATE) {
       n.setToken(lookahead);
-      match(lookahead.getKind());
+      match(Token.Kind.PRIVATE);
     }
     return n;
   }
@@ -278,7 +292,7 @@ public class Parser {
 
   // To do: Need to handle no return type
 
-  private AstNode routineDeclaration (AccessSpecifier accessSpecifier, AstNode modifiers) {
+  private AstNode routineDeclaration (ExportSpecifier exportSpecifier, AstNode modifiers) {
     var n = new RoutineDeclaration(lookahead);
 //    var scope = Scope(Scope.Kind.LOCAL);
 //    scope.setEnclosingScope(currentScope);
@@ -286,8 +300,8 @@ public class Parser {
 //    n.setScope(currentScope);
     match(Token.Kind.DEF);
     // Use 'instanceof' on parent to check kind instead of static final variables
-    //accessSpecifier.setKind(AccessSpecifier.ROUTINE);
-    n.addChild(accessSpecifier);
+    //exportSpecifier.setKind(ExportSpecifier.ROUTINE);
+    n.addChild(exportSpecifier);
     n.addChild(modifiers);
     n.addChild(routineName());
     n.addChild(routineParameters());
@@ -383,11 +397,11 @@ public class Parser {
   // We put null values into the list of children to ensure a constant node
   // count and node order.
 
-  private AstNode variableDeclaration (AccessSpecifier accessSpecifier, AstNode modifiers) {
+  private AstNode variableDeclaration (ExportSpecifier exportSpecifier, AstNode modifiers) {
     AstNode n;
-    if (accessSpecifier != null) {
+    if (exportSpecifier != null) {
       n = new VariableDeclaration(lookahead);
-      n.addChild(accessSpecifier);
+      n.addChild(exportSpecifier);
     }
     else {
       // The local variable declaration node type exists primarily because the

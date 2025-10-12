@@ -23,6 +23,7 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
   public T visit (TranslationUnit node) { return null; }
   public T visit (Declarations node) { return null; }
   public T visit (AccessSpecifier node) { return null; }
+  public T visit (ExportSpecifier node) { return null; }
   public T visit (Modifiers node) { return null; }
   public T visit (Modifier node) { return null; }
 

@@ -104,27 +104,26 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // Access specifier should exist, but if it is implicit, then it won't have a token unless we artificially add one
-  // during semantic analysis.
+  // Export specifier should exist, but if it is implicit, then it won't have a
+  // token unless we artificially add one during semantic analysis.
 
-  // If we want different behavior for variables vs. routines, then we need to find a way to differentiate access
-  // specifiers. The problem is that the access specifier is encountered in the parser before we know which construct
+  // If we want different behavior for variables vs. routines, then we need to find a way to differentiate export
+  // specifiers. The problem is that the export specifier is encountered in the parser before we know which construct
   // it belongs to. So we must defer differentiation. Nevertheless, we can either mark it in the parser from within the
   // corresponding construct rule or we can use a separate semantic analysis pass. We could also use K>1 lookahead.
 
-  // If the access specifier is PUBLIC then this translates to an exported
+  // If the access specifier is omitted then this translates to an exported
   // entity that appears in the package interface unit. Otherwise, it appears
   // in the package implementation unit.
 
-  public ST visit (AccessSpecifier node) {
+  public ST visit (ExportSpecifier node) {
     ST st = null;
-    var token = node.getToken();
-    if (token != null && token.getKind() == Token.Kind.PUBLIC) {
+    if (node.getToken() == null) {
       st = group.getInstanceOf("declaration/accessSpecifier");
       st.add("value", "export");
     }
-    // This is how we can tell what kind of access specifier we have.
-//    if (node.getKind() == AccessSpecifier.VARIABLE)
+    // This is how we can tell what kind of export specifier we have.
+//    if (node.getKind() == ExportSpecifier.VARIABLE)
 //      System.out.println("THIS IS AN INSTANCE OF A VARIABLE DECLARATION!");
     return st;
   }
@@ -137,10 +136,9 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   // ROUTINE DECLARATIONS
 
   public ST visit (RoutineDeclaration node) {
-    var token = node.accessSpecifier().getToken();
-    if (token != null && token.getKind() == Token.Kind.PUBLIC) {
+    var token = node.exportSpecifier().getToken();
+    if (token == null) {
       var st = group.getInstanceOf("declaration/functionDeclaration");
-      st.add("accessSpecifier", visit(node.accessSpecifier()));
       st.add("functionName", visit(node.routineName()));
       st.add("functionParameters", visit(node.routineParameters()));
       st.add("functionReturnType", visit(node.routineReturnType()));
@@ -200,9 +198,8 @@ public class Generator2 extends ResultBaseVisitor <ST> {
 
   public ST visit (VariableDeclaration node) {
     var token = node.accessSpecifier().getToken();
-    if (token != null && token.getKind() == Token.Kind.PUBLIC) {
+    if (token == null) {
       var st = group.getInstanceOf("declaration/variableDeclaration");
-      st.add("accessSpecifier", visit(node.accessSpecifier()));
       stack.push(visit(node.variableName()));
       if (node.variableTypeSpecifier() != null)
         st.add("typeSpecifier", visit(node.variableTypeSpecifier()));

@@ -14,6 +14,7 @@ public interface Visitor {
   public void visit (TranslationUnit node);
   public void visit (Declarations node);
   public void visit (AccessSpecifier node);
+  public void visit (ExportSpecifier node);
   public void visit (Modifiers node);
   public void visit (Modifier node);
 

@@ -3,14 +3,13 @@ package main;
 import math;
 import stdlib;
 
-
 var x: int = 1;
 
 def main (argc: int, argv: *char[]) -> int {
 
 }
 
-public def myfun1 (s: float, t: uint32) -> *int {
+def myfun1 (s: float, t: uint32) -> *int {
 
   var r: int = x[2][4];
 

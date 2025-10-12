@@ -21,7 +21,7 @@ public class RoutineDeclaration extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode accessSpecifier () {
+  public AstNode exportSpecifier () {
     return getChild(0);
   }
 

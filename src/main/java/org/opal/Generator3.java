@@ -204,7 +204,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
 
   public ST visit (VariableDeclaration node) {
     var token = node.accessSpecifier().getToken();
-    if (token == null || token.getKind() == Token.Kind.PRIVATE) {
+    if (token != null) {
       var st = group.getInstanceOf("declaration/variableDeclaration");
       stack.push(visit(node.variableName()));
       if (node.variableTypeSpecifier() != null)

@@ -1,9 +1,3 @@
-functionDeclaration (
-  accessSpecifier,
-  functionName,
-  functionParameters,
-  functionReturnType
-) ::= <%
-<if(accessSpecifier)><accessSpecifier> <endif>
-auto <functionName> <functionParameters> <functionReturnType>;
-%>
+functionDeclaration (functionName, functionParameters, functionReturnType) ::= <<
+export auto <functionName> <functionParameters> <functionReturnType>;
+>>
