@@ -58,7 +58,7 @@ public interface Visitor {
   public void visit (LoopInitializer node);
   public void visit (LoopCondition node);
   public void visit (LoopUpdate node);
-  public void visit (ForeachStatement node);
+  public void visit (ForStatement node);
   public void visit (IfStatement node);
   public void visit (IfCondition node);
   public void visit (ReturnStatement node);

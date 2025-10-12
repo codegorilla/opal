@@ -74,7 +74,6 @@ public class Token {
     FALSE,
     FINAL,
     FOR,
-    FOREACH,
     FN,
     FUN,
     GOTO,

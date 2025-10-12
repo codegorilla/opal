@@ -67,7 +67,7 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
   public T visit (LoopInitializer node) { return null; }
   public T visit (LoopCondition node) { return null; }
   public T visit (LoopUpdate node) { return null; }
-  public T visit (ForeachStatement node) { return null; }
+  public T visit (ForStatement node) { return null; }
   public T visit (IfStatement node) { return null; }
   public T visit (IfCondition node) { return null; }
   public T visit (ReturnStatement node) { return null; }

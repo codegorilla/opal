@@ -67,7 +67,6 @@ public class Lexer {
     keywordLookup.put("false", Token.Kind.FALSE);
     keywordLookup.put("final", Token.Kind.FINAL);
     keywordLookup.put("for", Token.Kind.FOR);
-    keywordLookup.put("foreach", Token.Kind.FOREACH);
     keywordLookup.put("fn", Token.Kind.FN);
     keywordLookup.put("fun", Token.Kind.FUN);
     keywordLookup.put("if", Token.Kind.IF);

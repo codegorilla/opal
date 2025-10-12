@@ -5,9 +5,9 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class ForeachStatement extends AstNode {
+public class ForStatement extends AstNode {
 
-  public ForeachStatement (Token token) {
+  public ForStatement (Token token) {
     super(token);
   }
 
@@ -29,7 +29,7 @@ public class ForeachStatement extends AstNode {
     return getChild(1);
   }
 
-  public AstNode foreachBody () {
+  public AstNode forBody () {
     return getChild(2);
   }
 

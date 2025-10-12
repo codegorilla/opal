@@ -28,4 +28,9 @@ public def myfun1 (s: float, t: uint32) -> *int {
     break;
   }
 
+  for (i in list) {
+    println(i);
+    break;
+  }
+
 }

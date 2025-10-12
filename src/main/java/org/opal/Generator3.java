@@ -298,6 +298,37 @@ public class Generator3 extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  public ST visit (ForStatement node) {
+    var st = group.getInstanceOf("statement/rangeBasedForStatement");
+    st.add("name", visit(node.name()));
+    st.add("expression", visit(node.expression()));
+    st.add("forBody", visit(node.forBody()));
+    return st;
+  }
+
+  // If body is a passthrough
+
+  public ST visit (IfStatement node) {
+    var st = group.getInstanceOf("statement/ifStatement");
+    st.add("ifCondition", visit(node.ifCondition()));
+    st.add("ifBody", visit(node.ifBody()));
+    if (node.getChildCount() == 3)
+      st.add("elseClause", visit(node.elseClause()));
+    return st;
+  }
+
+  public ST visit (IfCondition node) {
+    var st = group.getInstanceOf("statement/ifCondition");
+    st.add("expression", visit(node.expression()));
+    return st;
+  }
+
+  public ST visit (ElseClause node) {
+    var st = group.getInstanceOf("statement/elseClause");
+    st.add("elseBody", visit(node.elseBody()));
+    return st;
+  }
+
   public ST visit (LoopStatement node) {
     var st = group.getInstanceOf("statement/forStatement");
     if (node.hasLoopControl())
@@ -329,37 +360,6 @@ public class Generator3 extends ResultBaseVisitor <ST> {
 
   public ST visit (LoopUpdate node) {
     return visit(node.expression());
-  }
-
-  public ST visit (ForeachStatement node) {
-    var st = group.getInstanceOf("statement/foreachStatement");
-    st.add("name", visit(node.name()));
-    st.add("expression", visit(node.expression()));
-    st.add("foreachBody", visit(node.foreachBody()));
-    return st;
-  }
-
-  // If body is a passthrough
-
-  public ST visit (IfStatement node) {
-    var st = group.getInstanceOf("statement/ifStatement");
-    st.add("ifCondition", visit(node.ifCondition()));
-    st.add("ifBody", visit(node.ifBody()));
-    if (node.getChildCount() == 3)
-      st.add("elseClause", visit(node.elseClause()));
-    return st;
-  }
-
-  public ST visit (IfCondition node) {
-    var st = group.getInstanceOf("statement/ifCondition");
-    st.add("expression", visit(node.expression()));
-    return st;
-  }
-
-  public ST visit (ElseClause node) {
-    var st = group.getInstanceOf("statement/elseClause");
-    st.add("elseBody", visit(node.elseBody()));
-    return st;
   }
 
   public ST visit (ReturnStatement node) {

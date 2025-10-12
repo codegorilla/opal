@@ -58,7 +58,7 @@ public interface ResultVisitor <T> {
   public T visit (LoopInitializer node);
   public T visit (LoopCondition node);
   public T visit (LoopUpdate node);
-  public T visit (ForeachStatement node);
+  public T visit (ForStatement node);
   public T visit (IfStatement node);
   public T visit (IfCondition node);
   public T visit (ReturnStatement node);
