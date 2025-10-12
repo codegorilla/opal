@@ -298,27 +298,36 @@ public class Generator3 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  public ST visit (ForStatement node) {
+  public ST visit (LoopStatement node) {
     var st = group.getInstanceOf("statement/forStatement");
-    if (node.hasForInitializer())
-      st.add("forInitializer", visit(node.forInitializer()));
-    if (node.hasForCondition())
-      st.add("forCondition", visit(node.forCondition()));
-    if (node.hasForUpdate())
-      st.add("forUpdate", visit(node.forUpdate()));
-    st.add("forBody", visit(node.forBody()));
+    if (node.hasLoopControl())
+      st.add("forControl", visit(node.loopControl()));
+    else
+      st.add("forControl", "(;;)");
+    st.add("forBody", visit(node.loopBody()));
     return st;
   }
 
-  public ST visit (ForInitializer node) {
+  public ST visit (LoopControl node) {
+    var st = group.getInstanceOf("statement/forControl");
+    if (node.hasLoopInitializer())
+      st.add("forInitializer", visit(node.forInitializer()));
+    if (node.hasLoopCondition())
+      st.add("forCondition", visit(node.forCondition()));
+    if (node.hasLoopUpdate())
+      st.add("forUpdate", visit(node.forUpdate()));
+    return st;
+  }
+
+  public ST visit (LoopInitializer node) {
     return visit(node.expression());
   }
 
-  public ST visit (ForCondition node) {
+  public ST visit (LoopCondition node) {
     return visit(node.expression());
   }
 
-  public ST visit (ForUpdate node) {
+  public ST visit (LoopUpdate node) {
     return visit(node.expression());
   }
 

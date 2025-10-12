@@ -5,9 +5,9 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class ForStatement extends AstNode {
+public class LoopControl extends AstNode {
 
-  public ForStatement (Token token) {
+  public LoopControl (Token token) {
     super(token);
   }
 
@@ -37,15 +37,15 @@ public class ForStatement extends AstNode {
     return getChild(3);
   }
 
-  public boolean hasForCondition () {
+  public boolean hasLoopCondition () {
     return getChild(1) != null;
   }
 
-  public boolean hasForInitializer () {
+  public boolean hasLoopInitializer () {
     return getChild(0) != null;
   }
 
-  public boolean hasForUpdate () {
+  public boolean hasLoopUpdate () {
     return getChild(2) != null;
   }
 

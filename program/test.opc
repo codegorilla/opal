@@ -19,8 +19,13 @@ public def myfun1 (s: float, t: uint32) -> *int {
 
   std.println(1, null);
 
-  List.setMethod();
+  loop (i=0; i<10; i+=1) {
+    x.setWidth(i);
+  }
 
-  break;
+  loop {
+    println(1);
+    break;
+  }
 
 }

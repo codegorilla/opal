@@ -53,10 +53,11 @@ public interface Visitor {
   public void visit (ElseClause node);
   public void visit (EmptyStatement node);
   public void visit (ExpressionStatement node);
-  public void visit (ForStatement node);
-  public void visit (ForInitializer node);
-  public void visit (ForCondition node);
-  public void visit (ForUpdate node);
+  public void visit (LoopStatement node);
+  public void visit (LoopControl node);
+  public void visit (LoopInitializer node);
+  public void visit (LoopCondition node);
+  public void visit (LoopUpdate node);
   public void visit (ForeachStatement node);
   public void visit (IfStatement node);
   public void visit (IfCondition node);
