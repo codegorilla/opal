@@ -13,7 +13,6 @@ public interface Visitor {
   // General declarations
   public void visit (TranslationUnit node);
   public void visit (Declarations node);
-  public void visit (AccessSpecifier node);
   public void visit (ExportSpecifier node);
   public void visit (Modifiers node);
   public void visit (Modifier node);
@@ -34,6 +33,10 @@ public interface Visitor {
   public void visit (ClassExtendsClause node);
   public void visit (BaseClasses node);
   public void visit (BaseClass node);
+
+  // Member declarations
+  public void visit (MemberAccessSpecifier node);
+  public void visit (MemberVariableDeclaration node);
 
   // Routine declarations
   public void visit (RoutineDeclaration node);

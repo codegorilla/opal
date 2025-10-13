@@ -5,10 +5,10 @@ import stdlib;
 
 var x: int = 1;
 
-class Token extends Object, String {
-}
+//class Token extends Object, String {
+//}
 
 def main () -> int {
-  var t: int = 0;
+  //var t: int = 0;
 }
 

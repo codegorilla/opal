@@ -50,7 +50,7 @@ public class Pass1 extends BaseVisitor {
     System.out.println("Import Name");
   }
 
-  public void visit (AccessSpecifier node) {
+  public void visit (MemberAccessSpecifier node) {
     System.out.println("Access Specifier");
   }
 

@@ -5,9 +5,9 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class VariableDeclaration extends AstNode {
+public class MemberVariableDeclaration extends AstNode {
 
-  public VariableDeclaration (Token token) {
+  public MemberVariableDeclaration (Token token) {
     super(token);
   }
 
@@ -21,14 +21,10 @@ public class VariableDeclaration extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode exportSpecifier () {
+  public AstNode accessSpecifier () {
     return getChild(0);
   }
 
-  public boolean hasExportSpecifier () {
-    return getChild(0) != null;
-  }
-  
   public AstNode modifiers () {
     return getChild(1);
   }

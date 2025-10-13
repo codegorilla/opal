@@ -180,12 +180,10 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-
   // ROUTINE DECLARATIONS
 
   public ST visit (RoutineDeclaration node) {
-    var token = node.exportSpecifier().getToken();
-    if (token == null) {
+    if (!node.hasExportSpecifier()) {
       var st = group.getInstanceOf("declaration/functionDeclaration");
       st.add("functionName", visit(node.routineName()));
       st.add("functionParameters", visit(node.routineParameters()));
@@ -245,8 +243,7 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   // VARIABLE DECLARATIONS
 
   public ST visit (VariableDeclaration node) {
-    var token = node.accessSpecifier().getToken();
-    if (token == null) {
+    if (!node.hasExportSpecifier()) {
       var st = group.getInstanceOf("declaration/variableDeclaration");
       stack.push(visit(node.variableName()));
       if (node.variableTypeSpecifier() != null)

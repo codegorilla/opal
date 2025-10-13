@@ -26,7 +26,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   // Stack for keeping track of current node path
   private final LinkedList<AstNode> ancestorStack = new LinkedList<>();
 
-  private int pass = 2;
+  private int pass = 1;
 
   public Generator3 (AstNode input) {
     super(input);
@@ -48,6 +48,8 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   public ST visit (TranslationUnit node) {
     var st = group.getInstanceOf("translationUnit");
     st.add("packageDeclaration", visit(node.packageDeclaration()));
+    st.add("declarations", visit(node.declarations()));
+    pass += 1;
     st.add("declarations", visit(node.declarations()));
     System.out.println("---");
     System.out.println(st.render());
@@ -125,11 +127,15 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   // To do: Might need to put conditional on the return type
 
   private ST routineDeclarationPass1 (RoutineDeclaration node) {
+    if (node.hasExportSpecifier()) {
       var st = group.getInstanceOf("declaration/functionDeclaration");
       st.add("functionName", visit(node.routineName()));
       st.add("functionParameters", visit(node.routineParameters()));
       st.add("functionReturnType", visit(node.routineReturnType()));
       return st;
+    }
+    else
+      return null;
   }
 
   private ST routineDeclarationPass2 (RoutineDeclaration node) {
@@ -203,8 +209,14 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   // the stack never has more than one element, it doesn't actually need to be a stack.
 
   public ST visit (VariableDeclaration node) {
-    var token = node.accessSpecifier().getToken();
-    if (token != null) {
+    if (pass == 2)
+      return variableDeclaration(node);
+    else
+      return null;
+  }
+
+  public ST variableDeclaration (VariableDeclaration node) {
+    if (node.hasExportSpecifier()) {
       var st = group.getInstanceOf("declaration/variableDeclaration");
       stack.push(visit(node.variableName()));
       if (node.variableTypeSpecifier() != null)

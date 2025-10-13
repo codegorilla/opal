@@ -1,6 +1,7 @@
 package org.opal.ast.declaration;
 
 import org.opal.ResultVisitor;
+import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
@@ -12,8 +13,8 @@ public class ExportSpecifier extends AstNode {
 
   int kind = ExportSpecifier.NONE;
 
-  public ExportSpecifier () {
-    super();
+  public ExportSpecifier (Token token) {
+    super(token);
   }
 
   @Override

@@ -162,7 +162,7 @@ public class Parser {
 
   private AstNode declaration () {
     AstNode n = null;
-    var spec = exportSpecifier();
+    var spec = (lookahead.getKind() == Token.Kind.PRIVATE) ? exportSpecifier() : null;
     if (lookahead.getKind() == Token.Kind.TEMPLATE)
       ; //n = templateDeclaration();
     else {
@@ -181,44 +181,14 @@ public class Parser {
     return n;
   }
 
-  // ACCESS SPECIFIERS, EXPORT SPECIFIERS, AND MODIFIERS
+  // EXPORT SPECIFIERS, AND MODIFIERS
 
-  // Callers can explicitly request an empty access specifier. This is useful
-  // for template declarations, where the access specifier is on the template
-  // declaration itself rather than the templated entity. In this case, the
-  // templated entity's AST node will still have an access specifier node, but
-  // it will not have any children. This will be interpreted later to mean that
-  // there is no access specifier. I prefer to handle it this way instead of not
-  // having an access specifier node at all because it avoids having to create
-  // specialized grammar rules for each case. However, I may change this later
-  // if the alternative proves better.
-
-  // Update: Just use the token as the discriminator. A missing token means that
-  // the access specifier was not specified. Also might need to add protected as
-  // another option.
-
-  // Note: Parameter is false by default in scala. But the parameter doesn't seem
-  // to be used.
-
-
-//  private AccessSpecifier accessSpecifier () {
-//    var n = new AccessSpecifier();
-//    if (lookahead.getKind() == Token.Kind.PRIVATE || lookahead.getKind() == Token.Kind.PUBLIC) {
-//      n.setToken(lookahead);
-//      match(lookahead.getKind());
-//    }
-//    return n;
-//  }
-
-  // entities may be declared as private, indicating that they are not
+  // Entities may be declared as private, indicating that they are not
   // exported. Otherwise, they are considered public and exported.
 
   private ExportSpecifier exportSpecifier () {
-    var n = new ExportSpecifier();
-    if (lookahead.getKind() == Token.Kind.PRIVATE) {
-      n.setToken(lookahead);
-      match(Token.Kind.PRIVATE);
-    }
+    var n = new ExportSpecifier(lookahead);
+    match(Token.Kind.PRIVATE);
     return n;
   }
 
@@ -338,13 +308,43 @@ public class Parser {
     var n = new ClassBody(lookahead);
     match(Token.Kind.L_BRACE);
     while (lookahead.getKind() != Token.Kind.R_BRACE)
-      ;
-//      n.addChild(classMember());
+      n.addChild(memberDeclaration());
     match(Token.Kind.R_BRACE);
     return n;
   }
 
+  private AstNode memberDeclaration () {
+    var kind = lookahead.getKind();
+    var spec = (
+      kind == Token.Kind.PRIVATE ||
+      kind == Token.Kind.PROTECTED
+    ) ? memberAccessSpecifier() : null;
+    var mods = modifiers();
+    var n = switch (lookahead.getKind()) {
+      //case Token.Kind.DEF -> memberRoutineDeclaration(spec, mods);
+      case Token.Kind.VAL, Token.Kind.VAR -> memberVariableDeclaration(spec, mods);
+      default -> null;
+    };
+    return n;
+  }
 
+  private MemberAccessSpecifier memberAccessSpecifier () {
+    var n = new MemberAccessSpecifier(lookahead);
+    match(lookahead.getKind());
+    return n;
+  }
+
+  private AstNode memberVariableDeclaration (MemberAccessSpecifier accessSpecifier, AstNode modifiers) {
+    var n = new MemberVariableDeclaration(lookahead);
+    match(Token.Kind.VAR);
+    n.addChild(accessSpecifier);
+    n.addChild(modifiers);
+    n.addChild(variableName());
+    n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier() : null);
+    n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer() : null);
+    match(Token.Kind.SEMICOLON);
+    return n;
+  }
 
   // ROUTINE DECLARATIONS
 
@@ -359,13 +359,11 @@ public class Parser {
 
   private AstNode routineDeclaration (ExportSpecifier exportSpecifier, AstNode modifiers) {
     var n = new RoutineDeclaration(lookahead);
+    match(Token.Kind.DEF);
 //    var scope = Scope(Scope.Kind.LOCAL);
 //    scope.setEnclosingScope(currentScope);
 //    currentScope = scope;
 //    n.setScope(currentScope);
-    match(Token.Kind.DEF);
-    // Use 'instanceof' on parent to check kind instead of static final variables
-    //exportSpecifier.setKind(ExportSpecifier.ROUTINE);
     n.addChild(exportSpecifier);
     n.addChild(modifiers);
     n.addChild(routineName());
@@ -463,17 +461,9 @@ public class Parser {
   // count and node order.
 
   private AstNode variableDeclaration (ExportSpecifier exportSpecifier, AstNode modifiers) {
-    AstNode n;
-    if (exportSpecifier != null) {
-      n = new VariableDeclaration(lookahead);
-      n.addChild(exportSpecifier);
-    }
-    else {
-      // The local variable declaration node type exists primarily because the
-      // number of children is different so it makes code generation easier.
-      n = new LocalVariableDeclaration(lookahead);
-    }
+    var n = new VariableDeclaration(lookahead);
     match(Token.Kind.VAR);
+    n.addChild(exportSpecifier);
     n.addChild(modifiers);
     n.addChild(variableName());
     n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier() : null);
@@ -501,6 +491,29 @@ public class Parser {
     n.addChild(expression(true));
     return n;
   }
+
+  // To do: This is new, needs review!
+
+  private AstNode localVariableDeclaration (ExportSpecifier exportSpecifier, AstNode modifiers) {
+    AstNode n;
+    if (exportSpecifier != null) {
+      n = new VariableDeclaration(lookahead);
+      n.addChild(exportSpecifier);
+    }
+    else {
+      // The local variable declaration node type exists primarily because the
+      // number of children is different so it makes code generation easier.
+      n = new LocalVariableDeclaration(lookahead);
+    }
+    match(Token.Kind.VAR);
+    n.addChild(modifiers);
+    n.addChild(variableName());
+    n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier() : null);
+    n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer() : null);
+    match(Token.Kind.SEMICOLON);
+    return n;
+  }
+
 
   // STATEMENTS **************************************************
 

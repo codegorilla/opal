@@ -1,5 +1,5 @@
 variableDeclaration (variableModifiers, typeSpecifier, declarator, initializer) ::= <%
-<if(variableModifiers)><variableModifiers; separator=" "> <endif>
+export <if(variableModifiers)><variableModifiers; separator=" "> <endif>
 <typeSpecifier> <declarator>
 <if(initializer)> <initializer><endif>;
 %>

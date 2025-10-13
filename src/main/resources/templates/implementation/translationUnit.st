@@ -4,6 +4,6 @@ translationUnit (packageDeclaration, importDeclarations, declarations) ::=  <<
 <packageDeclaration>
 
 namespace {
-  <declarations>
+  <declarations; separator="\n\n">
 }
 >>

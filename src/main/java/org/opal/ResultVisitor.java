@@ -13,7 +13,6 @@ public interface ResultVisitor <T> {
   // General declarations
   public T visit (TranslationUnit node);
   public T visit (Declarations node);
-  public T visit (AccessSpecifier node);
   public T visit (ExportSpecifier node);
   public T visit (Modifiers node);
   public T visit (Modifier node);
@@ -34,6 +33,10 @@ public interface ResultVisitor <T> {
   public T visit (ClassExtendsClause node);
   public T visit (BaseClasses node);
   public T visit (BaseClass node);
+
+  // Member declarations
+  public T visit (MemberAccessSpecifier node);
+  public T visit (MemberVariableDeclaration node);
 
   // Routine declarations
   public T visit (RoutineDeclaration node);

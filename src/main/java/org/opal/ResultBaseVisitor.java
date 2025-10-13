@@ -22,7 +22,6 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
   // General declarations
   public T visit (TranslationUnit node) { return null; }
   public T visit (Declarations node) { return null; }
-  public T visit (AccessSpecifier node) { return null; }
   public T visit (ExportSpecifier node) { return null; }
   public T visit (Modifiers node) { return null; }
   public T visit (Modifier node) { return null; }
@@ -43,6 +42,10 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
   public T visit (ClassExtendsClause node) { return null; }
   public T visit (BaseClasses node) { return null; }
   public T visit (BaseClass node) { return null; }
+
+  // Member declarations
+  public T visit (MemberAccessSpecifier node) { return null; }
+  public T visit (MemberVariableDeclaration node) { return null; }
 
   // Routine declarations
   public T visit (RoutineDeclaration node) { return null; }
