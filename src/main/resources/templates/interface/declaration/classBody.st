@@ -1,5 +1,5 @@
 classBody (memberDeclaration) ::= <<
 {
-<memberDeclaration>
+  <memberDeclaration; separator="\n">
 }
 >>

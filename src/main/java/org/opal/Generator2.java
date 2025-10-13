@@ -176,15 +176,27 @@ public class Generator2 extends ResultBaseVisitor <ST> {
 
   public ST visit (ClassBody node) {
     var st = group.getInstanceOf("declaration/classBody");
+    for (var child : node.getChildren()) {
+      st.add("memberDeclaration", visit(child));
+    }
     return st;
   }
 
   // To do:
 
-//  public ST visit (MemberVariableDeclaration node) {
-//    var st = group.getInstanceOf("declaration/classBody");
-//  }
-
+  public ST visit (MemberVariableDeclaration node) {
+      var st = group.getInstanceOf("declaration/memberVariableDeclaration");
+      // Test access specifier
+      st.add("accessSpecifier", node.accessSpecifier().getToken().getLexeme());
+      stack.push(visit(node.variableName()));
+      if (node.variableTypeSpecifier() != null)
+        st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
+      st.add("declarator", stack.pop());
+//    node.getModifiers().accept(this);
+      if (node.variableInitializer() != null)
+        st.add("initializer", visit(node.variableInitializer()));
+      return st;
+  }
 
   // ROUTINE DECLARATIONS
 

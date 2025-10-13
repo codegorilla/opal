@@ -91,7 +91,6 @@ public class Token {
     OVERRIDE,
     PACKAGE,
     PRIVATE,
-    PUBLIC,
     PROTECTED,
     RETURN,
     STATIC,

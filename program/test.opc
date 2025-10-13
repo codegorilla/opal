@@ -6,6 +6,7 @@ import stdlib;
 private var x: int = 1;
 
 class Token extends Object, String {
+  protected var a: float = 1.5;
 }
 
 private def main () -> int {

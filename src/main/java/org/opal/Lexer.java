@@ -82,7 +82,7 @@ public class Lexer {
     keywordLookup.put("override", Token.Kind.OVERRIDE);
     keywordLookup.put("package", Token.Kind.PACKAGE);
     keywordLookup.put("private", Token.Kind.PRIVATE);
-    keywordLookup.put("public", Token.Kind.PUBLIC);
+    keywordLookup.put("protected", Token.Kind.PROTECTED);
     keywordLookup.put("return", Token.Kind.RETURN);
     keywordLookup.put("static", Token.Kind.STATIC);
     keywordLookup.put("struct", Token.Kind.STRUCT);
