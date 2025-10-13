@@ -45,6 +45,7 @@ public class BaseVisitor implements Visitor {
   // Member declarations
   public void visit (MemberAccessSpecifier node) {}
   public void visit (MemberVariableDeclaration node) {}
+  public void visit (MemberRoutineDeclaration node) {}
 
   // Routine declarations
   public void visit (RoutineDeclaration node) {}

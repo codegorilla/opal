@@ -182,20 +182,38 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // To do:
+  public ST visit (MemberAccessSpecifier node) {
+    var st = group.getInstanceOf("declaration/memberAccessSpecifier");
+    st.add("value", node.getToken().getLexeme());
+    return st;
+  }
 
   public ST visit (MemberVariableDeclaration node) {
-      var st = group.getInstanceOf("declaration/memberVariableDeclaration");
-      // Test access specifier
-      st.add("accessSpecifier", node.accessSpecifier().getToken().getLexeme());
-      stack.push(visit(node.variableName()));
-      if (node.variableTypeSpecifier() != null)
-        st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
-      st.add("declarator", stack.pop());
+    var st = group.getInstanceOf("declaration/memberVariableDeclaration");
+    if (node.hasAccessSpecifier())
+      st.add("accessSpecifier", visit(node.accessSpecifier()));
+    else
+      st.add("accessSpecifier", "public");
+    stack.push(visit(node.variableName()));
+    if (node.hasVariableTypeSpecifier())
+      st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
+    st.add("declarator", stack.pop());
 //    node.getModifiers().accept(this);
-      if (node.variableInitializer() != null)
-        st.add("initializer", visit(node.variableInitializer()));
-      return st;
+    if (node.hasVariableInitializer())
+      st.add("initializer", visit(node.variableInitializer()));
+    return st;
+  }
+
+  public ST visit (MemberRoutineDeclaration node) {
+    var st = group.getInstanceOf("declaration/memberFunctionDeclaration");
+    if (node.hasAccessSpecifier())
+      st.add("accessSpecifier", visit(node.accessSpecifier()));
+    else
+      st.add("accessSpecifier", "public");
+    st.add("functionName", visit(node.routineName()));
+    st.add("functionParameters", visit(node.routineParameters()));
+    st.add("functionReturnType", visit(node.routineReturnType()));
+    return st;
   }
 
   // ROUTINE DECLARATIONS
@@ -264,11 +282,11 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     if (!node.hasExportSpecifier()) {
       var st = group.getInstanceOf("declaration/variableDeclaration");
       stack.push(visit(node.variableName()));
-      if (node.variableTypeSpecifier() != null)
+      if (node.hasVariableTypeSpecifier())
         st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
       st.add("declarator", stack.pop());
 //    node.getModifiers().accept(this);
-      if (node.variableInitializer() != null)
+      if (node.hasVariableInitializer())
         st.add("initializer", visit(node.variableInitializer()));
       return st;
     }

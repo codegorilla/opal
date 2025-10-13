@@ -325,7 +325,7 @@ public class Parser {
     ) ? memberAccessSpecifier() : null;
     var mods = modifiers();
     var n = switch (lookahead.getKind()) {
-      //case Token.Kind.DEF -> memberRoutineDeclaration(spec, mods);
+      case Token.Kind.DEF -> memberRoutineDeclaration(spec, mods);
       case Token.Kind.VAL, Token.Kind.VAR -> memberVariableDeclaration(spec, mods);
       default -> null;
     };
@@ -347,6 +347,19 @@ public class Parser {
     n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier() : null);
     n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer() : null);
     match(Token.Kind.SEMICOLON);
+    return n;
+  }
+
+  private AstNode memberRoutineDeclaration (MemberAccessSpecifier accessSpecifier, AstNode modifiers) {
+    var n = new MemberRoutineDeclaration(lookahead);
+    match(Token.Kind.DEF);
+    n.addChild(accessSpecifier);
+    n.addChild(modifiers);
+    n.addChild(routineName());
+    n.addChild(routineParameters());
+    n.addChild((lookahead.getKind() == Token.Kind.MINUS_GREATER) ? routineReturnType() : null);
+    n.addChild(routineBody());
+//    currentScope = scope.getEnclosingScope();
     return n;
   }
 

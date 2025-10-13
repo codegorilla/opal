@@ -5,9 +5,9 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class MemberVariableDeclaration extends AstNode {
+public class MemberRoutineDeclaration extends AstNode {
 
-  public MemberVariableDeclaration (Token token) {
+  public MemberRoutineDeclaration (Token token) {
     super(token);
   }
 
@@ -29,11 +29,7 @@ public class MemberVariableDeclaration extends AstNode {
     return getChild(0) != null;
   }
 
-  public boolean hasVariableTypeSpecifier () {
-    return getChild(3) != null;
-  }
-
-  public boolean hasVariableInitializer () {
+  public boolean hasRoutineReturnType () {
     return getChild(4) != null;
   }
 
@@ -41,16 +37,20 @@ public class MemberVariableDeclaration extends AstNode {
     return getChild(1);
   }
 
-  public AstNode variableName () {
+  public AstNode routineName () {
     return getChild(2);
   }
 
-  public AstNode variableTypeSpecifier () {
+  public AstNode routineParameters () {
     return getChild(3);
   }
 
-  public AstNode variableInitializer () {
+  public AstNode routineReturnType () {
     return getChild(4);
+  }
+
+  public AstNode routineBody () {
+    return getChild(5);
   }
 
 }

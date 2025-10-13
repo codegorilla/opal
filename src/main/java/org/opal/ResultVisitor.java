@@ -37,6 +37,7 @@ public interface ResultVisitor <T> {
   // Member declarations
   public T visit (MemberAccessSpecifier node);
   public T visit (MemberVariableDeclaration node);
+  public T visit (MemberRoutineDeclaration node);
 
   // Routine declarations
   public T visit (RoutineDeclaration node);
