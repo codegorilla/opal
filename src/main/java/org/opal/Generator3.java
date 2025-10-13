@@ -113,6 +113,95 @@ public class Generator3 extends ResultBaseVisitor <ST> {
     return null;
   }
 
+  // CLASS DECLARATIONS
+
+  // Might need declarations and definitions passes just as with routines
+
+  public ST visit (ClassDeclaration node) {
+    return (pass == 1) ? classDeclaration(node) : null;
+  }
+
+  public ST classDeclaration (ClassDeclaration node) {
+    if (node.hasExportSpecifier()) {
+      var st = group.getInstanceOf("declaration/classDeclaration");
+      st.add("className", visit(node.className()));
+      if (node.hasClassExtendsClause()) {
+        st.add("classExtendsClause", visit(node.classExtendsClause()));
+      }
+      st.add("classBody", visit(node.classBody()));
+      return st;
+    }
+    else
+      return null;
+  }
+
+  public ST visit (ClassName node) {
+    var st = group.getInstanceOf("declaration/className");
+    st.add("identifier", node.getToken().getLexeme());
+    return st;
+  }
+
+  public ST visit (ClassExtendsClause node) {
+    var st = group.getInstanceOf("declaration/classExtendsClause");
+    st.add("baseClasses", visit(node.baseClasses()));
+    return st;
+  }
+
+  public ST visit (BaseClasses node) {
+    var st = group.getInstanceOf("declaration/baseClasses");
+    for (var child : node.getChildren())
+      st.add("baseClass", visit(child));
+    return st;
+  }
+
+  public ST visit (BaseClass node) {
+    var st = group.getInstanceOf("declaration/baseClass");
+    st.add("name", node.getToken().getLexeme());
+    return st;
+  }
+
+  public ST visit (ClassBody node) {
+    var st = group.getInstanceOf("declaration/classBody");
+    for (var child : node.getChildren()) {
+      st.add("memberDeclaration", visit(child));
+    }
+    return st;
+  }
+
+  public ST visit (MemberAccessSpecifier node) {
+    var st = group.getInstanceOf("declaration/memberAccessSpecifier");
+    st.add("value", node.getToken().getLexeme());
+    return st;
+  }
+
+  public ST visit (MemberVariableDeclaration node) {
+    var st = group.getInstanceOf("declaration/memberVariableDeclaration");
+    if (node.hasAccessSpecifier())
+      st.add("accessSpecifier", visit(node.accessSpecifier()));
+    else
+      st.add("accessSpecifier", "public");
+    stack.push(visit(node.variableName()));
+    if (node.hasVariableTypeSpecifier())
+      st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
+    st.add("declarator", stack.pop());
+//    node.getModifiers().accept(this);
+    if (node.hasVariableInitializer())
+      st.add("initializer", visit(node.variableInitializer()));
+    return st;
+  }
+
+  public ST visit (MemberRoutineDeclaration node) {
+    var st = group.getInstanceOf("declaration/memberFunctionDeclaration");
+    if (node.hasAccessSpecifier())
+      st.add("accessSpecifier", visit(node.accessSpecifier()));
+    else
+      st.add("accessSpecifier", "public");
+    st.add("functionName", visit(node.routineName()));
+    st.add("functionParameters", visit(node.routineParameters()));
+    st.add("functionReturnType", visit(node.routineReturnType()));
+    return st;
+  }
+
   // ROUTINE DECLARATIONS
 
   public ST visit (RoutineDeclaration node) {

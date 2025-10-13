@@ -5,11 +5,11 @@ import stdlib;
 
 private var x: int = 1;
 
-class Token extends Object, String {
-  protected var a: float = 1.5;
-  var x: int = 1;
+private class Token extends Object, String {
+  private var a: float = 1.5;
+  private var x: int = 1;
 
-  private def getLexeme () -> String {
+  def getLexeme () -> String {
     // Do something
   }
 }
