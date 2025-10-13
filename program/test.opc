@@ -5,8 +5,8 @@ import stdlib;
 
 private var x: int = 1;
 
-//class Token extends Object, String {
-//}
+class Token extends Object, String {
+}
 
 private def main () -> int {
   var t: int = 0;

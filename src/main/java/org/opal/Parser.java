@@ -181,7 +181,7 @@ public class Parser {
     return n;
   }
 
-  // EXPORT SPECIFIERS, AND MODIFIERS
+  // EXPORT SPECIFIERS
 
   // Entities may be declared as private, indicating that they are not
   // exported. Otherwise, they are considered public and exported.
@@ -191,6 +191,8 @@ public class Parser {
     match(Token.Kind.PRIVATE);
     return n;
   }
+
+  // MODIFIERS
 
   // According to Parr, there is no need to have an AstNode kind -- you can just
   // use the token to determine what kind of node it is. This works only for
@@ -312,6 +314,8 @@ public class Parser {
     match(Token.Kind.R_BRACE);
     return n;
   }
+
+  // MEMBER DECLARATIONS
 
   private AstNode memberDeclaration () {
     var kind = lookahead.getKind();

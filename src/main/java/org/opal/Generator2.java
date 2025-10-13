@@ -136,8 +136,7 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   // CLASS DECLARATIONS
 
   public ST visit (ClassDeclaration node) {
-    var token = node.exportSpecifier().getToken();
-    if (token == null) {
+    if (!node.hasExportSpecifier()) {
       var st = group.getInstanceOf("declaration/classDeclaration");
       st.add("className", visit(node.className()));
       if (node.hasClassExtendsClause()) {
@@ -179,6 +178,13 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     var st = group.getInstanceOf("declaration/classBody");
     return st;
   }
+
+  // To do:
+
+//  public ST visit (MemberVariableDeclaration node) {
+//    var st = group.getInstanceOf("declaration/classBody");
+//  }
+
 
   // ROUTINE DECLARATIONS
 

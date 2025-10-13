@@ -25,6 +25,10 @@ public class ClassDeclaration extends AstNode {
     return getChild(0);
   }
 
+  public boolean hasExportSpecifier () {
+    return exportSpecifier() != null;
+  }
+
   public AstNode modifiers () {
     return getChild(1);
   }
