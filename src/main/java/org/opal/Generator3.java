@@ -209,21 +209,18 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   // the stack never has more than one element, it doesn't actually need to be a stack.
 
   public ST visit (VariableDeclaration node) {
-    if (pass == 2)
-      return variableDeclaration(node);
-    else
-      return null;
+    return (pass == 2) ? variableDeclaration(node) : null;
   }
 
   public ST variableDeclaration (VariableDeclaration node) {
     if (node.hasExportSpecifier()) {
       var st = group.getInstanceOf("declaration/variableDeclaration");
       stack.push(visit(node.variableName()));
-      if (node.variableTypeSpecifier() != null)
+      if (node.hasVariableTypeSpecifier())
         st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
       st.add("declarator", stack.pop());
 //    node.getModifiers().accept(this);
-      if (node.variableInitializer() != null)
+      if (node.hasVariableInitializer())
         st.add("initializer", visit(node.variableInitializer()));
       return st;
     }
@@ -234,10 +231,10 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   public ST visit (LocalVariableDeclaration node) {
     var st = group.getInstanceOf("declaration/localVariableDeclaration");
     stack.push(visit(node.variableName()));
-    if (node.variableTypeSpecifier() != null)
+    if (node.hasVariableTypeSpecifier())
       st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
     st.add("declarator", stack.pop());
-    if (node.variableInitializer() != null)
+    if (node.hasVariableInitializer())
       st.add("initializer", visit(node.variableInitializer()));
     return st;
   }

@@ -492,19 +492,8 @@ public class Parser {
     return n;
   }
 
-  // To do: This is new, needs review!
-
-  private AstNode localVariableDeclaration (ExportSpecifier exportSpecifier, AstNode modifiers) {
-    AstNode n;
-    if (exportSpecifier != null) {
-      n = new VariableDeclaration(lookahead);
-      n.addChild(exportSpecifier);
-    }
-    else {
-      // The local variable declaration node type exists primarily because the
-      // number of children is different so it makes code generation easier.
-      n = new LocalVariableDeclaration(lookahead);
-    }
+  private AstNode localVariableDeclaration (AstNode modifiers) {
+    AstNode n = new LocalVariableDeclaration(lookahead);
     match(Token.Kind.VAR);
     n.addChild(modifiers);
     n.addChild(variableName());
@@ -513,7 +502,6 @@ public class Parser {
     match(Token.Kind.SEMICOLON);
     return n;
   }
-
 
   // STATEMENTS **************************************************
 
@@ -647,7 +635,7 @@ public class Parser {
     var mods = modifiers();
     var kind = lookahead.getKind();
     if (kind == Token.Kind.VAL || kind == Token.Kind.VAR)
-      n = variableDeclaration(null, mods);
+      n = localVariableDeclaration(mods);
     // To do: Need error checking here
     return n;
   }

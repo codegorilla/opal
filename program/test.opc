@@ -3,12 +3,11 @@ package main;
 import math;
 import stdlib;
 
-var x: int = 1;
+private var x: int = 1;
 
 //class Token extends Object, String {
 //}
 
-def main () -> int {
-  //var t: int = 0;
+private def main () -> int {
+  var t: int = 0;
 }
-

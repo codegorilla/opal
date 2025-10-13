@@ -21,6 +21,14 @@ public class LocalVariableDeclaration extends AstNode {
     return v.visit(this);
   }
 
+  public boolean hasVariableTypeSpecifier () {
+    return getChild(2) != null;
+  }
+
+  public boolean hasVariableInitializer () {
+    return getChild(3) != null;
+  }
+
   public AstNode modifiers () {
     return getChild(0);
   }
