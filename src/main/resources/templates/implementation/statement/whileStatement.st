@@ -1,3 +1,3 @@
 whileStatement (whileCondition, whileBody) ::= <<
-while <whileCondition> <whileBody>
+while (<whileCondition>) <whileBody>
 >>

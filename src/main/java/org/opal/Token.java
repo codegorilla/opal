@@ -183,7 +183,6 @@ public class Token {
     COLON,
     COMMA,
     EQUAL,
-    EQUAL_X2,
     EQUAL_EQUAL,
     EXCLAMATION,
     EXCLAMATION_EQUAL,

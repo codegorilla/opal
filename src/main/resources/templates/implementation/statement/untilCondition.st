@@ -1,3 +1,0 @@
-untilCondition (expression) ::= <<
-(!(<expression>))
->>

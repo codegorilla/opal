@@ -147,7 +147,7 @@ public class Lexer {
         consume();
         if (current == '=') {
           consume();
-          kind = Token.Kind.EQUAL_X2;
+          kind = Token.Kind.EQUAL_EQUAL;
           lexeme = "==";
         } else {
           kind = Token.Kind.EQUAL;

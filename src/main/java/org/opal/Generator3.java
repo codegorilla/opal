@@ -467,7 +467,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // Until body is a passthrough
+  // Until condition and body are passthroughs
 
   public ST visit (UntilStatement node) {
     var st = group.getInstanceOf("statement/untilStatement");
@@ -476,24 +476,12 @@ public class Generator3 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  public ST visit (UntilCondition node) {
-    var st = group.getInstanceOf("statement/untilCondition");
-    st.add("expression", visit(node.expression()));
-    return st;
-  }
-
-  // While body is a passthrough
+  // While condition and body are passthroughs
 
   public ST visit (WhileStatement node) {
     var st = group.getInstanceOf("statement/whileStatement");
     st.add("whileCondition", visit(node.whileCondition()));
     st.add("whileBody", visit(node.whileBody()));
-    return st;
-  }
-
-  public ST visit (WhileCondition node) {
-    var st = group.getInstanceOf("statement/whileCondition");
-    st.add("expression", visit(node.expression()));
     return st;
   }
 

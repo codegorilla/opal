@@ -677,7 +677,9 @@ public class Parser {
   private AstNode doUntilStatement () {
     var n = new DoUntilStatement(lookahead);
     match(Token.Kind.UNTIL);
-    n.addChild(untilCondition());
+    match(Token.Kind.L_PARENTHESIS);
+    n.addChild(expression(true));
+    match(Token.Kind.R_PARENTHESIS);
     n.addChild(untilBody());
     return n;
   }
@@ -685,7 +687,9 @@ public class Parser {
   private AstNode doWhileStatement () {
     var n = new DoWhileStatement(lookahead);
     match(Token.Kind.WHILE);
-    n.addChild(whileCondition());
+    match(Token.Kind.L_PARENTHESIS);
+    n.addChild(expression(true));
+    match(Token.Kind.R_PARENTHESIS);
     n.addChild(whileBody());
     return n;
   }
@@ -876,28 +880,16 @@ public class Parser {
   // proves controversial or unpopular (or is deemed to not be orthogonal
   // enough) then it can be removed later.
 
-  private AstNode untilStatement () {
-    var n = new UntilStatement(lookahead);
-    match(Token.Kind.UNTIL);
-    n.addChild(untilCondition());
-    n.addChild(untilBody());
-    return n;
-  }
-
   // In C++26 the condition can be an expression or a declaration. For now, we
   // will only support expressions, and use the rule as a passthrough.
 
-  // We can handle transformation to a 'while' statement here by inserting an
-  // AST node that complements the expression. However, the parser should not
-  // concern itself with the details of the target language. The lack of an
-  // 'until' statement is a concern of the target language, so we will leave it
-  // up to a separate transformation or generation phase to make that change.
-
-  private AstNode untilCondition () {
-    var n = new UntilCondition(lookahead);
+  private AstNode untilStatement () {
+    var n = new UntilStatement(lookahead);
+    match(Token.Kind.UNTIL);
     match(Token.Kind.L_PARENTHESIS);
     n.addChild(expression(true));
     match(Token.Kind.R_PARENTHESIS);
+    n.addChild(untilBody());
     return n;
   }
 
@@ -915,22 +907,16 @@ public class Parser {
     }
   }
 
-  private AstNode whileStatement () {
-    var n = new WhileStatement(lookahead);
-    match(Token.Kind.WHILE);
-    n.addChild(whileCondition());
-    n.addChild(whileBody());
-    return n;
-  }
-
   // In C++26 the condition can be an expression or a declaration. For now, we
   // will only support expressions, and use the rule as a passthrough.
 
-  private AstNode whileCondition () {
-    var n = new WhileCondition(lookahead);
+  private AstNode whileStatement () {
+    var n = new WhileStatement(lookahead);
+    match(Token.Kind.WHILE);
     match(Token.Kind.L_PARENTHESIS);
     n.addChild(expression(true));
     match(Token.Kind.R_PARENTHESIS);
+    n.addChild(whileBody());
     return n;
   }
 
@@ -986,7 +972,6 @@ public class Parser {
         lookahead.getKind() == Token.Kind.BAR_EQUAL
     ) {
       var p = n;
-      System.out.println("HERE PAR ASSIGN EXPR");
       n = new BinaryExpression(lookahead);
       n.addChild(p);
       match(lookahead.getKind());

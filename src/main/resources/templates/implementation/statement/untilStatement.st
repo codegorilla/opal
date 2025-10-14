@@ -1,3 +1,3 @@
 untilStatement (untilCondition, untilBody) ::= <<
-while <untilCondition> <untilBody>
+while (!(<untilCondition>)) <untilBody>
 >>
