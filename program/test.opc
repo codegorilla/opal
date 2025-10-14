@@ -5,15 +5,17 @@ import stdlib;
 
 private var x: int = 1;
 
+var y: int = 2;
+
 private class Token extends Object, String {
   private var a: float = 1.5;
   private var x: int = 1;
 
   def getLexeme () -> String {
-    // Do something
+    var t: int = 0;
   }
 }
 
-private def main () -> int {
-  var t: int = 0;
+def main () -> int {
+  println("Hello world!");
 }

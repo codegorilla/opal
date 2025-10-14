@@ -297,6 +297,42 @@ public class Lexer {
           kind = Token.Kind.SLASH_EQUAL;
           lexeme = "/=";
           return new Token(kind, lexeme, position, line, column);
+        } else if (current == '*') {
+          // Block comment
+          consume();
+          var commentDone = false;
+          while (!commentDone) {
+            while (current != '*' && current != EOF) {
+              if (current == '\n') {
+                // Skip line feeds(LF)
+                consume();
+                line += 1;
+                column = 0;
+              } else if (current =='\r') {
+                // Skip carriage return +line feed(CR + LF) pairs
+                consume();
+                if (current == '\n') {
+                  consume();
+                  line += 1;
+                  column = 0;
+                } else {
+                  // Found carriage return (CR) by itself, which is invalid
+                  System.out.println("error: invalid line ending");
+                }
+              } else
+                consume();
+            }
+            while (current == '*')
+              consume();
+            if (current == '/') {
+              consume();
+              commentDone = true;
+            } else if (current == EOF) {
+              // Error - comment not closed
+              System.out.println("error: comment not closed");
+              commentDone = true;
+            }
+          }
         } else if (current == '/') {
           // Line comment
           do {
