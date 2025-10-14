@@ -1138,19 +1138,40 @@ public class Parser {
 
   private AstNode unaryExpression () {
     AstNode n = null;
+    var kind = lookahead.getKind();
     if (
-      lookahead.getKind() == Token.Kind.ASTERISK ||
-      lookahead.getKind() == Token.Kind.MINUS ||
-      lookahead.getKind() == Token.Kind.PLUS ||
-      lookahead.getKind() == Token.Kind.EXCLAMATION ||
-      lookahead.getKind() == Token.Kind.TILDE
+      kind == Token.Kind.ASTERISK ||
+      kind == Token.Kind.MINUS ||
+      kind == Token.Kind.PLUS ||
+      kind == Token.Kind.EXCLAMATION ||
+      kind == Token.Kind.TILDE
     ) {
       n = new UnaryExpression(lookahead);
-      match(lookahead.getKind());
+      match(kind);
       n.addChild(unaryExpression());
     }
-    else
+    else if (
+      kind == Token.Kind.CAST ||
+      kind == Token.Kind.DIVINE ||
+      kind == Token.Kind.TRANSMUTE
+    ) {
+      n = castExpression();
+    }
+    else {
       n = postfixExpression();
+    }
+    return n;
+  }
+
+  private AstNode castExpression () {
+    var n = new CastExpression(lookahead);
+    match(lookahead.getKind());
+    match(Token.Kind.LESS);
+    n.addChild(type(true));
+    match(Token.Kind.GREATER);
+    match(Token.Kind.L_PARENTHESIS);
+    n.addChild(expression(true));
+    match(Token.Kind.R_PARENTHESIS);
     return n;
   }
 

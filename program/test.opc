@@ -17,5 +17,6 @@ private class Token extends Object, String {
 }
 
 def main () -> int {
+  var x: int = cast<int>(1.5);
   println("Hello world!");
 }

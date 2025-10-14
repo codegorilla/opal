@@ -522,6 +522,22 @@ public class Generator3 extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  // To do: Set operation based on lexeme
+
+  public ST visit (CastExpression node) {
+    var st = group.getInstanceOf("expression/castExpression");
+    var operation = switch(node.getToken().getLexeme()) {
+      case "cast" -> "static_cast";
+      case "divine" -> "dynamic_cast";
+      case "transmute" -> "reinterpret_cast";
+      default -> null;
+    };
+    st.add("operation", operation);
+    st.add("type", visit(node.type()));
+    st.add("expression", visit(node.expression()));
+    return st;
+  }
+
   public ST visit (ArraySubscript node) {
     var st = group.getInstanceOf("expression/arraySubscript");
     st.add("name", visit(node.name()));

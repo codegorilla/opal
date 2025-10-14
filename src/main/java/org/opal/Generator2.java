@@ -104,30 +104,6 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // Export specifier should exist, but if it is implicit, then it won't have a
-  // token unless we artificially add one during semantic analysis.
-
-  // If we want different behavior for variables vs. routines, then we need to find a way to differentiate export
-  // specifiers. The problem is that the export specifier is encountered in the parser before we know which construct
-  // it belongs to. So we must defer differentiation. Nevertheless, we can either mark it in the parser from within the
-  // corresponding construct rule or we can use a separate semantic analysis pass. We could also use K>1 lookahead.
-
-  // If the access specifier is omitted then this translates to an exported
-  // entity that appears in the package interface unit. Otherwise, it appears
-  // in the package implementation unit.
-
-  public ST visit (ExportSpecifier node) {
-    ST st = null;
-    if (node.getToken() == null) {
-      st = group.getInstanceOf("declaration/accessSpecifier");
-      st.add("value", "export");
-    }
-    // This is how we can tell what kind of export specifier we have.
-//    if (node.getKind() == ExportSpecifier.VARIABLE)
-//      System.out.println("THIS IS AN INSTANCE OF A VARIABLE DECLARATION!");
-    return st;
-  }
-
   public ST visit (Modifiers node) {
     System.out.println("Modifiers");
     return null;
@@ -139,9 +115,8 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     if (!node.hasExportSpecifier()) {
       var st = group.getInstanceOf("declaration/classDeclaration");
       st.add("className", visit(node.className()));
-      if (node.hasClassExtendsClause()) {
+      if (node.hasClassExtendsClause())
         st.add("classExtendsClause", visit(node.classExtendsClause()));
-      }
       st.add("classBody", visit(node.classBody()));
       return st;
     }
