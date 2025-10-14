@@ -104,7 +104,9 @@ public class Lexer {
     keywordLookup.put("when", Token.Kind.WHEN);
     keywordLookup.put("while", Token.Kind.WHILE);
     keywordLookup.put("with", Token.Kind.WITH);
+    keywordLookup.put("short", Token.Kind.SHORT);
     keywordLookup.put("int", Token.Kind.INT);
+    keywordLookup.put("long", Token.Kind.LONG);
     keywordLookup.put("int8", Token.Kind.INT8);
     keywordLookup.put("int16", Token.Kind.INT16);
     keywordLookup.put("int32", Token.Kind.INT32);
@@ -115,6 +117,7 @@ public class Lexer {
     keywordLookup.put("uint32", Token.Kind.UINT32);
     keywordLookup.put("uint64", Token.Kind.UINT64);
     keywordLookup.put("float", Token.Kind.FLOAT);
+    keywordLookup.put("double", Token.Kind.DOUBLE);
     keywordLookup.put("float32", Token.Kind.FLOAT32);
     keywordLookup.put("float64", Token.Kind.FLOAT64);
     keywordLookup.put("void", Token.Kind.VOID);
