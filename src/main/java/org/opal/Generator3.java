@@ -85,32 +85,17 @@ public class Generator3 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // Access specifier should exist, but if it is implicit, then it won't have a token unless we artificially add one
-  // during semantic analysis.
-
-  // If we want different behavior for variables vs. routines, then we need to find a way to differentiate access
-  // specifiers. The problem is that the access specifier is encountered in the parser before we know which construct
-  // it belongs to. So we must defer differentiation. Nevertheless, we can either mark it in the parser from within the
-  // corresponding construct rule or we can use a separate semantic analysis pass. We could also use K>1 lookahead.
-
-  /*
-  public ST visit (AccessSpecifier node) {
-    ST st = null;
-    var token = node.getToken();
-    if (token != null && token.getKind() == Token.Kind.PUBLIC) {
-      st = group.getInstanceOf("declaration/accessSpecifier");
-      st.add("value", "export");
-    }
-    // This is how we can tell what kind of access specifier we have.
-//    if (node.getKind() == AccessSpecifier.VARIABLE)
-//      System.out.println("THIS IS AN INSTANCE OF A VARIABLE DECLARATION!");
-    return st;
-  }
-  */
+  // To do: Might need a modifier table to map Opal modifiers to C++ modifiers
 
   public ST visit (Modifiers node) {
-    System.out.println("Modifiers");
-    return null;
+    var st = group.getInstanceOf("declaration/modifiers");
+    for (var child : node.getChildren())
+      st.add("modifier", visit(child));
+    return st;
+  }
+
+  public ST visit (Modifier node) {
+    return new ST(node.getToken().getLexeme());
   }
 
   // CLASS DECLARATIONS
@@ -301,14 +286,18 @@ public class Generator3 extends ResultBaseVisitor <ST> {
     return (pass == 2) ? variableDeclaration(node) : null;
   }
 
+  // Some modifiers go in front, so go in other places. Need to account for all
+  // possible cases.
+
   public ST variableDeclaration (VariableDeclaration node) {
     if (node.hasExportSpecifier()) {
       var st = group.getInstanceOf("declaration/variableDeclaration");
+      if (node.hasModifiers())
+        st.add("modifiers", visit(node.modifiers()));
       stack.push(visit(node.variableName()));
       if (node.hasVariableTypeSpecifier())
         st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
       st.add("declarator", stack.pop());
-//    node.getModifiers().accept(this);
       if (node.hasVariableInitializer())
         st.add("initializer", visit(node.variableInitializer()));
       return st;

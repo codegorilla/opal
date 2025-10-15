@@ -29,6 +29,10 @@ public class VariableDeclaration extends AstNode {
     return getChild(0) != null;
   }
 
+  public boolean hasModifiers () {
+    return getChild(1).getChildCount() > 0;
+  }
+
   public boolean hasVariableTypeSpecifier () {
     return getChild(3) != null;
   }

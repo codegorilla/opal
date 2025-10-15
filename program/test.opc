@@ -3,7 +3,7 @@ package main;
 import math;
 import stdlib;
 
-private var x: int = 1;
+private const var x: int = 1;
 
 var y: int = 2;
 

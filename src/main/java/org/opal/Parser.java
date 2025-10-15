@@ -194,13 +194,6 @@ public class Parser {
 
   // MODIFIERS
 
-  // According to Parr, there is no need to have an AstNode kind -- you can just
-  // use the token to determine what kind of node it is. This works only for
-  // Simple cases. Sometimes, there is no corresponding token. So for that
-  // reason, we choose to have a AstNode kind field. That said, this means that
-  // sometimes we can leave the kind field generic and distinguish with more
-  // granularity by looking at the token.
-
   // Todo: We might just want to have one kind of modifier node and let the
   // token indicate what kind of modifier it is. The problem with this is that
   // some modifiers are added implicitly (e.g. 'final' in the case of 'val'), so
@@ -226,26 +219,26 @@ public class Parser {
 
   private AstNode modifiers () {
     var n = new Modifiers();
+    var kind = lookahead.getKind();
     while (
-      lookahead.getKind() == Token.Kind.ABSTRACT  ||
-      lookahead.getKind() == Token.Kind.CONST     ||
-      lookahead.getKind() == Token.Kind.CONSTEXPR ||
-      lookahead.getKind() == Token.Kind.FINAL     ||
-      lookahead.getKind() == Token.Kind.OVERRIDE  ||
-      lookahead.getKind() == Token.Kind.STATIC    ||
-      lookahead.getKind() == Token.Kind.VIRTUAL   ||
-      lookahead.getKind() == Token.Kind.VOLATILE
+      kind == Token.Kind.ABSTRACT  ||
+      kind == Token.Kind.CONST     ||
+      kind == Token.Kind.CONSTEXPR ||
+      kind == Token.Kind.FINAL     ||
+      kind == Token.Kind.OVERRIDE  ||
+      kind == Token.Kind.STATIC    ||
+      kind == Token.Kind.VIRTUAL   ||
+      kind == Token.Kind.VOLATILE
     ) {
-      var p = new Modifier(lookahead);
-      match(lookahead.getKind());
-      n.addChild(p);
-      try {
-        System.out.println("Sleeping for " + SLEEP_TIME + " seconds in modifiers...");
-        Thread.sleep(SLEEP_TIME);
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
+      n.addChild(modifier());
+      kind = lookahead.getKind();
     }
+    return n;
+  }
+
+  private AstNode modifier () {
+    var n = new Modifier(lookahead);
+    match(lookahead.getKind());
     return n;
   }
 
