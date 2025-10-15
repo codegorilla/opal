@@ -104,9 +104,17 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  // To do: Might need a modifier table to map Opal modifiers to C++ modifiers
+
   public ST visit (Modifiers node) {
-    System.out.println("Modifiers");
-    return null;
+    var st = group.getInstanceOf("declaration/modifiers");
+    for (var modifier : node.getModifiers())
+      st.add("modifier", visit(modifier));
+    return st;
+  }
+
+  public ST visit (Modifier node) {
+    return new ST(node.getToken().getLexeme());
   }
 
   // CLASS DECLARATIONS
@@ -256,6 +264,8 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   public ST visit (VariableDeclaration node) {
     if (!node.hasExportSpecifier()) {
       var st = group.getInstanceOf("declaration/variableDeclaration");
+      if (node.modifiers().hasChildren())
+        st.add("modifiers", visit(node.modifiers()));
       stack.push(visit(node.variableName()));
       if (node.hasVariableTypeSpecifier())
         st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
