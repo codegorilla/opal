@@ -6,7 +6,7 @@ import org.opal.ast.AstNode;
 
 public class Modifiers extends AstNode {
 
-  public Modifiers() {
+  public Modifiers () {
     super();
   }
 
@@ -18,6 +18,10 @@ public class Modifiers extends AstNode {
   @Override
   public <T> T accept (ResultVisitor<T> v) {
     return v.visit(this);
+  }
+
+  public Iterable<AstNode> getModifiers () {
+    return getChildren();
   }
 
 }

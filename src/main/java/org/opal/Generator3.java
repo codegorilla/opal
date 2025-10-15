@@ -89,8 +89,8 @@ public class Generator3 extends ResultBaseVisitor <ST> {
 
   public ST visit (Modifiers node) {
     var st = group.getInstanceOf("declaration/modifiers");
-    for (var child : node.getChildren())
-      st.add("modifier", visit(child));
+    for (var modifier : node.getModifiers())
+      st.add("modifier", visit(modifier));
     return st;
   }
 
@@ -147,9 +147,8 @@ public class Generator3 extends ResultBaseVisitor <ST> {
 
   public ST visit (ClassBody node) {
     var st = group.getInstanceOf("declaration/classBody");
-    for (var child : node.getChildren()) {
+    for (var child : node.getChildren())
       st.add("memberDeclaration", visit(child));
-    }
     return st;
   }
 
@@ -292,7 +291,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   public ST variableDeclaration (VariableDeclaration node) {
     if (node.hasExportSpecifier()) {
       var st = group.getInstanceOf("declaration/variableDeclaration");
-      if (node.hasModifiers())
+      if (node.modifiers().hasChildren())
         st.add("modifiers", visit(node.modifiers()));
       stack.push(visit(node.variableName()));
       if (node.hasVariableTypeSpecifier())
@@ -356,13 +355,11 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (BreakStatement node) {
-    var st = group.getInstanceOf("statement/breakStatement");
-    return st;
+    return group.getInstanceOf("statement/breakStatement");
   }
 
   public ST visit (ContinueStatement node) {
-    var st = group.getInstanceOf("statement/continueStatement");
-    return st;
+    return group.getInstanceOf("statement/continueStatement");
   }
 
   public ST visit(DoUntilStatement node) {

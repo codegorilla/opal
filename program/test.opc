@@ -7,7 +7,7 @@ private const var x: int = 1;
 
 var y: int = 2;
 
-private class Token extends Object {
+private class Token extends Object, Number {
   private var a: float = 1.5;
   private var x: int = 1;
 
