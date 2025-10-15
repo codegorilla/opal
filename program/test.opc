@@ -25,6 +25,8 @@ def main () -> int {
   until (x < 10)
     var t: int = 1;
 
-  if (x == true)
+  if (x == true) {
     var u: int = 2;
+  } else if (x == false)
+    var v: int = 3;
 }

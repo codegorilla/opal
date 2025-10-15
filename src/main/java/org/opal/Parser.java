@@ -680,7 +680,7 @@ public class Parser {
     match(Token.Kind.L_PARENTHESIS);
     n.addChild(expression(true));
     match(Token.Kind.R_PARENTHESIS);
-    n.addChild(untilBody());
+    n.addChild(statementBody());
     return n;
   }
 
@@ -690,7 +690,7 @@ public class Parser {
     match(Token.Kind.L_PARENTHESIS);
     n.addChild(expression(true));
     match(Token.Kind.R_PARENTHESIS);
-    n.addChild(whileBody());
+    n.addChild(statementBody());
     return n;
   }
 
@@ -736,7 +736,7 @@ public class Parser {
     match(Token.Kind.IN);
     n.addChild(expression(true));
     match(Token.Kind.R_PARENTHESIS);
-    n.addChild(forBody());
+    n.addChild(statementBody());
     return n;
   }
 
@@ -746,31 +746,13 @@ public class Parser {
     return n;
   }
 
-  private AstNode forBody () {
-    if (lookahead.getKind() == Token.Kind.L_BRACE)
-      return compoundStatement();
-    else {
-      // Insert fabricated compound statement
-      var n = new CompoundStatement(null);
-      n.addChild(statement());
-      return n;
-    }
-  }
-
   private AstNode ifStatement () {
     var n = new IfStatement(lookahead);
     match(Token.Kind.IF);
     match(Token.Kind.L_PARENTHESIS);
     n.addChild(expression(true));
     match(Token.Kind.R_PARENTHESIS);
-    if (lookahead.getKind() == Token.Kind.L_BRACE)
-      n.addChild(compoundStatement());
-    else {
-      // Insert fabricated compound statement
-      var p = new CompoundStatement(null);
-      p.addChild(statement());
-      n.addChild(p);
-    }
+    n.addChild(statementBody());
     if (lookahead.getKind() == Token.Kind.ELSE)
       n.addChild(elseClause());
     return n;
@@ -779,23 +761,13 @@ public class Parser {
   private AstNode elseClause () {
     var n = new ElseClause(lookahead);
     match(Token.Kind.ELSE);
-    n.addChild(elseBody());
+    if (lookahead.getKind() == Token.Kind.IF)
+      n.addChild(ifStatement());
+    else
+      n.addChild(statementBody());
     return n;
   }
-
-  private AstNode elseBody () {
-    if (lookahead.getKind() == Token.Kind.IF)
-      return ifStatement();
-    else if (lookahead.getKind() == Token.Kind.L_BRACE)
-      return compoundStatement();
-    else {
-      // Insert fabricated compound statement
-      var n = new CompoundStatement(null);
-      n.addChild(statement());
-      return n;
-    }
-  }
-
+  
   private AstNode loopStatement () {
     var n = new LoopStatement(lookahead);
     match(Token.Kind.LOOP);
@@ -879,22 +851,8 @@ public class Parser {
     match(Token.Kind.L_PARENTHESIS);
     n.addChild(expression(true));
     match(Token.Kind.R_PARENTHESIS);
-    n.addChild(untilBody());
+    n.addChild(statementBody());
     return n;
-  }
-
-  // Notice that fabricated AST nodes do not have tokens. This could be a
-  // source of bugs, so we need to be careful.
-
-  private AstNode untilBody () {
-    if (lookahead.getKind() == Token.Kind.L_BRACE)
-      return statement();
-    else {
-      // Insert fabricated compound statement
-      var n = new CompoundStatement(null);
-      n.addChild(statement());
-      return n;
-    }
   }
 
   // In C++26 the condition can be an expression or a declaration. For now, we
@@ -906,14 +864,14 @@ public class Parser {
     match(Token.Kind.L_PARENTHESIS);
     n.addChild(expression(true));
     match(Token.Kind.R_PARENTHESIS);
-    n.addChild(whileBody());
+    n.addChild(statementBody());
     return n;
   }
 
   // Notice that fabricated AST nodes do not have tokens. This could be a
   // source of bugs, so we need to be careful.
 
-  private AstNode whileBody () {
+  private AstNode statementBody () {
     if (lookahead.getKind() == Token.Kind.L_BRACE)
       return statement();
     else {
