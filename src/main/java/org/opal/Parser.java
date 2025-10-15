@@ -677,9 +677,7 @@ public class Parser {
   private AstNode doUntilStatement () {
     var n = new DoUntilStatement(lookahead);
     match(Token.Kind.UNTIL);
-    match(Token.Kind.L_PARENTHESIS);
-    n.addChild(expression(true));
-    match(Token.Kind.R_PARENTHESIS);
+    n.addChild(statementCondition());
     n.addChild(statementBody());
     return n;
   }
@@ -687,9 +685,7 @@ public class Parser {
   private AstNode doWhileStatement () {
     var n = new DoWhileStatement(lookahead);
     match(Token.Kind.WHILE);
-    match(Token.Kind.L_PARENTHESIS);
-    n.addChild(expression(true));
-    match(Token.Kind.R_PARENTHESIS);
+    n.addChild(statementCondition());
     n.addChild(statementBody());
     return n;
   }
@@ -749,9 +745,7 @@ public class Parser {
   private AstNode ifStatement () {
     var n = new IfStatement(lookahead);
     match(Token.Kind.IF);
-    match(Token.Kind.L_PARENTHESIS);
-    n.addChild(expression(true));
-    match(Token.Kind.R_PARENTHESIS);
+    n.addChild(statementCondition());
     n.addChild(statementBody());
     if (lookahead.getKind() == Token.Kind.ELSE)
       n.addChild(elseClause());
@@ -767,7 +761,7 @@ public class Parser {
       n.addChild(statementBody());
     return n;
   }
-  
+
   private AstNode loopStatement () {
     var n = new LoopStatement(lookahead);
     match(Token.Kind.LOOP);
@@ -848,9 +842,7 @@ public class Parser {
   private AstNode untilStatement () {
     var n = new UntilStatement(lookahead);
     match(Token.Kind.UNTIL);
-    match(Token.Kind.L_PARENTHESIS);
-    n.addChild(expression(true));
-    match(Token.Kind.R_PARENTHESIS);
+    n.addChild(statementCondition());
     n.addChild(statementBody());
     return n;
   }
@@ -861,10 +853,15 @@ public class Parser {
   private AstNode whileStatement () {
     var n = new WhileStatement(lookahead);
     match(Token.Kind.WHILE);
-    match(Token.Kind.L_PARENTHESIS);
-    n.addChild(expression(true));
-    match(Token.Kind.R_PARENTHESIS);
+    n.addChild(statementCondition());
     n.addChild(statementBody());
+    return n;
+  }
+
+  private AstNode statementCondition () {
+    match(Token.Kind.L_PARENTHESIS);
+    var n = expression(true);
+    match(Token.Kind.R_PARENTHESIS);
     return n;
   }
 
