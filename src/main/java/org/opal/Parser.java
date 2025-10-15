@@ -760,25 +760,20 @@ public class Parser {
   private AstNode ifStatement () {
     var n = new IfStatement(lookahead);
     match(Token.Kind.IF);
-//    n.addChild(ifCondition());
     match(Token.Kind.L_PARENTHESIS);
     n.addChild(expression(true));
     match(Token.Kind.R_PARENTHESIS);
-    n.addChild(ifBody());
+    if (lookahead.getKind() == Token.Kind.L_BRACE)
+      n.addChild(compoundStatement());
+    else {
+      // Insert fabricated compound statement
+      var p = new CompoundStatement(null);
+      p.addChild(statement());
+      n.addChild(p);
+    }
     if (lookahead.getKind() == Token.Kind.ELSE)
       n.addChild(elseClause());
     return n;
-  }
-
-  private AstNode ifBody () {
-    if (lookahead.getKind() == Token.Kind.L_BRACE)
-      return compoundStatement();
-    else {
-      // Insert fabricated compound statement
-      var n = new CompoundStatement(null);
-      n.addChild(statement());
-      return n;
-    }
   }
 
   private AstNode elseClause () {
