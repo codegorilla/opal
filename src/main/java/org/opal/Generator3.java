@@ -404,7 +404,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // If body is a passthrough
+  // If condition and body are passthroughs
 
   public ST visit (IfStatement node) {
     var st = group.getInstanceOf("statement/ifStatement");
@@ -412,12 +412,6 @@ public class Generator3 extends ResultBaseVisitor <ST> {
     st.add("ifBody", visit(node.ifBody()));
     if (node.getChildCount() == 3)
       st.add("elseClause", visit(node.elseClause()));
-    return st;
-  }
-
-  public ST visit (IfCondition node) {
-    var st = group.getInstanceOf("statement/ifCondition");
-    st.add("expression", visit(node.expression()));
     return st;
   }
 

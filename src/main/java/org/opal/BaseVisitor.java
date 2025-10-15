@@ -81,12 +81,9 @@ public class BaseVisitor implements Visitor {
   public void visit (LoopUpdate node) {}
   public void visit (ForStatement node) {}
   public void visit (IfStatement node) {}
-  public void visit (IfCondition node) {}
   public void visit (ReturnStatement node) {}
   public void visit (UntilStatement node) {}
-  public void visit (UntilCondition node) {}
   public void visit (WhileStatement node) {}
-  public void visit (WhileCondition node) {}
 
   // EXPRESSIONS
 
