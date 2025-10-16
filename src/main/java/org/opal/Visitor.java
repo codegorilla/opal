@@ -16,6 +16,8 @@ public interface Visitor {
   public void visit (ExportSpecifier node);
   public void visit (Modifiers node);
   public void visit (Modifier node);
+  public void visit (MemberRoutineQualifiers node);
+  public void visit (MemberRoutineQualifier node);
 
   // Package declarations
   public void visit (PackageDeclaration node);

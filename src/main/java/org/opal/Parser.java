@@ -350,9 +350,26 @@ public class Parser {
     n.addChild(modifiers);
     n.addChild(routineName());
     n.addChild(routineParameters());
+    n.addChild(memberRoutineQualifiers());
     n.addChild((lookahead.getKind() == Token.Kind.MINUS_GREATER) ? routineReturnType() : null);
     n.addChild(routineBody());
 //    currentScope = scope.getEnclosingScope();
+    return n;
+  }
+
+  private AstNode memberRoutineQualifiers () {
+    var n = new MemberRoutineQualifiers();
+    var kind = lookahead.getKind();
+    while (kind == Token.Kind.CONST || kind == Token.Kind.VOLATILE) {
+      n.addChild(memberRoutineQualifier());
+      kind = lookahead.getKind();
+    }
+    return n;
+  }
+
+  private AstNode memberRoutineQualifier () {
+    var n = new MemberRoutineQualifier(lookahead);
+    match(lookahead.getKind());
     return n;
   }
 
@@ -814,7 +831,6 @@ public class Parser {
   private AstNode returnStatement () {
     var n = new ReturnStatement(lookahead);
     match(Token.Kind.RETURN);
-    // Should we explicitly check FIRST, or is it ok to just check FOLLOW?
     if (lookahead.getKind() != Token.Kind.SEMICOLON) {
       n.addChild(expression(true));
       match(Token.Kind.SEMICOLON);

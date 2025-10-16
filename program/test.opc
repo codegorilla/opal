@@ -10,9 +10,10 @@ class Token extends Object, Number {
   private var a: float = 1.5;
   private var x: int = 1;
 
-  def getLexeme () -> String {
+  def getLexeme () volatile -> String {
     var t: int = 0;
   }
+
 }
 
 constexpr def test () -> int {

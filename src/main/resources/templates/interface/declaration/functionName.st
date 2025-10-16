@@ -1,3 +1,0 @@
-functionName (identifier) ::= <<
-<identifier>
->>
