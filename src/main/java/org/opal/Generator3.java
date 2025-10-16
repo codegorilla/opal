@@ -109,21 +109,18 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   public ST classDeclaration (ClassDeclaration node) {
     if (node.hasExportSpecifier()) {
       var st = group.getInstanceOf("declaration/classDeclaration");
-      st.add("className", visit(node.className()));
-      if (node.hasClassExtendsClause()) {
-        st.add("classExtendsClause", visit(node.classExtendsClause()));
-      }
-      st.add("classBody", visit(node.classBody()));
+      st.add("name", visit(node.name()));
+      if (node.hasExtendsClause())
+        st.add("extendsClause", visit(node.extendsClause()));
+      st.add("body", visit(node.body()));
       return st;
-    }
-    else
+    } else {
       return null;
+    }
   }
 
   public ST visit (ClassName node) {
-    var st = group.getInstanceOf("declaration/className");
-    st.add("identifier", node.getToken().getLexeme());
-    return st;
+    return new ST(node.getToken().getLexeme());
   }
 
   public ST visit (ClassExtendsClause node) {

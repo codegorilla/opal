@@ -1,10 +1,6 @@
-classDeclaration (
-  classModifiers,
-  className,
-  classExtendsClause,
-  classBody
-) ::= <%
-class <className><\ >
-<if(classModifiers)><classModifiers; separator=" "> <endif>
-<classExtendsClause> <classBody>;
+classDeclaration (modifiers, name, extendsClause, body) ::= <%
+class <name><\ >
+<if(modifiers)><modifiers; separator=" "> <endif>
+<extendsClause><\ >
+<body>;
 %>

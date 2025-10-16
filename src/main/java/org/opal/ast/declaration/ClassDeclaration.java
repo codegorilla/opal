@@ -33,19 +33,19 @@ public class ClassDeclaration extends AstNode {
     return getChild(1);
   }
 
-  public AstNode className () {
+  public AstNode name () {
     return getChild(2);
   }
 
-  public AstNode classExtendsClause () {
+  public AstNode extendsClause () {
     return getChild(3);
   }
 
-  public AstNode classBody () {
+  public AstNode body () {
     return getChild(4);
   }
 
-  public boolean hasClassExtendsClause () {
+  public boolean hasExtendsClause () {
     return getChild(3) != null;
   }
 
