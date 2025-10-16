@@ -24,8 +24,8 @@ public class BaseVisitor implements Visitor {
   public void visit (ExportSpecifier node) {}
   public void visit (Modifiers node) {}
   public void visit (Modifier node) {}
-  public void visit (MemberRoutineQualifiers node) {}
-  public void visit (MemberRoutineQualifier node) {}
+  public void visit (CVQualifiers node) {}
+  public void visit (CVQualifier node) {}
 
   // Package declarations
   public void visit (PackageDeclaration node) {}

@@ -16,8 +16,8 @@ public interface ResultVisitor <T> {
   public T visit (ExportSpecifier node);
   public T visit (Modifiers node);
   public T visit (Modifier node);
-  public T visit (MemberRoutineQualifiers node);
-  public T visit (MemberRoutineQualifier node);
+  public T visit (CVQualifiers node);
+  public T visit (CVQualifier node);
 
   // Package declarations
   public T visit (PackageDeclaration node);

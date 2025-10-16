@@ -25,8 +25,8 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
   public T visit (ExportSpecifier node) { return null; }
   public T visit (Modifiers node) { return null; }
   public T visit (Modifier node) { return null; }
-  public T visit (MemberRoutineQualifiers node) { return null; }
-  public T visit (MemberRoutineQualifier node) { return null; }
+  public T visit (CVQualifiers node) { return null; }
+  public T visit (CVQualifier node) { return null; }
 
   // Package declarations
   public T visit (PackageDeclaration node) { return null; }

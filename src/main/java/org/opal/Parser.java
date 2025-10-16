@@ -350,25 +350,25 @@ public class Parser {
     n.addChild(modifiers);
     n.addChild(routineName());
     n.addChild(routineParameters());
-    n.addChild(memberRoutineQualifiers());
+    n.addChild(cvQualifiers());
     n.addChild((lookahead.getKind() == Token.Kind.MINUS_GREATER) ? routineReturnType() : null);
     n.addChild(routineBody());
 //    currentScope = scope.getEnclosingScope();
     return n;
   }
 
-  private AstNode memberRoutineQualifiers () {
-    var n = new MemberRoutineQualifiers();
+  private AstNode cvQualifiers () {
+    var n = new CVQualifiers();
     var kind = lookahead.getKind();
     while (kind == Token.Kind.CONST || kind == Token.Kind.VOLATILE) {
-      n.addChild(memberRoutineQualifier());
+      n.addChild(cvQualifier());
       kind = lookahead.getKind();
     }
     return n;
   }
 
-  private AstNode memberRoutineQualifier () {
-    var n = new MemberRoutineQualifier(lookahead);
+  private AstNode cvQualifier () {
+    var n = new CVQualifier(lookahead);
     match(lookahead.getKind());
     return n;
   }

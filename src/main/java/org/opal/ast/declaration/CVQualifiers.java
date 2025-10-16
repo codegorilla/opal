@@ -1,14 +1,13 @@
 package org.opal.ast.declaration;
 
 import org.opal.ResultVisitor;
-import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class MemberRoutineQualifier extends AstNode {
+public class CVQualifiers extends AstNode {
 
-  public MemberRoutineQualifier (Token token) {
-    super(token);
+  public CVQualifiers () {
+    super();
   }
 
   @Override
@@ -19,6 +18,10 @@ public class MemberRoutineQualifier extends AstNode {
   @Override
   public <T> T accept (ResultVisitor<T> v) {
     return v.visit(this);
+  }
+
+  public Iterable<AstNode> getQualifiers () {
+    return getChildren();
   }
 
 }

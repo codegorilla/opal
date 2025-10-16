@@ -191,10 +191,23 @@ public class Generator2 extends ResultBaseVisitor <ST> {
       st.add("accessSpecifier", visit(node.accessSpecifier()));
     else
       st.add("accessSpecifier", "public");
-    st.add("functionName", visit(node.routineName()));
-    st.add("functionParameters", visit(node.routineParameters()));
-    st.add("functionReturnType", visit(node.routineReturnType()));
+    st.add("name", visit(node.name()));
+    st.add("parameters", visit(node.parameters()));
+    if (node.cvQualifiers().hasChildren())
+      st.add("cvQualifiers", visit(node.cvQualifiers()));
+    st.add("returnType", visit(node.returnType()));
     return st;
+  }
+
+  public ST visit (CVQualifiers node) {
+    var st = group.getInstanceOf("declaration/cvQualifiers");
+    for (var qualifier : node.getQualifiers())
+      st.add("qualifier", visit(qualifier));
+    return st;
+  }
+
+  public ST visit (CVQualifier node) {
+    return new ST(node.getToken().getLexeme());
   }
 
   // ROUTINE DECLARATIONS
