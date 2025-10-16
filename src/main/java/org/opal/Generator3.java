@@ -161,13 +161,12 @@ public class Generator3 extends ResultBaseVisitor <ST> {
       st.add("accessSpecifier", visit(node.accessSpecifier()));
     else
       st.add("accessSpecifier", "public");
-    stack.push(visit(node.variableName()));
-    if (node.hasVariableTypeSpecifier())
-      st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
+    stack.push(visit(node.name()));
+    if (node.hasTypeSpecifier())
+      st.add("typeSpecifier", visit(node.typeSpecifier()));
     st.add("declarator", stack.pop());
-//    node.getModifiers().accept(this);
-    if (node.hasVariableInitializer())
-      st.add("initializer", visit(node.variableInitializer()));
+    if (node.hasInitializer())
+      st.add("initializer", visit(node.initializer()));
     return st;
   }
 
