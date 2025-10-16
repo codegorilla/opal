@@ -292,24 +292,21 @@ public class Generator3 extends ResultBaseVisitor <ST> {
     return (pass == 2) ? variableDeclaration(node) : null;
   }
 
-  // Some modifiers go in front, so go in other places. Need to account for all
-  // possible cases.
-
   public ST variableDeclaration (VariableDeclaration node) {
     if (node.hasExportSpecifier()) {
       var st = group.getInstanceOf("declaration/variableDeclaration");
       if (node.modifiers().hasChildren())
         st.add("modifiers", visit(node.modifiers()));
-      stack.push(visit(node.variableName()));
-      if (node.hasVariableTypeSpecifier())
-        st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
+      stack.push(visit(node.name()));
+      if (node.hasTypeSpecifier())
+        st.add("typeSpecifier", visit(node.typeSpecifier()));
       st.add("declarator", stack.pop());
-      if (node.hasVariableInitializer())
-        st.add("initializer", visit(node.variableInitializer()));
+      if (node.hasInitializer())
+        st.add("initializer", visit(node.initializer()));
       return st;
-    }
-    else
+    } else {
       return null;
+      }
   }
 
   public ST visit (LocalVariableDeclaration node) {

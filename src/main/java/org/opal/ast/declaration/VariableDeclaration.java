@@ -28,12 +28,12 @@ public class VariableDeclaration extends AstNode {
   public boolean hasExportSpecifier () {
     return getChild(0) != null;
   }
-  
-  public boolean hasVariableTypeSpecifier () {
+
+  public boolean hasTypeSpecifier () {
     return getChild(3) != null;
   }
 
-  public boolean hasVariableInitializer () {
+  public boolean hasInitializer () {
     return getChild(4) != null;
   }
   
@@ -41,15 +41,15 @@ public class VariableDeclaration extends AstNode {
     return getChild(1);
   }
 
-  public AstNode variableName () {
+  public AstNode name () {
     return getChild(2);
   }
 
-  public AstNode variableTypeSpecifier () {
+  public AstNode typeSpecifier () {
     return getChild(3);
   }
 
-  public AstNode variableInitializer () {
+  public AstNode initializer () {
     return getChild(4);
   }
 
