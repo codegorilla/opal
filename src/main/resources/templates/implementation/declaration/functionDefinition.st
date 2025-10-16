@@ -1,8 +1,4 @@
-functionDefinition (
-  functionName,
-  functionParameters,
-  functionReturnType,
-  functionBody
-) ::= <%
-auto <functionName> <functionParameters> <functionReturnType> <functionBody>
+functionDefinition (modifiers, name, parameters, returnType, body) ::= <%
+<if(modifiers)><modifiers; separator=" "> <endif>
+auto <name> <parameters> <returnType> <body>
 %>

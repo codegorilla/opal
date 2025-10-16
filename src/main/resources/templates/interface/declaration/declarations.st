@@ -1,3 +1,3 @@
 declarations (declaration) ::= <<
-<declaration; separator="\n\n">
+<declaration:export(); separator="\n\n">
 >>

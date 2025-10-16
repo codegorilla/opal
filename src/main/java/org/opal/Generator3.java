@@ -197,34 +197,41 @@ public class Generator3 extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  // Modifiers can go in several possible locations:
+  //   beginning: constexpr, virtual
+  //   middle: const, volatile (aka CV qualifiers)
+  //   end: final, override
+
   // To do: Might need to put conditional on the return type
 
   private ST routineDeclarationPass1 (RoutineDeclaration node) {
     if (node.hasExportSpecifier()) {
       var st = group.getInstanceOf("declaration/functionDeclaration");
-      st.add("functionName", visit(node.routineName()));
-      st.add("functionParameters", visit(node.routineParameters()));
-      st.add("functionReturnType", visit(node.routineReturnType()));
+      if (node.modifiers().hasChildren())
+        st.add("modifiers", visit(node.modifiers()));
+      st.add("name", visit(node.name()));
+      st.add("parameters", visit(node.parameters()));
+      st.add("returnType", visit(node.returnType()));
       return st;
-    }
-    else
+    } else {
       return null;
+    }
   }
 
   private ST routineDeclarationPass2 (RoutineDeclaration node) {
     var st = group.getInstanceOf("declaration/functionDefinition");
-    st.add("functionName", visit(node.routineName()));
-    st.add("functionParameters", visit(node.routineParameters()));
+    if (node.modifiers().hasChildren())
+      st.add("modifiers", visit(node.modifiers()));
+    st.add("name", visit(node.name()));
+    st.add("parameters", visit(node.parameters()));
     if (node.hasRoutineReturnType())
-      st.add("functionReturnType", visit(node.routineReturnType()));
-    st.add("functionBody", visit(node.routineBody()));
+      st.add("returnType", visit(node.returnType()));
+    st.add("body", visit(node.body()));
     return st;
   }
 
   public ST visit (RoutineName node) {
-    var st = group.getInstanceOf("declaration/functionName");
-    st.add("identifier", node.getToken().getLexeme());
-    return st;
+    return new ST(node.getToken().getLexeme());
   }
 
   public ST visit (RoutineParameters node) {

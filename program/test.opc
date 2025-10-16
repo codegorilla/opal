@@ -15,7 +15,7 @@ private class Token extends Object, Number {
   }
 }
 
-def main () -> int {
+constexpr def test () -> int {
   println("Hello world!");
 
   while (x != 5)

@@ -204,19 +204,19 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   public ST visit (RoutineDeclaration node) {
     if (!node.hasExportSpecifier()) {
       var st = group.getInstanceOf("declaration/functionDeclaration");
-      st.add("functionName", visit(node.routineName()));
-      st.add("functionParameters", visit(node.routineParameters()));
-      st.add("functionReturnType", visit(node.routineReturnType()));
+      if (node.modifiers().hasChildren())
+        st.add("modifiers", visit(node.modifiers()));
+      st.add("name", visit(node.name()));
+      st.add("parameters", visit(node.parameters()));
+      st.add("returnType", visit(node.returnType()));
       return st;
-    }
-    else
+    } else {
       return null;
+    }
   }
 
   public ST visit (RoutineName node) {
-    var st = group.getInstanceOf("declaration/functionName");
-    st.add("identifier", node.getToken().getLexeme());
-    return st;
+    return new ST(node.getToken().getLexeme());
   }
 
   public ST visit (RoutineParameters node) {

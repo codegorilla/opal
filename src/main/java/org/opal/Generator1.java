@@ -63,9 +63,9 @@ public class Generator1 extends BaseVisitor {
   }
 
   public void visit (RoutineDeclaration node) {
-    visit(node.routineName());
-    if (isMain.get(node.routineName()))
-      visit(node.routineParameters());
+    visit(node.name());
+    if (isMain.get(node.name()))
+      visit(node.parameters());
   }
 
   public void visit (RoutineName node) {

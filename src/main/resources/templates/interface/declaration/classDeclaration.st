@@ -4,7 +4,7 @@ classDeclaration (
   classExtendsClause,
   classBody
 ) ::= <%
-export class <className><\ >
+class <className><\ >
 <if(classModifiers)><classModifiers; separator=" "> <endif>
 <classExtendsClause> <classBody>;
 %>
