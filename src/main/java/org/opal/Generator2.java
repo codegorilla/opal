@@ -199,7 +199,9 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     else
       st.add("accessSpecifier", "public");
     if (node.modifiers().hasChildren())
-      st.add("modifiers", visit(node.modifiers()));
+      st.add("modifiers1", visit(node.modifiers()));
+    if (node.modifiers().hasChildren())
+      st.add("modifiers2", visit(node.modifiers()));
     st.add("name", visit(node.name()));
     st.add("parameters", visit(node.parameters()));
     if (node.cvQualifiers().hasChildren())
@@ -207,6 +209,29 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     if (node.refQualifiers().hasChildren())
       st.add("refQualifiers", visit(node.refQualifiers()));
     st.add("returnType", visit(node.returnType()));
+    return st;
+  }
+
+  // Tracks modifier passes
+  private int modifiersPass = 0;
+
+  public ST visit (MemberRoutineModifiers node) {
+    var st = group.getInstanceOf("declaration/memberFunctionModifiers");
+    if (modifiersPass == 0) {
+      for (var modifier : node.getModifiers()) {
+        var st0 = visit(modifier);
+        if (st0.render().equals("virtual"))
+          st.add("modifier", st0);
+      }
+    } else {
+      for (var modifier : node.getModifiers()) {
+        var st1 = visit(modifier);
+        if (st1.render().equals("final"))
+          st.add("modifier", st1);
+      }
+    }
+    // Alternate between first and second pass
+    modifiersPass = (modifiersPass + 1) % 2;
     return st;
   }
 

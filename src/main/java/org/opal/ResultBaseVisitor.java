@@ -45,12 +45,13 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
 
   // Member declarations
   public T visit (MemberAccessSpecifier node) { return null; }
-  public T visit (MemberVariableDeclaration node) { return null; }
   public T visit (MemberRoutineDeclaration node) { return null; }
+  public T visit (MemberRoutineModifiers node) { return null; }
   public T visit (CVQualifiers node) { return null; }
   public T visit (CVQualifier node) { return null; }
   public T visit (RefQualifiers node) { return null; }
   public T visit (RefQualifier node) { return null; }
+  public T visit (MemberVariableDeclaration node) { return null; }
 
   // Routine declarations
   public T visit (RoutineDeclaration node) { return null; }

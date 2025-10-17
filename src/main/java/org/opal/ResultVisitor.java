@@ -36,12 +36,13 @@ public interface ResultVisitor <T> {
 
   // Member declarations
   public T visit (MemberAccessSpecifier node);
-  public T visit (MemberVariableDeclaration node);
   public T visit (MemberRoutineDeclaration node);
+  public T visit (MemberRoutineModifiers node);
   public T visit (CVQualifiers node);
   public T visit (CVQualifier node);
   public T visit (RefQualifiers node);
   public T visit (RefQualifier node);
+  public T visit (MemberVariableDeclaration node);
 
   // Routine declarations
   public T visit (RoutineDeclaration node);

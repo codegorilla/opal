@@ -358,7 +358,7 @@ public class Parser {
     var n = new MemberRoutineDeclaration(lookahead);
     match(Token.Kind.DEF);
     n.addChild(accessSpecifier);
-    n.addChild(routineModifiers());
+    n.addChild(memberRoutineModifiers());
     n.addChild(routineName());
     n.addChild(routineParameters());
     n.addChild(cvQualifiers());
@@ -366,6 +366,13 @@ public class Parser {
     n.addChild((lookahead.getKind() == Token.Kind.MINUS_GREATER) ? routineReturnType() : null);
     n.addChild(routineBody());
 //    currentScope = scope.getEnclosingScope();
+    return n;
+  }
+
+  private AstNode memberRoutineModifiers () {
+    var n = new MemberRoutineModifiers();
+    while (!modifierStack.isEmpty())
+      n.addChild(modifierStack.pop());
     return n;
   }
 

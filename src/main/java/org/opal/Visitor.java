@@ -36,12 +36,13 @@ public interface Visitor {
 
   // Member declarations
   public void visit (MemberAccessSpecifier node);
-  public void visit (MemberVariableDeclaration node);
   public void visit (MemberRoutineDeclaration node);
+  public void visit (MemberRoutineModifiers node);
   public void visit (CVQualifiers node);
   public void visit (CVQualifier node);
   public void visit (RefQualifiers node);
   public void visit (RefQualifier node);
+  public void visit (MemberVariableDeclaration node);
 
   // Routine declarations
   public void visit (RoutineDeclaration node);

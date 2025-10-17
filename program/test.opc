@@ -10,7 +10,11 @@ final class Token extends Object, Number {
   private const var a: float = 1.5;
   private var x: int = 1;
 
-  final def getLexeme () const -> String {
+  virtual final def getLexeme () const -> String {
+    var t: int = 0;
+  }
+
+  virtual final def getToken () -> int {
     var t: int = 0;
   }
 
