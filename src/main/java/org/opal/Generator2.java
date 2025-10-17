@@ -204,6 +204,8 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     st.add("parameters", visit(node.parameters()));
     if (node.cvQualifiers().hasChildren())
       st.add("cvQualifiers", visit(node.cvQualifiers()));
+    if (node.refQualifiers().hasChildren())
+      st.add("refQualifiers", visit(node.refQualifiers()));
     st.add("returnType", visit(node.returnType()));
     return st;
   }
@@ -216,6 +218,17 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (CVQualifier node) {
+    return new ST(node.getToken().getLexeme());
+  }
+
+  public ST visit (RefQualifiers node) {
+    var st = group.getInstanceOf("declaration/refQualifiers");
+    for (var qualifier : node.getQualifiers())
+      st.add("qualifier", visit(qualifier));
+    return st;
+  }
+
+  public ST visit (RefQualifier node) {
     return new ST(node.getToken().getLexeme());
   }
 
