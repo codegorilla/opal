@@ -14,7 +14,6 @@ public interface ResultVisitor <T> {
   public T visit (TranslationUnit node);
   public T visit (Declarations node);
   public T visit (ExportSpecifier node);
-  public T visit (Modifiers node);
   public T visit (Modifier node);
   public T visit (CVQualifiers node);
   public T visit (CVQualifier node);
@@ -30,6 +29,7 @@ public interface ResultVisitor <T> {
 
   // Class declarations
   public T visit (ClassDeclaration node);
+  public T visit (ClassModifiers node);
   public T visit (ClassName node);
   public T visit (ClassBody node);
   public T visit (ClassExtendsClause node);
@@ -43,6 +43,7 @@ public interface ResultVisitor <T> {
 
   // Routine declarations
   public T visit (RoutineDeclaration node);
+  public T visit (RoutineModifiers node);
   public T visit (RoutineName node);
   public T visit (RoutineParameters node);
   public T visit (RoutineParameter node);
@@ -53,6 +54,7 @@ public interface ResultVisitor <T> {
 
   // Variable declarations
   public T visit (VariableDeclaration node);
+  public T visit (VariableModifiers node);
   public T visit (LocalVariableDeclaration node);
   public T visit (VariableName node);
   public T visit (VariableTypeSpecifier node);

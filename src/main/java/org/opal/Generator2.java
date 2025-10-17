@@ -110,39 +110,7 @@ public class Generator2 extends ResultBaseVisitor <ST> {
 
   // To do: Might need a modifier table to map Opal modifiers to C++ modifiers
 
-  // How do we know what kind of modifiers we have? Do we check the parent node
-  // kind using 'instanceof'? Or should the modifiers be coded in the parser?
-
-  // Need to set a pass counter
-
-  private int modifiersPass = 0;
-
-  public ST visit (Modifiers node) {
-      var st = group.getInstanceOf("declaration/modifiers");
-      for (var modifier : node.getModifiers())
-        st.add("modifier", visit(modifier));
-      return st;
-  }
-  
   public ST visit (Modifier node) {
-    if (ancestorStack.get(1) instanceof ClassDeclaration)
-      return classModifier(node);
-    else if (ancestorStack.get(1) instanceof RoutineDeclaration)
-      return routineModifier(node);
-    else if (ancestorStack.get(1) instanceof VariableDeclaration)
-      return variableModifier(node);
-    return null;
-  }
-
-  public ST classModifier (Modifier node) {
-    return new ST(node.getToken().getLexeme());
-  }
-
-  public ST routineModifier (Modifier node) {
-    return new ST(node.getToken().getLexeme());
-  }
-
-  public ST variableModifier (Modifier node) {
     return new ST(node.getToken().getLexeme());
   }
 
@@ -151,14 +119,8 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   public ST visit (ClassDeclaration node) {
     if (!node.hasExportSpecifier()) {
       var st = group.getInstanceOf("declaration/classDeclaration");
-      if (node.modifiers().hasChildren()) {
-        modifiersPass = 1;
+      if (node.modifiers().hasChildren())
         st.add("modifiers", visit(node.modifiers()));
-      }
-      if (node.modifiers().hasChildren()) {
-        modifiersPass = 2;
-        st.add("modifiers", visit(node.modifiers()));
-      }
       st.add("name", visit(node.name()));
       if (node.hasExtendsClause())
         st.add("extendsClause", visit(node.extendsClause()));
@@ -167,6 +129,13 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     } else {
       return null;
     }
+  }
+
+  public ST visit (ClassModifiers node) {
+    var st = group.getInstanceOf("declaration/classModifiers");
+    for (var modifier : node.getModifiers())
+      st.add("modifier", visit(modifier));
+    return st;
   }
 
   public ST visit (ClassName node) {
@@ -212,6 +181,8 @@ public class Generator2 extends ResultBaseVisitor <ST> {
       st.add("accessSpecifier", visit(node.accessSpecifier()));
     else
       st.add("accessSpecifier", "public");
+    if (node.modifiers().hasChildren())
+      st.add("modifiers", visit(node.modifiers()));
     stack.push(visit(node.name()));
     if (node.hasTypeSpecifier())
       st.add("typeSpecifier", visit(node.typeSpecifier()));
@@ -227,6 +198,8 @@ public class Generator2 extends ResultBaseVisitor <ST> {
       st.add("accessSpecifier", visit(node.accessSpecifier()));
     else
       st.add("accessSpecifier", "public");
+    if (node.modifiers().hasChildren())
+      st.add("modifiers", visit(node.modifiers()));
     st.add("name", visit(node.name()));
     st.add("parameters", visit(node.parameters()));
     if (node.cvQualifiers().hasChildren())
@@ -260,6 +233,13 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     } else {
       return null;
     }
+  }
+
+  public ST visit (RoutineModifiers node) {
+    var st = group.getInstanceOf("declaration/functionModifiers");
+    for (var modifier : node.getModifiers())
+      st.add("modifier", visit(modifier));
+    return st;
   }
 
   public ST visit (RoutineName node) {
@@ -323,6 +303,13 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     }
     else
       return null;
+  }
+
+  public ST visit (VariableModifiers node) {
+    var st = group.getInstanceOf("declaration/variableModifiers");
+    for (var modifier : node.getModifiers())
+      st.add("modifier", visit(modifier));
+    return st;
   }
 
   // In C++, any pointer or raw array portions of the type specifier are

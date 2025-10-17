@@ -1,6 +1,6 @@
 classDeclaration (modifiers, name, extendsClause, body) ::= <%
 class <name><\ >
-<if(modifiers)><modifiers; separator=" "> <endif>
+<if(modifiers)><modifiers> <endif>
 <extendsClause><\ >
 <body>;
 %>

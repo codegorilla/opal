@@ -1,6 +1,6 @@
-memberVariableDeclaration (accessSpecifier, variableModifiers, typeSpecifier, declarator, initializer) ::= <%
+memberVariableDeclaration (accessSpecifier, modifiers, typeSpecifier, declarator, initializer) ::= <%
 <if(accessSpecifier)><accessSpecifier>: <endif>
-<if(variableModifiers)><variableModifiers; separator=" "> <endif>
+<if(modifiers)><modifiers; separator=" "> <endif>
 <typeSpecifier> <declarator>
 <if(initializer)> <initializer><endif>;
 %>

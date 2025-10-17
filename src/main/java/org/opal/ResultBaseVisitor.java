@@ -23,7 +23,6 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
   public T visit (TranslationUnit node) { return null; }
   public T visit (Declarations node) { return null; }
   public T visit (ExportSpecifier node) { return null; }
-  public T visit (Modifiers node) { return null; }
   public T visit (Modifier node) { return null; }
   public T visit (CVQualifiers node) { return null; }
   public T visit (CVQualifier node) { return null; }
@@ -39,6 +38,7 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
 
   // Class declarations
   public T visit (ClassDeclaration node) { return null; }
+  public T visit (ClassModifiers node) { return null; }
   public T visit (ClassName node) { return null; }
   public T visit (ClassBody node) { return null; }
   public T visit (ClassExtendsClause node) { return null; }
@@ -52,6 +52,7 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
 
   // Routine declarations
   public T visit (RoutineDeclaration node) { return null; }
+  public T visit (RoutineModifiers node) { return null; }
   public T visit (RoutineName node) { return null; }
   public T visit (RoutineParameters node) { return null; }
   public T visit (RoutineParameter node) { return null; }
@@ -62,6 +63,7 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
 
   // Variable declarations
   public T visit (VariableDeclaration node) { return null; }
+  public T visit (VariableModifiers node) { return null; }
   public T visit (LocalVariableDeclaration node) { return null; }
   public T visit (VariableName node) { return null; }
   public T visit (VariableTypeSpecifier node) { return null; }

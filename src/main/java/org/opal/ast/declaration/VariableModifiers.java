@@ -4,9 +4,9 @@ import org.opal.ResultVisitor;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class Modifiers extends AstNode {
+public class VariableModifiers extends AstNode {
 
-  public Modifiers () {
+  public VariableModifiers () {
     super();
   }
 

@@ -20,8 +20,12 @@ public class Parser {
   private int position;
   private Token lookahead;
 
-  // Used to pass nodes up and down during tree traversal
+  // Used to pass type nodes up and down during tree traversal
   private final LinkedList<Type> stack;
+
+  // Used to collect modifier nodes in preparation for aggregation into
+  // specialized modifiers nodes.
+  private final LinkedList<AstNode> modifierStack;
 
   // Used for symbol table operations. Cobalt requires a symbol table during
   // parsing in order to disambiguate a few grammar rules. We cannot wait until
@@ -42,6 +46,7 @@ public class Parser {
     position = 0;
     lookahead = input.get(position);
     stack = new LinkedList<>();
+    modifierStack = new LinkedList<>();
     builtinScope = new Scope(Scope.Kind.BUILT_IN);
     currentScope = builtinScope;
   }
@@ -54,7 +59,6 @@ public class Parser {
   }
 
   private void match (String lexeme) {
-    // Note: If re-writing in java, we need to compare using .equals() method
     if (lookahead.getLexeme().equals(lexeme))
       consume();
     else
@@ -166,14 +170,14 @@ public class Parser {
     if (lookahead.getKind() == Token.Kind.TEMPLATE)
       ; //n = templateDeclaration();
     else {
-      var mods = modifiers();
+      modifiers();
       switch (lookahead.getKind()) {
         case Token.Kind.CLASS ->
-          n = classDeclaration(spec, mods);
+          n = classDeclaration(spec);
         case Token.Kind.DEF ->
-          n = routineDeclaration(spec, mods);
+          n = routineDeclaration(spec);
         case Token.Kind.VAL, Token.Kind.VAR ->
-          n = variableDeclaration(spec, mods);
+          n = variableDeclaration(spec);
         default ->
           n = null;
       }
@@ -217,8 +221,7 @@ public class Parser {
   // natural aversion to 'constexpr' for some reason... it's a bit obtuse for my
   // taste.
 
-  private AstNode modifiers () {
-    var n = new Modifiers();
+  private void modifiers () {
     var kind = lookahead.getKind();
     while (
       kind == Token.Kind.ABSTRACT  ||
@@ -230,28 +233,34 @@ public class Parser {
       kind == Token.Kind.VIRTUAL   ||
       kind == Token.Kind.VOLATILE
     ) {
-      n.addChild(modifier());
+      modifier();
       kind = lookahead.getKind();
     }
-    return n;
   }
 
-  private AstNode modifier () {
+  private void modifier () {
     var n = new Modifier(lookahead);
     match(lookahead.getKind());
-    return n;
+    modifierStack.push(n);
   }
 
   // CLASS DECLARATIONS
 
-  private AstNode classDeclaration (ExportSpecifier exportSpecifier, AstNode modifiers) {
+  private AstNode classDeclaration (AstNode exportSpecifier) {
     var n = new ClassDeclaration(lookahead);
     match(Token.Kind.CLASS);
     n.addChild(exportSpecifier);
-    n.addChild(modifiers);
+    n.addChild(classModifiers());
     n.addChild(className());
     n.addChild((lookahead.getKind() == Token.Kind.EXTENDS) ? classExtendsClause() : null);
     n.addChild(classBody());
+    return n;
+  }
+
+  private AstNode classModifiers () {
+    var n = new ClassModifiers();
+    while (!modifierStack.isEmpty())
+      n.addChild(modifierStack.pop());
     return n;
   }
 
@@ -316,10 +325,10 @@ public class Parser {
       kind == Token.Kind.PRIVATE ||
       kind == Token.Kind.PROTECTED
     ) ? memberAccessSpecifier() : null;
-    var mods = modifiers();
+    modifiers();
     var n = switch (lookahead.getKind()) {
-      case Token.Kind.DEF -> memberRoutineDeclaration(spec, mods);
-      case Token.Kind.VAL, Token.Kind.VAR -> memberVariableDeclaration(spec, mods);
+      case Token.Kind.DEF -> memberRoutineDeclaration(spec);
+      case Token.Kind.VAL, Token.Kind.VAR -> memberVariableDeclaration(spec);
       default -> null;
     };
     return n;
@@ -331,11 +340,11 @@ public class Parser {
     return n;
   }
 
-  private AstNode memberVariableDeclaration (MemberAccessSpecifier accessSpecifier, AstNode modifiers) {
+  private AstNode memberVariableDeclaration (MemberAccessSpecifier accessSpecifier) {
     var n = new MemberVariableDeclaration(lookahead);
     match(Token.Kind.VAR);
     n.addChild(accessSpecifier);
-    n.addChild(modifiers);
+    n.addChild(variableModifiers());
     n.addChild(variableName());
     n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier() : null);
     n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer() : null);
@@ -343,11 +352,11 @@ public class Parser {
     return n;
   }
 
-  private AstNode memberRoutineDeclaration (MemberAccessSpecifier accessSpecifier, AstNode modifiers) {
+  private AstNode memberRoutineDeclaration (MemberAccessSpecifier accessSpecifier) {
     var n = new MemberRoutineDeclaration(lookahead);
     match(Token.Kind.DEF);
     n.addChild(accessSpecifier);
-    n.addChild(modifiers);
+    n.addChild(routineModifiers());
     n.addChild(routineName());
     n.addChild(routineParameters());
     n.addChild(cvQualifiers());
@@ -384,7 +393,7 @@ public class Parser {
 
   // To do: Need to handle no return type
 
-  private AstNode routineDeclaration (ExportSpecifier exportSpecifier, AstNode modifiers) {
+  private AstNode routineDeclaration (ExportSpecifier exportSpecifier) {
     var n = new RoutineDeclaration(lookahead);
     match(Token.Kind.DEF);
 //    var scope = Scope(Scope.Kind.LOCAL);
@@ -392,12 +401,19 @@ public class Parser {
 //    currentScope = scope;
 //    n.setScope(currentScope);
     n.addChild(exportSpecifier);
-    n.addChild(modifiers);
+    n.addChild(routineModifiers());
     n.addChild(routineName());
     n.addChild(routineParameters());
     n.addChild((lookahead.getKind() == Token.Kind.MINUS_GREATER) ? routineReturnType() : null);
     n.addChild(routineBody());
 //    currentScope = scope.getEnclosingScope();
+    return n;
+  }
+
+  private AstNode routineModifiers () {
+    var n = new RoutineModifiers();
+    while (!modifierStack.isEmpty())
+      n.addChild(modifierStack.pop());
     return n;
   }
 
@@ -487,15 +503,22 @@ public class Parser {
   // We put null values into the list of children to ensure a constant node
   // count and node order.
 
-  private AstNode variableDeclaration (ExportSpecifier exportSpecifier, AstNode modifiers) {
+  private AstNode variableDeclaration (ExportSpecifier exportSpecifier) {
     var n = new VariableDeclaration(lookahead);
     match(Token.Kind.VAR);
     n.addChild(exportSpecifier);
-    n.addChild(modifiers);
+    n.addChild(variableModifiers());
     n.addChild(variableName());
     n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier() : null);
     n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer() : null);
     match(Token.Kind.SEMICOLON);
+    return n;
+  }
+
+  private AstNode variableModifiers () {
+    var n = new VariableModifiers();
+    while (!modifierStack.isEmpty())
+      n.addChild(modifierStack.pop());
     return n;
   }
 
@@ -519,10 +542,10 @@ public class Parser {
     return n;
   }
 
-  private AstNode localVariableDeclaration (AstNode modifiers) {
+  private AstNode localVariableDeclaration () {
     AstNode n = new LocalVariableDeclaration(lookahead);
     match(Token.Kind.VAR);
-    n.addChild(modifiers);
+    n.addChild(variableModifiers());
     n.addChild(variableName());
     n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier() : null);
     n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer() : null);
@@ -659,10 +682,10 @@ public class Parser {
 
   private AstNode declarationStatement () {
     AstNode n = null;
-    var mods = modifiers();
+    modifiers();
     var kind = lookahead.getKind();
     if (kind == Token.Kind.VAL || kind == Token.Kind.VAR)
-      n = localVariableDeclaration(mods);
+      n = localVariableDeclaration();
     // To do: Need error checking here
     return n;
   }

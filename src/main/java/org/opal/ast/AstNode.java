@@ -34,6 +34,11 @@ public abstract class AstNode {
     children.add(node);
   }
 
+  public void addChildren (Iterable<AstNode> nodes) {
+    for (var node : nodes)
+      children.add(node);
+  }
+
   public boolean hasChildren () {
     return !children.isEmpty();
   }
@@ -45,7 +50,7 @@ public abstract class AstNode {
   public int getChildCount () {
     return children.size();
   }
-  
+
   public Iterable<AstNode> getChildren () {
     return children;
   }

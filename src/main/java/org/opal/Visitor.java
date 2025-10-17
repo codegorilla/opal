@@ -14,7 +14,6 @@ public interface Visitor {
   public void visit (TranslationUnit node);
   public void visit (Declarations node);
   public void visit (ExportSpecifier node);
-  public void visit (Modifiers node);
   public void visit (Modifier node);
   public void visit (CVQualifiers node);
   public void visit (CVQualifier node);
@@ -30,6 +29,7 @@ public interface Visitor {
 
   // Class declarations
   public void visit (ClassDeclaration node);
+  public void visit (ClassModifiers node);
   public void visit (ClassName node);
   public void visit (ClassBody node);
   public void visit (ClassExtendsClause node);
@@ -43,6 +43,7 @@ public interface Visitor {
 
   // Routine declarations
   public void visit (RoutineDeclaration node);
+  public void visit (RoutineModifiers node);
   public void visit (RoutineName node);
   public void visit (RoutineParameters node);
   public void visit (RoutineParameter node);
@@ -53,6 +54,7 @@ public interface Visitor {
 
   // Variable declarations
   public void visit (VariableDeclaration node);
+  public void visit (VariableModifiers node);
   public void visit (LocalVariableDeclaration node);
   public void visit (VariableName node);
   public void visit (VariableTypeSpecifier node);

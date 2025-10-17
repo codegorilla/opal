@@ -87,13 +87,6 @@ public class Generator3 extends ResultBaseVisitor <ST> {
 
   // To do: Might need a modifier table to map Opal modifiers to C++ modifiers
 
-  public ST visit (Modifiers node) {
-    var st = group.getInstanceOf("declaration/modifiers");
-    for (var modifier : node.getModifiers())
-      st.add("modifier", visit(modifier));
-    return st;
-  }
-
   public ST visit (Modifier node) {
     return new ST(node.getToken().getLexeme());
   }
@@ -109,6 +102,8 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   public ST classDeclaration (ClassDeclaration node) {
     if (node.hasExportSpecifier()) {
       var st = group.getInstanceOf("declaration/classDeclaration");
+      if (node.modifiers().hasChildren())
+        st.add("modifiers", visit(node.modifiers()));
       st.add("name", visit(node.name()));
       if (node.hasExtendsClause())
         st.add("extendsClause", visit(node.extendsClause()));
@@ -117,6 +112,13 @@ public class Generator3 extends ResultBaseVisitor <ST> {
     } else {
       return null;
     }
+  }
+
+  public ST visit (ClassModifiers node) {
+    var st = group.getInstanceOf("declaration/classModifiers");
+    for (var modifier : node.getModifiers())
+      st.add("modifier", visit(modifier));
+    return st;
   }
 
   public ST visit (ClassName node) {
@@ -239,6 +241,13 @@ public class Generator3 extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  public ST visit (RoutineModifiers node) {
+    var st = group.getInstanceOf("declaration/functionModifiers");
+    for (var modifier : node.getModifiers())
+      st.add("modifier", visit(modifier));
+    return st;
+  }
+
   public ST visit (RoutineName node) {
     return new ST(node.getToken().getLexeme());
   }
@@ -316,6 +325,13 @@ public class Generator3 extends ResultBaseVisitor <ST> {
     } else {
       return null;
       }
+  }
+
+  public ST visit (VariableModifiers node) {
+    var st = group.getInstanceOf("declaration/variableModifiers");
+    for (var modifier : node.getModifiers())
+      st.add("modifier", visit(modifier));
+    return st;
   }
 
   public ST visit (LocalVariableDeclaration node) {

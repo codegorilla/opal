@@ -7,10 +7,10 @@ private const var x: int = 1;
 const var y: int = 2;
 
 final class Token extends Object, Number {
-  private var a: float = 1.5;
+  private const var a: float = 1.5;
   private var x: int = 1;
 
-  def getLexeme () const -> String {
+  final def getLexeme () const -> String {
     var t: int = 0;
   }
 
