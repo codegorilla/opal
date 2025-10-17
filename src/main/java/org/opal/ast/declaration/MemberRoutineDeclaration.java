@@ -29,8 +29,8 @@ public class MemberRoutineDeclaration extends AstNode {
     return getChild(0) != null;
   }
 
-  public boolean hasRoutineReturnType () {
-    return getChild(4) != null;
+  public boolean hasReturnType () {
+    return getChild(6) != null;
   }
 
   public AstNode modifiers () {
@@ -49,12 +49,16 @@ public class MemberRoutineDeclaration extends AstNode {
     return getChild(4);
   }
 
-  public AstNode returnType () {
+  public AstNode refQualifiers () {
     return getChild(5);
   }
 
-  public AstNode body () {
+  public AstNode returnType () {
     return getChild(6);
+  }
+
+  public AstNode body () {
+    return getChild(7);
   }
 
 }

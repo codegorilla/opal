@@ -29,7 +29,7 @@ public class RoutineDeclaration extends AstNode {
     return getChild(0) != null;
   }
 
-  public boolean hasRoutineReturnType () {
+  public boolean hasReturnType () {
     return getChild(4) != null;
   }
 

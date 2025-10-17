@@ -352,6 +352,8 @@ public class Parser {
     return n;
   }
 
+  // To do: Ref qualifiers, noexcept, final, and override modifiers
+
   private AstNode memberRoutineDeclaration (MemberAccessSpecifier accessSpecifier) {
     var n = new MemberRoutineDeclaration(lookahead);
     match(Token.Kind.DEF);
@@ -360,6 +362,7 @@ public class Parser {
     n.addChild(routineName());
     n.addChild(routineParameters());
     n.addChild(cvQualifiers());
+    n.addChild(refQualifiers());
     n.addChild((lookahead.getKind() == Token.Kind.MINUS_GREATER) ? routineReturnType() : null);
     n.addChild(routineBody());
 //    currentScope = scope.getEnclosingScope();
@@ -378,6 +381,22 @@ public class Parser {
 
   private AstNode cvQualifier () {
     var n = new CVQualifier(lookahead);
+    match(lookahead.getKind());
+    return n;
+  }
+
+  private AstNode refQualifiers () {
+    var n = new RefQualifiers();
+    var kind = lookahead.getKind();
+    while (kind == Token.Kind.AMPERSAND || kind == Token.Kind.AMPERSAND_AMPERSAND) {
+      n.addChild(refQualifier());
+      kind = lookahead.getKind();
+    }
+    return n;
+  }
+
+  private AstNode refQualifier () {
+    var n = new RefQualifier(lookahead);
     match(lookahead.getKind());
     return n;
   }

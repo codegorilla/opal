@@ -15,8 +15,6 @@ public interface Visitor {
   public void visit (Declarations node);
   public void visit (ExportSpecifier node);
   public void visit (Modifier node);
-  public void visit (CVQualifiers node);
-  public void visit (CVQualifier node);
 
   // Package declarations
   public void visit (PackageDeclaration node);
@@ -40,6 +38,10 @@ public interface Visitor {
   public void visit (MemberAccessSpecifier node);
   public void visit (MemberVariableDeclaration node);
   public void visit (MemberRoutineDeclaration node);
+  public void visit (CVQualifiers node);
+  public void visit (CVQualifier node);
+  public void visit (RefQualifiers node);
+  public void visit (RefQualifier node);
 
   // Routine declarations
   public void visit (RoutineDeclaration node);

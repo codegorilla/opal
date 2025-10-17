@@ -235,7 +235,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
       st.add("modifiers", visit(node.modifiers()));
     st.add("name", visit(node.name()));
     st.add("parameters", visit(node.parameters()));
-    if (node.hasRoutineReturnType())
+    if (node.hasReturnType())
       st.add("returnType", visit(node.returnType()));
     st.add("body", visit(node.body()));
     return st;

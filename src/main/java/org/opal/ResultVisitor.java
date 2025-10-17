@@ -15,13 +15,11 @@ public interface ResultVisitor <T> {
   public T visit (Declarations node);
   public T visit (ExportSpecifier node);
   public T visit (Modifier node);
-  public T visit (CVQualifiers node);
-  public T visit (CVQualifier node);
 
   // Package declarations
   public T visit (PackageDeclaration node);
   public T visit (PackageName node);
-  
+
   // Import declarations
   public T visit (ImportDeclarations node);
   public T visit (ImportDeclaration node);
@@ -40,6 +38,10 @@ public interface ResultVisitor <T> {
   public T visit (MemberAccessSpecifier node);
   public T visit (MemberVariableDeclaration node);
   public T visit (MemberRoutineDeclaration node);
+  public T visit (CVQualifiers node);
+  public T visit (CVQualifier node);
+  public T visit (RefQualifiers node);
+  public T visit (RefQualifier node);
 
   // Routine declarations
   public T visit (RoutineDeclaration node);

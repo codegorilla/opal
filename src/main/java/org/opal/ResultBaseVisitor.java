@@ -24,8 +24,6 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
   public T visit (Declarations node) { return null; }
   public T visit (ExportSpecifier node) { return null; }
   public T visit (Modifier node) { return null; }
-  public T visit (CVQualifiers node) { return null; }
-  public T visit (CVQualifier node) { return null; }
 
   // Package declarations
   public T visit (PackageDeclaration node) { return null; }
@@ -49,6 +47,10 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
   public T visit (MemberAccessSpecifier node) { return null; }
   public T visit (MemberVariableDeclaration node) { return null; }
   public T visit (MemberRoutineDeclaration node) { return null; }
+  public T visit (CVQualifiers node) { return null; }
+  public T visit (CVQualifier node) { return null; }
+  public T visit (RefQualifiers node) { return null; }
+  public T visit (RefQualifier node) { return null; }
 
   // Routine declarations
   public T visit (RoutineDeclaration node) { return null; }
