@@ -6,7 +6,7 @@ import stdlib;
 private const var x: int = 1;
 const var y: int = 2;
 
-class Token extends Object, Number {
+final class Token extends Object, Number {
   private var a: float = 1.5;
   private var x: int = 1;
 

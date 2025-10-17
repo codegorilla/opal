@@ -9,6 +9,7 @@ import org.opal.ast.type.*;
 import org.stringtemplate.v4.*;
 
 import java.net.URL;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 // The purpose of this pass is to create a module interface unit.
@@ -26,6 +27,9 @@ public class Generator2 extends ResultBaseVisitor <ST> {
 
   // Stack for keeping track of current node path
   private final LinkedList<AstNode> ancestorStack = new LinkedList<>();
+
+  // Tracks passes on individual nodes
+  private HashMap<AstNode, Integer> passCount = new HashMap<>();
 
   public Generator2 (AstNode input) {
     super(input);
@@ -106,14 +110,39 @@ public class Generator2 extends ResultBaseVisitor <ST> {
 
   // To do: Might need a modifier table to map Opal modifiers to C++ modifiers
 
+  // How do we know what kind of modifiers we have? Do we check the parent node
+  // kind using 'instanceof'? Or should the modifiers be coded in the parser?
+
+  // Need to set a pass counter
+
+  private int modifiersPass = 0;
+
   public ST visit (Modifiers node) {
-    var st = group.getInstanceOf("declaration/modifiers");
-    for (var modifier : node.getModifiers())
-      st.add("modifier", visit(modifier));
-    return st;
+      var st = group.getInstanceOf("declaration/modifiers");
+      for (var modifier : node.getModifiers())
+        st.add("modifier", visit(modifier));
+      return st;
+  }
+  
+  public ST visit (Modifier node) {
+    if (ancestorStack.get(1) instanceof ClassDeclaration)
+      return classModifier(node);
+    else if (ancestorStack.get(1) instanceof RoutineDeclaration)
+      return routineModifier(node);
+    else if (ancestorStack.get(1) instanceof VariableDeclaration)
+      return variableModifier(node);
+    return null;
   }
 
-  public ST visit (Modifier node) {
+  public ST classModifier (Modifier node) {
+    return new ST(node.getToken().getLexeme());
+  }
+
+  public ST routineModifier (Modifier node) {
+    return new ST(node.getToken().getLexeme());
+  }
+
+  public ST variableModifier (Modifier node) {
     return new ST(node.getToken().getLexeme());
   }
 
@@ -122,6 +151,14 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   public ST visit (ClassDeclaration node) {
     if (!node.hasExportSpecifier()) {
       var st = group.getInstanceOf("declaration/classDeclaration");
+      if (node.modifiers().hasChildren()) {
+        modifiersPass = 1;
+        st.add("modifiers", visit(node.modifiers()));
+      }
+      if (node.modifiers().hasChildren()) {
+        modifiersPass = 2;
+        st.add("modifiers", visit(node.modifiers()));
+      }
       st.add("name", visit(node.name()));
       if (node.hasExtendsClause())
         st.add("extendsClause", visit(node.extendsClause()));
