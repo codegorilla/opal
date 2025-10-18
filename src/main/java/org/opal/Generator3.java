@@ -256,12 +256,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
     };
     return st;
   }
-
-  // Modifiers can go in several possible locations:
-  //   beginning: constexpr, virtual
-  //   middle: const, volatile (aka CV qualifiers)
-  //   end: final, override
-
+  
   // To do: Might need to put conditional on the return type
 
   private ST routineDeclarationPass1 (RoutineDeclaration node) {
