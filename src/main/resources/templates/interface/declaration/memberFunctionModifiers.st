@@ -1,3 +1,0 @@
-memberFunctionModifiers (modifier) ::= <<
-<modifier; separator=" ">
->>

@@ -1,3 +1,0 @@
-functionParameterTypeSpecifier (type) ::= <<
-<type>
->>

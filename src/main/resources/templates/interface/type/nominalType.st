@@ -1,3 +1,0 @@
-nominalType (name) ::= <<
-<name>
->>

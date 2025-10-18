@@ -1,3 +1,0 @@
-baseClasses (baseClass) ::= <<
-<baseClass; separator=", ">
->>

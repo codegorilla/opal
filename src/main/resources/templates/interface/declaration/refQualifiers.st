@@ -1,3 +1,0 @@
-refQualifiers (qualifier) ::= <<
-<qualifier; separator=" ">
->>

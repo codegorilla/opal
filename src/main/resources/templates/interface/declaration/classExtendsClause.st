@@ -1,3 +1,0 @@
-classExtendsClause (baseClasses) ::= <<
-: <baseClasses>
->>

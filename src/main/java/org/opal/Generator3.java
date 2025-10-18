@@ -33,7 +33,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
 
   public Generator3 (AstNode input) {
     super(input);
-    templateDirectoryUrl = this.getClass().getClassLoader().getResource("templates/implementation");
+    templateDirectoryUrl = this.getClass().getClassLoader().getResource("templates");
     group = new STGroupDir(templateDirectoryUrl);
   }
 
@@ -49,7 +49,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (TranslationUnit node) {
-    var st = group.getInstanceOf("translationUnit");
+    var st = group.getInstanceOf("implementation/translationUnit");
     st.add("packageDeclaration", visit(node.packageDeclaration()));
     st.add("declarations", visit(node.declarations()));
     pass += 1;
@@ -66,7 +66,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   // Package declaration is special in that there is only one, and it must appear at the top of the translation unit.
 
   public ST visit (PackageDeclaration node) {
-    var st = group.getInstanceOf("declaration/packageDeclaration");
+    var st = group.getInstanceOf("implementation/declaration/packageDeclaration");
     st.add("packageName", visit(node.packageName()));
     return st;
   }
@@ -74,7 +74,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   // For now just support single word package names
 
   public ST visit (PackageName node) {
-    var st = group.getInstanceOf("declaration/packageName");
+    var st = group.getInstanceOf("implementation/declaration/packageName");
     st.add("name", node.getToken().getLexeme());
     return st;
   }
@@ -82,7 +82,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   // COMMON DECLARATIONS
 
   public ST visit (Declarations node) {
-    var st = group.getInstanceOf("declaration/declarations");
+    var st = group.getInstanceOf("implementation/declaration/declarations");
     for (var child : node.getChildren())
       st.add("declaration", visit(child));
     return st;
@@ -104,7 +104,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
 
   public ST classDeclaration (ClassDeclaration node) {
     if (node.hasExportSpecifier()) {
-      var st = group.getInstanceOf("declaration/classDeclaration");
+      var st = group.getInstanceOf("common/declaration/classDeclaration");
       if (node.modifiers().hasChildren())
         st.add("modifiers", visit(node.modifiers()));
       st.add("name", visit(node.name()));
@@ -118,7 +118,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (ClassModifiers node) {
-    var st = group.getInstanceOf("declaration/classModifiers");
+    var st = group.getInstanceOf("common/declaration/classModifiers");
     for (var modifier : node.getModifiers())
       st.add("modifier", visit(modifier));
     return st;
@@ -129,39 +129,39 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (ClassExtendsClause node) {
-    var st = group.getInstanceOf("declaration/classExtendsClause");
+    var st = group.getInstanceOf("common/declaration/classExtendsClause");
     st.add("baseClasses", visit(node.baseClasses()));
     return st;
   }
 
   public ST visit (BaseClasses node) {
-    var st = group.getInstanceOf("declaration/baseClasses");
+    var st = group.getInstanceOf("common/declaration/baseClasses");
     for (var child : node.getChildren())
       st.add("baseClass", visit(child));
     return st;
   }
 
   public ST visit (BaseClass node) {
-    var st = group.getInstanceOf("declaration/baseClass");
+    var st = group.getInstanceOf("common/declaration/baseClass");
     st.add("name", node.getToken().getLexeme());
     return st;
   }
 
   public ST visit (ClassBody node) {
-    var st = group.getInstanceOf("declaration/classBody");
+    var st = group.getInstanceOf("common/declaration/classBody");
     for (var child : node.getChildren())
       st.add("memberDeclaration", visit(child));
     return st;
   }
 
   public ST visit (MemberAccessSpecifier node) {
-    var st = group.getInstanceOf("declaration/memberAccessSpecifier");
+    var st = group.getInstanceOf("common/declaration/memberAccessSpecifier");
     st.add("value", node.getToken().getLexeme());
     return st;
   }
 
   public ST visit (MemberVariableDeclaration node) {
-    var st = group.getInstanceOf("declaration/memberVariableDeclaration");
+    var st = group.getInstanceOf("common/declaration/memberVariableDeclaration");
     if (node.hasAccessSpecifier())
       st.add("accessSpecifier", visit(node.accessSpecifier()));
     else
@@ -176,7 +176,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (MemberRoutineDeclaration node) {
-    var st = group.getInstanceOf("declaration/memberFunctionDeclaration");
+    var st = group.getInstanceOf("common/declaration/memberFunctionDeclaration");
     if (node.hasAccessSpecifier())
       st.add("accessSpecifier", visit(node.accessSpecifier()));
     else
@@ -196,7 +196,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (MemberRoutineModifiers node) {
-    var st = group.getInstanceOf("declaration/memberFunctionModifiers");
+    var st = group.getInstanceOf("common/declaration/memberFunctionModifiers");
     if (modifiersPass == 0) {
       for (var modifier : node.getModifiers()) {
         var kind = modifier.getToken().getKind();
@@ -225,7 +225,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (CVQualifiers node) {
-    var st = group.getInstanceOf("declaration/cvQualifiers");
+    var st = group.getInstanceOf("common/declaration/cvQualifiers");
     for (var qualifier : node.getQualifiers())
       st.add("qualifier", visit(qualifier));
     return st;
@@ -236,7 +236,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (RefQualifiers node) {
-    var st = group.getInstanceOf("declaration/refQualifiers");
+    var st = group.getInstanceOf("common/declaration/refQualifiers");
     for (var qualifier : node.getQualifiers())
       st.add("qualifier", visit(qualifier));
     return st;
@@ -266,7 +266,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
 
   private ST routineDeclarationPass1 (RoutineDeclaration node) {
     if (node.hasExportSpecifier()) {
-      var st = group.getInstanceOf("declaration/functionDeclaration");
+      var st = group.getInstanceOf("common/declaration/functionDeclaration");
       if (node.modifiers().hasChildren()) {
         st.add("modifiers1", visit(node.modifiers()));
         st.add("modifiers2", visit(node.modifiers()));
@@ -281,7 +281,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   }
 
   private ST routineDeclarationPass2 (RoutineDeclaration node) {
-    var st = group.getInstanceOf("declaration/functionDefinition");
+    var st = group.getInstanceOf("implementation/declaration/functionDefinition");
     if (node.modifiers().hasChildren()) {
       st.add("modifiers1", visit(node.modifiers()));
       st.add("modifiers2", visit(node.modifiers()));
@@ -295,7 +295,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (RoutineModifiers node) {
-    var st = group.getInstanceOf("declaration/functionModifiers");
+    var st = group.getInstanceOf("common/declaration/functionModifiers");
     if (modifiersPass == 0) {
       for (var modifier : node.getModifiers()) {
         var kind = modifier.getToken().getKind();
@@ -321,14 +321,14 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (RoutineParameters node) {
-    var st = group.getInstanceOf("declaration/functionParameters");
+    var st = group.getInstanceOf("common/declaration/functionParameters");
     for (var child : node.getChildren())
       st.add("functionParameter", visit(child));
     return st;
   }
 
   public ST visit (RoutineParameter node) {
-    var st = group.getInstanceOf("declaration/functionParameter");
+    var st = group.getInstanceOf("common/declaration/functionParameter");
     visit(node.routineParameterName());
     st.add("typeSpecifier", visit(node.routineParameterTypeSpecifier()));
     st.add("declarator", stack.pop());
@@ -336,20 +336,20 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit(RoutineParameterName node) {
-    var st = group.getInstanceOf("declarator/simpleDeclarator");
+    var st = group.getInstanceOf("common/declarator/simpleDeclarator");
     st.add("name", node.getToken().getLexeme());
     stack.push(st);
     return null;
   }
 
   public ST visit (RoutineParameterTypeSpecifier node) {
-    var st = group.getInstanceOf("declaration/functionParameterTypeSpecifier");
+    var st = group.getInstanceOf("common/declaration/functionParameterTypeSpecifier");
     st.add("type", visit(node.type()));
     return st;
   }
 
   public ST visit (RoutineReturnType node) {
-    var st = group.getInstanceOf("declaration/functionReturnType");
+    var st = group.getInstanceOf("common/declaration/functionReturnType");
     stack.push(emptyDeclarator());
     st.add("type", visit(node.type()));
     st.add("declarator", stack.pop());
@@ -357,7 +357,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (RoutineBody node) {
-    var st = group.getInstanceOf("declaration/functionBody");
+    var st = group.getInstanceOf("common/declaration/functionBody");
     st.add("compoundStatement", visit(node.compoundStatement()));
     return st;
   }
@@ -380,7 +380,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
 
   public ST variableDeclaration (VariableDeclaration node) {
     if (node.hasExportSpecifier()) {
-      var st = group.getInstanceOf("declaration/variableDeclaration");
+      var st = group.getInstanceOf("common/declaration/variableDeclaration");
       if (node.modifiers().hasChildren())
         st.add("modifiers", visit(node.modifiers()));
       stack.push(visit(node.name()));
@@ -396,14 +396,14 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (VariableModifiers node) {
-    var st = group.getInstanceOf("declaration/variableModifiers");
+    var st = group.getInstanceOf("common/declaration/variableModifiers");
     for (var modifier : node.getModifiers())
       st.add("modifier", visit(modifier));
     return st;
   }
 
   public ST visit (LocalVariableDeclaration node) {
-    var st = group.getInstanceOf("declaration/localVariableDeclaration");
+    var st = group.getInstanceOf("common/declaration/localVariableDeclaration");
     stack.push(visit(node.variableName()));
     if (node.hasVariableTypeSpecifier())
       st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
@@ -421,20 +421,20 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   // explicit stack to facilitate the exchange.
 
   public ST visit (VariableName node) {
-    var st = group.getInstanceOf("declarator/simpleDeclarator");
+    var st = group.getInstanceOf("common/declarator/simpleDeclarator");
     st.add("name", node.getToken().getLexeme());
     return st;
   }
 
   public ST visit (VariableTypeSpecifier node) {
-    var st = group.getInstanceOf("declaration/variableTypeSpecifier");
+    var st = group.getInstanceOf("common/declaration/variableTypeSpecifier");
     st.add("type", visit(node.type()));
     return st;
   }
 
   public ST visit (VariableInitializer node) {
     if (node.hasChildren()) {
-      var st = group.getInstanceOf("declaration/variableInitializer");
+      var st = group.getInstanceOf("common/declaration/variableInitializer");
       st.add("expression", visit(node.expression()));
       return st;
     }
@@ -445,42 +445,42 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   // STATEMENTS ***************************************************************
 
   public ST visit (CompoundStatement node) {
-    var st = group.getInstanceOf("statement/compoundStatement");
+    var st = group.getInstanceOf("implementation/statement/compoundStatement");
     for (var child : node.getChildren())
       st.add("statement", visit(child));
     return st;
   }
 
   public ST visit (BreakStatement node) {
-    return group.getInstanceOf("statement/breakStatement");
+    return group.getInstanceOf("implementation/statement/breakStatement");
   }
 
   public ST visit (ContinueStatement node) {
-    return group.getInstanceOf("statement/continueStatement");
+    return group.getInstanceOf("implementation/statement/continueStatement");
   }
 
   public ST visit(DoUntilStatement node) {
-    var st = group.getInstanceOf("statement/doUntilStatement");
+    var st = group.getInstanceOf("implementation/statement/doUntilStatement");
     st.add("untilCondition", visit(node.untilCondition()));
     st.add("untilBody", visit(node.untilBody()));
     return st;
   }
 
   public ST visit(DoWhileStatement node) {
-    var st = group.getInstanceOf("statement/doWhileStatement");
+    var st = group.getInstanceOf("implementation/statement/doWhileStatement");
     st.add("whileCondition", visit(node.whileCondition()));
     st.add("whileBody", visit(node.whileBody()));
     return st;
   }
 
   public ST visit (ExpressionStatement node) {
-    var st = group.getInstanceOf("statement/expressionStatement");
+    var st = group.getInstanceOf("implementation/statement/expressionStatement");
     st.add("expression", visit(node.expression()));
     return st;
   }
 
   public ST visit (ForStatement node) {
-    var st = group.getInstanceOf("statement/rangeBasedForStatement");
+    var st = group.getInstanceOf("implementation/statement/rangeBasedForStatement");
     st.add("name", visit(node.name()));
     st.add("expression", visit(node.expression()));
     st.add("forBody", visit(node.forBody()));
@@ -490,7 +490,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   // If condition and body are passthroughs
 
   public ST visit (IfStatement node) {
-    var st = group.getInstanceOf("statement/ifStatement");
+    var st = group.getInstanceOf("implementation/statement/ifStatement");
     st.add("ifCondition", visit(node.ifCondition()));
     st.add("ifBody", visit(node.ifBody()));
     if (node.getChildCount() == 3)
@@ -499,13 +499,13 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (ElseClause node) {
-    var st = group.getInstanceOf("statement/elseClause");
+    var st = group.getInstanceOf("implementation/statement/elseClause");
     st.add("elseBody", visit(node.elseBody()));
     return st;
   }
 
   public ST visit (LoopStatement node) {
-    var st = group.getInstanceOf("statement/forStatement");
+    var st = group.getInstanceOf("implementation/statement/forStatement");
     if (node.hasLoopControl())
       st.add("forControl", visit(node.loopControl()));
     else
@@ -515,7 +515,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (LoopControl node) {
-    var st = group.getInstanceOf("statement/forControl");
+    var st = group.getInstanceOf("implementation/statement/forControl");
     if (node.hasLoopInitializer())
       st.add("forInitializer", visit(node.forInitializer()));
     if (node.hasLoopCondition())
@@ -538,7 +538,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (ReturnStatement node) {
-    var st = group.getInstanceOf("statement/returnStatement");
+    var st = group.getInstanceOf("implementation/statement/returnStatement");
     if (node.hasChildren())
       st.add("expression", visit(node.expression()));
     return st;
@@ -547,7 +547,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   // Until condition and body are passthroughs
 
   public ST visit (UntilStatement node) {
-    var st = group.getInstanceOf("statement/untilStatement");
+    var st = group.getInstanceOf("implementation/statement/untilStatement");
     st.add("untilCondition", visit(node.untilCondition()));
     st.add("untilBody", visit(node.untilBody()));
     return st;
@@ -556,7 +556,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   // While condition and body are passthroughs
 
   public ST visit (WhileStatement node) {
-    var st = group.getInstanceOf("statement/whileStatement");
+    var st = group.getInstanceOf("implementation/statement/whileStatement");
     st.add("whileCondition", visit(node.whileCondition()));
     st.add("whileBody", visit(node.whileBody()));
     return st;
@@ -565,7 +565,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   // EXPRESSIONS **************************************************************
 
   public ST visit (Expression node) {
-    var st = group.getInstanceOf("expression/expression");
+    var st = group.getInstanceOf("common/expression/expression");
     st.add("value", visit(node.getChild(0)));
     return st;
   }
@@ -573,7 +573,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   // Perhaps if we know this is the root node, we don't need parenthesis.
 
   public ST visit (BinaryExpression node) {
-    var st = group.getInstanceOf("expression/binaryExpression");
+    var st = group.getInstanceOf("common/expression/binaryExpression");
     st.add("operation", node.getToken().getLexeme());
     st.add("leftExpression",  visit(node.leftExpression()));
     st.add("rightExpression", visit(node.rightExpression()));
@@ -581,7 +581,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (UnaryExpression node) {
-    var st = group.getInstanceOf("expression/unaryExpression");
+    var st = group.getInstanceOf("common/expression/unaryExpression");
     st.add("operation", node.getToken().getLexeme());
     st.add("expression",  visit(node.expression()));
     return st;
@@ -590,7 +590,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   // To do: Set operation based on lexeme
 
   public ST visit (CastExpression node) {
-    var st = group.getInstanceOf("expression/castExpression");
+    var st = group.getInstanceOf("common/expression/castExpression");
     var operation = switch(node.getToken().getLexeme()) {
       case "cast" -> "static_cast";
       case "divine" -> "dynamic_cast";
@@ -604,84 +604,84 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (ArraySubscript node) {
-    var st = group.getInstanceOf("expression/arraySubscript");
+    var st = group.getInstanceOf("common/expression/arraySubscript");
     st.add("name", visit(node.name()));
     st.add("subscript", visit(node.subscript()));
     return st;
   }
 
   public ST visit (DereferencingMemberAccess node) {
-    var st = group.getInstanceOf("expression/dereferencingMemberAccess");
+    var st = group.getInstanceOf("common/expression/dereferencingMemberAccess");
     st.add("name", visit(node.name()));
     st.add("member", visit(node.member()));
     return st;
   }
 
   public ST visit (MemberAccess node) {
-    var st = group.getInstanceOf("expression/memberAccess");
+    var st = group.getInstanceOf("common/expression/memberAccess");
     st.add("name", visit(node.name()));
     st.add("member", visit(node.member()));
     return st;
   }
 
   public ST visit (RoutineCall node) {
-    var st = group.getInstanceOf("expression/functionCall");
+    var st = group.getInstanceOf("common/expression/functionCall");
     st.add("name", visit(node.name()));
     st.add("arguments", visit(node.routineArguments()));
     return st;
   }
 
   public ST visit (RoutineArguments node) {
-    var st = group.getInstanceOf("expression/functionArguments");
+    var st = group.getInstanceOf("common/expression/functionArguments");
     for (var routineArgument : node.getChildren())
       st.add("argument", visit(routineArgument));
     return st;
   }
 
   public ST visit (RoutineArgument node) {
-    var st = group.getInstanceOf("expression/functionArgument");
+    var st = group.getInstanceOf("common/expression/functionArgument");
     st.add("expression", visit(node.expression()));
     return st;
   }
 
   public ST visit (Name node) {
-    var st = group.getInstanceOf("expression/name");
+    var st = group.getInstanceOf("common/expression/name");
     st.add("value", node.getToken().getLexeme());
     return st;
   }
 
   public ST visit (NullLiteral node) {
-    var st = group.getInstanceOf("expression/expression");
+    var st = group.getInstanceOf("common/expression/expression");
     st.add("value", "nullptr");
     return st;
   }
 
   public ST visit (BooleanLiteral node) {
-    var st = group.getInstanceOf("expression/expression");
+    var st = group.getInstanceOf("common/expression/expression");
     st.add("value", node.getToken().getLexeme());
     return st;
   }
 
   public ST visit (CharacterLiteral node) {
-    var st = group.getInstanceOf("expression/expression");
+    var st = group.getInstanceOf("common/expression/expression");
     st.add("value", node.getToken().getLexeme());
     return st;
   }
 
   public ST visit (FloatingPointLiteral node) {
-    var st = group.getInstanceOf("expression/expression");
+    var st = group.getInstanceOf("common/expression/expression");
     st.add("value", node.getToken().getLexeme());
     return st;
   }
 
   public ST visit (IntegerLiteral node) {
-    var st = group.getInstanceOf("expression/expression");
+    var st = group.getInstanceOf("common/expression/expression");
     st.add("value", node.getToken().getLexeme());
     return st;
   }
 
   public ST visit (StringLiteral node) {
-    var st = group.getInstanceOf("expression/expression");
+    var st = group.getInstanceOf("common/expression/expression");
     st.add("value", node.getToken().getLexeme());
     return st;
   }
@@ -689,7 +689,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   // TYPES ********************************************************************
 
   public ST visit (ArrayType node) {
-    var st = group.getInstanceOf("declarator/arrayDeclarator");
+    var st = group.getInstanceOf("common/declarator/arrayDeclarator");
     st.add("directDeclarator", stack.pop());
     if (node.getChildCount() == 2)
       st.add("expression", visit(node.expression()));
@@ -698,20 +698,20 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (NominalType node) {
-    var st = group.getInstanceOf("type/nominalType");
+    var st = group.getInstanceOf("common/type/nominalType");
     st.add("name", node.getToken().getLexeme());
     return st;
   }
 
   public ST visit (TemplateInstantiation node) {
-    var st = group.getInstanceOf("type/templateInstantiation");
+    var st = group.getInstanceOf("common/type/templateInstantiation");
     st.add("name", visit(node.getChild(0)));
     st.add("arguments", visit(node.getChild(1)));
     return st;
   }
 
   public ST visit (TemplateArguments node) {
-    var st = group.getInstanceOf("type/templateArguments");
+    var st = group.getInstanceOf("common/type/templateArguments");
     for (var child : node.getChildren())
       st.add("argument", visit(child));
     return st;
@@ -720,7 +720,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   public ST visit (TemplateArgument node) {
     // Put empty declarator on the stack
     stack.push(new ST(""));
-    var st = group.getInstanceOf("type/templateArgument");
+    var st = group.getInstanceOf("common/type/templateArgument");
     st.add("type", visit(node.getChild(0)));
     st.add("declarator", stack.pop());
     return st;
@@ -737,7 +737,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   // argument.
 
   public ST visit (PointerType node) {
-    var st = group.getInstanceOf("declarator/pointerDeclarator");
+    var st = group.getInstanceOf("common/declarator/pointerDeclarator");
     st.add("directDeclarator", stack.pop());
     stack.push(st);
     return visit(node.baseType());
@@ -748,7 +748,7 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   // arrays.
 
   public ST visit (PrimitiveType node) {
-    var st = group.getInstanceOf("type/primitiveType");
+    var st = group.getInstanceOf("common/type/primitiveType");
     st.add("name", node.getToken().getLexeme());
     return st;
   }

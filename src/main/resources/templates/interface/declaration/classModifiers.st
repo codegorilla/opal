@@ -1,3 +1,0 @@
-classModifiers (modifier) ::= <<
-<modifier; separator=" ">
->>

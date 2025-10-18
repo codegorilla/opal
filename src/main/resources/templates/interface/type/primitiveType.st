@@ -1,3 +1,0 @@
-primitiveType (name) ::= <<
-<name>
->>

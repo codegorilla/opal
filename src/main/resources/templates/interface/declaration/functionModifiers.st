@@ -1,3 +1,0 @@
-functionModifiers (modifier) ::= <<
-<modifier; separator=" ">
->>

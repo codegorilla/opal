@@ -1,3 +1,0 @@
-cvQualifiers (qualifier) ::= <<
-<qualifier; separator=" ">
->>

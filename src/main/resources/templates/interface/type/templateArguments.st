@@ -1,3 +1,0 @@
-templateArguments (argument) ::= <<
-\<<argument; separator=",">\>
->>

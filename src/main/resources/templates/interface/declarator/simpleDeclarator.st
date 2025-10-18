@@ -1,3 +1,0 @@
-simpleDeclarator (name) ::= <<
-<name>
->>

@@ -1,3 +1,0 @@
-memberAccessSpecifier (value) ::= <<
-<value>
->>

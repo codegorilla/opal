@@ -1,3 +1,0 @@
-functionParameters (functionParameter) ::= <<
-(<functionParameter; separator=", ">)
->>
