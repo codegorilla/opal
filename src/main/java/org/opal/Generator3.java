@@ -404,12 +404,14 @@ public class Generator3 extends ResultBaseVisitor <ST> {
 
   public ST visit (LocalVariableDeclaration node) {
     var st = group.getInstanceOf("common/declaration/localVariableDeclaration");
-    stack.push(visit(node.variableName()));
-    if (node.hasVariableTypeSpecifier())
-      st.add("typeSpecifier", visit(node.variableTypeSpecifier()));
+    stack.push(visit(node.name()));
+    if (node.hasTypeSpecifier())
+      st.add("typeSpecifier", visit(node.typeSpecifier()));
+    else
+      st.add("typeSpecifier", "auto");
     st.add("declarator", stack.pop());
-    if (node.hasVariableInitializer())
-      st.add("initializer", visit(node.variableInitializer()));
+    if (node.hasInitializer())
+      st.add("initializer", visit(node.initializer()));
     return st;
   }
 

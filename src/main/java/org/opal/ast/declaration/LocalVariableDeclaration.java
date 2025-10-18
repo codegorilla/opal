@@ -21,11 +21,11 @@ public class LocalVariableDeclaration extends AstNode {
     return v.visit(this);
   }
 
-  public boolean hasVariableTypeSpecifier () {
+  public boolean hasTypeSpecifier () {
     return getChild(2) != null;
   }
 
-  public boolean hasVariableInitializer () {
+  public boolean hasInitializer () {
     return getChild(3) != null;
   }
 
@@ -33,15 +33,15 @@ public class LocalVariableDeclaration extends AstNode {
     return getChild(0);
   }
 
-  public AstNode variableName () {
+  public AstNode name () {
     return getChild(1);
   }
 
-  public AstNode variableTypeSpecifier () {
+  public AstNode typeSpecifier () {
     return getChild(2);
   }
 
-  public AstNode variableInitializer () {
+  public AstNode initializer () {
     return getChild(3);
   }
 
