@@ -77,6 +77,7 @@ public class Lexer {
     keywordLookup.put("module", Token.Kind.MODULE);
     keywordLookup.put("new", Token.Kind.NEW);
     keywordLookup.put("nil", Token.Kind.NIL);
+    keywordLookup.put("noexcept", Token.Kind.NOEXCEPT);
     keywordLookup.put("null", Token.Kind.NULL);
     keywordLookup.put("or", Token.Kind.OR);
     keywordLookup.put("override", Token.Kind.OVERRIDE);

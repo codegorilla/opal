@@ -14,13 +14,13 @@ final class Token extends Object, Number {
     var t: int = 0;
   }
 
-  virtual final def getToken () -> int {
+  virtual final def getToken () const -> int {
     var t: int = 0;
   }
 
 }
 
-constexpr def test () -> int {
+constexpr noexcept def test () -> int {
   println("Hello world!");
 
   while (x != 5)

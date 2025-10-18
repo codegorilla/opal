@@ -86,6 +86,7 @@ public class Token {
     NAMESPACE,
     NEW,
     NIL,
+    NOEXCEPT,
     NULL,
     OR,
     OVERRIDE,

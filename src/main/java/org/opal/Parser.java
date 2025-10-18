@@ -229,6 +229,7 @@ public class Parser {
       kind == Token.Kind.CONSTEXPR ||
       kind == Token.Kind.FINAL     ||
       kind == Token.Kind.OVERRIDE  ||
+      kind == Token.Kind.NOEXCEPT  ||
       kind == Token.Kind.STATIC    ||
       kind == Token.Kind.VIRTUAL   ||
       kind == Token.Kind.VOLATILE

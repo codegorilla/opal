@@ -11,6 +11,7 @@ import org.stringtemplate.v4.*;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 // The purpose of this pass is to create a module interface unit.
 
@@ -28,8 +29,8 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   // Stack for keeping track of current node path
   private final LinkedList<AstNode> ancestorStack = new LinkedList<>();
 
-  // Tracks passes on individual nodes
-  private HashMap<AstNode, Integer> passCount = new HashMap<>();
+  // Tracks modifier passes
+  private int modifiersPass = 0;
 
   public Generator2 (AstNode input) {
     super(input);
@@ -198,10 +199,10 @@ public class Generator2 extends ResultBaseVisitor <ST> {
       st.add("accessSpecifier", visit(node.accessSpecifier()));
     else
       st.add("accessSpecifier", "public");
-    if (node.modifiers().hasChildren())
+    if (node.modifiers().hasChildren()) {
       st.add("modifiers1", visit(node.modifiers()));
-    if (node.modifiers().hasChildren())
       st.add("modifiers2", visit(node.modifiers()));
+    }
     st.add("name", visit(node.name()));
     st.add("parameters", visit(node.parameters()));
     if (node.cvQualifiers().hasChildren())
@@ -212,22 +213,28 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // Tracks modifier passes
-  private int modifiersPass = 0;
-
   public ST visit (MemberRoutineModifiers node) {
     var st = group.getInstanceOf("declaration/memberFunctionModifiers");
     if (modifiersPass == 0) {
       for (var modifier : node.getModifiers()) {
-        var st0 = visit(modifier);
-        if (st0.render().equals("virtual"))
-          st.add("modifier", st0);
+        var kind = modifier.getToken().getKind();
+        if (
+          kind == Token.Kind.CONSTEXPR ||
+          kind == Token.Kind.VIRTUAL
+        ) {
+          st.add("modifier", visit(modifier));
+        }
       }
     } else {
       for (var modifier : node.getModifiers()) {
-        var st1 = visit(modifier);
-        if (st1.render().equals("final"))
-          st.add("modifier", st1);
+        var kind = modifier.getToken().getKind();
+        if (
+          kind == Token.Kind.FINAL    ||
+          kind == Token.Kind.NOEXCEPT ||
+          kind == Token.Kind.OVERRIDE
+        ) {
+          st.add("modifier", visit(modifier));
+        }
       }
     }
     // Alternate between first and second pass
@@ -263,7 +270,9 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     if (!node.hasExportSpecifier()) {
       var st = group.getInstanceOf("declaration/functionDeclaration");
       if (node.modifiers().hasChildren())
-        st.add("modifiers", visit(node.modifiers()));
+        st.add("modifiers1", visit(node.modifiers()));
+      if (node.modifiers().hasChildren())
+        st.add("modifiers2", visit(node.modifiers()));
       st.add("name", visit(node.name()));
       st.add("parameters", visit(node.parameters()));
       st.add("returnType", visit(node.returnType()));
@@ -275,8 +284,23 @@ public class Generator2 extends ResultBaseVisitor <ST> {
 
   public ST visit (RoutineModifiers node) {
     var st = group.getInstanceOf("declaration/functionModifiers");
-    for (var modifier : node.getModifiers())
-      st.add("modifier", visit(modifier));
+    if (modifiersPass == 0) {
+      for (var modifier : node.getModifiers()) {
+        var kind = modifier.getToken().getKind();
+        if (kind == Token.Kind.CONSTEXPR) {
+          st.add("modifier", visit(modifier));
+        }
+      }
+    } else {
+      for (var modifier : node.getModifiers()) {
+        var kind = modifier.getToken().getKind();
+        if (kind == Token.Kind.NOEXCEPT) {
+          st.add("modifier", visit(modifier));
+        }
+      }
+    }
+    // Alternate between first and second pass
+    modifiersPass = (modifiersPass + 1) % 2;
     return st;
   }
 
