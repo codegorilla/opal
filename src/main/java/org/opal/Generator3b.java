@@ -76,53 +76,23 @@ public class Generator3b extends ResultBaseVisitor <ST> {
 
   public ST visit (ClassDeclaration node) {
     if (node.hasExportSpecifier()) {
-      var st = group.getInstanceOf("common/declaration/classDeclaration");
-      if (node.modifiers().hasChildren())
-        st.add("modifiers", visit(node.modifiers()));
-      st.add("name", visit(node.name()));
-      if (node.hasExtendsClause())
-        st.add("extendsClause", visit(node.extendsClause()));
-      st.add("body", visit(node.body()));
+      var st = visit(node.body());
       return st;
     } else {
       return null;
     }
   }
 
-  public ST visit (ClassModifiers node) {
-    var st = group.getInstanceOf("common/declaration/classModifiers");
-    for (var modifier : node.getModifiers())
-      st.add("modifier", visit(modifier));
-    return st;
-  }
+  // Need this as prefix to each member function
 
   public ST visit (ClassName node) {
     return new ST(node.getToken().getLexeme());
   }
 
-  public ST visit (ClassExtendsClause node) {
-    var st = group.getInstanceOf("common/declaration/classExtendsClause");
-    st.add("baseClasses", visit(node.baseClasses()));
-    return st;
-  }
-
-  public ST visit (BaseClasses node) {
-    var st = group.getInstanceOf("common/declaration/baseClasses");
-    for (var child : node.getChildren())
-      st.add("baseClass", visit(child));
-    return st;
-  }
-
-  public ST visit (BaseClass node) {
-    var st = group.getInstanceOf("common/declaration/baseClass");
-    st.add("name", node.getToken().getLexeme());
-    return st;
-  }
-
   public ST visit (ClassBody node) {
-    var st = group.getInstanceOf("common/declaration/classBody");
+    var st = group.getInstanceOf("implementation/definition/memberDefinitions");
     for (var child : node.getChildren())
-      st.add("memberDeclaration", visit(child));
+      st.add("memberDefinition", visit(child));
     return st;
   }
 
@@ -201,34 +171,6 @@ public class Generator3b extends ResultBaseVisitor <ST> {
 
   public ST visit (RefQualifier node) {
     return new ST(node.getToken().getLexeme());
-  }
-
-  // To do: I believe all member variables are defined inside the class body,
-  // not outside. Needs to be verified. If so, then these do not need to appear
-  // in gen3b.
-
-  public ST visit (MemberVariableDeclaration node) {
-    var st = group.getInstanceOf("common/declaration/memberVariableDeclaration");
-    if (node.hasAccessSpecifier())
-      st.add("accessSpecifier", visit(node.accessSpecifier()));
-    else
-      st.add("accessSpecifier", "public");
-    if (node.modifiers().hasChildren())
-      st.add("modifiers", visit(node.modifiers()));
-    stack.push(visit(node.name()));
-    if (node.hasTypeSpecifier())
-      st.add("typeSpecifier", visit(node.typeSpecifier()));
-    st.add("declarator", stack.pop());
-    if (node.hasInitializer())
-      st.add("initializer", visit(node.initializer()));
-    return st;
-  }
-
-  public ST visit (MemberVariableModifiers node) {
-    var st = group.getInstanceOf("common/declaration/memberVariableModifiers");
-    for (var modifier : node.getModifiers())
-      st.add("modifier", visit(modifier));
-    return st;
   }
 
   // ROUTINE DECLARATIONS
