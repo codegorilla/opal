@@ -96,22 +96,18 @@ public class Generator3b extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  public ST visit (MemberAccessSpecifier node) {
-    var st = group.getInstanceOf("common/declaration/memberAccessSpecifier");
-    st.add("value", node.getToken().getLexeme());
-    return st;
-  }
+  // Access specifiers are not used in module implementation file
+
+  // To do: Need to add class name to front of name
 
   public ST visit (MemberRoutineDeclaration node) {
-    var st = group.getInstanceOf("common/declaration/memberFunctionDeclaration");
-    if (node.hasAccessSpecifier())
-      st.add("accessSpecifier", visit(node.accessSpecifier()));
-    else
-      st.add("accessSpecifier", "public");
+    var st = group.getInstanceOf("implementation/definition/memberFunctionDefinition");
     if (node.modifiers().hasChildren()) {
       st.add("modifiers1", visit(node.modifiers()));
       st.add("modifiers2", visit(node.modifiers()));
     }
+    // Work in progress
+    st.add("className", "Token");
     st.add("name", visit(node.name()));
     st.add("parameters", visit(node.parameters()));
     if (node.cvQualifiers().hasChildren())
@@ -119,6 +115,7 @@ public class Generator3b extends ResultBaseVisitor <ST> {
     if (node.refQualifiers().hasChildren())
       st.add("refQualifiers", visit(node.refQualifiers()));
     st.add("returnType", visit(node.returnType()));
+    st.add("body", visit(node.body()));
     return st;
   }
 
@@ -128,8 +125,7 @@ public class Generator3b extends ResultBaseVisitor <ST> {
       for (var modifier : node.getModifiers()) {
         var kind = modifier.getToken().getKind();
         if (
-          kind == Token.Kind.CONSTEXPR ||
-          kind == Token.Kind.VIRTUAL
+          kind == Token.Kind.CONSTEXPR
         ) {
           st.add("modifier", visit(modifier));
         }
@@ -138,9 +134,7 @@ public class Generator3b extends ResultBaseVisitor <ST> {
       for (var modifier : node.getModifiers()) {
         var kind = modifier.getToken().getKind();
         if (
-          kind == Token.Kind.FINAL    ||
-          kind == Token.Kind.NOEXCEPT ||
-          kind == Token.Kind.OVERRIDE
+          kind == Token.Kind.NOEXCEPT
         ) {
           st.add("modifier", visit(modifier));
         }
