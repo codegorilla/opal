@@ -38,8 +38,8 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     group = new STGroupDir(templateDirectoryUrl);
   }
 
-  public void process () {
-    visit(root);
+  public ST process () {
+    return visit(root);
   }
 
   public ST visit (AstNode node) {

@@ -1,13 +1,11 @@
 declarationGroup (typeDeclarations, routineDeclarations, variableDeclarations, classDeclarations) ::=  <<
-// Implementation unit
+// Declarations
 
-namespace {
-  <typeDeclarations; separator="\n\n">
+<typeDeclarations; separator="\n\n">
 
-  <routineDeclarations; separator="\n\n">
+<routineDeclarations; separator="\n\n">
 
-  <variableDeclarations; separator="\n\n">
+<variableDeclarations; separator="\n\n">
 
-  <classDeclarations; separator="\n\n">
-}
+<classDeclarations; separator="\n\n">
 >>

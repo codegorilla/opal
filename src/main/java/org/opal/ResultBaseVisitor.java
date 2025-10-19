@@ -11,11 +11,11 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
 
   AstNode root;
 
-  public ResultBaseVisitor(AstNode input) {
+  public ResultBaseVisitor (AstNode input) {
     root = input;
   }
 
-  public void process () {}
+  public T process () { return null; }
 
   // DECLARATIONS
 

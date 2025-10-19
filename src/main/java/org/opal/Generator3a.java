@@ -4,7 +4,6 @@ import org.opal.ast.AstNode;
 import org.opal.ast.TranslationUnit;
 import org.opal.ast.declaration.*;
 import org.opal.ast.expression.*;
-import org.opal.ast.statement.*;
 import org.opal.ast.type.*;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroupDir;
@@ -46,8 +45,8 @@ public class Generator3a extends ResultBaseVisitor <ST> {
     group = new STGroupDir(templateDirectoryUrl);
   }
 
-  public void process () {
-    visit(root);
+  public ST process () {
+    return visit(root);
   }
 
   public ST visit (AstNode node) {
@@ -67,10 +66,7 @@ public class Generator3a extends ResultBaseVisitor <ST> {
     st.add("routineDeclarations", visit(node.declarations()));
     st.add("variableDeclarations", visit(node.declarations()));
     st.add("classDeclarations", visit(node.declarations()));
-    // Print out separator for now, but move to Gen3 later
-    System.out.println("---");
-    System.out.println(st.render());
-    return null;
+    return st;
   }
 
   // DECLARATIONS *************************************************************

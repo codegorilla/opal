@@ -1,7 +1,5 @@
 definitionGroup (definitions) ::=  <<
-// Implementation unit
+// Definitions
 
-namespace {
-  <definitions; separator="\n\n">
-}
+<definitions; separator="\n\n">
 >>

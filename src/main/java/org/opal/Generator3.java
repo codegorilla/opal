@@ -12,7 +12,8 @@ import org.stringtemplate.v4.STGroupDir;
 import java.net.URL;
 import java.util.LinkedList;
 
-// The purpose of this pass is to create function prototypes within a module implementation unit.
+// The purpose of this pass is to aggregate declarations and definitions for
+// the module implementation unit.
 
 public class Generator3 extends ResultBaseVisitor <ST> {
 
@@ -37,8 +38,12 @@ public class Generator3 extends ResultBaseVisitor <ST> {
     group = new STGroupDir(templateDirectoryUrl);
   }
 
-  public void process () {
-    visit(root);
+  public ST process () {
+    var st = visit(root);
+    System.out.println("---");
+    System.out.println(st.render());
+    // Just return null for now. Maybe return ST later.
+    return null;
   }
 
   public ST visit (AstNode node) {
@@ -51,12 +56,13 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   public ST visit (TranslationUnit node) {
     var st = group.getInstanceOf("implementation/translationUnit");
     st.add("packageDeclaration", visit(node.packageDeclaration()));
-    st.add("declarations", visit(node.declarations()));
-    pass += 1;
-    st.add("declarations", visit(node.declarations()));
-    System.out.println("---");
-    System.out.println(st.render());
-    return null;
+    // Add in declarations
+    var generator3a = new Generator3a(node);
+    st.add("declarations", generator3a.process());
+    // Add in definitions
+    var generator3b = new Generator3b(node);
+    st.add("definitions", generator3b.process());
+    return st;
   }
 
   // DECLARATIONS *************************************************************

@@ -27,9 +27,6 @@ public class Generator3b extends ResultBaseVisitor <ST> {
   // Stack for keeping track of current node path
   private final LinkedList<AstNode> ancestorStack = new LinkedList<>();
 
-  // I don't think we need to worry about passes in the definition phase
-  private int pass = 1;
-
   // Tracks modifier passes
   private int modifiersPass = 0;
 
@@ -39,8 +36,8 @@ public class Generator3b extends ResultBaseVisitor <ST> {
     group = new STGroupDir(templateDirectoryUrl);
   }
 
-  public void process () {
-    visit(root);
+  public ST process () {
+    return visit(root);
   }
 
   public ST visit (AstNode node) {
@@ -53,9 +50,7 @@ public class Generator3b extends ResultBaseVisitor <ST> {
   public ST visit (TranslationUnit node) {
     var st = group.getInstanceOf("implementation/definitionGroup");
     st.add("definitions", visit(node.declarations()));
-    System.out.println("---");
-    System.out.println(st.render());
-    return null;
+    return st;
   }
 
   // DECLARATIONS *************************************************************
