@@ -52,7 +52,7 @@ public class BaseVisitor implements Visitor {
   public void visit (CVQualifier node) {}
   public void visit (RefQualifiers node) {}
   public void visit (RefQualifier node) {}
-  
+
   // Member variable declarations
   public void visit (MemberVariableDeclaration node) {}
   public void visit (MemberVariableModifiers node) {}

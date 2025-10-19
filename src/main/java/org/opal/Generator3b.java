@@ -166,12 +166,21 @@ public class Generator3b extends ResultBaseVisitor <ST> {
       st.add("accessSpecifier", visit(node.accessSpecifier()));
     else
       st.add("accessSpecifier", "public");
+    if (node.modifiers().hasChildren())
+      st.add("modifiers", visit(node.modifiers()));
     stack.push(visit(node.name()));
     if (node.hasTypeSpecifier())
       st.add("typeSpecifier", visit(node.typeSpecifier()));
     st.add("declarator", stack.pop());
     if (node.hasInitializer())
       st.add("initializer", visit(node.initializer()));
+    return st;
+  }
+
+  public ST visit (MemberVariableModifiers node) {
+    var st = group.getInstanceOf("common/declaration/memberVariableModifiers");
+    for (var modifier : node.getModifiers())
+      st.add("modifier", visit(modifier));
     return st;
   }
 
