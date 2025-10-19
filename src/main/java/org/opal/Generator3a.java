@@ -57,9 +57,7 @@ public class Generator3a extends ResultBaseVisitor <ST> {
 
   // For gen3a, translation unit should just have declarations. Each visit to
   // declarations will increment a pass counter, which will cause declarations
-  // to appear in the following order: routines, variables, classes.
-
-  // Note: We should probably also do class forward declarations.
+  // to appear in the following order: types, routines, variables, classes.
 
   public ST visit (TranslationUnit node) {
     var st = group.getInstanceOf("implementation/declarationGroup");
