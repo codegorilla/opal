@@ -1,0 +1,3 @@
+classForwardDeclaration (name) ::= <<
+class <name>;
+>>

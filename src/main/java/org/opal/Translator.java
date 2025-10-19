@@ -60,8 +60,18 @@ public class Translator {
     generator1.process();
     var generator2 = new Generator2(root);
     generator2.process();
-    var generator3 = new Generator3(root);
-    generator3.process();
+
+    // Ultimately we need to create a module implementation unit that is a
+    // combination of declarations and definitions. These will each be handled
+    // as separate passes (Generator3a and Generator3b) and combined by an
+    // aggregation pass (Generator3).
+
+    // For now just do the definition part
+    var generator3a = new Generator3a(root);
+    generator3a.process();
+    
+//    var generator3 = new Generator3(root);
+//    generator3.process();
   }
 
 }
