@@ -66,10 +66,11 @@ public class Translator {
     // as separate passes (Generator3a and Generator3b) and combined by an
     // aggregation pass (Generator3).
 
-    // For now just do the definition part
     var generator3a = new Generator3a(root);
     generator3a.process();
-    
+    var generator3b = new Generator3b(root);
+    generator3b.process();
+
 //    var generator3 = new Generator3(root);
 //    generator3.process();
   }

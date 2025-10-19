@@ -12,7 +12,8 @@ import org.stringtemplate.v4.STGroupDir;
 import java.net.URL;
 import java.util.LinkedList;
 
-// The purpose of this pass is to create definitions within a module implementation unit.
+// The purpose of this pass is to create definitions within a module
+// implementation unit.
 
 public class Generator3b extends ResultBaseVisitor <ST> {
 
@@ -26,6 +27,7 @@ public class Generator3b extends ResultBaseVisitor <ST> {
   // Stack for keeping track of current node path
   private final LinkedList<AstNode> ancestorStack = new LinkedList<>();
 
+  // I don't think we need to worry about passes in the definition phase
   private int pass = 1;
 
   // Tracks modifier passes
@@ -49,11 +51,8 @@ public class Generator3b extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (TranslationUnit node) {
-    var st = group.getInstanceOf("implementation/translationUnit");
-    st.add("packageDeclaration", visit(node.packageDeclaration()));
-    st.add("declarations", visit(node.declarations()));
-    pass += 1;
-    st.add("declarations", visit(node.declarations()));
+    var st = group.getInstanceOf("implementation/definitionGroup");
+    st.add("definitions", visit(node.declarations()));
     System.out.println("---");
     System.out.println(st.render());
     return null;
@@ -61,30 +60,12 @@ public class Generator3b extends ResultBaseVisitor <ST> {
 
   // DECLARATIONS *************************************************************
 
-  // PACKAGE DECLARATIONS
-
-  // Package declaration is special in that there is only one, and it must appear at the top of the translation unit.
-
-  public ST visit (PackageDeclaration node) {
-    var st = group.getInstanceOf("implementation/declaration/packageDeclaration");
-    st.add("packageName", visit(node.packageName()));
-    return st;
-  }
-
-  // For now just support single word package names
-
-  public ST visit (PackageName node) {
-    var st = group.getInstanceOf("implementation/declaration/packageName");
-    st.add("name", node.getToken().getLexeme());
-    return st;
-  }
-
   // COMMON DECLARATIONS
 
   public ST visit (Declarations node) {
-    var st = group.getInstanceOf("implementation/declaration/declarations");
+    var st = group.getInstanceOf("implementation/definition/definitions");
     for (var child : node.getChildren())
-      st.add("declaration", visit(child));
+      st.add("definition", visit(child));
     return st;
   }
 
@@ -96,13 +77,9 @@ public class Generator3b extends ResultBaseVisitor <ST> {
 
   // CLASS DECLARATIONS
 
-  // Might need declarations and definitions passes just as with routines
+  // Need to revamp this to just show member routine definitions
 
   public ST visit (ClassDeclaration node) {
-    return (pass == 1) ? classDeclaration(node) : null;
-  }
-
-  public ST classDeclaration (ClassDeclaration node) {
     if (node.hasExportSpecifier()) {
       var st = group.getInstanceOf("common/declaration/classDeclaration");
       if (node.modifiers().hasChildren())
@@ -231,6 +208,10 @@ public class Generator3b extends ResultBaseVisitor <ST> {
     return new ST(node.getToken().getLexeme());
   }
 
+  // To do: I believe all member variables are defined inside the class body,
+  // not outside. Needs to be verified. If so, then these do not need to appear
+  // in gen3b.
+
   public ST visit (MemberVariableDeclaration node) {
     var st = group.getInstanceOf("common/declaration/memberVariableDeclaration");
     if (node.hasAccessSpecifier())
@@ -257,34 +238,9 @@ public class Generator3b extends ResultBaseVisitor <ST> {
 
   // ROUTINE DECLARATIONS
 
-  public ST visit (RoutineDeclaration node) {
-    var st = switch (pass) {
-      case 1 -> routineDeclarationPass1(node);
-      case 2 -> routineDeclarationPass2(node);
-      default -> null;
-    };
-    return st;
-  }
-  
   // To do: Might need to put conditional on the return type
 
-  private ST routineDeclarationPass1 (RoutineDeclaration node) {
-    if (node.hasExportSpecifier()) {
-      var st = group.getInstanceOf("common/declaration/functionDeclaration");
-      if (node.modifiers().hasChildren()) {
-        st.add("modifiers1", visit(node.modifiers()));
-        st.add("modifiers2", visit(node.modifiers()));
-      }
-      st.add("name", visit(node.name()));
-      st.add("parameters", visit(node.parameters()));
-      st.add("returnType", visit(node.returnType()));
-      return st;
-    } else {
-      return null;
-    }
-  }
-
-  private ST routineDeclarationPass2 (RoutineDeclaration node) {
+  public ST visit (RoutineDeclaration node) {
     var st = group.getInstanceOf("implementation/declaration/functionDefinition");
     if (node.modifiers().hasChildren()) {
       st.add("modifiers1", visit(node.modifiers()));
@@ -378,36 +334,12 @@ public class Generator3b extends ResultBaseVisitor <ST> {
   // The variable name is placed on a stack, transformed into a declarator, and then retrieved from the stack. Since
   // the stack never has more than one element, it doesn't actually need to be a stack.
 
-  public ST visit (VariableDeclaration node) {
-    return (pass == 2) ? variableDeclaration(node) : null;
-  }
-
-  public ST variableDeclaration (VariableDeclaration node) {
-    if (node.hasExportSpecifier()) {
-      var st = group.getInstanceOf("common/declaration/variableDeclaration");
-      if (node.modifiers().hasChildren())
-        st.add("modifiers", visit(node.modifiers()));
-      stack.push(visit(node.name()));
-      if (node.hasTypeSpecifier())
-        st.add("typeSpecifier", visit(node.typeSpecifier()));
-      st.add("declarator", stack.pop());
-      if (node.hasInitializer())
-        st.add("initializer", visit(node.initializer()));
-      return st;
-    } else {
-      return null;
-      }
-  }
-
-  public ST visit (VariableModifiers node) {
-    var st = group.getInstanceOf("common/declaration/variableModifiers");
-    for (var modifier : node.getModifiers())
-      st.add("modifier", visit(modifier));
-    return st;
-  }
+  // Gen3a handles global variable definitions as part of declarations.
 
   public ST visit (LocalVariableDeclaration node) {
     var st = group.getInstanceOf("common/declaration/localVariableDeclaration");
+    if (node.modifiers().hasChildren())
+      st.add("modifiers", visit(node.modifiers()));
     stack.push(visit(node.name()));
     if (node.hasTypeSpecifier())
       st.add("typeSpecifier", visit(node.typeSpecifier()));
@@ -416,6 +348,13 @@ public class Generator3b extends ResultBaseVisitor <ST> {
     st.add("declarator", stack.pop());
     if (node.hasInitializer())
       st.add("initializer", visit(node.initializer()));
+    return st;
+  }
+
+  public ST visit (VariableModifiers node) {
+    var st = group.getInstanceOf("common/declaration/variableModifiers");
+    for (var modifier : node.getModifiers())
+      st.add("modifier", visit(modifier));
     return st;
   }
 

@@ -12,7 +12,8 @@ import org.stringtemplate.v4.STGroupDir;
 import java.net.URL;
 import java.util.LinkedList;
 
-// The purpose of this pass is to create declarations within a module implementation unit.
+// The purpose of this pass is to create declarations within a module
+// interface unit.
 
 public class Generator3a extends ResultBaseVisitor <ST> {
 
@@ -24,6 +25,7 @@ public class Generator3a extends ResultBaseVisitor <ST> {
   private final LinkedList<ST> stack = new LinkedList<>();
 
   // Stack for keeping track of current node path
+  // Note: This might not be needed in gen3a
   private final LinkedList<AstNode> ancestorStack = new LinkedList<>();
 
   private final int TYPE_PASS     = 1;
@@ -31,8 +33,8 @@ public class Generator3a extends ResultBaseVisitor <ST> {
   private final int VARIABLE_PASS = 3;
   private final int CLASS_PASS    = 4;
 
-  // There should be four passes: forward class declarations, function
-  // prototypes, global variables, class declarations
+  // There should be four passes: types (e.g. forward class declarations),
+  // function prototypes, global variables, class declarations
   private int pass = TYPE_PASS;
 
   // Tracks modifier passes
@@ -387,19 +389,6 @@ public class Generator3a extends ResultBaseVisitor <ST> {
     var st = group.getInstanceOf("common/declaration/variableModifiers");
     for (var modifier : node.getModifiers())
       st.add("modifier", visit(modifier));
-    return st;
-  }
-
-  public ST visit (LocalVariableDeclaration node) {
-    var st = group.getInstanceOf("common/declaration/localVariableDeclaration");
-    stack.push(visit(node.name()));
-    if (node.hasTypeSpecifier())
-      st.add("typeSpecifier", visit(node.typeSpecifier()));
-    else
-      st.add("typeSpecifier", "auto");
-    st.add("declarator", stack.pop());
-    if (node.hasInitializer())
-      st.add("initializer", visit(node.initializer()));
     return st;
   }
 
