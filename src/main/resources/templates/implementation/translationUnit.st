@@ -1,9 +1,9 @@
-translationUnit (packageDeclaration, importDeclarations, declarations, definitions) ::=  <<
+translationUnit (packageDeclaration, importDeclarations, packageName, declarations, definitions) ::=  <<
 // Implementation unit
 
 <packageDeclaration>
 
-namespace {
+namespace <packageName> {
   <declarations; separator="\n\n">
 
   <definitions; separator="\n\n">

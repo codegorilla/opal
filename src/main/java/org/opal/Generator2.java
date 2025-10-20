@@ -9,22 +9,23 @@ import org.opal.ast.type.*;
 import org.stringtemplate.v4.*;
 
 import java.net.URL;
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 
 // The purpose of this pass is to create a module interface unit.
-
-// To do: Public/private dichotomy needs to be handled correctly.
 
 public class Generator2 extends ResultBaseVisitor <ST> {
 
   private final URL templateDirectoryUrl;
   private final STGroupDir group;
 
-  // Stack for facilitating out-of-order operations. For example, we need to swap the base type for the variable name in
-  // order to form a declarator. We also need to invert the order in which arrays and pointers are processed.
+  // Stack for facilitating out-of-order operations on types. For example, we
+  // need to swap the base type for the variable name in order to form a
+  // declarator. We also need to invert the order in which arrays and pointers
+  // are processed.
   private final LinkedList<ST> stack = new LinkedList<>();
+
+  // Stack for facilitating out-of-order operations
+  private final LinkedList<ST> genStack = new LinkedList<>();
 
   // Stack for keeping track of current node path
   private final LinkedList<AstNode> ancestorStack = new LinkedList<>();
@@ -52,6 +53,7 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   public ST visit (TranslationUnit node) {
     var st = group.getInstanceOf("interface/translationUnit");
     st.add("packageDeclaration", visit(node.packageDeclaration()));
+    st.add("packageName", genStack.pop());
     st.add("importDeclarations", visit(node.importDeclarations()));
     st.add("declarations", visit(node.declarations()));
     System.out.println("---");
@@ -63,20 +65,26 @@ public class Generator2 extends ResultBaseVisitor <ST> {
 
   // PACKAGE DECLARATIONS
 
-  // Package declaration is special in that there is only one, and it must appear at the top of the translation unit.
+  // Package declaration is special in that there is only one, and it must
+  // appear at the top of the translation unit.
 
   public ST visit (PackageDeclaration node) {
     var st = group.getInstanceOf("interface/declaration/packageDeclaration");
-    st.add("packageName", visit(node.packageName()));
+    visit(node.packageName());
+    st.add("packageName", genStack.getFirst());
     return st;
   }
 
   // For now just support single word package names
 
+  // Normally, we would return string templates, but in this case, we use the
+  // general stack to facilitate re-use of the package name in more than one
+  // place.
+
   public ST visit (PackageName node) {
-    var st = group.getInstanceOf("interface/declaration/packageName");
-    st.add("name", node.getToken().getLexeme());
-    return st;
+    var st = new ST(node.getToken().getLexeme());
+    genStack.push(st);
+    return null;
   }
 
   // IMPORT DECLARATIONS
