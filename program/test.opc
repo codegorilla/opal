@@ -14,7 +14,7 @@ private final class Token extends Object, Number {
     var t: int = 0;
   }
 
-  virtual final def getToken () const & -> int {
+  virtual override def getToken () const & -> int {
     var t: int = 0;
   }
 

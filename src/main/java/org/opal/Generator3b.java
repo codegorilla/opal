@@ -159,7 +159,7 @@ public class Generator3b extends ResultBaseVisitor <ST> {
   // To do: Might need to put conditional on the return type
 
   public ST visit (RoutineDeclaration node) {
-    var st = group.getInstanceOf("implementation/declaration/functionDefinition");
+    var st = group.getInstanceOf("implementation/definition/functionDefinition");
     if (node.modifiers().hasChildren())
       st.add("modifiers", visit(node.modifiers()));
     st.add("name", visit(node.name()));
