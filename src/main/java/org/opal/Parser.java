@@ -1464,6 +1464,7 @@ public class Parser {
       kind == Token.Kind.UINT32  ||
       kind == Token.Kind.UINT64  ||
       kind == Token.Kind.FLOAT   ||
+      kind == Token.Kind.DOUBLE  ||
       kind == Token.Kind.FLOAT32 ||
       kind == Token.Kind.FLOAT64 ||
       kind == Token.Kind.VOID
@@ -1533,6 +1534,7 @@ public class Parser {
     match(Token.Kind.R_PARENTHESIS);
     match(Token.Kind.MINUS_GREATER);
     n.addChild(type());
+    System.out.println("TYPE IS STILL " + n.getToken());
     return n;
   }
 

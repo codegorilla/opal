@@ -507,4 +507,15 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  public ST visit (RoutinePointerType node) {
+    var st = group.getInstanceOf("common/declarator/routinePointerDeclarator");
+    st.add("directDeclarator", stack.pop());
+    for (int i=0; i<node.getChildCount()-1; i++) {
+      st.add("parameters", visit(node.getChild(i)));
+    }
+    stack.push(st);
+    // Return type goes here?
+    return visit(node.getChild(node.getChildCount()-1));
+  }
+
 }
