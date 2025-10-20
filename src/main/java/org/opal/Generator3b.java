@@ -20,15 +20,17 @@ public class Generator3b extends ResultBaseVisitor <ST> {
   private final URL templateDirectoryUrl;
   private final STGroupDir group;
 
-  // Stack for facilitating out-of-order operations. For example, we need to swap the base type for the variable name in
-  // order to form a declarator. We also need to invert the order in which arrays and pointers are processed.
+  // Stack for facilitating out-of-order operations. For example, we need to
+  // swap the base type for the variable name in order to form a declarator. We
+  // also need to invert the order in which arrays and pointers are processed.
   private final LinkedList<ST> stack = new LinkedList<>();
 
   // Stack for keeping track of current node path
+  // Note: This might not be needed in gen3b
   private final LinkedList<AstNode> ancestorStack = new LinkedList<>();
 
-  // Tracks modifier passes
-  private int modifiersPass = 0;
+  // Stack for keeping track of current class name
+  private final LinkedList<AstNode> classNameStack = new LinkedList<>();
 
   public Generator3b (AstNode input) {
     super(input);
@@ -72,33 +74,28 @@ public class Generator3b extends ResultBaseVisitor <ST> {
 
   // CLASS DECLARATIONS
 
-  // Need to revamp this to just show member routine definitions
-
   public ST visit (ClassDeclaration node) {
     if (node.hasExportSpecifier()) {
+      classNameStack.push(node.name());
       var st = visit(node.body());
+      classNameStack.pop();
       return st;
     } else {
       return null;
     }
   }
 
-  // Need this as prefix to each member function
-
-  public ST visit (ClassName node) {
-    return new ST(node.getToken().getLexeme());
-  }
-
   public ST visit (ClassBody node) {
-    var st = group.getInstanceOf("implementation/definition/memberDefinitions");
+    var st = group.getInstanceOf("implementation/definition/memberFunctionDefinitions");
     for (var child : node.getChildren())
-      st.add("memberDefinition", visit(child));
+      st.add("definition", visit(child));
     return st;
   }
 
-  // Access specifiers are not used in module implementation file
+  // Access specifiers and some modifiers (e.g. final, override, virtual) are
+  // not used in module implementation file.
 
-  // To do: Need to add class name to front of name
+  // To do: Work in progress. Need to add class name to front of name.
 
   public ST visit (MemberRoutineDeclaration node) {
     var st = group.getInstanceOf("implementation/definition/memberFunctionDefinition");
@@ -106,8 +103,8 @@ public class Generator3b extends ResultBaseVisitor <ST> {
       st.add("modifiers1", visit(node.modifiers()));
       st.add("modifiers2", visit(node.modifiers()));
     }
-    // Work in progress
-    st.add("className", "Token");
+    var className = classNameStack.get(0).getToken().getLexeme();
+    st.add("className", className);
     st.add("name", visit(node.name()));
     st.add("parameters", visit(node.parameters()));
     if (node.cvQualifiers().hasChildren())
