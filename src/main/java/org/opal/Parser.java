@@ -1268,21 +1268,23 @@ public class Parser {
     return n;
   }
 
+  // To do: Putting new expression here for now. Research correct location.
+
   private AstNode primaryExpression () {
     AstNode n = null;
     var kind = lookahead.getKind();
     if (
-        kind == Token.Kind.FALSE ||
-        kind == Token.Kind.TRUE ||
-        kind == Token.Kind.CHARACTER_LITERAL ||
-        kind == Token.Kind.FLOAT32_LITERAL ||
-        kind == Token.Kind.FLOAT64_LITERAL ||
-        kind == Token.Kind.INT32_LITERAL ||
-        kind == Token.Kind.INT64_LITERAL ||
-        kind == Token.Kind.NULL ||
-        kind == Token.Kind.STRING_LITERAL ||
-        kind == Token.Kind.UINT32_LITERAL ||
-        kind == Token.Kind.UINT64_LITERAL
+      kind == Token.Kind.FALSE ||
+      kind == Token.Kind.TRUE ||
+      kind == Token.Kind.CHARACTER_LITERAL ||
+      kind == Token.Kind.FLOAT32_LITERAL ||
+      kind == Token.Kind.FLOAT64_LITERAL ||
+      kind == Token.Kind.INT32_LITERAL ||
+      kind == Token.Kind.INT64_LITERAL ||
+      kind == Token.Kind.NULL ||
+      kind == Token.Kind.STRING_LITERAL ||
+      kind == Token.Kind.UINT32_LITERAL ||
+      kind == Token.Kind.UINT64_LITERAL
     ) {
       n = literal();
     } else if (lookahead.getKind() == Token.Kind.THIS)
@@ -1290,6 +1292,12 @@ public class Parser {
     else if (lookahead.getKind() == Token.Kind.IDENTIFIER) {
       // Test this -- is this not working?
       n = name();
+    }
+    else if (lookahead.getKind() == Token.Kind.DELETE) {
+      n = deleteExpression();
+    }
+    else if (lookahead.getKind() == Token.Kind.NEW) {
+      n = newExpression();
     }
     // Defer implementing if expressions
 //    else if (lookahead.getKind() == Token.Kind.IF)
@@ -1376,6 +1384,20 @@ public class Parser {
     match(Token.Kind.L_PARENTHESIS);
     var n = expression(false);
     match(Token.Kind.R_PARENTHESIS);
+    return n;
+  }
+
+  // To do: Finish delete and new expressions
+
+  private AstNode deleteExpression () {
+    var n = new NewExpression(lookahead);
+    match(Token.Kind.NEW);
+    return n;
+  }
+
+  private AstNode newExpression () {
+    var n = new NewExpression(lookahead);
+    match(Token.Kind.NEW);
     return n;
   }
 

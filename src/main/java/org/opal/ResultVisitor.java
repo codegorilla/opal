@@ -96,6 +96,8 @@ public interface ResultVisitor <T> {
   public T visit (BinaryExpression node);
   public T visit (UnaryExpression node);
   public T visit (CastExpression node);
+  public T visit (DeleteExpression node);
+  public T visit (NewExpression node);
   public T visit (DereferencingMemberAccess node);
   public T visit (MemberAccess node);
   public T visit (RoutineCall node);

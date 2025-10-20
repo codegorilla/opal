@@ -96,6 +96,8 @@ public interface Visitor {
   public void visit (BinaryExpression node);
   public void visit (UnaryExpression node);
   public void visit (CastExpression node);
+  public void visit (DeleteExpression node);
+  public void visit (NewExpression node);
   public void visit (DereferencingMemberAccess node);
   public void visit (MemberAccess node);
   public void visit (RoutineCall node);
