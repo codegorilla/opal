@@ -1449,7 +1449,7 @@ public class Parser {
     Type fragment = null;
     var kind = lookahead.getKind();
     if (kind == Token.Kind.CARET) {
-//      fragment = routinePointerType();
+      fragment = routinePointerType();
     }
     else if (
       kind == Token.Kind.BOOL    ||
@@ -1518,6 +1518,21 @@ public class Parser {
     match(Token.Kind.IDENTIFIER);
     if (lookahead.getKind() == Token.Kind.LESS)
       n = templateInstantiation(n);
+    return n;
+  }
+
+  private Type routinePointerType () {
+    var n = new RoutinePointerType(lookahead);
+    match(Token.Kind.CARET);
+    match(Token.Kind.L_PARENTHESIS);
+    n.addChild(type());
+    while (lookahead.getKind() == Token.Kind.COMMA) {
+      match(Token.Kind.COMMA);
+      n.addChild(type());
+    }
+    match(Token.Kind.R_PARENTHESIS);
+    match(Token.Kind.MINUS_GREATER);
+    n.addChild(type());
     return n;
   }
 

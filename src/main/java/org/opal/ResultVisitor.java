@@ -124,6 +124,7 @@ public interface ResultVisitor <T> {
   public T visit (NominalType node);
   public T visit (PointerType node);
   public T visit (PrimitiveType node);
+  public T visit (RoutinePointerType node);
 
   public T visit (TemplateInstantiation node);
   public T visit (TemplateArguments node);
