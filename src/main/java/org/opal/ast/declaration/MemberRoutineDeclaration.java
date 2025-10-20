@@ -29,6 +29,10 @@ public class MemberRoutineDeclaration extends AstNode {
     return getChild(0) != null;
   }
 
+  public boolean hasNoexceptSpecifier () {
+    return getChild(6) != null;
+  }
+
   public boolean hasReturnType () {
     return getChild(6) != null;
   }
@@ -53,12 +57,16 @@ public class MemberRoutineDeclaration extends AstNode {
     return getChild(5);
   }
 
-  public AstNode returnType () {
+  public AstNode noexceptSpecifier () {
     return getChild(6);
   }
 
-  public AstNode body () {
+  public AstNode returnType () {
     return getChild(7);
+  }
+
+  public AstNode body () {
+    return getChild(8);
   }
 
 }

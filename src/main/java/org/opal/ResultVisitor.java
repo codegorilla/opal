@@ -14,6 +14,7 @@ public interface ResultVisitor <T> {
   public T visit (TranslationUnit node);
   public T visit (Declarations node);
   public T visit (ExportSpecifier node);
+  public T visit (NoexceptSpecifier node);
   public T visit (Modifier node);
 
   // Package declarations

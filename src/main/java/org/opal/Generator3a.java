@@ -177,6 +177,8 @@ public class Generator3a extends ResultBaseVisitor <ST> {
       st.add("cvQualifiers", visit(node.cvQualifiers()));
     if (node.refQualifiers().hasChildren())
       st.add("refQualifiers", visit(node.refQualifiers()));
+    if (node.hasNoexceptSpecifier())
+      st.add("noexceptSpecifier", visit(node.noexceptSpecifier()));
     st.add("returnType", visit(node.returnType()));
     return st;
   }
@@ -186,21 +188,14 @@ public class Generator3a extends ResultBaseVisitor <ST> {
     if (modifiersPass == 0) {
       for (var modifier : node.getModifiers()) {
         var kind = modifier.getToken().getKind();
-        if (
-          kind == Token.Kind.CONSTEXPR ||
-          kind == Token.Kind.VIRTUAL
-        ) {
+        if (kind == Token.Kind.CONSTEXPR || kind == Token.Kind.VIRTUAL) {
           st.add("modifier", visit(modifier));
         }
       }
     } else {
       for (var modifier : node.getModifiers()) {
         var kind = modifier.getToken().getKind();
-        if (
-          kind == Token.Kind.FINAL    ||
-          kind == Token.Kind.NOEXCEPT ||
-          kind == Token.Kind.OVERRIDE
-        ) {
+        if (kind == Token.Kind.FINAL || kind == Token.Kind.OVERRIDE) {
           st.add("modifier", visit(modifier));
         }
       }
@@ -265,11 +260,12 @@ public class Generator3a extends ResultBaseVisitor <ST> {
       if (node.hasExportSpecifier()) {
         var st = group.getInstanceOf("common/declaration/functionDeclaration");
         if (node.modifiers().hasChildren()) {
-          st.add("modifiers1", visit(node.modifiers()));
-          st.add("modifiers2", visit(node.modifiers()));
+          st.add("modifiers", visit(node.modifiers()));
         }
         st.add("name", visit(node.name()));
         st.add("parameters", visit(node.parameters()));
+        if (node.hasNoexceptSpecifier())
+          st.add("noexceptSpecifier", visit(node.noexceptSpecifier()));
         st.add("returnType", visit(node.returnType()));
         return st;
       } else {
@@ -282,23 +278,12 @@ public class Generator3a extends ResultBaseVisitor <ST> {
 
   public ST visit (RoutineModifiers node) {
     var st = group.getInstanceOf("common/declaration/functionModifiers");
-    if (modifiersPass == 0) {
-      for (var modifier : node.getModifiers()) {
-        var kind = modifier.getToken().getKind();
-        if (kind == Token.Kind.CONSTEXPR) {
-          st.add("modifier", visit(modifier));
-        }
-      }
-    } else {
-      for (var modifier : node.getModifiers()) {
-        var kind = modifier.getToken().getKind();
-        if (kind == Token.Kind.NOEXCEPT) {
-          st.add("modifier", visit(modifier));
-        }
+    for (var modifier : node.getModifiers()) {
+      var kind = modifier.getToken().getKind();
+      if (kind == Token.Kind.CONSTEXPR) {
+        st.add("modifier", visit(modifier));
       }
     }
-    // Alternate between first and second pass
-    modifiersPass = (modifiersPass + 1) % 2;
     return st;
   }
 
@@ -332,6 +317,10 @@ public class Generator3a extends ResultBaseVisitor <ST> {
     var st = group.getInstanceOf("common/declaration/functionParameterTypeSpecifier");
     st.add("type", visit(node.type()));
     return st;
+  }
+
+  public ST visit (NoexceptSpecifier node) {
+    return new ST(node.getToken().getLexeme());
   }
 
   public ST visit (RoutineReturnType node) {

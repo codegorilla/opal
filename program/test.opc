@@ -20,7 +20,7 @@ private final class Token extends Object, Number {
 
 }
 
-private constexpr noexcept def test () -> int {
+private constexpr def test () noexcept -> int {
   println("Hello world!");
 
   while (x != 5)

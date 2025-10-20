@@ -29,8 +29,12 @@ public class RoutineDeclaration extends AstNode {
     return getChild(0) != null;
   }
 
-  public boolean hasReturnType () {
+  public boolean hasNoexceptSpecifier () {
     return getChild(4) != null;
+  }
+
+  public boolean hasReturnType () {
+    return getChild(5) != null;
   }
 
   public AstNode modifiers () {
@@ -45,12 +49,16 @@ public class RoutineDeclaration extends AstNode {
     return getChild(3);
   }
 
-  public AstNode returnType () {
+  public AstNode noexceptSpecifier () {
     return getChild(4);
   }
 
-  public AstNode body () {
+  public AstNode returnType () {
     return getChild(5);
+  }
+
+  public AstNode body () {
+    return getChild(6);
   }
 
 }

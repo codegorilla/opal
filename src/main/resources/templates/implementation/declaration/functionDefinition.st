@@ -1,6 +1,6 @@
-functionDefinition (modifiers1, name, parameters, modifiers2, returnType, body) ::= <%
-<if(modifiers1)><modifiers1; separator=" "> <endif>
+functionDefinition (modifiers, name, parameters, noexceptSpecifier, returnType, body) ::= <%
+<if(modifiers)><modifiers; separator=" "> <endif>
 auto <name> <parameters><\ >
-<if(modifiers2)><modifiers2; separator=" "> <endif>
+<if(noexceptSpecifier)><noexceptSpecifier> <endif>
 <returnType> <body>
 %>

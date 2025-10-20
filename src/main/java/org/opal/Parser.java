@@ -229,7 +229,6 @@ public class Parser {
       kind == Token.Kind.CONSTEXPR ||
       kind == Token.Kind.FINAL     ||
       kind == Token.Kind.OVERRIDE  ||
-      kind == Token.Kind.NOEXCEPT  ||
       kind == Token.Kind.STATIC    ||
       kind == Token.Kind.VIRTUAL   ||
       kind == Token.Kind.VOLATILE
@@ -353,7 +352,7 @@ public class Parser {
     return n;
   }
 
-  // To do: Ref qualifiers, noexcept, final, and override modifiers
+  // To do: Final and override modifiers
 
   private AstNode memberRoutineDeclaration (MemberAccessSpecifier accessSpecifier) {
     var n = new MemberRoutineDeclaration(lookahead);
@@ -364,6 +363,7 @@ public class Parser {
     n.addChild(routineParameters());
     n.addChild(cvQualifiers());
     n.addChild(refQualifiers());
+    n.addChild((lookahead.getKind() == Token.Kind.NOEXCEPT) ? noexceptSpecifier() : null);
     n.addChild((lookahead.getKind() == Token.Kind.MINUS_GREATER) ? routineReturnType() : null);
     n.addChild(routineBody());
 //    currentScope = scope.getEnclosingScope();
@@ -431,6 +431,7 @@ public class Parser {
     n.addChild(routineModifiers());
     n.addChild(routineName());
     n.addChild(routineParameters());
+    n.addChild((lookahead.getKind() == Token.Kind.NOEXCEPT) ? noexceptSpecifier() : null);
     n.addChild((lookahead.getKind() == Token.Kind.MINUS_GREATER) ? routineReturnType() : null);
     n.addChild(routineBody());
 //    currentScope = scope.getEnclosingScope();
@@ -489,6 +490,12 @@ public class Parser {
     var n = new RoutineParameterTypeSpecifier(lookahead);
     match(Token.Kind.COLON);
     n.addChild(type(true));
+    return n;
+  }
+
+  private AstNode noexceptSpecifier () {
+    var n = new NoexceptSpecifier(lookahead);
+    match(Token.Kind.NOEXCEPT);
     return n;
   }
 
