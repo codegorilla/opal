@@ -489,7 +489,7 @@ public class Parser {
   private AstNode routineParameterTypeSpecifier () {
     var n = new RoutineParameterTypeSpecifier(lookahead);
     match(Token.Kind.COLON);
-    n.addChild(type(true));
+    n.addChild(type());
     return n;
   }
 
@@ -514,7 +514,7 @@ public class Parser {
     var n = new RoutineReturnType();
     if (lookahead.getKind() == Token.Kind.MINUS_GREATER) {
       match(Token.Kind.MINUS_GREATER);
-      n.addChild(type(true));
+      n.addChild(type());
     }
     return n;
   }
@@ -565,7 +565,7 @@ public class Parser {
   private AstNode variableTypeSpecifier () {
     var n = new VariableTypeSpecifier(lookahead);
     match(Token.Kind.COLON);
-    n.addChild(type(true));
+    n.addChild(type());
     return n;
   }
 
@@ -1174,7 +1174,7 @@ public class Parser {
     var n = new CastExpression(lookahead);
     match(lookahead.getKind());
     match(Token.Kind.LESS);
-    n.addChild(type(true));
+    n.addChild(type());
     match(Token.Kind.GREATER);
     match(Token.Kind.L_PARENTHESIS);
     n.addChild(expression(true));
@@ -1196,7 +1196,7 @@ public class Parser {
     var n = new NewExpression(lookahead);
     match(Token.Kind.NEW);
     n.addChild(lookahead.getKind() == Token.Kind.L_BRACKET ? newPlacement() : null);
-    n.addChild(type(true));
+    n.addChild(type());
     n.addChild(lookahead.getKind() == Token.Kind.L_PARENTHESIS ? newInitializer() : null);
     return n;
   }
@@ -1465,7 +1465,6 @@ public class Parser {
       n = stack.pop();
       n.addChild(p);
     }
-    n.setRoot(root);
     // If program crashes, check here, this is just for testing.
     System.out.println("***");
     System.out.println(n);

@@ -104,10 +104,6 @@ public class Pass1 extends BaseVisitor {
 
   // Types
 
-  public void visit (TypeRoot node) {
-    System.out.println("TypeRoot");
-  }
-
   public void visit (ArrayType node) {
     System.out.println("ArrayType");
   }

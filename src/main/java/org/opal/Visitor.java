@@ -122,7 +122,6 @@ public interface Visitor {
   // TYPES
 
   public void visit (Type node);
-  public void visit (TypeRoot node);
   public void visit (ArrayType node);
   public void visit (NominalType node);
   public void visit (PointerType node);

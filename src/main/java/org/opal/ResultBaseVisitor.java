@@ -131,7 +131,6 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
   // TYPES
 
   public T visit (Type node) { return null; }
-  public T visit (TypeRoot node) { return null; }
   public T visit (ArrayType node) { return null; }
   public T visit (NominalType node) { return null; }
   public T visit (PointerType node) { return null; }
