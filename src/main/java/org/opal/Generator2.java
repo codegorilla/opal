@@ -409,7 +409,9 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // Perhaps if we know this is the root node, we don't need parenthesis.
+  // Perhaps if we know this is the root node, we don't need parenthesis. We
+  // can tell if we are the root node because the parent node type will NOT be
+  // an expression. We can use not operator and 'instanceof' to check this.
 
   public ST visit (BinaryExpression node) {
     var st = group.getInstanceOf("common/expression/binaryExpression");
@@ -481,15 +483,11 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // We need to be able to tell if we are inside template arguments. This could be done by using parent links or by
-  // pushing nodes onto a stack and traversing the stack until a template argument is found or the root node is reached.
-  // Update: Doesn't seem to be needed anymore. We push an empty declarator, so it can be treated the same regardless
-  // of whether we are in template or not.
-
-  // To do: Another thing we need to do is determine what kind of template argument it is. If it is a type argument,
-  // then we need to parse it as a type; whereas if it is a non-type argument (e.g. variable), then we need to parse it
-  // as an expression. This determination can be made via symbol table lookup, but for now just assume it is a type
-  // argument.
+  // To do: Another thing we need to do is determine what kind of template
+  // argument it is. If it is a type argument, then we need to parse it as a
+  // type; whereas if it is a non-type argument (e.g. variable), then we need
+  // to parse it as an expression. This determination can be made via symbol
+  // table lookup, but for now just assume it is a type argument.
 
   public ST visit (PointerType node) {
     var st = group.getInstanceOf("common/declarator/pointerDeclarator");
@@ -497,10 +495,6 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     stack.push(st);
     return visit(node.baseType());
   }
-
-  // To do: See if we can eliminate gratuitous parenthesis. If the PointerType node is at the top of the expression tree
-  // then we don't need parentheses. There may be other situations too, such as consecutive pointers and consecutive
-  // arrays.
 
   public ST visit (PrimitiveType node) {
     var st = group.getInstanceOf("common/type/primitiveType");
