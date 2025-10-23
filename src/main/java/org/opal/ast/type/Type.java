@@ -2,8 +2,6 @@ package org.opal.ast.type;
 
 import org.opal.Token;
 import org.opal.ast.AstNode;
-import org.opal.ResultVisitor;
-import org.opal.Visitor;
 
 public abstract class Type extends AstNode {
 
@@ -22,6 +20,10 @@ public abstract class Type extends AstNode {
 //  public <T> T accept (ResultVisitor<T> v) {
 //    return v.visit(this);
 //  }
+
+  public boolean getRoot () {
+    return root;
+  }
 
   public void setRoot (boolean root) {
     this.root = root;

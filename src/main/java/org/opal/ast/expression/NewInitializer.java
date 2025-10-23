@@ -5,9 +5,9 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class NewExpression extends AstNode {
+public class NewInitializer extends AstNode {
 
-  public NewExpression (Token token) {
+  public NewInitializer (Token token) {
     super(token);
   }
 
@@ -21,12 +21,8 @@ public class NewExpression extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode expression () {
-    return getChild(0);
-  }
-
-  public AstNode type () {
-    return getChild(1);
+  public Iterable<AstNode> arguments () {
+    return getChildren();
   }
 
 }

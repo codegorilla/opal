@@ -107,6 +107,7 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
   public T visit (CastExpression node) { return null; }
   public T visit (DeleteExpression node) { return null; }
   public T visit (NewExpression node) { return null; }
+  public T visit (NewInitializer node) { return null; }
   public T visit (DereferencingMemberAccess node) { return null; }
   public T visit (MemberAccess node) { return null; }
   public T visit (RoutineCall node) { return null; }

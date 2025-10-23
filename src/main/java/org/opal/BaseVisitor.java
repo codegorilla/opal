@@ -106,6 +106,7 @@ public class BaseVisitor implements Visitor {
   public void visit (CastExpression node) {}
   public void visit (DeleteExpression node) {}
   public void visit (NewExpression node) {}
+  public void visit (NewInitializer node) {}
   public void visit (DereferencingMemberAccess node) {}
   public void visit (MemberAccess node) {}
   public void visit (RoutineCall node) {}

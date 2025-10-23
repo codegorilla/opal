@@ -26,8 +26,7 @@ public class Generator3a extends ResultBaseVisitor <ST> {
   private final LinkedList<ST> stack = new LinkedList<>();
 
   // Stack for keeping track of current node path
-  // Note: This might not be needed in gen3a
-  private final LinkedList<AstNode> ancestorStack = new LinkedList<>();
+  private final LinkedList<AstNode> nodePath = new LinkedList<>();
 
   private final int TYPE_PASS     = 1;
   private final int ROUTINE_PASS  = 2;
@@ -52,9 +51,9 @@ public class Generator3a extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (AstNode node) {
-    ancestorStack.push(node);
+    nodePath.push(node);
     var st = node.accept(this);
-    ancestorStack.pop();
+    nodePath.pop();
     return st;
   }
 
@@ -534,6 +533,7 @@ public class Generator3a extends ResultBaseVisitor <ST> {
 
   public ST visit (ArrayType node) {
     var st = group.getInstanceOf("common/declarator/arrayDeclarator");
+    st.add("cop", nodePath.get(1) instanceof PointerType);
     st.add("directDeclarator", stack.pop());
     if (node.getChildCount() == 2)
       st.add("expression", visit(node.expression()));

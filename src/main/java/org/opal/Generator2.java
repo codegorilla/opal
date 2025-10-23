@@ -28,7 +28,7 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   private final LinkedList<ST> genStack = new LinkedList<>();
 
   // Stack for keeping track of current node path
-  private final LinkedList<AstNode> ancestorStack = new LinkedList<>();
+  private final LinkedList<AstNode> nodePath = new LinkedList<>();
 
   // Tracks modifier passes
   private int modifiersPass = 0;
@@ -44,9 +44,9 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (AstNode node) {
-    ancestorStack.push(node);
+    nodePath.push(node);
     var st = node.accept(this);
-    ancestorStack.pop();
+    nodePath.pop();
     return st;
   }
 
@@ -444,6 +444,7 @@ public class Generator2 extends ResultBaseVisitor <ST> {
 
   public ST visit (ArrayType node) {
     var st = group.getInstanceOf("common/declarator/arrayDeclarator");
+    st.add("cop", nodePath.get(1) instanceof PointerType);
     st.add("directDeclarator", stack.pop());
     if (node.getChildCount() == 2)
       st.add("expression", visit(node.expression()));

@@ -969,18 +969,19 @@ public class Parser {
 
   private AstNode assignmentExpression () {
     var n = logicalOrExpression();
+    var kind = lookahead.getKind();
     while (
-        lookahead.getKind() == Token.Kind.EQUAL ||
-        lookahead.getKind() == Token.Kind.ASTERISK_EQUAL ||
-        lookahead.getKind() == Token.Kind.SLASH_EQUAL ||
-        lookahead.getKind() == Token.Kind.PERCENT_EQUAL ||
-        lookahead.getKind() == Token.Kind.PLUS_EQUAL ||
-        lookahead.getKind() == Token.Kind.MINUS_EQUAL ||
-        lookahead.getKind() == Token.Kind.LESS_LESS_EQUAL ||
-        lookahead.getKind() == Token.Kind.GREATER_GREATER_EQUAL ||
-        lookahead.getKind() == Token.Kind.AMPERSAND_EQUAL ||
-        lookahead.getKind() == Token.Kind.CARET_EQUAL ||
-        lookahead.getKind() == Token.Kind.BAR_EQUAL
+      kind == Token.Kind.EQUAL ||
+      kind == Token.Kind.ASTERISK_EQUAL ||
+      kind == Token.Kind.SLASH_EQUAL ||
+      kind == Token.Kind.PERCENT_EQUAL ||
+      kind == Token.Kind.PLUS_EQUAL ||
+      kind == Token.Kind.MINUS_EQUAL ||
+      kind == Token.Kind.LESS_LESS_EQUAL ||
+      kind == Token.Kind.GREATER_GREATER_EQUAL ||
+      kind == Token.Kind.AMPERSAND_EQUAL ||
+      kind == Token.Kind.CARET_EQUAL ||
+      kind == Token.Kind.BAR_EQUAL
     ) {
       var p = n;
       n = new BinaryExpression(lookahead);
@@ -988,6 +989,7 @@ public class Parser {
       match(lookahead.getKind());
       p = logicalOrExpression();
       n.addChild(p);
+      kind = lookahead.getKind();
     }
     return n;
   }
@@ -1153,6 +1155,12 @@ public class Parser {
     ) {
       n = castExpression();
     }
+    else if (kind == Token.Kind.DELETE) {
+      n = deleteExpression();
+    }
+    else if (kind == Token.Kind.NEW) {
+      n = newExpression();
+    }
     else {
       n = postfixExpression();
     }
@@ -1167,6 +1175,44 @@ public class Parser {
     match(Token.Kind.GREATER);
     match(Token.Kind.L_PARENTHESIS);
     n.addChild(expression(true));
+    match(Token.Kind.R_PARENTHESIS);
+    return n;
+  }
+
+  // To do: Finish delete and new expressions. Should delete operand be an
+  // expression or an identifier?
+
+  private AstNode deleteExpression () {
+    var n = new DeleteExpression(lookahead);
+    match(Token.Kind.DELETE);
+    n.addChild(expression(true));
+    return n;
+  }
+
+  private AstNode newExpression () {
+    var n = new NewExpression(lookahead);
+    match(Token.Kind.NEW);
+    n.addChild(lookahead.getKind() == Token.Kind.L_BRACKET ? newPlacement() : null);
+    n.addChild(type(true));
+    n.addChild(lookahead.getKind() == Token.Kind.L_PARENTHESIS ? newInitializer() : null);
+    return n;
+  }
+
+  private AstNode newPlacement () {
+    match(Token.Kind.L_BRACKET);
+    var n = expression(true);
+    match(Token.Kind.R_BRACKET);
+    return n;
+  }
+
+  private AstNode newInitializer () {
+    var n = new NewInitializer(lookahead);
+    match(Token.Kind.L_PARENTHESIS);
+    n.addChild(expression(true));
+    while (lookahead.getKind() == Token.Kind.COMMA) {
+      match(Token.Kind.COMMA);
+      n.addChild(expression(true));
+    }
     match(Token.Kind.R_PARENTHESIS);
     return n;
   }
@@ -1270,6 +1316,9 @@ public class Parser {
 
   // To do: Putting new expression here for now. Research correct location.
 
+  // To do: This is not erroring out on bad input to new expression. Needs
+  // investigation.
+
   private AstNode primaryExpression () {
     AstNode n = null;
     var kind = lookahead.getKind();
@@ -1292,12 +1341,6 @@ public class Parser {
     else if (lookahead.getKind() == Token.Kind.IDENTIFIER) {
       // Test this -- is this not working?
       n = name();
-    }
-    else if (lookahead.getKind() == Token.Kind.DELETE) {
-      n = deleteExpression();
-    }
-    else if (lookahead.getKind() == Token.Kind.NEW) {
-      n = newExpression();
     }
     // Defer implementing if expressions
 //    else if (lookahead.getKind() == Token.Kind.IF)
@@ -1384,20 +1427,6 @@ public class Parser {
     match(Token.Kind.L_PARENTHESIS);
     var n = expression(false);
     match(Token.Kind.R_PARENTHESIS);
-    return n;
-  }
-
-  // To do: Finish delete and new expressions
-
-  private AstNode deleteExpression () {
-    var n = new NewExpression(lookahead);
-    match(Token.Kind.NEW);
-    return n;
-  }
-
-  private AstNode newExpression () {
-    var n = new NewExpression(lookahead);
-    match(Token.Kind.NEW);
     return n;
   }
 

@@ -1,3 +1,3 @@
 pointerDeclarator (directDeclarator) ::= <<
-(*<directDeclarator>)
+*<directDeclarator>
 >>

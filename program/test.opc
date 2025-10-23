@@ -9,12 +9,20 @@ private const var y: int = 2;
 private var a: *int = 1;
 private var b: ^(float, int) -> void;
 
-private final class Token extends Object, Number {
+final class Token extends Object, Number {
   private const var a: float = 1.5;
   private var x: int = 1;
 
   private virtual final def getLexeme () const -> String {
     var t: int = 0;
+
+    var x: (**int[4])[5] = new *(*int[10])[5];
+
+//    var x: *int = new int[5];
+//    var y: **int = new *int[5];
+
+//    var x: **Token = new *Token[5];
+//    var x: **Token = new *int[5];
   }
 
   virtual override def getToken () const & -> int {

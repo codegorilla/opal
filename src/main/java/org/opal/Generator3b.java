@@ -27,8 +27,7 @@ public class Generator3b extends ResultBaseVisitor <ST> {
   private final LinkedList<ST> stack = new LinkedList<>();
 
   // Stack for keeping track of current node path
-  // Note: This might not be needed in gen3b
-  private final LinkedList<AstNode> ancestorStack = new LinkedList<>();
+  private final LinkedList<AstNode> nodePath = new LinkedList<>();
 
   // Stack for keeping track of current class name
   private final LinkedList<AstNode> classNameStack = new LinkedList<>();
@@ -44,9 +43,9 @@ public class Generator3b extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (AstNode node) {
-    ancestorStack.push(node);
+    nodePath.push(node);
     var st = node.accept(this);
-    ancestorStack.pop();
+    nodePath.pop();
     return st;
   }
 
@@ -76,14 +75,10 @@ public class Generator3b extends ResultBaseVisitor <ST> {
   // CLASS DECLARATIONS
 
   public ST visit (ClassDeclaration node) {
-    if (node.hasExportSpecifier()) {
       classNameStack.push(node.name());
       var st = visit(node.body());
       classNameStack.pop();
       return st;
-    } else {
-      return null;
-    }
   }
 
   public ST visit (ClassBody node) {
@@ -457,6 +452,14 @@ public class Generator3b extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  public ST visit (NewExpression node) {
+    var st = group.getInstanceOf("common/expression/newExpression");
+    stack.push(emptyDeclarator());
+    st.add("type", visit(node.type()));
+    st.add("declarator", stack.pop());
+    return st;
+  }
+
   public ST visit (ArraySubscript node) {
     var st = group.getInstanceOf("common/expression/arraySubscript");
     st.add("name", visit(node.name()));
@@ -544,6 +547,7 @@ public class Generator3b extends ResultBaseVisitor <ST> {
 
   public ST visit (ArrayType node) {
     var st = group.getInstanceOf("common/declarator/arrayDeclarator");
+    st.add("cop", nodePath.get(1) instanceof PointerType);
     st.add("directDeclarator", stack.pop());
     if (node.getChildCount() == 2)
       st.add("expression", visit(node.expression()));
@@ -589,6 +593,8 @@ public class Generator3b extends ResultBaseVisitor <ST> {
   // then we need to parse it as a type; whereas if it is a non-type argument (e.g. variable), then we need to parse it
   // as an expression. This determination can be made via symbol table lookup, but for now just assume it is a type
   // argument.
+
+  // Pointer doesn't need parenthesis if it is under an array.
 
   public ST visit (PointerType node) {
     var st = group.getInstanceOf("common/declarator/pointerDeclarator");

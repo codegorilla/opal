@@ -480,7 +480,7 @@ public class Lexer {
 
       else if (current == '(') {
         consume();
-        return new Token(Token.Kind.L_PARENTHESIS, ")", position, line, column);
+        return new Token(Token.Kind.L_PARENTHESIS, "(", position, line, column);
       }
 
       else if (current == ')') {
