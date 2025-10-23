@@ -1136,6 +1136,10 @@ public class Parser {
 
   // Why recursion here instead of iteration? Does it matter?
 
+  // C++ formulation might be slightly different with mutual recursion between
+  // unaryExpression and castExpression methods. What effect might that have?
+  // (See p. 54, Ellis & Stroustrup, 1990.)
+
   private AstNode unaryExpression () {
     AstNode n = null;
     var kind = lookahead.getKind();
@@ -1158,7 +1162,6 @@ public class Parser {
       n = castExpression();
     }
     else if (kind == Token.Kind.DELETE) {
-      System.out.println("GOT DELETE ***");
       n = deleteExpression();
     }
     else if (kind == Token.Kind.NEW) {
@@ -1466,9 +1469,9 @@ public class Parser {
       n.addChild(p);
     }
     // If program crashes, check here, this is just for testing.
-    System.out.println("***");
-    System.out.println(n);
-    System.out.println("***");
+//    System.out.println("***");
+//    System.out.println(n);
+//    System.out.println("***");
     return n;
   }
 
