@@ -628,7 +628,9 @@ public class Parser {
       kind == Token.Kind.STRING_LITERAL    ||
       kind == Token.Kind.UINT32_LITERAL    ||
       kind == Token.Kind.UINT64_LITERAL    ||
-      kind == Token.Kind.IDENTIFIER
+      kind == Token.Kind.IDENTIFIER        ||
+      kind == Token.Kind.NEW               ||
+      kind == Token.Kind.DELETE
     ) {
       n = expressionStatement();
     } else {
@@ -1156,6 +1158,7 @@ public class Parser {
       n = castExpression();
     }
     else if (kind == Token.Kind.DELETE) {
+      System.out.println("GOT DELETE ***");
       n = deleteExpression();
     }
     else if (kind == Token.Kind.NEW) {
@@ -1585,7 +1588,6 @@ public class Parser {
     match(Token.Kind.R_PARENTHESIS);
     match(Token.Kind.MINUS_GREATER);
     n.addChild(type());
-    System.out.println("TYPE IS STILL " + n.getToken());
     return n;
   }
 
