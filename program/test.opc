@@ -17,6 +17,7 @@ final class Token extends Object, Number {
     var t: int = 0;
 
     var x: (**int[4])[5] = new *(*int[10])[5];
+    var x: List = new List<int>(10);
 
 //    var x: *int = new int[5];
 //    var y: **int = new *int[5];

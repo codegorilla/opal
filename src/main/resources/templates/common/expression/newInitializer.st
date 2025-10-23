@@ -1,0 +1,3 @@
+newInitializer (argument) ::= <<
+(<argument; separator=", ">)
+>>

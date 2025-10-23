@@ -457,6 +457,15 @@ public class Generator3b extends ResultBaseVisitor <ST> {
     stack.push(emptyDeclarator());
     st.add("type", visit(node.type()));
     st.add("declarator", stack.pop());
+    if (node.hasInitializer())
+      st.add("initializer", visit(node.initializer()));
+    return st;
+  }
+
+  public ST visit (NewInitializer node) {
+    var st = group.getInstanceOf("common/expression/newInitializer");
+    for (var argument : node.arguments())
+      st.add("argument", visit(argument));
     return st;
   }
 
