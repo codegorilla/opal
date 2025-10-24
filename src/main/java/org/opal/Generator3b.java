@@ -452,6 +452,14 @@ public class Generator3b extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  public ST visit (DeleteExpression node) {
+    var st = group.getInstanceOf("common/expression/deleteExpression");
+    st.add("arrayFlag", node.getArrayFlag());
+    st.add("expression", visit(node.expression()));
+    return st;
+  }
+
+
   public ST visit (NewExpression node) {
     var st = group.getInstanceOf("common/expression/newExpression");
     stack.push(emptyDeclarator());

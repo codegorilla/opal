@@ -7,6 +7,8 @@ import org.opal.ast.AstNode;
 
 public class DeleteExpression extends AstNode {
 
+  private boolean arrayFlag = false;
+
   public DeleteExpression (Token token) {
     super(token);
   }
@@ -23,6 +25,14 @@ public class DeleteExpression extends AstNode {
 
   public AstNode expression () {
     return getChild(0);
+  }
+
+  public void setArrayFlag () {
+    arrayFlag = true;
+  }
+
+  public boolean getArrayFlag () {
+    return arrayFlag;
   }
 
 }

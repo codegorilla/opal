@@ -1185,12 +1185,21 @@ public class Parser {
     return n;
   }
 
-  // To do: Finish delete and new expressions. Should delete operand be an
-  // expression or an identifier?
+  // In C++, the delete keyword is followed by a cast expression. I believe
+  // this is to limit the possible kind of expressions that can be used.
+  // However, C++ has a different arrangement between the cast an unary
+  // expressions compared to this language. We should investigate if limiting
+  // the delete expression is the reason why, and if so, adjust the grammar to
+  // match.
 
   private AstNode deleteExpression () {
     var n = new DeleteExpression(lookahead);
     match(Token.Kind.DELETE);
+    if (lookahead.getKind() == Token.Kind.L_BRACKET) {
+      n.setArrayFlag();
+      match(Token.Kind.L_BRACKET);
+      match(Token.Kind.R_BRACKET);
+    }
     n.addChild(expression(true));
     return n;
   }

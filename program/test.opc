@@ -21,6 +21,7 @@ final class Token extends Object, Number {
 
     // To do: code generation for delete
     delete x;
+    delete[] x;
 
 //    var x: *int = new int[5];
 //    var y: **int = new *int[5];
