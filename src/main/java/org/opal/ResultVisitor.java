@@ -28,6 +28,7 @@ public interface ResultVisitor <T> {
 
   // Typealias declarations
   public T visit (TypealiasDeclaration node);
+  public T visit (TypealiasName node);
 
   // Class declarations
   public T visit (ClassDeclaration node);

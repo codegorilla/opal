@@ -21,4 +21,20 @@ public class TypealiasDeclaration extends AstNode {
     return v.visit(this);
   }
 
+  public AstNode exportSpecifier () {
+    return getChild(0);
+  }
+
+  public boolean hasExportSpecifier () {
+    return getChild(0) != null;
+  }
+
+  public AstNode name () {
+    return getChild(1);
+  }
+
+  public AstNode type () {
+    return getChild(2);
+  }
+
 }

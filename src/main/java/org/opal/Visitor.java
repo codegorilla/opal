@@ -28,6 +28,7 @@ public interface Visitor {
 
   // Typealias declarations
   public void visit (TypealiasDeclaration node);
+  public void visit (TypealiasName node);
 
   // Class declarations
   public void visit (ClassDeclaration node);

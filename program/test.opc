@@ -3,7 +3,7 @@ package main;
 import math;
 import stdlib;
 
-typealias;
+typealias IntPtr = *int[10];
 
 final class Token extends Object, Number {
 
@@ -15,7 +15,7 @@ final class Token extends Object, Number {
     var a: int = 0;
   }
 
-  virtual override def getToken () const & -> int {
+  virtual override def getToken (x: IntPtr) const & -> *int {
     var b: int = 0;
   }
 

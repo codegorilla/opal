@@ -204,7 +204,17 @@ public class Parser {
     var n = new TypealiasDeclaration(lookahead);
     match(Token.Kind.TYPEALIAS);
     n.addChild(exportSpecifier);
+    n.addChild(typealiasName());
+    match(Token.Kind.EQUAL);
+    System.out.println(lookahead);
+    n.addChild(type());
     match(Token.Kind.SEMICOLON);
+    return n;
+  }
+
+  private AstNode typealiasName () {
+    var n = new TypealiasName(lookahead);
+    match(Token.Kind.IDENTIFIER);
     return n;
   }
 

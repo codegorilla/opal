@@ -117,6 +117,21 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  public ST visit (TypealiasDeclaration node) {
+    if (!node.hasExportSpecifier()) {
+      var st = group.getInstanceOf("common/declaration/typealiasDeclaration");
+      st.add("name", visit(node.name()));
+      stack.push(emptyDeclarator());
+      st.add("type", visit(node.type()));
+      st.add("declarator", stack.pop());
+      return st;
+    } else return null;
+  }
+
+  public ST visit (TypealiasName node) {
+    return new ST(node.getToken().getLexeme());
+  }
+
   // To do: Might need a modifier table to map Opal modifiers to C++ modifiers
 
   public ST visit (Modifier node) {

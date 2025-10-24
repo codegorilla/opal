@@ -37,6 +37,7 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
 
   // Typealias declarations
   public T visit (TypealiasDeclaration node) { return null; }
+  public T visit (TypealiasName node) { return null; }
 
   // Class declarations
   public T visit (ClassDeclaration node) { return null; }
