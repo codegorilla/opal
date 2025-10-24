@@ -109,7 +109,8 @@ public class Generator3b extends ResultBaseVisitor <ST> {
       st.add("refQualifiers", visit(node.refQualifiers()));
     if (node.hasNoexceptSpecifier())
       st.add("noexceptSpecifier", visit(node.noexceptSpecifier()));
-    st.add("returnType", visit(node.returnType()));
+    if (node.hasReturnType())
+      st.add("returnType", visit(node.returnType()));
     st.add("body", visit(node.body()));
     return st;
   }

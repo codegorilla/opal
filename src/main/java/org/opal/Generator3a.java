@@ -180,7 +180,8 @@ public class Generator3a extends ResultBaseVisitor <ST> {
       st.add("refQualifiers", visit(node.refQualifiers()));
     if (node.hasNoexceptSpecifier())
       st.add("noexceptSpecifier", visit(node.noexceptSpecifier()));
-    st.add("returnType", visit(node.returnType()));
+    if (node.hasReturnType())
+      st.add("returnType", visit(node.returnType()));
     return st;
   }
 
@@ -267,7 +268,8 @@ public class Generator3a extends ResultBaseVisitor <ST> {
         st.add("parameters", visit(node.parameters()));
         if (node.hasNoexceptSpecifier())
           st.add("noexceptSpecifier", visit(node.noexceptSpecifier()));
-        st.add("returnType", visit(node.returnType()));
+        if (node.hasReturnType())
+          st.add("returnType", visit(node.returnType()));
         return st;
       } else {
         return null;

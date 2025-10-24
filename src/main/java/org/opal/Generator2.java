@@ -219,7 +219,8 @@ public class Generator2 extends ResultBaseVisitor <ST> {
       st.add("refQualifiers", visit(node.refQualifiers()));
     if (node.hasNoexceptSpecifier())
       st.add("noexceptSpecifier", visit(node.noexceptSpecifier()));
-    st.add("returnType", visit(node.returnType()));
+    if (node.hasReturnType())
+      st.add("returnType", visit(node.returnType()));
     return st;
   }
 
@@ -269,6 +270,10 @@ public class Generator2 extends ResultBaseVisitor <ST> {
 
   // ROUTINE DECLARATIONS
 
+  // For now, return types are always explicitly required unless the routine
+  // returns nothing, in which case it can be omitted. Later on, we will
+  // consider various options for return type deduction.
+
   public ST visit (RoutineDeclaration node) {
     if (!node.hasExportSpecifier()) {
       var st = group.getInstanceOf("common/declaration/functionDeclaration");
@@ -278,7 +283,8 @@ public class Generator2 extends ResultBaseVisitor <ST> {
       st.add("parameters", visit(node.parameters()));
       if (node.hasNoexceptSpecifier())
         st.add("noexceptSpecifier", visit(node.noexceptSpecifier()));
-      st.add("returnType", visit(node.returnType()));
+      if (node.hasReturnType())
+        st.add("returnType", visit(node.returnType()));
       return st;
     } else {
       return null;

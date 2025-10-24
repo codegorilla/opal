@@ -34,7 +34,7 @@ public class MemberRoutineDeclaration extends AstNode {
   }
 
   public boolean hasReturnType () {
-    return getChild(6) != null;
+    return getChild(7) != null;
   }
 
   public AstNode modifiers () {

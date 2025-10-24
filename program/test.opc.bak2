@@ -1,0 +1,52 @@
+package main;
+
+import math;
+import stdlib;
+
+private const var x: int = cast<int>(1);
+private const var y: int = 2;
+
+private var a: *int = 1;
+private var b: ^(float, int) -> void;
+
+final class Token extends Object, Number {
+  private const var a: float = 1.5;
+  private var x: int = 1;
+
+  private virtual final def getLexeme () const -> String {
+    var t: int = 0;
+
+    var x: (**int[4])[5] = new *(*int[10])[5];
+    var x: List = new List<int>(10);
+
+    // To do: code generation for delete
+    delete x;
+    delete[] x;
+
+//    var x: *int = new int[5];
+//    var y: **int = new *int[5];
+
+//    var x: **Token = new *Token[5];
+//    var x: **Token = new *int[5];
+  }
+
+  virtual override def getToken () const & -> int {
+    var t: int = 0;
+  }
+
+}
+
+private constexpr def test () noexcept -> int {
+  println("Hello world!");
+
+  while (x != 5)
+    var s: int = 1;
+
+  until (x < 10)
+    var t = 1;
+
+  if (x == true) {
+    var u = 2;
+  } else if (x == false)
+    var v = 3.14;
+}
