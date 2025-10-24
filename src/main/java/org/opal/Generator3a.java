@@ -446,6 +446,9 @@ public class Generator3a extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  // Its not clear that we actually need new/delete in Generator 3a. This pass
+  // is intended for declarations. Definitions are implemented in Generator 3b.
+
   public ST visit (DeleteExpression node) {
     var st = group.getInstanceOf("common/expression/deleteExpression");
     st.add("arrayFlag", node.getArrayFlag());
