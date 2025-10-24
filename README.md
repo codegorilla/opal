@@ -1,6 +1,8 @@
 ## Opal Programming Language
 
-A statically typed programming language that compiles to C++.
+Powerful. Concise. Familiar.
+
+Opal is a statically typed programming language that compiles to C++.
 
 Opal aims to be provide significantly nicer syntax than C++, fixing many of
 the language's syntax warts; while retaining virtually identical semantics.
