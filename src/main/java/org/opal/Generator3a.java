@@ -446,6 +446,30 @@ public class Generator3a extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  public ST visit (DeleteExpression node) {
+    var st = group.getInstanceOf("common/expression/deleteExpression");
+    st.add("arrayFlag", node.getArrayFlag());
+    st.add("expression", visit(node.expression()));
+    return st;
+  }
+
+  public ST visit (NewExpression node) {
+    var st = group.getInstanceOf("common/expression/newExpression");
+    stack.push(emptyDeclarator());
+    st.add("type", visit(node.type()));
+    st.add("declarator", stack.pop());
+    if (node.hasInitializer())
+      st.add("initializer", visit(node.initializer()));
+    return st;
+  }
+
+  public ST visit (NewInitializer node) {
+    var st = group.getInstanceOf("common/expression/newInitializer");
+    for (var argument : node.arguments())
+      st.add("argument", visit(argument));
+    return st;
+  }
+
   public ST visit (ArraySubscript node) {
     var st = group.getInstanceOf("common/expression/arraySubscript");
     st.add("name", visit(node.name()));
