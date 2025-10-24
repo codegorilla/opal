@@ -132,10 +132,12 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return new ST(node.getToken().getLexeme());
   }
 
-  // To do: Might need a modifier table to map Opal modifiers to C++ modifiers
-
   public ST visit (Modifier node) {
-    return new ST(node.getToken().getLexeme());
+    var text = switch (node.getToken().getKind()) {
+      case Token.Kind.ABSTRACT -> "= 0";
+      default -> node.getToken().getLexeme();
+    };
+    return new ST(text);
   }
 
   // CLASS DECLARATIONS
@@ -251,7 +253,11 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     } else {
       for (var modifier : node.getModifiers()) {
         var kind = modifier.getToken().getKind();
-        if (kind == Token.Kind.FINAL || kind == Token.Kind.OVERRIDE) {
+        if (
+          kind == Token.Kind.ABSTRACT ||
+          kind == Token.Kind.FINAL    ||
+          kind == Token.Kind.OVERRIDE
+        ) {
           st.add("modifier", visit(modifier));
         }
       }

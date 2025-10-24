@@ -434,7 +434,7 @@ public class Generator3a extends ResultBaseVisitor <ST> {
 
   public ST visit (CastExpression node) {
     var st = group.getInstanceOf("common/expression/castExpression");
-    var operation = switch(node.getToken().getKind()) {
+    var operation = switch (node.getToken().getKind()) {
       case Token.Kind.CAST -> "static_cast";
       case Token.Kind.DIVINE -> "dynamic_cast";
       case Token.Kind.TRANSMUTE -> "reinterpret_cast";
