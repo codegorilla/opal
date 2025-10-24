@@ -34,6 +34,9 @@ public class BaseVisitor implements Visitor {
   public void visit (ImportDeclaration node) {}
   public void visit (ImportName node) {}
 
+  // Typealias declarations
+  public void visit (TypealiasDeclaration node) {}
+
   // Class declarations
   public void visit (ClassDeclaration node) {}
   public void visit (ClassModifiers node) {}

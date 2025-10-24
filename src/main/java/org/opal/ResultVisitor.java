@@ -26,6 +26,9 @@ public interface ResultVisitor <T> {
   public T visit (ImportDeclaration node);
   public T visit (ImportName node);
 
+  // Typealias declarations
+  public T visit (TypealiasDeclaration node);
+
   // Class declarations
   public T visit (ClassDeclaration node);
   public T visit (ClassModifiers node);

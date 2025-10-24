@@ -178,6 +178,8 @@ public class Parser {
           n = routineDeclaration(spec);
         case Token.Kind.VAL, Token.Kind.VAR ->
           n = variableDeclaration(spec);
+        case Token.Kind.TYPEALIAS ->
+          n = typealiasDeclaration(spec);
         default ->
           n = null;
       }
@@ -193,6 +195,16 @@ public class Parser {
   private ExportSpecifier exportSpecifier () {
     var n = new ExportSpecifier(lookahead);
     match(Token.Kind.PRIVATE);
+    return n;
+  }
+
+  // TYPEALIAS DECLARATION
+
+  private AstNode typealiasDeclaration (AstNode exportSpecifier) {
+    var n = new TypealiasDeclaration(lookahead);
+    match(Token.Kind.TYPEALIAS);
+    n.addChild(exportSpecifier);
+    match(Token.Kind.SEMICOLON);
     return n;
   }
 

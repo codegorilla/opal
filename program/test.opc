@@ -3,6 +3,8 @@ package main;
 import math;
 import stdlib;
 
+typealias;
+
 final class Token extends Object, Number {
 
   private virtual final def getLexeme () const -> String {
