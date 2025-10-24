@@ -133,9 +133,10 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (Modifier node) {
-    var text = switch (node.getToken().getKind()) {
+    var token = node.getToken();
+    var text = switch (token.getKind()) {
       case Token.Kind.ABSTRACT -> "= 0";
-      default -> node.getToken().getLexeme();
+      default -> token.getLexeme();
     };
     return new ST(text);
   }

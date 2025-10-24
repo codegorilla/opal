@@ -66,10 +66,9 @@ public class Generator3b extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // To do: Might need a modifier table to map Opal modifiers to C++ modifiers
+  // Abstract member routines are never defined, so there is no need to map
+  // 'abstract' keyword in this pass.
 
-  // To do: Implement abstract - see gen2
-  
   public ST visit (Modifier node) {
     return new ST(node.getToken().getLexeme());
   }

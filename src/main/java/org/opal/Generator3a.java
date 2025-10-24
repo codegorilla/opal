@@ -82,12 +82,13 @@ public class Generator3a extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  // To do: Might need a modifier table to map Opal modifiers to C++ modifiers
-
-  // To do: Implement abstract - see gen2
-
   public ST visit (Modifier node) {
-    return new ST(node.getToken().getLexeme());
+    var token = node.getToken();
+    var text = switch (token.getKind()) {
+      case Token.Kind.ABSTRACT -> "= 0";
+      default -> token.getLexeme();
+    };
+    return new ST(text);
   }
 
   // CLASS DECLARATIONS
@@ -199,7 +200,11 @@ public class Generator3a extends ResultBaseVisitor <ST> {
     } else {
       for (var modifier : node.getModifiers()) {
         var kind = modifier.getToken().getKind();
-        if (kind == Token.Kind.FINAL || kind == Token.Kind.OVERRIDE) {
+        if (
+          kind == Token.Kind.ABSTRACT ||
+          kind == Token.Kind.FINAL    ||
+          kind == Token.Kind.OVERRIDE
+        ) {
           st.add("modifier", visit(modifier));
         }
       }
