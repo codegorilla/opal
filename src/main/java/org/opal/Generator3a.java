@@ -255,8 +255,6 @@ public class Generator3a extends ResultBaseVisitor <ST> {
 
   // ROUTINE DECLARATIONS
 
-  // To do: Might need to put conditional on the return type
-
   public ST visit (RoutineDeclaration node) {
     if (pass == ROUTINE_PASS) {
       if (node.hasExportSpecifier()) {

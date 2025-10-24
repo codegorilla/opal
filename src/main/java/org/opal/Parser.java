@@ -418,8 +418,6 @@ public class Parser {
   // For now, there are no local routines, so no need to distinguish between
   // global and local routines.
 
-  // To do: Need to handle no return type
-
   private AstNode routineDeclaration (ExportSpecifier exportSpecifier) {
     var n = new RoutineDeclaration(lookahead);
     match(Token.Kind.DEF);
@@ -1453,7 +1451,7 @@ public class Parser {
 
   // TYPES **************************************************
 
-  // Type processing is interesting because Cobalt uses a form of the
+  // Type processing is interesting because Opal uses a form of the
   // C-declaration style, so parsing types requires following the "spiral rule".
   // To make this easier, we make use of stack and queue types provided by the
   // language rather than complicating AST node class definition with parent
