@@ -84,6 +84,8 @@ public class Generator3a extends ResultBaseVisitor <ST> {
 
   // To do: Might need a modifier table to map Opal modifiers to C++ modifiers
 
+  // To do: Implement abstract - see gen2
+
   public ST visit (Modifier node) {
     return new ST(node.getToken().getLexeme());
   }
