@@ -26,10 +26,6 @@ public interface ResultVisitor <T> {
   public T visit (ImportDeclaration node);
   public T visit (ImportName node);
 
-  // Typealias declarations
-  public T visit (TypealiasDeclaration node);
-  public T visit (TypealiasName node);
-
   // Class declarations
   public T visit (ClassDeclaration node);
   public T visit (ClassModifiers node);
@@ -42,6 +38,9 @@ public interface ResultVisitor <T> {
   // Member general declarations
   public T visit (MemberAccessSpecifier node);
 
+  // Member typealias declarations
+  public T visit (MemberTypealiasDeclaration node);
+
   // Member routine declarations
   public T visit (MemberRoutineDeclaration node);
   public T visit (MemberRoutineModifiers node);
@@ -53,6 +52,11 @@ public interface ResultVisitor <T> {
   // Member variable declarations
   public T visit (MemberVariableDeclaration node);
   public T visit (MemberVariableModifiers node);
+
+  // Typealias declarations
+  public T visit (TypealiasDeclaration node);
+  public T visit (LocalTypealiasDeclaration node);
+  public T visit (TypealiasName node);
 
   // Routine declarations
   public T visit (RoutineDeclaration node);

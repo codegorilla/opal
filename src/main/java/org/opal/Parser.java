@@ -174,12 +174,12 @@ public class Parser {
       switch (lookahead.getKind()) {
         case Token.Kind.CLASS ->
           n = classDeclaration(spec);
+        case Token.Kind.TYPEALIAS ->
+          n = typealiasDeclaration(spec);
         case Token.Kind.DEF ->
           n = routineDeclaration(spec);
         case Token.Kind.VAL, Token.Kind.VAR ->
           n = variableDeclaration(spec);
-        case Token.Kind.TYPEALIAS ->
-          n = typealiasDeclaration(spec);
         default ->
           n = null;
       }
@@ -195,26 +195,6 @@ public class Parser {
   private ExportSpecifier exportSpecifier () {
     var n = new ExportSpecifier(lookahead);
     match(Token.Kind.PRIVATE);
-    return n;
-  }
-
-  // TYPEALIAS DECLARATION
-
-  private AstNode typealiasDeclaration (AstNode exportSpecifier) {
-    var n = new TypealiasDeclaration(lookahead);
-    match(Token.Kind.TYPEALIAS);
-    n.addChild(exportSpecifier);
-    n.addChild(typealiasName());
-    match(Token.Kind.EQUAL);
-    System.out.println(lookahead);
-    n.addChild(type());
-    match(Token.Kind.SEMICOLON);
-    return n;
-  }
-
-  private AstNode typealiasName () {
-    var n = new TypealiasName(lookahead);
-    match(Token.Kind.IDENTIFIER);
     return n;
   }
 
@@ -349,6 +329,7 @@ public class Parser {
     ) ? memberAccessSpecifier() : null;
     modifiers();
     var n = switch (lookahead.getKind()) {
+      case Token.Kind.TYPEALIAS -> memberTypealiasDeclaration(spec);
       case Token.Kind.DEF -> memberRoutineDeclaration(spec);
       case Token.Kind.VAL, Token.Kind.VAR -> memberVariableDeclaration(spec);
       default -> null;
@@ -362,14 +343,13 @@ public class Parser {
     return n;
   }
 
-  private AstNode memberVariableDeclaration (MemberAccessSpecifier accessSpecifier) {
-    var n = new MemberVariableDeclaration(lookahead);
-    match(Token.Kind.VAR);
+  private AstNode memberTypealiasDeclaration (AstNode accessSpecifier) {
+    var n = new TypealiasDeclaration(lookahead);
+    match(Token.Kind.TYPEALIAS);
     n.addChild(accessSpecifier);
-    n.addChild(variableModifiers());
-    n.addChild(variableName());
-    n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier() : null);
-    n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer() : null);
+    n.addChild(typealiasName());
+    match(Token.Kind.EQUAL);
+    n.addChild(type());
     match(Token.Kind.SEMICOLON);
     return n;
   }
@@ -428,6 +408,47 @@ public class Parser {
   private AstNode refQualifier () {
     var n = new RefQualifier(lookahead);
     match(lookahead.getKind());
+    return n;
+  }
+
+  private AstNode memberVariableDeclaration (MemberAccessSpecifier accessSpecifier) {
+    var n = new MemberVariableDeclaration(lookahead);
+    match(Token.Kind.VAR);
+    n.addChild(accessSpecifier);
+    n.addChild(variableModifiers());
+    n.addChild(variableName());
+    n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier() : null);
+    n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer() : null);
+    match(Token.Kind.SEMICOLON);
+    return n;
+  }
+
+  // TYPEALIAS DECLARATION
+
+  private AstNode typealiasDeclaration (AstNode exportSpecifier) {
+    var n = new TypealiasDeclaration(lookahead);
+    match(Token.Kind.TYPEALIAS);
+    n.addChild(exportSpecifier);
+    n.addChild(typealiasName());
+    match(Token.Kind.EQUAL);
+    n.addChild(type());
+    match(Token.Kind.SEMICOLON);
+    return n;
+  }
+
+  private AstNode typealiasName () {
+    var n = new TypealiasName(lookahead);
+    match(Token.Kind.IDENTIFIER);
+    return n;
+  }
+
+  private AstNode localTypealiasDeclaration () {
+    var n = new LocalTypealiasDeclaration(lookahead);
+    match(Token.Kind.TYPEALIAS);
+    n.addChild(typealiasName());
+    match(Token.Kind.EQUAL);
+    n.addChild(type());
+    match(Token.Kind.SEMICOLON);
     return n;
   }
 
@@ -631,8 +652,9 @@ public class Parser {
     ) {
       n = standardStatement();
     } else if (
-      kind == Token.Kind.CLASS ||
-      kind == Token.Kind.DEF   ||
+      kind == Token.Kind.CLASS     ||
+      kind == Token.Kind.TYPEALIAS ||
+      kind == Token.Kind.VAL       ||
       kind == Token.Kind.VAR
     ) {
       n = declarationStatement();
@@ -740,7 +762,9 @@ public class Parser {
     AstNode n = null;
     modifiers();
     var kind = lookahead.getKind();
-    if (kind == Token.Kind.VAL || kind == Token.Kind.VAR)
+    if (kind == Token.Kind.TYPEALIAS)
+      n = localTypealiasDeclaration();
+    else if (kind == Token.Kind.VAL || kind == Token.Kind.VAR)
       n = localVariableDeclaration();
     // To do: Need error checking here
     return n;

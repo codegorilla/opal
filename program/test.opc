@@ -22,5 +22,6 @@ final class Token extends Object, Number {
 }
 
 def test () {
+    typealias IntPtr = *int[10];
     var c: int = 0;
 }

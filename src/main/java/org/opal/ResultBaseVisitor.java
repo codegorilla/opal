@@ -35,10 +35,6 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
   public T visit (ImportDeclaration node) { return null; }
   public T visit (ImportName node) { return null; }
 
-  // Typealias declarations
-  public T visit (TypealiasDeclaration node) { return null; }
-  public T visit (TypealiasName node) { return null; }
-
   // Class declarations
   public T visit (ClassDeclaration node) { return null; }
   public T visit (ClassModifiers node) { return null; }
@@ -51,6 +47,9 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
   // Member general declarations
   public T visit (MemberAccessSpecifier node) { return null; }
 
+  // Member typealias declarations
+  public T visit (MemberTypealiasDeclaration node) { return null; }
+
   // Member routine declarations
   public T visit (MemberRoutineDeclaration node) { return null; }
   public T visit (MemberRoutineModifiers node) { return null; }
@@ -62,6 +61,11 @@ public class ResultBaseVisitor <T> implements ResultVisitor <T> {
   // Member variable declarations
   public T visit (MemberVariableDeclaration node) { return null; }
   public T visit (MemberVariableModifiers node) { return null; }
+
+  // Typealias declarations
+  public T visit (TypealiasDeclaration node) { return null; }
+  public T visit (LocalTypealiasDeclaration node) { return null; }
+  public T visit (TypealiasName node) { return null; }
 
   // Routine declarations
   public T visit (RoutineDeclaration node) { return null; }
