@@ -165,6 +165,19 @@ public class Generator3a extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  public ST visit (MemberTypealiasDeclaration node) {
+    var st = group.getInstanceOf("common/declaration/memberUsingDeclaration");
+    if (node.hasAccessSpecifier())
+      st.add("accessSpecifier", visit(node.accessSpecifier()));
+    else
+      st.add("accessSpecifier", "public");
+    st.add("name", visit(node.name()));
+    stack.push(emptyDeclarator());
+    st.add("type", visit(node.type()));
+    st.add("declarator", stack.pop());
+    return st;
+  }
+
   public ST visit (MemberRoutineDeclaration node) {
     var st = group.getInstanceOf("common/declaration/memberFunctionDeclaration");
     if (node.hasAccessSpecifier())
@@ -258,6 +271,29 @@ public class Generator3a extends ResultBaseVisitor <ST> {
     for (var modifier : node.getModifiers())
       st.add("modifier", visit(modifier));
     return st;
+  }
+
+  // TYPEALIAS DECLARATIONS
+
+  public ST visit (TypealiasDeclaration node) {
+    if (pass == TYPE_PASS) {
+      if (node.hasExportSpecifier()) {
+        var st = group.getInstanceOf("common/declaration/usingDeclaration");
+        st.add("name", visit(node.name()));
+        stack.push(emptyDeclarator());
+        st.add("type", visit(node.type()));
+        st.add("declarator", stack.pop());
+        return st;
+      } else {
+        return null;
+      }
+    } else {
+      return null;
+    }
+  }
+
+  public ST visit (TypealiasName node) {
+    return new ST(node.getToken().getLexeme());
   }
 
   // ROUTINE DECLARATIONS

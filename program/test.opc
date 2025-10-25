@@ -3,9 +3,11 @@ package main;
 import math;
 import stdlib;
 
-typealias IntPtr = *int[10];
+private typealias IntPtr = *int[10];
 
-final class Token extends Object, Number {
+private final class Token extends Object, Number {
+
+  typealias FloatPtr = *float;
 
   private virtual final def getLexeme () const -> String {
     var a: int = 0;
@@ -16,12 +18,13 @@ final class Token extends Object, Number {
   }
 
   virtual override def getToken (x: IntPtr) const & -> *int {
+    typealias IntPtr = *int;
     var b: int = 0;
   }
 
 }
 
 def test () {
-    typealias IntPtr = *int[10];
-    var c: int = 0;
+  typealias IntPtr = *int;
+  var c: int = 0;
 }

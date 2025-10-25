@@ -22,11 +22,11 @@ public class LocalTypealiasDeclaration extends AstNode {
   }
 
   public AstNode name () {
-    return getChild(1);
+    return getChild(0);
   }
 
   public AstNode type () {
-    return getChild(2);
+    return getChild(1);
   }
 
 }

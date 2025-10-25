@@ -344,7 +344,7 @@ public class Parser {
   }
 
   private AstNode memberTypealiasDeclaration (AstNode accessSpecifier) {
-    var n = new TypealiasDeclaration(lookahead);
+    var n = new MemberTypealiasDeclaration(lookahead);
     match(Token.Kind.TYPEALIAS);
     n.addChild(accessSpecifier);
     n.addChild(typealiasName());

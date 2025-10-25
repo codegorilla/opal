@@ -149,6 +149,21 @@ public class Generator3b extends ResultBaseVisitor <ST> {
     return new ST(node.getToken().getLexeme());
   }
 
+  // TYPEALIAS DECLARATIONS
+
+  public ST visit (LocalTypealiasDeclaration node) {
+    var st = group.getInstanceOf("common/declaration/localUsingDeclaration");
+    st.add("name", visit(node.name()));
+    stack.push(emptyDeclarator());
+    st.add("type", visit(node.type()));
+    st.add("declarator", stack.pop());
+    return st;
+  }
+
+  public ST visit (TypealiasName node) {
+    return new ST(node.getToken().getLexeme());
+  }
+
   // ROUTINE DECLARATIONS
 
   public ST visit (RoutineDeclaration node) {

@@ -117,21 +117,6 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  public ST visit (TypealiasDeclaration node) {
-    if (!node.hasExportSpecifier()) {
-      var st = group.getInstanceOf("common/declaration/typealiasDeclaration");
-      st.add("name", visit(node.name()));
-      stack.push(emptyDeclarator());
-      st.add("type", visit(node.type()));
-      st.add("declarator", stack.pop());
-      return st;
-    } else return null;
-  }
-
-  public ST visit (TypealiasName node) {
-    return new ST(node.getToken().getLexeme());
-  }
-
   public ST visit (Modifier node) {
     var token = node.getToken();
     var text = switch (token.getKind()) {
@@ -202,20 +187,16 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return st;
   }
 
-  public ST visit (MemberVariableDeclaration node) {
-    var st = group.getInstanceOf("common/declaration/memberVariableDeclaration");
+  public ST visit (MemberTypealiasDeclaration node) {
+    var st = group.getInstanceOf("common/declaration/memberUsingDeclaration");
     if (node.hasAccessSpecifier())
       st.add("accessSpecifier", visit(node.accessSpecifier()));
     else
       st.add("accessSpecifier", "public");
-    if (node.modifiers().hasChildren())
-      st.add("modifiers", visit(node.modifiers()));
-    stack.push(visit(node.name()));
-    if (node.hasTypeSpecifier())
-      st.add("typeSpecifier", visit(node.typeSpecifier()));
+    st.add("name", visit(node.name()));
+    stack.push(emptyDeclarator());
+    st.add("type", visit(node.type()));
     st.add("declarator", stack.pop());
-    if (node.hasInitializer())
-      st.add("initializer", visit(node.initializer()));
     return st;
   }
 
@@ -287,6 +268,40 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   }
 
   public ST visit (RefQualifier node) {
+    return new ST(node.getToken().getLexeme());
+  }
+
+  public ST visit (MemberVariableDeclaration node) {
+    var st = group.getInstanceOf("common/declaration/memberVariableDeclaration");
+    if (node.hasAccessSpecifier())
+      st.add("accessSpecifier", visit(node.accessSpecifier()));
+    else
+      st.add("accessSpecifier", "public");
+    if (node.modifiers().hasChildren())
+      st.add("modifiers", visit(node.modifiers()));
+    stack.push(visit(node.name()));
+    if (node.hasTypeSpecifier())
+      st.add("typeSpecifier", visit(node.typeSpecifier()));
+    st.add("declarator", stack.pop());
+    if (node.hasInitializer())
+      st.add("initializer", visit(node.initializer()));
+    return st;
+  }
+
+  // TYPEALIAS DECLARATIONS
+
+  public ST visit (TypealiasDeclaration node) {
+    if (!node.hasExportSpecifier()) {
+      var st = group.getInstanceOf("common/declaration/usingDeclaration");
+      st.add("name", visit(node.name()));
+      stack.push(emptyDeclarator());
+      st.add("type", visit(node.type()));
+      st.add("declarator", stack.pop());
+      return st;
+    } else return null;
+  }
+
+  public ST visit (TypealiasName node) {
     return new ST(node.getToken().getLexeme());
   }
 
