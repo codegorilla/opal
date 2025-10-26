@@ -206,7 +206,11 @@ public class Generator3a extends ResultBaseVisitor <ST> {
     if (modifiersPass == 0) {
       for (var modifier : node.getModifiers()) {
         var kind = modifier.getToken().getKind();
-        if (kind == Token.Kind.CONSTEXPR || kind == Token.Kind.VIRTUAL) {
+        if (
+          kind == Token.Kind.CONSTEXPR ||
+          kind == Token.Kind.STATIC    ||
+          kind == Token.Kind.VIRTUAL
+        ) {
           st.add("modifier", visit(modifier));
         }
       }

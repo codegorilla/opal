@@ -12,10 +12,12 @@ private typealias IntPtr = *int[10];
 
 final class Token extends Object, Number {
 
+  static var x: int = 1;
+
   typealias FloatPtr = *float;
 
   // To do: implement static member functions and member variables
-  private def getLexeme () const -> String {
+  private static def getLexeme () const -> String {
     var a: int = 0;
   }
 

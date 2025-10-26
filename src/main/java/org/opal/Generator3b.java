@@ -180,6 +180,9 @@ public class Generator3b extends ResultBaseVisitor <ST> {
     return st;
   }
 
+  // Some modifiers, such as 'static' and 'virtual' do not appear on
+  // the routine definition.
+
   public ST visit (RoutineModifiers node) {
     var st = group.getInstanceOf("common/declaration/functionModifiers");
     for (var modifier : node.getModifiers()) {
