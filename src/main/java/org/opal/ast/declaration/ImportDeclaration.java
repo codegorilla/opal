@@ -21,8 +21,8 @@ public class ImportDeclaration extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode importName () {
-    return getChild(0);
+  public Iterable<AstNode> names () {
+    return getChildren();
   }
 
 }

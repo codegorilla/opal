@@ -98,14 +98,13 @@ public class Generator2 extends ResultBaseVisitor <ST> {
 
   public ST visit (ImportDeclaration node) {
     var st = group.getInstanceOf("interface/declaration/importDeclaration");
-    st.add("importName", visit(node.importName()));
+    for (var name : node.names())
+      st.add("name", visit(name));
     return st;
   }
 
   public ST visit (ImportName node) {
-    var st = group.getInstanceOf("interface/declaration/importName");
-    st.add("name", node.getToken().getLexeme());
-    return st;
+    return new ST(node.getToken().getLexeme());
   }
 
   // COMMON DECLARATIONS

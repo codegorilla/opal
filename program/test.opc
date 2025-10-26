@@ -1,11 +1,22 @@
 package main;
 
-import math;
-import stdlib;
+import std.math;
+import std.crypto;
+import lang.math;
+
+import zlib.net.server.auth;
+import zlib.net.client.auth;
+
+//use zlib.net.server.auth;
+//use zlib.net.client.auth;
+
+//use std.math;
+//use std.crypto;
+
 
 private typealias IntPtr = *int[10];
 
-private final class Token extends Object, Number {
+final class Token extends Object, Number {
 
   typealias FloatPtr = *float;
 
@@ -17,7 +28,7 @@ private final class Token extends Object, Number {
     var a: int = 0;
   }
 
-  virtual override def getToken (x: IntPtr) const & -> *int {
+  virtual abstract override def getToken (x: IntPtr) const & -> *int {
     typealias IntPtr = *int;
     var b: int = 0;
   }

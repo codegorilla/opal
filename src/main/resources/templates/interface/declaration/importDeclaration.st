@@ -1,3 +1,3 @@
-importDeclaration (importName) ::= <<
-import <importName>;
+importDeclaration (name) ::= <<
+import <name; separator=".">;
 >>

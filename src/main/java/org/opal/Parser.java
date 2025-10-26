@@ -133,10 +133,21 @@ public class Parser {
     return n;
   }
 
+  // We could implement this several ways. First, we could use a binary tree
+  // with dots as internal nodes and names as leaf nodes. Second, we could
+  // simply have a chain of names, with each child names being under its
+  // respective parent. Lastly, we can have a list of names under the import
+  // declaration. We choose to go with the latter case because that is the
+  // easiest implementation and the others hold no advantages for our use case.
+
   private AstNode importDeclaration () {
     var n = new ImportDeclaration(lookahead);
     match(Token.Kind.IMPORT);
     n.addChild(importName());
+    while (lookahead.getKind() == Token.Kind.PERIOD) {
+      match(Token.Kind.PERIOD);
+      n.addChild(importName());
+    }
     match(Token.Kind.SEMICOLON);
     return n;
   }
