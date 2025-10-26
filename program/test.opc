@@ -1,18 +1,12 @@
 package main;
 
 import std.math;
+
 import std.crypto;
 import lang.math;
 
 import zlib.net.server.auth;
 import zlib.net.client.auth;
-
-//use zlib.net.server.auth;
-//use zlib.net.client.auth;
-
-//use std.math;
-//use std.crypto;
-
 
 private typealias IntPtr = *int[10];
 
@@ -20,7 +14,8 @@ final class Token extends Object, Number {
 
   typealias FloatPtr = *float;
 
-  private virtual final def getLexeme () const -> String {
+  // To do: implement static member functions and member variables
+  private def getLexeme () const -> String {
     var a: int = 0;
   }
 

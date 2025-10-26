@@ -241,9 +241,6 @@ public class Parser {
       kind == Token.Kind.CONST     ||
       kind == Token.Kind.CONSTEXPR ||
       kind == Token.Kind.FINAL     ||
-      kind == Token.Kind.OVERRIDE  ||
-      kind == Token.Kind.STATIC    ||
-      kind == Token.Kind.VIRTUAL   ||
       kind == Token.Kind.VOLATILE
     ) {
       modifier();
@@ -338,7 +335,7 @@ public class Parser {
       kind == Token.Kind.PRIVATE ||
       kind == Token.Kind.PROTECTED
     ) ? memberAccessSpecifier() : null;
-    modifiers();
+    memberModifiers();
     var n = switch (lookahead.getKind()) {
       case Token.Kind.TYPEALIAS -> memberTypealiasDeclaration(spec);
       case Token.Kind.DEF -> memberRoutineDeclaration(spec);
@@ -352,6 +349,23 @@ public class Parser {
     var n = new MemberAccessSpecifier(lookahead);
     match(lookahead.getKind());
     return n;
+  }
+
+  private void memberModifiers () {
+    var kind = lookahead.getKind();
+    while (
+      kind == Token.Kind.ABSTRACT  ||
+      kind == Token.Kind.CONST     ||
+      kind == Token.Kind.CONSTEXPR ||
+      kind == Token.Kind.FINAL     ||
+      kind == Token.Kind.OVERRIDE  ||
+      kind == Token.Kind.STATIC    ||
+      kind == Token.Kind.VIRTUAL   ||
+      kind == Token.Kind.VOLATILE
+    ) {
+      modifier();
+      kind = lookahead.getKind();
+    }
   }
 
   private AstNode memberTypealiasDeclaration (AstNode accessSpecifier) {
