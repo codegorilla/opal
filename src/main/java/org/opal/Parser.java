@@ -181,6 +181,18 @@ public class Parser {
     return n;
   }
 
+  // I don't know if it makes sense to be able to export using declarations in
+  // Opal. It is definitely possible in C++, and might come in handy for
+  // aggregating smaller packages into a "super package". However, unlike Opal,
+  // modules and namespaces are orthogonal concepts in C++, so there could be
+  // considerations in C++ that don't apply to Opal and/or vice versa. For now,
+  // we will allow using declarations to be exported, and re-evaluate later.
+
+  // Using declarations may need to appear in the module interface unit even if
+  // they are not being exported. This is because there could be references to
+  // a name introduced by a 'using' statement in a class declaration or routine
+  // prototype.
+
   private AstNode declaration () {
     AstNode n = null;
     var spec = (lookahead.getKind() == Token.Kind.PRIVATE) ? exportSpecifier() : null;
