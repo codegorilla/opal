@@ -3,7 +3,7 @@ translationUnit (packageDeclaration, importDeclarations, packageName, declaratio
 
 <packageDeclaration>
 
-namespace <packageName> {
+namespace <packageName; separator="::"> {
   <declarations; separator="\n\n">
 
   <definitions; separator="\n\n">

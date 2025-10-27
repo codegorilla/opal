@@ -82,8 +82,6 @@ public class Token {
     IN,
     IMPORT,
     LOOP,
-    MODULE,
-    NAMESPACE,
     NEW,
     NIL,
     NOEXCEPT,

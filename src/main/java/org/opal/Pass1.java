@@ -35,7 +35,6 @@ public class Pass1 extends BaseVisitor {
 
   public void visit (PackageDeclaration node) {
     System.out.println("Package Declaration");
-    node.packageName().accept(this);
   }
 
   public void visit (PackageName node) {

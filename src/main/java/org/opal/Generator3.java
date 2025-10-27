@@ -46,7 +46,9 @@ public class Generator3 extends ResultBaseVisitor <ST> {
   public ST visit (TranslationUnit node) {
     var st = group.getInstanceOf("implementation/translationUnit");
     st.add("packageDeclaration", visit(node.packageDeclaration()));
-    st.add("packageName", genStack.pop());
+    var tempStack = genStack.reversed();
+    while (!genStack.isEmpty())
+      st.add("packageName", tempStack.pop());
     // Add in declarations
     var generator3a = new Generator3a(node);
     st.add("declarations", generator3a.process());
@@ -60,25 +62,21 @@ public class Generator3 extends ResultBaseVisitor <ST> {
 
   // PACKAGE DECLARATIONS
 
-  // Package declaration is special in that there is only one, and it must appear at the top of the translation unit.
-
   public ST visit (PackageDeclaration node) {
     var st = group.getInstanceOf("implementation/declaration/packageDeclaration");
-    visit(node.packageName());
-    st.add("packageName", genStack.getFirst());
+    for (var name : node.names())
+      st.add("name", visit(name));
     return st;
   }
 
-  // For now just support single word package names
-
-  // Normally, we would return string templates, but in this case, we use the
-  // general stack to facilitate re-use of the package name in more than one
-  // place.
+  // Normally, we would just return string templates, but in this case, we also
+  // use the general stack to facilitate re-use of the package name in more
+  // than one place.
 
   public ST visit (PackageName node) {
     var st = new ST(node.getToken().getLexeme());
     genStack.push(st);
-    return null;
+    return st;
   }
 
 }

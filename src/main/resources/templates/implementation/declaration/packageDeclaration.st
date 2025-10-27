@@ -1,5 +1,3 @@
-// Cobalt packages correspond to C++ modules
-
-packageDeclaration (packageName) ::= <<
-module <packageName>;
+packageDeclaration (name) ::= <<
+module <name; separator=".">;
 >>

@@ -109,13 +109,19 @@ public class Parser {
 
   // DECLARATIONS **************************************************
 
-  // Package declaration is special in that there is only one, and it must
-  // appear at the top of the translation unit.
+  // The package declaration is special in that there is only one per
+  // translation unit, and it must appear at the very top. A package is
+  // basically a direct 1:1 translation to a C++ module and namespace of the
+  // same name.
 
   private AstNode packageDeclaration () {
     var n = new PackageDeclaration(lookahead);
     match(Token.Kind.PACKAGE);
     n.addChild(packageName());
+    while (lookahead.getKind() == Token.Kind.PERIOD) {
+      match(Token.Kind.PERIOD);
+      n.addChild(packageName());
+    }
     match(Token.Kind.SEMICOLON);
     return n;
   }

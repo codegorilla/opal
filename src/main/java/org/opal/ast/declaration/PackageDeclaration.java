@@ -21,8 +21,13 @@ public class PackageDeclaration extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode packageName () {
-    return getChild(0);
+  // DEPRECATED
+//  public AstNode packageName () {
+//    return getChild(0);
+//  }
+
+  public Iterable<AstNode> names () {
+    return getChildren();
   }
 
 }

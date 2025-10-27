@@ -6,7 +6,7 @@ translationUnit (packageDeclaration, importDeclarations, packageName, declaratio
 import std;
 <importDeclarations>
 
-namespace <packageName> {
+namespace <packageName; separator="::"> {
   <declarations>
 }
 >>

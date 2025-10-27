@@ -69,12 +69,12 @@ public class Lexer {
     keywordLookup.put("for", Token.Kind.FOR);
     keywordLookup.put("fn", Token.Kind.FN);
     keywordLookup.put("fun", Token.Kind.FUN);
+    keywordLookup.put("goto", Token.Kind.GOTO);
     keywordLookup.put("if", Token.Kind.IF);
     keywordLookup.put("import", Token.Kind.IMPORT);
     keywordLookup.put("in", Token.Kind.IN);
     keywordLookup.put("include", Token.Kind.INCLUDE);
     keywordLookup.put("loop", Token.Kind.LOOP);
-    keywordLookup.put("module", Token.Kind.MODULE);
     keywordLookup.put("new", Token.Kind.NEW);
     keywordLookup.put("nil", Token.Kind.NIL);
     keywordLookup.put("noexcept", Token.Kind.NOEXCEPT);
@@ -87,6 +87,7 @@ public class Lexer {
     keywordLookup.put("return", Token.Kind.RETURN);
     keywordLookup.put("static", Token.Kind.STATIC);
     keywordLookup.put("struct", Token.Kind.STRUCT);
+    keywordLookup.put("switch", Token.Kind.SWITCH);
     keywordLookup.put("template", Token.Kind.TEMPLATE);
     keywordLookup.put("this", Token.Kind.THIS);
     keywordLookup.put("trait", Token.Kind.TRAIT);
