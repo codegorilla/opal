@@ -5,6 +5,8 @@ import std.math;
 import std.crypto;
 import lang.math;
 
+private using lang.math.Bessel;
+
 private typealias IntPtr = *int[10];
 
 final class Token extends Object, Number {

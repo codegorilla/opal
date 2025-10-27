@@ -26,6 +26,11 @@ public interface ResultVisitor <T> {
   public T visit (ImportDeclaration node);
   public T visit (ImportName node);
 
+  // Using declarations
+  public T visit (UsingDeclaration node);
+  public T visit (UsingQualifiedName node);
+  public T visit (UsingName node);
+
   // Class declarations
   public T visit (ClassDeclaration node);
   public T visit (ClassModifiers node);
@@ -40,6 +45,9 @@ public interface ResultVisitor <T> {
 
   // Member typealias declarations
   public T visit (MemberTypealiasDeclaration node);
+
+  // Member use declarations
+  public T visit (MemberUseDeclaration node);
 
   // Member routine declarations
   public T visit (MemberRoutineDeclaration node);

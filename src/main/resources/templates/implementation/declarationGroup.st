@@ -1,5 +1,13 @@
-declarationGroup (typeDeclarations, routineDeclarations, variableDeclarations, classDeclarations) ::=  <<
+declarationGroup (
+  usingDeclarations,
+  typeDeclarations,
+  routineDeclarations,
+  variableDeclarations,
+  classDeclarations
+) ::=  <<
 // Declarations
+
+<usingDeclarations; separator="\n\n">
 
 <typeDeclarations; separator="\n\n">
 

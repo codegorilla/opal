@@ -1,3 +1,3 @@
-usingDeclaration (name, type, declarator) ::= <<
-using <name> = <type> <declarator>;
+usingDeclaration (qualifiedName) ::= <<
+using <qualifiedName>;
 >>

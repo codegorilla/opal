@@ -122,6 +122,29 @@ public class Generator2 extends ResultBaseVisitor <ST> {
     return new ST(text);
   }
 
+  // USING DECLARATIONS
+
+  public ST visit (UsingDeclaration node) {
+    if (!node.hasExportSpecifier()) {
+      var st = group.getInstanceOf("common/declaration/usingDeclaration");
+      st.add("qualifiedName", visit(node.qualifiedName()));
+      return st;
+    } else {
+      return null;
+    }
+  }
+
+  public ST visit (UsingQualifiedName node) {
+    var st = group.getInstanceOf("common/declaration/usingQualifiedName");
+    for (var name : node.names())
+      st.add("name", visit(name));
+    return st;
+  }
+
+  public ST visit (UsingName node) {
+    return new ST(node.getToken().getLexeme());
+  }
+
   // CLASS DECLARATIONS
 
   public ST visit (ClassDeclaration node) {
@@ -292,7 +315,7 @@ public class Generator2 extends ResultBaseVisitor <ST> {
 
   public ST visit (TypealiasDeclaration node) {
     if (!node.hasExportSpecifier()) {
-      var st = group.getInstanceOf("common/declaration/usingDeclaration");
+      var st = group.getInstanceOf("common/declaration/usingTypealiasDeclaration");
       st.add("name", visit(node.name()));
       stack.push(emptyDeclarator());
       st.add("type", visit(node.type()));

@@ -1,0 +1,3 @@
+usingQualifiedName (name) ::= <<
+<name; separator="::">
+>>

@@ -146,6 +146,8 @@ public class Parser {
   // declaration. We choose to go with the latter case because that is the
   // easiest implementation and the others hold no advantages for our use case.
 
+  // To do: Implement 'import as' clause
+
   private AstNode importDeclaration () {
     var n = new ImportDeclaration(lookahead);
     match(Token.Kind.IMPORT);
@@ -179,26 +181,23 @@ public class Parser {
     return n;
   }
 
-  // To do: Implement use declaration
-
   private AstNode declaration () {
     AstNode n = null;
     var spec = (lookahead.getKind() == Token.Kind.PRIVATE) ? exportSpecifier() : null;
-    if (lookahead.getKind() == Token.Kind.TEMPLATE)
-      ; //n = templateDeclaration();
-    else {
-      modifiers();
-      switch (lookahead.getKind()) {
-        case Token.Kind.CLASS ->
-          n = classDeclaration(spec);
-        case Token.Kind.TYPEALIAS ->
-          n = typealiasDeclaration(spec);
-        case Token.Kind.DEF ->
-          n = routineDeclaration(spec);
-        case Token.Kind.VAL, Token.Kind.VAR ->
-          n = variableDeclaration(spec);
-        default ->
-          n = null;
+    if (lookahead.getKind() == Token.Kind.TEMPLATE) {
+//      n = templateDeclaration();
+    } else {
+      if (lookahead.getKind() == Token.Kind.USING) {
+        n = usingDeclaration(spec);
+      } else {
+        modifiers();
+        n = switch (lookahead.getKind()) {
+          case Token.Kind.CLASS -> classDeclaration(spec);
+          case Token.Kind.TYPEALIAS -> typealiasDeclaration(spec);
+          case Token.Kind.DEF -> routineDeclaration(spec);
+          case Token.Kind.VAL, Token.Kind.VAR -> variableDeclaration(spec);
+          default -> null;
+        };
       }
     }
     return n;
@@ -212,6 +211,33 @@ public class Parser {
   private ExportSpecifier exportSpecifier () {
     var n = new ExportSpecifier(lookahead);
     match(Token.Kind.PRIVATE);
+    return n;
+  }
+
+  // USING DECLARATIONS
+
+  private AstNode usingDeclaration (AstNode exportSpecifier) {
+    var n = new UsingDeclaration(lookahead);
+    match(Token.Kind.USING);
+    n.addChild(exportSpecifier);
+    n.addChild(usingQualifiedName());
+    match(Token.Kind.SEMICOLON);
+    return n;
+  }
+
+  private AstNode usingQualifiedName () {
+    var n = new UsingQualifiedName(lookahead);
+    n.addChild(usingName());
+    while (lookahead.getKind() == Token.Kind.PERIOD) {
+      match(Token.Kind.PERIOD);
+      n.addChild(usingName());
+    }
+    return n;
+  }
+
+  private AstNode usingName () {
+    var n = new UsingName(lookahead);
+    match(Token.Kind.IDENTIFIER);
     return n;
   }
 
@@ -336,18 +362,20 @@ public class Parser {
   // MEMBER DECLARATIONS
 
   private AstNode memberDeclaration () {
+    AstNode n;
     var kind = lookahead.getKind();
-    var spec = (
-      kind == Token.Kind.PRIVATE ||
-      kind == Token.Kind.PROTECTED
-    ) ? memberAccessSpecifier() : null;
-    memberModifiers();
-    var n = switch (lookahead.getKind()) {
-      case Token.Kind.TYPEALIAS -> memberTypealiasDeclaration(spec);
-      case Token.Kind.DEF -> memberRoutineDeclaration(spec);
-      case Token.Kind.VAL, Token.Kind.VAR -> memberVariableDeclaration(spec);
-      default -> null;
-    };
+    var spec = (kind == Token.Kind.PRIVATE || kind == Token.Kind.PROTECTED) ? memberAccessSpecifier() : null;
+    if (lookahead.getKind() == Token.Kind.USE)  {
+      n = memberUseDeclaration(spec);
+    } else {
+      memberModifiers();
+      n = switch (lookahead.getKind()) {
+        case Token.Kind.TYPEALIAS -> memberTypealiasDeclaration(spec);
+        case Token.Kind.DEF -> memberRoutineDeclaration(spec);
+        case Token.Kind.VAL, Token.Kind.VAR -> memberVariableDeclaration(spec);
+        default -> null;
+      };
+    }
     return n;
   }
 
@@ -385,7 +413,20 @@ public class Parser {
     return n;
   }
 
-  // To do: Final and override modifiers
+  // To do: Needs refactor
+
+  private AstNode memberUseDeclaration (AstNode accessSpecifier) {
+    var n = new MemberUseDeclaration(lookahead);
+    match(Token.Kind.USE);
+    n.addChild(accessSpecifier);
+    n.addChild(usingName());
+    while (lookahead.getKind() == Token.Kind.PERIOD) {
+      match(Token.Kind.PERIOD);
+      n.addChild(usingName());
+    }
+    match(Token.Kind.SEMICOLON);
+    return n;
+  }
 
   private AstNode memberRoutineDeclaration (MemberAccessSpecifier accessSpecifier) {
     var n = new MemberRoutineDeclaration(lookahead);

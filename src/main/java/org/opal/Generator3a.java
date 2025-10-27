@@ -28,14 +28,16 @@ public class Generator3a extends ResultBaseVisitor <ST> {
   // Stack for keeping track of current node path
   private final LinkedList<AstNode> nodePath = new LinkedList<>();
 
-  private final int TYPE_PASS     = 1;
-  private final int ROUTINE_PASS  = 2;
-  private final int VARIABLE_PASS = 3;
-  private final int CLASS_PASS    = 4;
+  private final int USING_PASS    = 1;
+  private final int TYPE_PASS     = 2;
+  private final int ROUTINE_PASS  = 3;
+  private final int VARIABLE_PASS = 4;
+  private final int CLASS_PASS    = 5;
 
-  // There should be four passes: types (e.g. forward class declarations),
-  // function prototypes, global variables, class declarations
-  private int pass = TYPE_PASS;
+  // There should be several passes: using declarations, types (e.g. forward
+  // class declarations), function prototypes, global variables, class
+  // declarations.
+  private int pass = USING_PASS;
 
   // Tracks modifier passes
   private int modifiersPass = 0;
@@ -63,6 +65,7 @@ public class Generator3a extends ResultBaseVisitor <ST> {
 
   public ST visit (TranslationUnit node) {
     var st = group.getInstanceOf("implementation/declarationGroup");
+    st.add("usingDeclarations", visit(node.declarations()));
     st.add("typeDeclarations", visit(node.declarations()));
     st.add("routineDeclarations", visit(node.declarations()));
     st.add("variableDeclarations", visit(node.declarations()));
@@ -89,6 +92,33 @@ public class Generator3a extends ResultBaseVisitor <ST> {
       default -> token.getLexeme();
     };
     return new ST(text);
+  }
+
+  // USING DECLARATIONS
+
+  public ST visit (UsingDeclaration node) {
+    if (pass == USING_PASS) {
+      if (node.hasExportSpecifier()) {
+        var st = group.getInstanceOf("common/declaration/usingDeclaration");
+        st.add("qualifiedName", visit(node.qualifiedName()));
+        return st;
+      } else {
+        return null;
+      }
+    } else {
+      return null;
+    }
+  }
+
+  public ST visit (UsingQualifiedName node) {
+    var st = group.getInstanceOf("common/declaration/usingQualifiedName");
+    for (var name : node.names())
+      st.add("name", visit(name));
+    return st;
+  }
+
+  public ST visit (UsingName node) {
+    return new ST(node.getToken().getLexeme());
   }
 
   // CLASS DECLARATIONS
@@ -282,7 +312,7 @@ public class Generator3a extends ResultBaseVisitor <ST> {
   public ST visit (TypealiasDeclaration node) {
     if (pass == TYPE_PASS) {
       if (node.hasExportSpecifier()) {
-        var st = group.getInstanceOf("common/declaration/usingDeclaration");
+        var st = group.getInstanceOf("common/declaration/usingTypealiasDeclaration");
         st.add("name", visit(node.name()));
         stack.push(emptyDeclarator());
         st.add("type", visit(node.type()));
