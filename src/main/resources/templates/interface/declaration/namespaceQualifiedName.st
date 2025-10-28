@@ -1,0 +1,3 @@
+namespaceQualifiedName (name) ::= <<
+<name; separator="::">
+>>

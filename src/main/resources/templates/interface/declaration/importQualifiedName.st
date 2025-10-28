@@ -1,0 +1,3 @@
+importQualifiedName (name) ::= <<
+<name; separator=".">
+>>

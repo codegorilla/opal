@@ -24,7 +24,9 @@ public interface Visitor {
   // Import declarations
   public void visit (ImportDeclarations node);
   public void visit (ImportDeclaration node);
+  public void visit (ImportQualifiedName node);
   public void visit (ImportName node);
+  public void visit (ImportAliasName node);
 
   // Using Declarations
   public void visit (UsingDeclaration node);

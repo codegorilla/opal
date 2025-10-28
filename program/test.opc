@@ -3,9 +3,13 @@ package main;
 import std.math;
 
 import std.crypto;
-import lang.math;
+import opal.lang.math as math;
 
-private using lang.math.Bessel;
+/*
+use lang.math.Bessel;
+use lang.math.{ Bessel, Widget };
+use lang.math.*;
+*/
 
 private typealias IntPtr = *int[10];
 

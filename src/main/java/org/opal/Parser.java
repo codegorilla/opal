@@ -151,17 +151,31 @@ public class Parser {
   private AstNode importDeclaration () {
     var n = new ImportDeclaration(lookahead);
     match(Token.Kind.IMPORT);
+    n.addChild(importQualifiedName());
+    n.addChild(lookahead.getKind() == Token.Kind.AS ? importAliasName() : null);
+    match(Token.Kind.SEMICOLON);
+    return n;
+  }
+
+  private AstNode importQualifiedName () {
+    var n = new ImportQualifiedName(lookahead);
     n.addChild(importName());
     while (lookahead.getKind() == Token.Kind.PERIOD) {
       match(Token.Kind.PERIOD);
       n.addChild(importName());
     }
-    match(Token.Kind.SEMICOLON);
     return n;
   }
 
   private AstNode importName () {
     var n = new ImportName(lookahead);
+    match(Token.Kind.IDENTIFIER);
+    return n;
+  }
+
+  private AstNode importAliasName () {
+    match(Token.Kind.AS);
+    var n = new ImportAliasName(lookahead);
     match(Token.Kind.IDENTIFIER);
     return n;
   }

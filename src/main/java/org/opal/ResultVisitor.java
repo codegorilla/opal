@@ -24,7 +24,9 @@ public interface ResultVisitor <T> {
   // Import declarations
   public T visit (ImportDeclarations node);
   public T visit (ImportDeclaration node);
+  public T visit (ImportQualifiedName node);
   public T visit (ImportName node);
+  public T visit (ImportAliasName node);
 
   // Using declarations
   public T visit (UsingDeclaration node);

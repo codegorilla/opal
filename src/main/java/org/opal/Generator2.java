@@ -33,6 +33,9 @@ public class Generator2 extends ResultBaseVisitor <ST> {
   // Tracks modifier passes
   private int modifiersPass = 0;
 
+  // Tracks import qualified name passes
+  private int importPass = 0;
+
   public Generator2 (AstNode input) {
     super(input);
     templateDirectoryUrl = this.getClass().getClassLoader().getResource("templates");
@@ -95,12 +98,34 @@ public class Generator2 extends ResultBaseVisitor <ST> {
 
   public ST visit (ImportDeclaration node) {
     var st = group.getInstanceOf("interface/declaration/importDeclaration");
-    for (var name : node.names())
-      st.add("name", visit(name));
+    st.add("importQualifiedName", visit(node.qualifiedName()));
+    st.add("namespaceQualifiedName", visit(node.qualifiedName()));
+    if (node.hasAliasName())
+      st.add("aliasName", visit(node.aliasName()));
+    return st;
+  }
+
+  public ST visit (ImportQualifiedName node) {
+    ST st;
+    if (importPass == 0) {
+      st = group.getInstanceOf("interface/declaration/importQualifiedName");
+      for (var name : node.names())
+        st.add("name", visit(name));
+    } else {
+      st = group.getInstanceOf("interface/declaration/namespaceQualifiedName");
+      for (var name : node.names())
+        st.add("name", visit(name));
+    }
+    // Alternate between first and second pass
+    importPass = (importPass + 1) % 2;
     return st;
   }
 
   public ST visit (ImportName node) {
+    return new ST(node.getToken().getLexeme());
+  }
+
+  public ST visit (ImportAliasName node) {
     return new ST(node.getToken().getLexeme());
   }
 

@@ -5,9 +5,9 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class ImportDeclaration extends AstNode {
+public class ImportAliasName extends AstNode {
 
-  public ImportDeclaration (Token token) {
+  public ImportAliasName (Token token) {
     super(token);
   }
 
@@ -19,18 +19,6 @@ public class ImportDeclaration extends AstNode {
   @Override
   public <T> T accept (ResultVisitor<T> v) {
     return v.visit(this);
-  }
-
-  public AstNode qualifiedName () {
-    return getChild(0);
-  }
-
-  public boolean hasAliasName () {
-    return getChild(1) != null;
-  }
-
-  public AstNode aliasName () {
-    return getChild(1);
   }
 
 }
