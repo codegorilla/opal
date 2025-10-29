@@ -28,4 +28,8 @@ public class Declarations extends AstNode {
     return v.visit(this);
   }
 
+  public Iterable<AstNode> declarations () {
+    return getChildren();
+  }
+
 }

@@ -13,7 +13,7 @@ import java.util.LinkedList;
 
 // The purpose of this pass is to create a module interface unit.
 
-public class Generator2 extends ResultBaseVisitor <ST> {
+public class Generator2 extends BaseResultVisitor<ST> {
 
   private final URL templateDirectoryUrl;
   private final STGroupDir group;

@@ -7,11 +7,11 @@ import org.opal.ast.expression.*;
 import org.opal.ast.statement.*;
 import org.opal.ast.type.*;
 
-public class ResultBaseVisitor <T> implements ResultVisitor <T> {
+public class BaseResultVisitor<T> implements ResultVisitor <T> {
 
   AstNode root;
 
-  public ResultBaseVisitor (AstNode input) {
+  public BaseResultVisitor (AstNode input) {
     root = input;
   }
 

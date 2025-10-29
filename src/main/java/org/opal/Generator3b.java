@@ -15,7 +15,7 @@ import java.util.LinkedList;
 // The purpose of this pass is to create definitions within a module
 // implementation unit.
 
-public class Generator3b extends ResultBaseVisitor <ST> {
+public class Generator3b extends BaseResultVisitor<ST> {
 
   private final URL templateDirectoryUrl;
   private final STGroupDir group;

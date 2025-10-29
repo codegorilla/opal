@@ -54,14 +54,20 @@ public class Translator {
     System.out.println(tokens);
     var parser = new Parser(tokens);
     var root = parser.process();
+
     var pass1 = new Pass1(root);
     pass1.process();
-    var generator1 = new Generator1(root);
-    generator1.process();
-    var generator2 = new Generator2(root);
-    generator2.process();
-    var generator3 = new Generator3(root);
-    generator3.process();
+
+    // Determine import aliases
+    var pass10 = new Pass10(root);
+    pass10.process();
+
+//    var generator1 = new Generator1(root);
+//    generator1.process();
+//    var generator2 = new Generator2(root);
+//    generator2.process();
+//    var generator3 = new Generator3(root);
+//    generator3.process();
   }
 
 }

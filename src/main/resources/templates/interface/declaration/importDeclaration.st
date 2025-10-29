@@ -1,5 +1,5 @@
 
-importDeclaration (importQualifiedName, namespaceQualifiedName, aliasName) ::= <<
+importDeclaration (importQualifiedName, namespaceQualifiedName, aliasName) ::= <%
 import <importQualifiedName>;
-<if(aliasName)>namespace <aliasName> = <namespaceQualifiedName>;<endif>
->>
+<if(aliasName)><\n>namespace <aliasName> = <namespaceQualifiedName>;<endif>
+%>

@@ -1,9 +1,10 @@
 package main;
 
-import std.math;
+import std.math as math;
 
 import std.crypto;
-import opal.lang.math as math;
+import opal.lang.math;
+import std.str;
 
 /*
 use lang.math.Bessel;
