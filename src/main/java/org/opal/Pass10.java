@@ -28,8 +28,11 @@ import org.opal.ast.type.PrimitiveType;
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 public class Pass10 extends BaseVisitor {
+
+  private final List<String> lines;
 
   // Stack for keeping track of current node path
   private final LinkedList<AstNode> nodePath = new LinkedList<>();
@@ -40,8 +43,9 @@ public class Pass10 extends BaseVisitor {
   // Map that relates import declaration nodes to import alias names
   private final HashMap<ImportDeclaration, String> aliasNames = new HashMap<>();
 
-  public Pass10 (AstNode input) {
+  public Pass10 (AstNode input, List<String> lines) {
     super(input);
+    this.lines = lines;
   }
 
   public void process () {
@@ -92,8 +96,12 @@ public class Pass10 extends BaseVisitor {
       // Rule: Explicit alias name cannot be the same as the implicit alias name
       var explicitAlias = nameStack.get(0);
       var implicitAlias = nameStack.get(1);
-      if (explicitAlias.equals(implicitAlias))
+      if (explicitAlias.equals(implicitAlias)) {
         System.out.println("ERROR: Matching names");
+        var line = node.aliasName().getToken().getLine();
+        System.out.println("| " + lines.get(line - 1));
+//        System.out.println("| \u001B[31m                   ~~~~");
+      }
     }
     aliasNames.put(node, nameStack.pop());
   }

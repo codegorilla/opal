@@ -5,6 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -47,9 +49,13 @@ public class Translator {
 
   private void loadFile (Path filePath) {
     var reader = new Reader(filePath);
-    var out = reader.process();
-    System.out.println(out);
-    var lexer = new Lexer(out);
+    var source = reader.process();
+    // Lines are used for error analysis. We don't necessarily want the lexer
+    // to operate on lines of text since program elements may span multiple
+    // lines or multiple elements may occur on a single line.
+    var sourceLines = source.lines().toList();
+
+    var lexer = new Lexer(source);
     var tokens = lexer.process();
     System.out.println(tokens);
     var parser = new Parser(tokens);
@@ -59,8 +65,22 @@ public class Translator {
     pass1.process();
 
     // Determine import aliases
-    var pass10 = new Pass10(root);
+    var pass10 = new Pass10(root, sourceLines);
     pass10.process();
+
+    var ANSI_RESET = "\u001B[0m";
+    var ANSI_RED = "\u001B[31m";
+
+    var token = tokens.get(4);
+    var e = new Error(Error.Kind.SYNTAX, "matching names", token, sourceLines.get(token.getLine()-1));
+    System.out.println(e.complete());
+    var begin = token.getColumn();
+    var s = new StringBuilder("  | ");
+    s.repeat(' ', begin - 1);
+    s.append(ANSI_RED);
+    s.repeat('~', token.getLexeme().length());
+    s.append(ANSI_RESET);
+    System.out.println(s);
 
 //    var generator1 = new Generator1(root);
 //    generator1.process();
