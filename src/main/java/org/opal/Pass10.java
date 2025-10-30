@@ -14,12 +14,31 @@ import org.opal.ast.type.PrimitiveType;
 
 // The purpose of this pass is to determine import alias names.
 
+// By default the import alias name is the last component of the fully
+// qualified name. However, if an explicit alias name is specified with an "as
+// clause", then that is taken to be the import alias name instead. If two
+// packages are imported whose fully qualified names share the same last
+// component, then no import alias name will be created for either package.
+// If two packages are imported and the same explicit alias name is specified
+// for both, then this is an error. Likewise, if a package is imported and its
+// explicit alias name conflicts with an implicit alias name from another
+// package, then this is also an error. Finally, if a packages is imported
+// whose explicit alias name is specified and is the same as the implicit alias
+// name, then this is also an error.
+
+import java.util.HashMap;
 import java.util.LinkedList;
 
 public class Pass10 extends BaseVisitor {
 
   // Stack for keeping track of current node path
   private final LinkedList<AstNode> nodePath = new LinkedList<>();
+
+  // Stack for passing name information up and down during traversal
+  private final LinkedList<String> nameStack = new LinkedList<>();
+
+  // Map that relates import declaration nodes to import alias names
+  private final HashMap<ImportDeclaration, String> aliasNames = new HashMap<>();
 
   public Pass10 (AstNode input) {
     super(input);
@@ -47,8 +66,6 @@ public class Pass10 extends BaseVisitor {
 
   public void visit (Declarations node) {
     for (var declaration : node.declarations()) {
-      System.out.println("Going to visit!");
-      System.out.println(declaration);
       visit(declaration);
     }
   }
@@ -69,16 +86,32 @@ public class Pass10 extends BaseVisitor {
   }
 
   public void visit (ImportDeclaration node) {
-    System.out.println("Import Declaration");
+    visit(node.qualifiedName());
+    if (node.hasAliasName()) {
+      visit(node.aliasName());
+      // Rule: Explicit alias name cannot be the same as the implicit alias name
+      var explicitAlias = nameStack.get(0);
+      var implicitAlias = nameStack.get(1);
+      if (explicitAlias.equals(implicitAlias))
+        System.out.println("ERROR: Matching names");
+    }
+    aliasNames.put(node, nameStack.pop());
+  }
+
+  public void visit (ImportQualifiedName node) {
+    visit(node.getLastChild());
   }
 
   public void visit (ImportName node) {
-    System.out.println("Import Name");
+    nameStack.push(node.getToken().getLexeme());
   }
 
-  public void visit (MemberAccessSpecifier node) {
-    System.out.println("Access Specifier");
+  public void visit (ImportAliasName node) {
+    nameStack.push(node.getToken().getLexeme());
   }
+
+
+
 
 //  public void visit (Modifiers node) {
 //    System.out.println("Modifiers");

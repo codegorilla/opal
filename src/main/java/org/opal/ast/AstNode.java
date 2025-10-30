@@ -51,6 +51,14 @@ public abstract class AstNode {
     return children.size();
   }
 
+  public AstNode getFirstChild () {
+    return children.getFirst();
+  }
+  
+  public AstNode getLastChild () {
+    return children.getLast();
+  }
+
   public Iterable<AstNode> getChildren () {
     return children;
   }
