@@ -42,8 +42,13 @@ public class Pass10 extends BaseVisitor {
   // Stack for passing name information up and down during traversal
   private final LinkedList<String> nameStack = new LinkedList<>();
 
+  // Do we need two-way mapping?
+
   // Map that relates import declaration nodes to import alias names
-  private final HashMap<ImportDeclaration, String> aliasNames = new HashMap<>();
+  //  private final HashMap<ImportDeclaration, String> aliasNames = new HashMap<>();
+
+  // Map that relates alias name to import alias state machine
+  private final HashMap<String, ImportAliasStateMachine> aliasMachineTable = new HashMap<>();
 
   public Pass10 (AstNode input, List<String> sourceLines) {
     super(input);
@@ -63,9 +68,8 @@ public class Pass10 extends BaseVisitor {
 
   public void visit (TranslationUnit node) {
     System.out.println("Translation unit");
-    visit(node.importDeclarations());
-    var child = node.declarations();
-    visit(child);
+    if (node.hasImportDeclarations())
+      visit(node.importDeclarations());
   }
 
   // Declarations
@@ -92,18 +96,32 @@ public class Pass10 extends BaseVisitor {
   }
 
   public void visit (ImportDeclaration node) {
-    visit(node.qualifiedName());
     if (node.hasAliasName()) {
+      // Explicit transition
       visit(node.aliasName());
-      // Rule: Explicit alias name cannot be the same as the implicit alias name
-      var explicitAlias = nameStack.get(0);
-      var implicitAlias = nameStack.get(1);
-      if (explicitAlias.equals(implicitAlias)) {
-        var err = new SemanticError(sourceLines, "matching names", node.aliasName().getToken());
-        System.out.println(err.complete());
+      var aliasName = nameStack.pop();
+      var machine = aliasMachineTable.get(aliasName);
+      if (machine == null) {
+        var newMachine = new ImportAliasStateMachine();
+        newMachine.transitionExplicit(node);
+        aliasMachineTable.put(aliasName, newMachine);
+      } else {
+        machine.transitionExplicit(node);
+      }
+    } else {
+      // Implicit transition
+      visit(node.qualifiedName());
+      var aliasName = nameStack.pop();
+      var machine = aliasMachineTable.get(aliasName);
+      if (machine == null) {
+        var newMachine = new ImportAliasStateMachine();
+        newMachine.transitionImplicit(node);
+        aliasMachineTable.put(aliasName, newMachine);
+      } else {
+        machine.transitionImplicit(node);
       }
     }
-    aliasNames.put(node, nameStack.pop());
+
   }
 
   public void visit (ImportQualifiedName node) {

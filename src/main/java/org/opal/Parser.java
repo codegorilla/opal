@@ -101,8 +101,8 @@ public class Parser {
     currentScope = scope;
     //n.setScope(currentScope);
     n.addChild(packageDeclaration());
-    if (lookahead.getKind() == Token.Kind.IMPORT)
-      n.addChild(importDeclarations());
+    n.addChild(lookahead.getKind() == Token.Kind.IMPORT ? importDeclarations() : null);
+//      n.addChild(importDeclarations());
     n.addChild(declarations());
     return n;
   }

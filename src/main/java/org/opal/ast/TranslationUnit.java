@@ -24,6 +24,10 @@ public class TranslationUnit extends AstNode {
     return getChild(0);
   }
 
+  public boolean hasImportDeclarations () {
+    return getChild(1) != null;
+  }
+
   public AstNode importDeclarations () {
     return getChild(1);
   }

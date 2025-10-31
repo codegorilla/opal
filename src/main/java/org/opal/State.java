@@ -1,5 +1,8 @@
 package org.opal;
 
+// This is the lexer state. We will have multiple state machines in the
+// compiler, so this probably needs to be namespaced.
+
 public enum State {
 
   // Binary integer states
