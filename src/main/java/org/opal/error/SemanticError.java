@@ -1,20 +1,26 @@
-package org.opal;
+package org.opal.error;
 
 // We will need different error classes because each kind of error
 // has different kinds of things (e.g. tokens, nodes) to report.
 
-public class Error {
+import org.opal.Token;
 
-  private final Error.Kind kind;
+import java.util.List;
+
+public class SemanticError extends Error {
+
+  private final List<String> lines;
   private final String message;
   private final Token token;
-  private final String sourceLine;
 
-  public Error (Error.Kind kind, String message, Token token, String sourceLine) {
-    this.kind = kind;
+  private final String ANSI_RESET = "\u001B[0m";
+  private final String ANSI_RED   = "\u001B[31m";
+
+  public SemanticError (List<String> lines, String message, Token token) {
+    super();
+    this.lines = lines;
     this.message = message;
     this.token = token;
-    this.sourceLine = sourceLine;
   }
 
   // We want to construct a summary line followed by some detail lines. The
@@ -31,26 +37,27 @@ public class Error {
   }
 
   private String summary () {
-    var s = new StringBuilder("semantic error (");
-    s.append(token.getLine())
+    var sb = new StringBuilder("semantic error (");
+    sb.append(token.getLine())
       .append(", ")
       .append(token.getColumn())
       .append("): ")
       .append(message);
-    return s.toString();
+    return sb.toString();
   }
 
   private String detail () {
-    var s = new StringBuffer();
-    s.append("  | ");
-    s.append(sourceLine);
-    return s.toString();
-  }
-
-  public enum Kind {
-    LEXICAL,
-    SYNTAX,
-    SEMANTIC
+    var sb = new StringBuffer();
+    sb.append("  | ")
+      .append(lines.get(token.getLine()-1))
+      .append("\n")
+      .append("  | ")
+      .repeat(' ', token.getColumn() - 1)
+      .append(ANSI_RED)
+      .append('^')
+      .repeat('~', token.getLexeme().length() - 1)
+      .append(ANSI_RESET);
+    return sb.toString();
   }
 
 }

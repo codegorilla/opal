@@ -1,12 +1,12 @@
 package org.opal;
 
+import org.opal.error.Error;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -67,20 +67,6 @@ public class Translator {
     // Determine import aliases
     var pass10 = new Pass10(root, sourceLines);
     pass10.process();
-
-    var ANSI_RESET = "\u001B[0m";
-    var ANSI_RED = "\u001B[31m";
-
-    var token = tokens.get(4);
-    var e = new Error(Error.Kind.SYNTAX, "matching names", token, sourceLines.get(token.getLine()-1));
-    System.out.println(e.complete());
-    var begin = token.getColumn();
-    var s = new StringBuilder("  | ");
-    s.repeat(' ', begin - 1);
-    s.append(ANSI_RED);
-    s.repeat('~', token.getLexeme().length());
-    s.append(ANSI_RESET);
-    System.out.println(s);
 
 //    var generator1 = new Generator1(root);
 //    generator1.process();

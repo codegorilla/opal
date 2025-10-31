@@ -12,6 +12,8 @@ import org.opal.ast.type.NominalType;
 import org.opal.ast.type.PointerType;
 import org.opal.ast.type.PrimitiveType;
 
+import org.opal.error.*;
+
 // The purpose of this pass is to determine import alias names.
 
 // By default the import alias name is the last component of the fully
@@ -32,7 +34,7 @@ import java.util.List;
 
 public class Pass10 extends BaseVisitor {
 
-  private final List<String> lines;
+  private final List<String> sourceLines;
 
   // Stack for keeping track of current node path
   private final LinkedList<AstNode> nodePath = new LinkedList<>();
@@ -43,9 +45,9 @@ public class Pass10 extends BaseVisitor {
   // Map that relates import declaration nodes to import alias names
   private final HashMap<ImportDeclaration, String> aliasNames = new HashMap<>();
 
-  public Pass10 (AstNode input, List<String> lines) {
+  public Pass10 (AstNode input, List<String> sourceLines) {
     super(input);
-    this.lines = lines;
+    this.sourceLines = sourceLines;
   }
 
   public void process () {
@@ -97,10 +99,8 @@ public class Pass10 extends BaseVisitor {
       var explicitAlias = nameStack.get(0);
       var implicitAlias = nameStack.get(1);
       if (explicitAlias.equals(implicitAlias)) {
-        System.out.println("ERROR: Matching names");
-        var line = node.aliasName().getToken().getLine();
-        System.out.println("| " + lines.get(line - 1));
-//        System.out.println("| \u001B[31m                   ~~~~");
+        var err = new SemanticError(sourceLines, "matching names", node.aliasName().getToken());
+        System.out.println(err.complete());
       }
     }
     aliasNames.put(node, nameStack.pop());
