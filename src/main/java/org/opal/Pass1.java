@@ -49,6 +49,10 @@ public class Pass1 extends BaseVisitor {
     System.out.println("Import Name");
   }
 
+  public void visit (OtherDeclarations node) {
+    System.out.println("Other Declarations");
+  }
+
   public void visit (MemberAccessSpecifier node) {
     System.out.println("Access Specifier");
   }

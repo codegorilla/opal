@@ -3,17 +3,16 @@ package org.opal.ast.declaration;
 import org.opal.ResultVisitor;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
-
 import org.stringtemplate.v4.ST;
 
 import java.util.LinkedList;
 
-public class Declarations extends AstNode {
+public class OtherDeclarations extends AstNode {
 
   // Leave public for now while experimenting
   public LinkedList<ST> templates;
 
-  public Declarations() {
+  public OtherDeclarations () {
     super();
     templates = new LinkedList<>();
   }
@@ -28,24 +27,7 @@ public class Declarations extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode packageDeclaration () {
-    return getChild(0);
-  }
-
-  public boolean hasImportDeclarations () {
-    return getChild(1) != null;
-  }
-
-  public AstNode importDeclarations () {
-    return getChild(1);
-  }
-
-  public AstNode otherDeclarations () {
-    return getChild(2);
-  }
-
-  // Deprecate?
-  public Iterable<AstNode> declarations () {
+  public Iterable<AstNode> otherDeclarations () {
     return getChildren();
   }
 

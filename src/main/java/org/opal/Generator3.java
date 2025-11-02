@@ -45,7 +45,7 @@ public class Generator3 extends BaseResultVisitor<ST> {
 
   public ST visit (TranslationUnit node) {
     var st = group.getInstanceOf("implementation/translationUnit");
-    st.add("packageDeclaration", visit(node.packageDeclaration()));
+    //st.add("packageDeclaration", visit(node.packageDeclaration())); // <========== COMMENTED TEMPORARILY
     var tempStack = genStack.reversed();
     while (!genStack.isEmpty())
       st.add("packageName", tempStack.pop());

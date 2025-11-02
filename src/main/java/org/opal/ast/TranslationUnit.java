@@ -20,20 +20,8 @@ public class TranslationUnit extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode packageDeclaration () {
-    return getChild(0);
-  }
-
-  public boolean hasImportDeclarations () {
-    return getChild(1) != null;
-  }
-
-  public AstNode importDeclarations () {
-    return getChild(1);
-  }
-
   public AstNode declarations () {
-    return getChild(2);
+    return getChild(0);
   }
 
 }

@@ -16,14 +16,14 @@ public class BaseVisitor implements Visitor {
 
   public void process () {}
 
+  // TRANSLATION UNIT
+
+  public void visit (TranslationUnit node) {}
+
   // DECLARATIONS
 
   // General declarations
-  public void visit (TranslationUnit node) {}
   public void visit (Declarations node) {}
-  public void visit (ExportSpecifier node) {}
-  public void visit (NoexceptSpecifier node) {}
-  public void visit (Modifier node) {}
 
   // Package declarations
   public void visit (PackageDeclaration node) {}
@@ -40,6 +40,12 @@ public class BaseVisitor implements Visitor {
   public void visit (UsingDeclaration node) {}
   public void visit (UsingQualifiedName node) {}
   public void visit (UsingName node) {}
+
+  // Other declarations
+  public void visit (OtherDeclarations node) {}
+  public void visit (ExportSpecifier node) {}
+  public void visit (NoexceptSpecifier node) {}
+  public void visit (Modifier node) {}
 
   // Class declarations
   public void visit (ClassDeclaration node) {}

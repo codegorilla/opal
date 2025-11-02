@@ -57,6 +57,10 @@ public class Generator1 extends BaseVisitor {
   // DECLARATIONS **************************************************
 
   public void visit (Declarations node) {
+    visit(node.otherDeclarations());
+  }
+
+  public void visit (OtherDeclarations node) {
     for (var child : node.getChildren()) {
       visit(child);
     }

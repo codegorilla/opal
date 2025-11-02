@@ -55,11 +55,6 @@ public class Generator2 extends BaseResultVisitor<ST> {
 
   public ST visit (TranslationUnit node) {
     var st = group.getInstanceOf("interface/translationUnit");
-    st.add("packageDeclaration", visit(node.packageDeclaration()));
-    var tempStack = genStack.reversed();
-    while (!genStack.isEmpty())
-      st.add("packageName", tempStack.pop());
-    st.add("importDeclarations", visit(node.importDeclarations()));
     st.add("declarations", visit(node.declarations()));
     System.out.println("---");
     System.out.println(st.render());
@@ -67,6 +62,17 @@ public class Generator2 extends BaseResultVisitor<ST> {
   }
 
   // DECLARATIONS **************************************************
+
+  public ST visit (Declarations node) {
+    var st = group.getInstanceOf("interface/declaration/declarations");
+    st.add("packageDeclaration", visit(node.packageDeclaration()));
+    var tempStack = genStack.reversed();
+    while (!genStack.isEmpty())
+      st.add("packageName", tempStack.pop());
+    st.add("importDeclarations", visit(node.importDeclarations()));
+    st.add("otherDeclarations", visit(node.otherDeclarations()));
+    return st;
+  }
 
   // PACKAGE DECLARATIONS
 
@@ -133,12 +139,12 @@ public class Generator2 extends BaseResultVisitor<ST> {
     return new ST(node.getToken().getLexeme());
   }
 
-  // COMMON DECLARATIONS
+  // OTHER DECLARATIONS
 
-  public ST visit (Declarations node) {
-    var st = group.getInstanceOf("interface/declaration/declarations");
-    for (var child : node.getChildren())
-      st.add("declaration", visit(child));
+  public ST visit (OtherDeclarations node) {
+    var st = group.getInstanceOf("interface/declaration/otherDeclarations");
+    for (var otherDeclaration : node.otherDeclarations())
+      st.add("otherDeclaration", visit(otherDeclaration));
     return st;
   }
 

@@ -17,14 +17,14 @@ public class BaseResultVisitor<T> implements ResultVisitor <T> {
 
   public T process () { return null; }
 
+  // TRANSLATION UNIT
+
+  public T visit (TranslationUnit node) { return null; }
+
   // DECLARATIONS
 
   // General declarations
-  public T visit (TranslationUnit node) { return null; }
   public T visit (Declarations node) { return null; }
-  public T visit (ExportSpecifier node) { return null; }
-  public T visit (NoexceptSpecifier node) { return null; }
-  public T visit (Modifier node) { return null; }
 
   // Package declarations
   public T visit (PackageDeclaration node) { return null; }
@@ -41,6 +41,12 @@ public class BaseResultVisitor<T> implements ResultVisitor <T> {
   public T visit (UsingDeclaration node) { return null; }
   public T visit (UsingQualifiedName node) { return null; }
   public T visit (UsingName node) { return null; }
+
+  // Other declarations
+  public T visit (OtherDeclarations node) { return null; }
+  public T visit (ExportSpecifier node) { return null; }
+  public T visit (NoexceptSpecifier node) { return null; }
+  public T visit (Modifier node) { return null; }
 
   // Class declarations
   public T visit (ClassDeclaration node) { return null; }

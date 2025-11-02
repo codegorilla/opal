@@ -8,14 +8,14 @@ import org.opal.ast.type.*;
 
 public interface ResultVisitor <T> {
 
+  // TRANSLATION UNIT
+
+  public T visit (TranslationUnit node);
+
   // DECLARATIONS
 
   // General declarations
-  public T visit (TranslationUnit node);
   public T visit (Declarations node);
-  public T visit (ExportSpecifier node);
-  public T visit (NoexceptSpecifier node);
-  public T visit (Modifier node);
 
   // Package declarations
   public T visit (PackageDeclaration node);
@@ -32,6 +32,12 @@ public interface ResultVisitor <T> {
   public T visit (UsingDeclaration node);
   public T visit (UsingQualifiedName node);
   public T visit (UsingName node);
+
+  // Other declarations
+  public T visit (OtherDeclarations node);
+  public T visit (ExportSpecifier node);
+  public T visit (NoexceptSpecifier node);
+  public T visit (Modifier node);
 
   // Class declarations
   public T visit (ClassDeclaration node);

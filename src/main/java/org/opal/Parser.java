@@ -94,19 +94,32 @@ public class Parser {
     builtinScope.define(new PrimitiveTypeSymbol("void"));
   }
 
+  // To do: What is the lookahead on the translation unit? I think this should
+  // be removed. Not all AST nodes need to have a token.
+
   private AstNode translationUnit () {
     var n = new TranslationUnit(lookahead);
-    var scope = new Scope(Scope.Kind.GLOBAL);
-//    scope.setEnclosingScope(currentScope);
-//    currentScope = scope;
-    //n.setScope(currentScope);
-    n.addChild(packageDeclaration());
-    n.addChild(lookahead.getKind() == Token.Kind.IMPORT ? importDeclarations() : null);
     n.addChild(declarations());
+    //var scope = new Scope(Scope.Kind.GLOBAL);
+    //scope.setEnclosingScope(currentScope);
+    //currentScope = scope;
+    //n.setScope(currentScope);
     return n;
   }
 
   // DECLARATIONS **************************************************
+
+  // Package declaration and import declarations must appear before any other
+  // declarations in the translation unit.
+
+  private AstNode declarations () {
+    var n = new Declarations();
+    n.addChild(packageDeclaration());
+    n.addChild(lookahead.getKind() == Token.Kind.IMPORT ? importDeclarations() : null);
+    // To do: Could this be null or should we always assume there will be some other declarations?
+    n.addChild(otherDeclarations());
+    return n;
+  }
 
   // The package declaration is special in that there is only one per
   // translation unit, and it must appear at the very top. A package is
@@ -145,13 +158,11 @@ public class Parser {
   // declaration. We choose to go with the latter case because that is the
   // easiest implementation and the others hold no advantages for our use case.
 
-  // To do: Implement 'import as' clause
-
   private AstNode importDeclaration () {
     var n = new ImportDeclaration(lookahead);
     match(Token.Kind.IMPORT);
     n.addChild(importQualifiedName());
-    n.addChild(lookahead.getKind() == Token.Kind.AS ? importAliasName() : null);
+    n.addChild(lookahead.getKind() == Token.Kind.AS ? importAsName() : null);
     match(Token.Kind.SEMICOLON);
     return n;
   }
@@ -172,25 +183,15 @@ public class Parser {
     return n;
   }
 
-  private AstNode importAliasName () {
+  // This works differently from else clause and variable name, etc. The
+  // ImportAsName node does not have a child node containing the name. This is
+  // fine, but it doesn't align with the rest of the parser so we might want to
+  // change this to match the others.
+
+  private AstNode importAsName () {
     match(Token.Kind.AS);
     var n = new ImportAsName(lookahead);
     match(Token.Kind.IDENTIFIER);
-    return n;
-  }
-
-  private AstNode declarations () {
-    var n = new Declarations();
-    while (lookahead.getKind() != Token.Kind.EOF) {
-      // Infinite loop, need to consume
-      System.out.println("Sleeping for " + SLEEP_TIME + " seconds in declarations...");
-      try {
-        Thread.sleep(SLEEP_TIME);
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
-      n.addChild(declaration());
-    }
     return n;
   }
 
@@ -206,7 +207,22 @@ public class Parser {
   // a name introduced by a 'using' statement in a class declaration or routine
   // prototype.
 
-  private AstNode declaration () {
+  private AstNode otherDeclarations () {
+    var n = new OtherDeclarations();
+    while (lookahead.getKind() != Token.Kind.EOF) {
+      // Infinite loop, need to consume
+      System.out.println("Sleeping for " + SLEEP_TIME + " seconds in declarations...");
+      try {
+        Thread.sleep(SLEEP_TIME);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+      n.addChild(otherDeclaration());
+    }
+    return n;
+  }
+
+  private AstNode otherDeclaration () {
     AstNode n = null;
     var spec = (lookahead.getKind() == Token.Kind.PRIVATE) ? exportSpecifier() : null;
     if (lookahead.getKind() == Token.Kind.TEMPLATE) {

@@ -1,3 +1,10 @@
-declarations (declaration) ::= <<
-<declaration:export(); separator="\n\n">
+declarations (packageDeclaration, importDeclarations, packageName, otherDeclarations) ::=  <<
+<packageDeclaration>
+
+import std;
+<importDeclarations>
+
+namespace <packageName; separator="::"> {
+  <otherDeclarations>
+}
 >>

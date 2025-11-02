@@ -56,8 +56,17 @@ public class Pass10 extends BaseVisitor {
 
   public void visit (TranslationUnit node) {
     System.out.println("Translation unit");
-    if (node.hasImportDeclarations())
-      visit(node.importDeclarations());
+    visit(node.declarations());
+  }
+
+  // Declarations
+
+  public void visit (Declarations node) {
+    for (var declaration : node.declarations()) {
+      visit(declaration);
+    }
+//    if (node.hasImportDeclarations())
+//      visit(node.importDeclarations());
     //var keys = aliasMachineTable.keySet();
     var entries = aliasMachineTable.entrySet();
     for (var entry : entries) {
@@ -76,22 +85,6 @@ public class Pass10 extends BaseVisitor {
         }
       }
     }
-  }
-
-  // Declarations
-
-  public void visit (Declarations node) {
-    for (var declaration : node.declarations()) {
-      visit(declaration);
-    }
-  }
-
-  public void visit (PackageDeclaration node) {
-    System.out.println("Package Declaration");
-  }
-
-  public void visit (PackageName node) {
-    System.out.println("Package Name");
   }
 
   public void visit (ImportDeclarations node) {
