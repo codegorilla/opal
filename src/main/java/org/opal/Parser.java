@@ -97,12 +97,11 @@ public class Parser {
   private AstNode translationUnit () {
     var n = new TranslationUnit(lookahead);
     var scope = new Scope(Scope.Kind.GLOBAL);
-    scope.setEnclosingScope(currentScope);
-    currentScope = scope;
+//    scope.setEnclosingScope(currentScope);
+//    currentScope = scope;
     //n.setScope(currentScope);
     n.addChild(packageDeclaration());
     n.addChild(lookahead.getKind() == Token.Kind.IMPORT ? importDeclarations() : null);
-//      n.addChild(importDeclarations());
     n.addChild(declarations());
     return n;
   }

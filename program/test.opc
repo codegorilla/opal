@@ -3,7 +3,7 @@ package main;
 import std.math;
 import lang.math;
 import opal.grinch as math;
-import opal.math as math;
+//import opal.math as math;
 
 //import std.crypto;
 //import opal.lang.math;
