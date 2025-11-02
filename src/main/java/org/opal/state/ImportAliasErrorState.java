@@ -9,11 +9,11 @@ public class ImportAliasErrorState implements ImportAliasState {
 
   public ImportAliasErrorState () {}
 
-  public void transitionExplicit (ImportDeclaration node) {
+  public void handleExplicit (ImportDeclaration node) {
     System.out.println("Remaining at error.");
   }
 
-  public void transitionImplicit (ImportDeclaration node) {
+  public void handleImplicit (ImportDeclaration node) {
     System.out.println("Remaining at error.");
   }
 }

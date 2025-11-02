@@ -25,11 +25,11 @@ public class ImportDeclaration extends AstNode {
     return getChild(0);
   }
 
-  public boolean hasAliasName () {
+  public boolean hasAsName () {
     return getChild(1) != null;
   }
 
-  public AstNode aliasName () {
+  public AstNode asName () {
     return getChild(1);
   }
 

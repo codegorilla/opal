@@ -96,29 +96,29 @@ public class Pass10 extends BaseVisitor {
   }
 
   public void visit (ImportDeclaration node) {
-    if (node.hasAliasName()) {
-      // Explicit transition
-      visit(node.aliasName());
+    if (node.hasAsName()) {
+      // Request explicit alias
+      visit(node.asName());
       var aliasName = nameStack.pop();
-      var machine = aliasMachineTable.get(aliasName);
-      if (machine == null) {
-        var newMachine = new ImportAliasContext();
-        newMachine.transitionExplicit(node);
-        aliasMachineTable.put(aliasName, newMachine);
+      var context = aliasMachineTable.get(aliasName);
+      if (context == null) {
+        context = new ImportAliasContext();
+        context.requestExplicit(node);
+        aliasMachineTable.put(aliasName, context);
       } else {
-        machine.transitionExplicit(node);
+        context.requestExplicit(node);
       }
     } else {
-      // Implicit transition
+      // Request implicit alias
       visit(node.qualifiedName());
       var aliasName = nameStack.pop();
-      var machine = aliasMachineTable.get(aliasName);
-      if (machine == null) {
-        var newMachine = new ImportAliasContext();
-        newMachine.transitionImplicit(node);
-        aliasMachineTable.put(aliasName, newMachine);
+      var context = aliasMachineTable.get(aliasName);
+      if (context == null) {
+        context = new ImportAliasContext();
+        context.requestImplicit(node);
+        aliasMachineTable.put(aliasName, context);
       } else {
-        machine.transitionImplicit(node);
+        context.requestImplicit(node);
       }
     }
 
@@ -132,7 +132,7 @@ public class Pass10 extends BaseVisitor {
     nameStack.push(node.getToken().getLexeme());
   }
 
-  public void visit (ImportAliasName node) {
+  public void visit (ImportAsName node) {
     nameStack.push(node.getToken().getLexeme());
   }
 

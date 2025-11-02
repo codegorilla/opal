@@ -175,7 +175,7 @@ public class Parser {
 
   private AstNode importAliasName () {
     match(Token.Kind.AS);
-    var n = new ImportAliasName(lookahead);
+    var n = new ImportAsName(lookahead);
     match(Token.Kind.IDENTIFIER);
     return n;
   }

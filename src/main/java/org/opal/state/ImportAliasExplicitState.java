@@ -13,14 +13,14 @@ public class ImportAliasExplicitState implements ImportAliasState {
     this.context = context;
   }
 
-  public void transitionExplicit (ImportDeclaration node) {
+  public void handleExplicit (ImportDeclaration node) {
     System.out.println("Transitioning from explicit to error.");
     context.setState(context.ERROR);
     context.setNode(null);
     context.setErrorBit(true);
   }
 
-  public void transitionImplicit (ImportDeclaration node) {
+  public void handleImplicit (ImportDeclaration node) {
     System.out.println("Remaining at explicit.");
   }
 }

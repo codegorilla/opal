@@ -1,7 +1,6 @@
 package org.opal.state;
 
 import org.opal.ast.declaration.ImportDeclaration;
-import org.opal.error.SemanticError;
 
 // This finite state machine (FSM) is used to track which import declaration
 // node (if any) corresponds to a particular import alias. It is probably
@@ -37,6 +36,18 @@ public class ImportAliasContext {
     setErrorBit(false);
   }
 
+  public static ImportAliasContext createExplicit (ImportDeclaration node) {
+    var context = new ImportAliasContext();
+    context.requestExplicit(node);
+    return context;
+  }
+
+  public static ImportAliasContext createImplicit (ImportDeclaration node) {
+    var context = new ImportAliasContext();
+    context.requestImplicit(node);
+    return context;
+  }
+
   public boolean getErrorBit () {
     return errorBit;
   }
@@ -57,11 +68,11 @@ public class ImportAliasContext {
     this.state = state;
   }
 
-  public void transitionExplicit (ImportDeclaration node) {
-    state.transitionExplicit(node);
+  public void requestExplicit (ImportDeclaration node) {
+    state.handleExplicit(node);
   }
 
-  public void transitionImplicit (ImportDeclaration node) {
-    state.transitionImplicit(node);
+  public void requestImplicit (ImportDeclaration node) {
+    state.handleImplicit(node);
   }
 }

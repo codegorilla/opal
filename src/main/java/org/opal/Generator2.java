@@ -100,8 +100,8 @@ public class Generator2 extends BaseResultVisitor<ST> {
     var st = group.getInstanceOf("interface/declaration/importDeclaration");
     st.add("importQualifiedName", visit(node.qualifiedName()));
     st.add("namespaceQualifiedName", visit(node.qualifiedName()));
-    if (node.hasAliasName())
-      st.add("aliasName", visit(node.aliasName()));
+    if (node.hasAsName())
+      st.add("aliasName", visit(node.asName()));
     return st;
   }
 
@@ -125,7 +125,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
     return new ST(node.getToken().getLexeme());
   }
 
-  public ST visit (ImportAliasName node) {
+  public ST visit (ImportAsName node) {
     return new ST(node.getToken().getLexeme());
   }
 

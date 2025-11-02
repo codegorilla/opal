@@ -5,9 +5,9 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class ImportAliasName extends AstNode {
+public class ImportAsName extends AstNode {
 
-  public ImportAliasName (Token token) {
+  public ImportAsName (Token token) {
     super(token);
   }
 
