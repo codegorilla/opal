@@ -68,10 +68,10 @@ public class Translator {
     var pass10 = new Pass10(root, sourceLines);
     pass10.process();
 
-//    var generator1 = new Generator1(root);
-//    generator1.process();
-//    var generator2 = new Generator2(root);
-//    generator2.process();
+    var generator1 = new Generator1(root);
+    generator1.process();
+    var generator2 = new Generator2(root);
+    generator2.process();
 //    var generator3 = new Generator3(root);
 //    generator3.process();
   }

@@ -100,10 +100,14 @@ public class Generator2 extends BaseResultVisitor<ST> {
     var st = group.getInstanceOf("interface/declaration/importDeclaration");
     st.add("importQualifiedName", visit(node.qualifiedName()));
     st.add("namespaceQualifiedName", visit(node.qualifiedName()));
-    if (node.hasAsName())
-      st.add("aliasName", visit(node.asName()));
+    if (node.getAliasAttribute() != null) {
+      st.add("aliasName", node.getAliasAttribute());
+    }
     return st;
   }
+
+  // We need to visit this twice so that we can get back qualified names
+  // separated by periods and then by double colons.
 
   public ST visit (ImportQualifiedName node) {
     ST st;

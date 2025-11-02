@@ -7,7 +7,8 @@ import org.opal.ast.AstNode;
 
 public class ImportDeclaration extends AstNode {
 
-  private String aliasAttribute;
+  // Alias as determined from import declaration analysis
+  private String aliasAttribute = null;
 
   public ImportDeclaration (Token token) {
     super(token);
