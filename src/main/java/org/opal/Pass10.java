@@ -12,7 +12,7 @@ import org.opal.ast.type.NominalType;
 import org.opal.ast.type.PointerType;
 import org.opal.ast.type.PrimitiveType;
 
-import org.opal.error.*;
+import org.opal.state.ImportAliasContext;
 
 // The purpose of this pass is to determine import alias names.
 
@@ -48,7 +48,7 @@ public class Pass10 extends BaseVisitor {
   //  private final HashMap<ImportDeclaration, String> aliasNames = new HashMap<>();
 
   // Map that relates alias name to import alias state machine
-  private final HashMap<String, ImportAliasStateMachine> aliasMachineTable = new HashMap<>();
+  private final HashMap<String, ImportAliasContext> aliasMachineTable = new HashMap<>();
 
   public Pass10 (AstNode input, List<String> sourceLines) {
     super(input);
@@ -102,7 +102,7 @@ public class Pass10 extends BaseVisitor {
       var aliasName = nameStack.pop();
       var machine = aliasMachineTable.get(aliasName);
       if (machine == null) {
-        var newMachine = new ImportAliasStateMachine();
+        var newMachine = new ImportAliasContext();
         newMachine.transitionExplicit(node);
         aliasMachineTable.put(aliasName, newMachine);
       } else {
@@ -114,7 +114,7 @@ public class Pass10 extends BaseVisitor {
       var aliasName = nameStack.pop();
       var machine = aliasMachineTable.get(aliasName);
       if (machine == null) {
-        var newMachine = new ImportAliasStateMachine();
+        var newMachine = new ImportAliasContext();
         newMachine.transitionImplicit(node);
         aliasMachineTable.put(aliasName, newMachine);
       } else {

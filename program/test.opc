@@ -1,7 +1,9 @@
 package main;
 
 import std.math;
-import opal.math;
+import lang.math;
+import opal.math as math;
+import opal.grinch as math;
 
 //import std.math as math;
 
