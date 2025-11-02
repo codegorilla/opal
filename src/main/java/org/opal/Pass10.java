@@ -3,14 +3,6 @@ package org.opal;
 import org.opal.ast.AstNode;
 import org.opal.ast.TranslationUnit;
 import org.opal.ast.declaration.*;
-import org.opal.ast.expression.BinaryExpression;
-import org.opal.ast.expression.Expression;
-import org.opal.ast.expression.FloatingPointLiteral;
-import org.opal.ast.expression.IntegerLiteral;
-import org.opal.ast.type.ArrayType;
-import org.opal.ast.type.NominalType;
-import org.opal.ast.type.PointerType;
-import org.opal.ast.type.PrimitiveType;
 
 import org.opal.state.ImportAliasContext;
 
