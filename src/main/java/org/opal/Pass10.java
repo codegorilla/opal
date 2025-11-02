@@ -22,11 +22,7 @@ import org.opal.state.ImportAliasContext;
 // packages are imported whose fully qualified names share the same last
 // component, then no import alias name will be created for either package.
 // If two packages are imported and the same explicit alias name is specified
-// for both, then this is an error. Likewise, if a package is imported and its
-// explicit alias name conflicts with an implicit alias name from another
-// package, then this is also an error. Finally, if a packages is imported
-// whose explicit alias name is specified and is the same as the implicit alias
-// name, then this is also an error.
+// for both, then this is an error.
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -42,12 +38,11 @@ public class Pass10 extends BaseVisitor {
   // Stack for passing name information up and down during traversal
   private final LinkedList<String> nameStack = new LinkedList<>();
 
-  // Do we need two-way mapping?
-
-  // Map that relates import declaration nodes to import alias names
-  //  private final HashMap<ImportDeclaration, String> aliasNames = new HashMap<>();
-
   // Map that relates alias name to import alias state machine
+  // This needs to either synthesize AST nodes or be passed to code generator
+  // to be used for generating namespace aliases. Or, we can go back through
+  // and attach to each import declaration node the appropriate alias name.
+  // This last option actually sounds like the best plan.
   private final HashMap<String, ImportAliasContext> aliasMachineTable = new HashMap<>();
 
   public Pass10 (AstNode input, List<String> sourceLines) {
@@ -70,6 +65,17 @@ public class Pass10 extends BaseVisitor {
     System.out.println("Translation unit");
     if (node.hasImportDeclarations())
       visit(node.importDeclarations());
+    var keys = aliasMachineTable.keySet();
+    for (var key : keys) {
+      var x = aliasMachineTable.get(key);
+      // Need to check if error bit is set. If so, create error.
+      System.out.println(x.getErrorBit());
+      // If no error, then check if node is null.
+      System.out.println(x.getNode());
+      // If node exists, then we need to mark that node with its alias.
+      // The code generator will then use those marks to generate a
+      // namespace alias as required.
+    }
   }
 
   // Declarations
@@ -121,7 +127,6 @@ public class Pass10 extends BaseVisitor {
         context.requestImplicit(node);
       }
     }
-
   }
 
   public void visit (ImportQualifiedName node) {
@@ -134,75 +139,6 @@ public class Pass10 extends BaseVisitor {
 
   public void visit (ImportAsName node) {
     nameStack.push(node.getToken().getLexeme());
-  }
-
-
-
-
-//  public void visit (Modifiers node) {
-//    System.out.println("Modifiers");
-//  }
-
-//  public void visit (VariableDeclaration node) {
-//    System.out.println("Variable Declaration");
-//    node.getAccessSpecifier().accept(this);
-//    node.getModifiers().accept(this);
-//    node.getName().accept(this);
-//    node.getTypeSpecifier().accept(this);
-//    node.variableInitializer().accept(this);
-//  }
-
-  public void visit (VariableName node) {
-    System.out.println("Variable Name");
-  }
-
-  public void visit (VariableTypeSpecifier node) {
-    System.out.println("Variable Type Specifier");
-  }
-
-  public void visit (VariableInitializer node) {
-    System.out.println("Variable Initializer");
-    node.getChild(0).accept(this);
-  }
-
-  // Expressions
-
-  public void visit (Expression node) {
-    System.out.println("Expression");
-    node.getChild(0).accept(this);
-  }
-
-  public void visit (BinaryExpression node) {
-    System.out.println("Binary Expression");
-    node.leftExpression().accept(this);
-    node.rightExpression().accept(this);
-  }
-
-  public void visit (FloatingPointLiteral node) {
-    System.out.println("Floating Point literal");
-  }
-
-  public void visit (IntegerLiteral node) {
-    System.out.println("Integer literal");
-  }
-
-
-  // Types
-
-  public void visit (ArrayType node) {
-    System.out.println("ArrayType");
-  }
-
-  public void visit (NominalType node) {
-    System.out.println("NominalType");
-  }
-
-  public void visit (PointerType node) {
-    System.out.println("PointerType");
-  }
-
-  public void visit (PrimitiveType node) {
-    System.out.println("PrimitiveType");
   }
 
 }
