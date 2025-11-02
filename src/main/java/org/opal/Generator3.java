@@ -82,9 +82,13 @@ public class Generator3 extends BaseResultVisitor<ST> {
     var tempStack = genStack.reversed();
     while (!genStack.isEmpty())
       st.add("packageName", tempStack.pop());
-    // We need to process other declarations multiple times
     var generator3a = new Generator3a(node);
-    st.add("declarations", generator3a.process());
+    // Process multiple times so forward declarations appear in proper order
+    st.add("usingDeclarations", generator3a.process());
+    st.add("typeDeclarations", generator3a.process());
+    st.add("routineDeclarations", generator3a.process());
+    st.add("variableDeclarations", generator3a.process());
+    st.add("classDeclarations", generator3a.process());
     var generator3b = new Generator3b(node);
     st.add("definitions", generator3b.process());
     return st;

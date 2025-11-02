@@ -1,7 +1,6 @@
 package org.opal;
 
 import org.opal.ast.AstNode;
-import org.opal.ast.TranslationUnit;
 import org.opal.ast.declaration.*;
 import org.opal.ast.expression.*;
 import org.opal.ast.type.*;
@@ -59,39 +58,20 @@ public class Generator3a extends BaseResultVisitor<ST> {
     return st;
   }
 
-  // For gen3a, translation unit should just have declarations. Each visit to
-  // declarations will increment a pass counter, which will cause declarations
-  // to appear in the following order: types, routines, variables, classes.
-
-//  public ST visit (TranslationUnit node) {
-//    System.out.println("GOT HERE TU");
-//    return visit(node.declarations());
-//  }
 
   // DECLARATIONS *************************************************************
 
   // OTHER DECLARATIONS
 
-  // I think we need to have nested loop here because we need to create a
-  // declaration group.
+  // Each visit to other declarations will increment a pass counter, which will
+  // cause declarations to appear in the following order: types, routines,
+  // variables, classes.
 
   public ST visit (OtherDeclarations node) {
     var st = group.getInstanceOf("implementation/declaration/otherDeclarations");
-    pass = USING_PASS;
     for (var child : node.getChildren())
-      st.add("usingDeclarations", visit(child));
-    pass = TYPE_PASS;
-    for (var child : node.getChildren())
-      st.add("typeDeclarations", visit(child));
-    pass = ROUTINE_PASS;
-    for (var child : node.getChildren())
-      st.add("routineDeclarations", visit(child));
-    pass = VARIABLE_PASS;
-    for (var child : node.getChildren())
-      st.add("variableDeclarations", visit(child));
-    pass = CLASS_PASS;
-    for (var child : node.getChildren())
-      st.add("classDeclarations", visit(child));
+      st.add("declaration", visit(child));
+    pass += 1;
     return st;
   }
 

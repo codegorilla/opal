@@ -1,6 +1,26 @@
-namespaceDefinition (packageName, declarations, definitions) ::= <<
+namespaceDefinition (
+  packageName,
+  usingDeclarations,
+  typeDeclarations,
+  routineDeclarations,
+  variableDeclarations,
+  classDeclarations,
+  definitions
+ ) ::= <<
 namespace <packageName; separator="::"> {
-  <declarations; separator="\n\n">
+  // Declarations
+
+  <usingDeclarations; separator="\n\n">
+
+  <typeDeclarations; separator="\n\n">
+
+  <routineDeclarations; separator="\n\n">
+
+  <variableDeclarations; separator="\n\n">
+
+  <classDeclarations; separator="\n\n">
+
+  // Definitions
 
   <definitions; separator="\n\n">
 }
