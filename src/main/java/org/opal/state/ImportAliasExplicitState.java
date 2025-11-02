@@ -13,10 +13,13 @@ public class ImportAliasExplicitState implements ImportAliasState {
     this.context = context;
   }
 
+  // Even though this is an error, we still set the node so that there is
+  // enough context to fill out the error message.
+
   public void handleExplicit (ImportDeclaration node) {
     System.out.println("Transitioning from explicit to error.");
     context.setState(context.ERROR);
-    context.setNode(null);
+    context.setNode(node);
     context.setErrorBit(true);
   }
 

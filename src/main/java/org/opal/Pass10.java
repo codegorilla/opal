@@ -4,6 +4,7 @@ import org.opal.ast.AstNode;
 import org.opal.ast.TranslationUnit;
 import org.opal.ast.declaration.*;
 
+import org.opal.error.SemanticError;
 import org.opal.state.ImportAliasContext;
 
 // The purpose of this pass is to determine import alias names.
@@ -57,16 +58,23 @@ public class Pass10 extends BaseVisitor {
     System.out.println("Translation unit");
     if (node.hasImportDeclarations())
       visit(node.importDeclarations());
-    var keys = aliasMachineTable.keySet();
-    for (var key : keys) {
-      var x = aliasMachineTable.get(key);
-      // Need to check if error bit is set. If so, create error.
-      System.out.println(x.getErrorBit());
-      // If no error, then check if node is null.
-      System.out.println(x.getNode());
-      // If node exists, then we need to mark that node with its alias.
-      // The code generator will then use those marks to generate a
-      // namespace alias as required.
+    //var keys = aliasMachineTable.keySet();
+    var entries = aliasMachineTable.entrySet();
+    for (var entry : entries) {
+      var alias = entry.getKey();
+      var machine = entry.getValue();
+      if (machine.getErrorBit()) {
+        var error = new SemanticError(sourceLines, "duplicate import alias", machine.getNode().asName().getToken());
+        System.out.println(error.complete());
+      } else {
+        if (machine.getNode() != null) {
+          // If node exists, then we need to mark that node with its alias. The
+          // code generator will then use those marks to generate a namespace
+          // alias as required.
+          machine.getNode().setAliasAttribute(alias);
+          System.out.println(machine.getNode() + "::" + alias);
+        }
+      }
     }
   }
 

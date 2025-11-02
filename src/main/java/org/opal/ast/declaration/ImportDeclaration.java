@@ -7,6 +7,8 @@ import org.opal.ast.AstNode;
 
 public class ImportDeclaration extends AstNode {
 
+  private String aliasAttribute;
+
   public ImportDeclaration (Token token) {
     super(token);
   }
@@ -31,6 +33,14 @@ public class ImportDeclaration extends AstNode {
 
   public AstNode asName () {
     return getChild(1);
+  }
+
+  public String getAliasAttribute () {
+    return aliasAttribute;
+  }
+
+  public void setAliasAttribute (String aliasAttribute) {
+    this.aliasAttribute = aliasAttribute;
   }
 
 }
