@@ -63,25 +63,35 @@ public class Generator3a extends BaseResultVisitor<ST> {
   // declarations will increment a pass counter, which will cause declarations
   // to appear in the following order: types, routines, variables, classes.
 
-  public ST visit (TranslationUnit node) {
-    var st = group.getInstanceOf("implementation/declarationGroup");
-    st.add("usingDeclarations", visit(node.declarations()));
-    st.add("typeDeclarations", visit(node.declarations()));
-    st.add("routineDeclarations", visit(node.declarations()));
-    st.add("variableDeclarations", visit(node.declarations()));
-    st.add("classDeclarations", visit(node.declarations()));
-    return st;
-  }
+//  public ST visit (TranslationUnit node) {
+//    System.out.println("GOT HERE TU");
+//    return visit(node.declarations());
+//  }
 
   // DECLARATIONS *************************************************************
 
-  // COMMON DECLARATIONS
+  // OTHER DECLARATIONS
 
-  public ST visit (Declarations node) {
-    var st = group.getInstanceOf("implementation/declaration/declarations");
+  // I think we need to have nested loop here because we need to create a
+  // declaration group.
+
+  public ST visit (OtherDeclarations node) {
+    var st = group.getInstanceOf("implementation/declaration/otherDeclarations");
+    pass = USING_PASS;
     for (var child : node.getChildren())
-      st.add("declaration", visit(child));
-    pass += 1;
+      st.add("usingDeclarations", visit(child));
+    pass = TYPE_PASS;
+    for (var child : node.getChildren())
+      st.add("typeDeclarations", visit(child));
+    pass = ROUTINE_PASS;
+    for (var child : node.getChildren())
+      st.add("routineDeclarations", visit(child));
+    pass = VARIABLE_PASS;
+    for (var child : node.getChildren())
+      st.add("variableDeclarations", visit(child));
+    pass = CLASS_PASS;
+    for (var child : node.getChildren())
+      st.add("classDeclarations", visit(child));
     return st;
   }
 

@@ -45,20 +45,18 @@ public class Generator3 extends BaseResultVisitor<ST> {
 
   public ST visit (TranslationUnit node) {
     var st = group.getInstanceOf("implementation/translationUnit");
-    //st.add("packageDeclaration", visit(node.packageDeclaration())); // <========== COMMENTED TEMPORARILY
-    var tempStack = genStack.reversed();
-    while (!genStack.isEmpty())
-      st.add("packageName", tempStack.pop());
-    // Add in declarations
-    var generator3a = new Generator3a(node);
-    st.add("declarations", generator3a.process());
-    // Add in definitions
-    var generator3b = new Generator3b(node);
-    st.add("definitions", generator3b.process());
+    st.add("elements", visit(node.declarations()));
     return st;
   }
 
   // DECLARATIONS **************************************************
+
+  public ST visit (Declarations node) {
+    var st = group.getInstanceOf("implementation/elements");
+    st.add("moduleDeclaration", visit(node.packageDeclaration()));
+    st.add("namespaceDefinition", visit(node.otherDeclarations()));
+    return st;
+  }
 
   // PACKAGE DECLARATIONS
 
@@ -76,6 +74,19 @@ public class Generator3 extends BaseResultVisitor<ST> {
   public ST visit (PackageName node) {
     var st = new ST(node.getToken().getLexeme());
     genStack.push(st);
+    return st;
+  }
+
+  public ST visit (OtherDeclarations node) {
+    var st = group.getInstanceOf("implementation/namespaceDefinition");
+    var tempStack = genStack.reversed();
+    while (!genStack.isEmpty())
+      st.add("packageName", tempStack.pop());
+    // We need to process other declarations multiple times
+    var generator3a = new Generator3a(node);
+    st.add("declarations", generator3a.process());
+    var generator3b = new Generator3b(node);
+    st.add("definitions", generator3b.process());
     return st;
   }
 

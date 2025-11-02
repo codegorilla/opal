@@ -17,7 +17,13 @@ use lang.math.*;
 
 private typealias IntPtr = *int[10];
 
-final class Token extends Object, Number {
+private def myfun1 (s: float, t: uint32) -> *int {
+  var x: int = 0;
+}
+
+private var b: int = 0.5;
+
+private final class Token extends Object, Number {
 
   static var x: int = 1;
 

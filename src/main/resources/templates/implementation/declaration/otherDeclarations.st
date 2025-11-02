@@ -1,4 +1,4 @@
-_declarationGroup (
+otherDeclarations (
   usingDeclarations,
   typeDeclarations,
   routineDeclarations,
