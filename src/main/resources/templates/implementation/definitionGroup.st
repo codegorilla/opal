@@ -1,4 +1,4 @@
-// Probably don't need this
+// Probably change to definition/definitionsGroup
 
 definitionGroup (definitions) ::=  <<
 // Definitions
