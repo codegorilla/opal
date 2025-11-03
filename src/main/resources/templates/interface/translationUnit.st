@@ -1,5 +1,5 @@
-translationUnit (declarations) ::=  <<
+translationUnit (elements) ::=  <<
 // Interface unit
 
-<declarations>
+<elements>
 >>

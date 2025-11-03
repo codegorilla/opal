@@ -20,6 +20,9 @@ public class Generator3 extends BaseResultVisitor<ST> {
   // Stack for facilitating out-of-order operations
   private final LinkedList<ST> genStack = new LinkedList<>();
 
+  // Stack for keeping track of current node path
+  private final LinkedList<AstNode> nodePath = new LinkedList<>();
+
   public Generator3 (AstNode input) {
     super(input);
     templateDirectoryUrl = this.getClass().getClassLoader().getResource("templates");
@@ -35,7 +38,10 @@ public class Generator3 extends BaseResultVisitor<ST> {
   }
 
   public ST visit (AstNode node) {
-    return node.accept(this);
+    nodePath.push(node);
+    var st = node.accept(this);
+    nodePath.pop();
+    return st;
   }
 
   // To do: We need to accumulate declarations from all translation units into
@@ -61,7 +67,7 @@ public class Generator3 extends BaseResultVisitor<ST> {
   // PACKAGE DECLARATIONS
 
   public ST visit (PackageDeclaration node) {
-    var st = group.getInstanceOf("implementation/declaration/packageDeclaration");
+    var st = group.getInstanceOf("implementation/declaration/moduleDeclaration");
     for (var name : node.names())
       st.add("name", visit(name));
     return st;

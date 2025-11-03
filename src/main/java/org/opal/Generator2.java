@@ -43,7 +43,11 @@ public class Generator2 extends BaseResultVisitor<ST> {
   }
 
   public ST process () {
-    return visit(root);
+    var st = visit(root);
+    System.out.println("---");
+    System.out.println(st.render());
+    // Just return null for now. Maybe return ST later.
+    return null;
   }
 
   public ST visit (AstNode node) {
@@ -55,21 +59,19 @@ public class Generator2 extends BaseResultVisitor<ST> {
 
   public ST visit (TranslationUnit node) {
     var st = group.getInstanceOf("interface/translationUnit");
-    st.add("declarations", visit(node.declarations()));
-    System.out.println("---");
-    System.out.println(st.render());
-    return null;
+    st.add("elements", visit(node.declarations()));
+    return st;
   }
 
   // DECLARATIONS **************************************************
 
   public ST visit (Declarations node) {
-    var st = group.getInstanceOf("interface/declaration/declarations");
-    st.add("packageDeclaration", visit(node.packageDeclaration()));
+    var st = group.getInstanceOf("interface/elements");
+    st.add("moduleDeclaration", visit(node.packageDeclaration()));
+    st.add("importDeclarations", visit(node.importDeclarations()));
     var tempStack = genStack.reversed();
     while (!genStack.isEmpty())
       st.add("packageName", tempStack.pop());
-    st.add("importDeclarations", visit(node.importDeclarations()));
     st.add("otherDeclarations", visit(node.otherDeclarations()));
     return st;
   }
@@ -143,7 +145,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
 
   public ST visit (OtherDeclarations node) {
     var st = group.getInstanceOf("interface/declaration/otherDeclarations");
-    for (var otherDeclaration : node.otherDeclarations())
+    for (var otherDeclaration : node.getChildren())
       st.add("otherDeclaration", visit(otherDeclaration));
     return st;
   }

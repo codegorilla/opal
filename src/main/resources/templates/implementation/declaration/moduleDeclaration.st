@@ -1,3 +1,3 @@
-packageDeclaration (name) ::= <<
+moduleDeclaration (name) ::= <<
 module <name; separator=".">;
 >>
