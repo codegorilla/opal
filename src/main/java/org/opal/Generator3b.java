@@ -39,6 +39,8 @@ public class Generator3b extends BaseResultVisitor<ST> {
   }
 
   public ST process () {
+    System.out.println("GOT HERE TU 3B");
+    System.out.println(root);
     return visit(root);
   }
 
@@ -49,18 +51,12 @@ public class Generator3b extends BaseResultVisitor<ST> {
     return st;
   }
 
-  public ST visit (TranslationUnit node) {
-    var st = group.getInstanceOf("implementation/definitionGroup");
-    st.add("definitions", visit(node.declarations()));
-    return st;
-  }
-
   // DECLARATIONS *************************************************************
 
-  // COMMON DECLARATIONS
+  // OTHER DECLARATIONS
 
-  public ST visit (Declarations node) {
-    var st = group.getInstanceOf("implementation/definition/definitions");
+  public ST visit (OtherDeclarations node) {
+    var st = group.getInstanceOf("implementation/definition/otherDefinitions");
     for (var child : node.getChildren())
       st.add("definition", visit(child));
     return st;

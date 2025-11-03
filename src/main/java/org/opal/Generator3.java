@@ -64,6 +64,7 @@ public class Generator3 extends BaseResultVisitor<ST> {
     while (!genStack.isEmpty())
       st.add("moduleName", tempStack.pop());
     st.add("otherDeclarations", visit(node.otherDeclarations()));
+    st.add("otherDefinitions", visit(node.otherDeclarations()));
     return st;
   }
 
@@ -86,17 +87,25 @@ public class Generator3 extends BaseResultVisitor<ST> {
     return st;
   }
 
+  private boolean evenPass = true;
+
   public ST visit (OtherDeclarations node) {
-    var st = group.getInstanceOf("implementation/declaration/otherDeclarationsGroup");
-    var generator3a = new Generator3a(node);
-    // Process multiple times so forward declarations appear in proper order
-    st.add("usingDeclarations", generator3a.process());
-    st.add("typeDeclarations", generator3a.process());
-    st.add("routineDeclarations", generator3a.process());
-    st.add("variableDeclarations", generator3a.process());
-    st.add("classDeclarations", generator3a.process());
-    //var generator3b = new Generator3b(node);
-    //st.add("definitions", generator3b.process());
+    ST st = null;
+    if (evenPass) {
+      st = group.getInstanceOf("implementation/declaration/otherDeclarationsGroup");
+      var generator3a = new Generator3a(node);
+      // Process multiple times so forward declarations appear in proper order
+      st.add("usingDeclarations", generator3a.process());
+      st.add("typeDeclarations", generator3a.process());
+      st.add("routineDeclarations", generator3a.process());
+      st.add("variableDeclarations", generator3a.process());
+      st.add("classDeclarations", generator3a.process());
+    } else {
+      st = group.getInstanceOf("implementation/definition/otherDefinitionsGroup");
+      var generator3b = new Generator3b(node);
+      st.add("definitions", generator3b.process());
+    }
+    evenPass = !evenPass;
     return st;
   }
 

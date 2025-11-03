@@ -1,6 +1,6 @@
 // Probably change to definition/definitionsGroup
 
-definitionGroup (definitions) ::=  <<
+otherDefinitionsGroup (definitions) ::=  <<
 // Definitions
 
 <definitions; separator="\n\n">
