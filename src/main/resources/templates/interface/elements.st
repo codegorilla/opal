@@ -1,10 +1,10 @@
-elements (moduleDeclaration, importDeclarations, packageName, otherDeclarations) ::=  <<
+elements (moduleDeclaration, importDeclarations, moduleName, otherDeclarations) ::=  <<
 <moduleDeclaration>
 
 import std;
 <importDeclarations>
 
-namespace <packageName; separator="::"> {
+namespace <moduleName; separator="::"> {
   <otherDeclarations>
 }
 >>

@@ -1,5 +1,7 @@
-elements (moduleDeclaration, namespaceDefinition) ::= <<
+elements (moduleDeclaration, moduleName, otherDeclarations, definitions) ::= <<
 <moduleDeclaration>
 
-<namespaceDefinition>
+namespace <moduleName; separator="::"> {
+  <otherDeclarations>
+}
 >>

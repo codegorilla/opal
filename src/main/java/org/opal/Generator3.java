@@ -60,7 +60,10 @@ public class Generator3 extends BaseResultVisitor<ST> {
   public ST visit (Declarations node) {
     var st = group.getInstanceOf("implementation/elements");
     st.add("moduleDeclaration", visit(node.packageDeclaration()));
-    st.add("namespaceDefinition", visit(node.otherDeclarations()));
+    var tempStack = genStack.reversed();
+    while (!genStack.isEmpty())
+      st.add("moduleName", tempStack.pop());
+    st.add("otherDeclarations", visit(node.otherDeclarations()));
     return st;
   }
 
@@ -84,10 +87,7 @@ public class Generator3 extends BaseResultVisitor<ST> {
   }
 
   public ST visit (OtherDeclarations node) {
-    var st = group.getInstanceOf("implementation/namespaceDefinition");
-    var tempStack = genStack.reversed();
-    while (!genStack.isEmpty())
-      st.add("packageName", tempStack.pop());
+    var st = group.getInstanceOf("implementation/declaration/otherDeclarations1");
     var generator3a = new Generator3a(node);
     // Process multiple times so forward declarations appear in proper order
     st.add("usingDeclarations", generator3a.process());
@@ -95,8 +95,8 @@ public class Generator3 extends BaseResultVisitor<ST> {
     st.add("routineDeclarations", generator3a.process());
     st.add("variableDeclarations", generator3a.process());
     st.add("classDeclarations", generator3a.process());
-    var generator3b = new Generator3b(node);
-    st.add("definitions", generator3b.process());
+    //var generator3b = new Generator3b(node);
+    //st.add("definitions", generator3b.process());
     return st;
   }
 

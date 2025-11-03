@@ -71,7 +71,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
     st.add("importDeclarations", visit(node.importDeclarations()));
     var tempStack = genStack.reversed();
     while (!genStack.isEmpty())
-      st.add("packageName", tempStack.pop());
+      st.add("moduleName", tempStack.pop());
     st.add("otherDeclarations", visit(node.otherDeclarations()));
     return st;
   }
@@ -79,7 +79,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
   // PACKAGE DECLARATIONS
 
   public ST visit (PackageDeclaration node) {
-    var st = group.getInstanceOf("interface/declaration/packageDeclaration");
+    var st = group.getInstanceOf("interface/declaration/moduleDeclaration");
     for (var name : node.names())
       st.add("name", visit(name));
     return st;
