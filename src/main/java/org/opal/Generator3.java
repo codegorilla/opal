@@ -87,25 +87,31 @@ public class Generator3 extends BaseResultVisitor<ST> {
     return st;
   }
 
+  // Tracks whether we are in declarations pass or definitions pass
   private boolean evenPass = true;
 
   public ST visit (OtherDeclarations node) {
-    ST st = null;
-    if (evenPass) {
-      st = group.getInstanceOf("implementation/declaration/otherDeclarationsGroup");
-      var generator3a = new Generator3a(node);
-      // Process multiple times so forward declarations appear in proper order
-      st.add("usingDeclarations", generator3a.process());
-      st.add("typeDeclarations", generator3a.process());
-      st.add("routineDeclarations", generator3a.process());
-      st.add("variableDeclarations", generator3a.process());
-      st.add("classDeclarations", generator3a.process());
-    } else {
-      st = group.getInstanceOf("implementation/definition/otherDefinitionsGroup");
-      var generator3b = new Generator3b(node);
-      st.add("definitions", generator3b.process());
-    }
+    ST st = evenPass ? otherDeclarationsGroup(node) : otherDefinitionsGroup(node);
     evenPass = !evenPass;
+    return st;
+  }
+
+  public ST otherDeclarationsGroup (OtherDeclarations node) {
+    var st = group.getInstanceOf("implementation/declaration/otherDeclarationsGroup");
+    var generator3a = new Generator3a(node);
+    // Process multiple times so forward declarations appear in proper order
+    st.add("usingDeclarations", generator3a.process());
+    st.add("typeDeclarations", generator3a.process());
+    st.add("routineDeclarations", generator3a.process());
+    st.add("variableDeclarations", generator3a.process());
+    st.add("classDeclarations", generator3a.process());
+    return st;
+  }
+
+  public ST otherDefinitionsGroup (OtherDeclarations node) {
+    var st = group.getInstanceOf("implementation/definition/otherDefinitionsGroup");
+    var generator3b = new Generator3b(node);
+    st.add("definitions", generator3b.process());
     return st;
   }
 
