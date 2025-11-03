@@ -68,7 +68,7 @@ public class Generator3a extends BaseResultVisitor<ST> {
   // variables, classes.
 
   public ST visit (OtherDeclarations node) {
-    var st = group.getInstanceOf("implementation/declaration/otherDeclarations2");
+    var st = group.getInstanceOf("implementation/declaration/otherDeclarations");
     for (var child : node.getChildren())
       st.add("otherDeclaration", visit(child));
     pass += 1;

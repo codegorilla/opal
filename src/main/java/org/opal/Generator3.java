@@ -87,7 +87,7 @@ public class Generator3 extends BaseResultVisitor<ST> {
   }
 
   public ST visit (OtherDeclarations node) {
-    var st = group.getInstanceOf("implementation/declaration/otherDeclarations1");
+    var st = group.getInstanceOf("implementation/declaration/otherDeclarationsGroup");
     var generator3a = new Generator3a(node);
     // Process multiple times so forward declarations appear in proper order
     st.add("usingDeclarations", generator3a.process());

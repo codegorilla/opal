@@ -23,7 +23,7 @@ private def myfun1 (s: float, t: uint32) -> *int {
 
 private var b: int = 0.5;
 
-private final class Token extends Object, Number {
+final class Token extends Object, Number {
 
   static var x: int = 1;
 
