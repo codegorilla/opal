@@ -39,8 +39,6 @@ public class Generator3b extends BaseResultVisitor<ST> {
   }
 
   public ST process () {
-    System.out.println("GOT HERE TU 3B");
-    System.out.println(root);
     return visit(root);
   }
 
