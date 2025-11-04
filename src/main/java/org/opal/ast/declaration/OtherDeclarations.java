@@ -27,8 +27,10 @@ public class OtherDeclarations extends AstNode {
     return v.visit(this);
   }
 
-  public Iterable<AstNode> otherDeclarations () {
-    return getChildren();
-  }
+  // Deprecate these methods that ruturn Iterable<AstNode>. Use getChildren()
+  // instead to solve naming consistency issue.
+//  public Iterable<AstNode> otherDeclarations () {
+//    return getChildren();
+//  }
 
 }

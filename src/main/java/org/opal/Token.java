@@ -105,7 +105,6 @@ public class Token {
     UNION,
     UNTIL,
     USE,
-    USING,
     VAL,
     VAR,
     VIRTUAL,

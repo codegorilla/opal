@@ -1,15 +1,12 @@
 package org.opal.ast.declaration;
 
 import org.opal.ResultVisitor;
-import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class UsingName extends AstNode {
+public class UseDeclarations extends AstNode {
 
-  public UsingName (Token token) {
-    super(token);
-  }
+  public UseDeclarations () {}
 
   @Override
   public void accept (Visitor v) {

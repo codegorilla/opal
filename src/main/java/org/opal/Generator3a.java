@@ -1,7 +1,6 @@
 package org.opal;
 
 import org.opal.ast.AstNode;
-import org.opal.ast.TranslationUnit;
 import org.opal.ast.declaration.*;
 import org.opal.ast.expression.*;
 import org.opal.ast.type.*;
@@ -59,28 +58,19 @@ public class Generator3a extends BaseResultVisitor<ST> {
     return st;
   }
 
-  // For gen3a, translation unit should just have declarations. Each visit to
-  // declarations will increment a pass counter, which will cause declarations
-  // to appear in the following order: types, routines, variables, classes.
-
-  public ST visit (TranslationUnit node) {
-    var st = group.getInstanceOf("implementation/declarationGroup");
-    st.add("usingDeclarations", visit(node.declarations()));
-    st.add("typeDeclarations", visit(node.declarations()));
-    st.add("routineDeclarations", visit(node.declarations()));
-    st.add("variableDeclarations", visit(node.declarations()));
-    st.add("classDeclarations", visit(node.declarations()));
-    return st;
-  }
 
   // DECLARATIONS *************************************************************
 
-  // COMMON DECLARATIONS
+  // OTHER DECLARATIONS
 
-  public ST visit (Declarations node) {
-    var st = group.getInstanceOf("implementation/declaration/declarations");
+  // Each visit to other declarations will increment a pass counter, which will
+  // cause declarations to appear in the following order: types, routines,
+  // variables, classes.
+
+  public ST visit (OtherDeclarations node) {
+    var st = group.getInstanceOf("implementation/declaration/otherDeclarations");
     for (var child : node.getChildren())
-      st.add("declaration", visit(child));
+      st.add("otherDeclaration", visit(child));
     pass += 1;
     return st;
   }
@@ -96,7 +86,7 @@ public class Generator3a extends BaseResultVisitor<ST> {
 
   // USING DECLARATIONS
 
-  public ST visit (UsingDeclaration node) {
+  public ST visit (UseDeclaration node) {
     if (pass == USING_PASS) {
       if (node.hasExportSpecifier()) {
         var st = group.getInstanceOf("common/declaration/usingDeclaration");
@@ -110,14 +100,14 @@ public class Generator3a extends BaseResultVisitor<ST> {
     }
   }
 
-  public ST visit (UsingQualifiedName node) {
+  public ST visit (UseQualifiedName node) {
     var st = group.getInstanceOf("common/declaration/usingQualifiedName");
     for (var name : node.names())
       st.add("name", visit(name));
     return st;
   }
 
-  public ST visit (UsingName node) {
+  public ST visit (UseName node) {
     return new ST(node.getToken().getLexeme());
   }
 

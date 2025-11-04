@@ -20,6 +20,9 @@ public class Generator3 extends BaseResultVisitor<ST> {
   // Stack for facilitating out-of-order operations
   private final LinkedList<ST> genStack = new LinkedList<>();
 
+  // Stack for keeping track of current node path
+  private final LinkedList<AstNode> nodePath = new LinkedList<>();
+
   public Generator3 (AstNode input) {
     super(input);
     templateDirectoryUrl = this.getClass().getClassLoader().getResource("templates");
@@ -35,7 +38,10 @@ public class Generator3 extends BaseResultVisitor<ST> {
   }
 
   public ST visit (AstNode node) {
-    return node.accept(this);
+    nodePath.push(node);
+    var st = node.accept(this);
+    nodePath.pop();
+    return st;
   }
 
   // To do: We need to accumulate declarations from all translation units into
@@ -45,25 +51,27 @@ public class Generator3 extends BaseResultVisitor<ST> {
 
   public ST visit (TranslationUnit node) {
     var st = group.getInstanceOf("implementation/translationUnit");
-    //st.add("packageDeclaration", visit(node.packageDeclaration())); // <========== COMMENTED TEMPORARILY
-    var tempStack = genStack.reversed();
-    while (!genStack.isEmpty())
-      st.add("packageName", tempStack.pop());
-    // Add in declarations
-    var generator3a = new Generator3a(node);
-    st.add("declarations", generator3a.process());
-    // Add in definitions
-    var generator3b = new Generator3b(node);
-    st.add("definitions", generator3b.process());
+    st.add("elements", visit(node.declarations()));
     return st;
   }
 
   // DECLARATIONS **************************************************
 
+  public ST visit (Declarations node) {
+    var st = group.getInstanceOf("implementation/elements");
+    st.add("moduleDeclaration", visit(node.packageDeclaration()));
+    var tempStack = genStack.reversed();
+    while (!genStack.isEmpty())
+      st.add("moduleName", tempStack.pop());
+    st.add("otherDeclarations", visit(node.otherDeclarations()));
+    st.add("otherDefinitions", visit(node.otherDeclarations()));
+    return st;
+  }
+
   // PACKAGE DECLARATIONS
 
   public ST visit (PackageDeclaration node) {
-    var st = group.getInstanceOf("implementation/declaration/packageDeclaration");
+    var st = group.getInstanceOf("implementation/declaration/moduleDeclaration");
     for (var name : node.names())
       st.add("name", visit(name));
     return st;
@@ -76,6 +84,34 @@ public class Generator3 extends BaseResultVisitor<ST> {
   public ST visit (PackageName node) {
     var st = new ST(node.getToken().getLexeme());
     genStack.push(st);
+    return st;
+  }
+
+  // Tracks whether we are in declarations pass or definitions pass
+  private boolean evenPass = true;
+
+  public ST visit (OtherDeclarations node) {
+    ST st = evenPass ? otherDeclarationsGroup(node) : otherDefinitionsGroup(node);
+    evenPass = !evenPass;
+    return st;
+  }
+
+  public ST otherDeclarationsGroup (OtherDeclarations node) {
+    var st = group.getInstanceOf("implementation/declaration/otherDeclarationsGroup");
+    var generator3a = new Generator3a(node);
+    // Process multiple times so forward declarations appear in proper order
+    st.add("usingDeclarations", generator3a.process());
+    st.add("typeDeclarations", generator3a.process());
+    st.add("routineDeclarations", generator3a.process());
+    st.add("variableDeclarations", generator3a.process());
+    st.add("classDeclarations", generator3a.process());
+    return st;
+  }
+
+  public ST otherDefinitionsGroup (OtherDeclarations node) {
+    var st = group.getInstanceOf("implementation/definition/otherDefinitionsGroup");
+    var generator3b = new Generator3b(node);
+    st.add("definitions", generator3b.process());
     return st;
   }
 

@@ -5,9 +5,9 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class UsingQualifiedName extends AstNode {
+public class UseDeclaration extends AstNode {
 
-  public UsingQualifiedName (Token token) {
+  public UseDeclaration (Token token) {
     super(token);
   }
 
@@ -21,8 +21,16 @@ public class UsingQualifiedName extends AstNode {
     return v.visit(this);
   }
 
-  public Iterable<AstNode> names () {
-    return getChildren();
+  public AstNode exportSpecifier () {
+    return getChild(0);
+  }
+
+  public boolean hasExportSpecifier () {
+    return getChild(0) != null;
+  }
+
+  public AstNode qualifiedName () {
+    return getChild(1);
   }
 
 }

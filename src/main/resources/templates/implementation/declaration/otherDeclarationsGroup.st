@@ -1,10 +1,10 @@
-declarationGroup (
+otherDeclarationsGroup (
   usingDeclarations,
   typeDeclarations,
   routineDeclarations,
   variableDeclarations,
   classDeclarations
-) ::=  <<
+) ::= <<
 // Declarations
 
 <usingDeclarations; separator="\n\n">

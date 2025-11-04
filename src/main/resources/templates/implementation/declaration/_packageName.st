@@ -1,3 +1,0 @@
-packageName (name) ::= <<
-<name>
->>

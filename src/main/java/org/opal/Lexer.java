@@ -98,7 +98,6 @@ public class Lexer {
     keywordLookup.put("union", Token.Kind.UNION);
     keywordLookup.put("until", Token.Kind.UNTIL);
     keywordLookup.put("use", Token.Kind.USE);
-    keywordLookup.put("using", Token.Kind.USING);
     keywordLookup.put("val", Token.Kind.VAL);
     keywordLookup.put("var", Token.Kind.VAR);
     keywordLookup.put("virtual", Token.Kind.VIRTUAL);
