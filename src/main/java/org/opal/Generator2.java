@@ -65,6 +65,10 @@ public class Generator2 extends BaseResultVisitor<ST> {
 
   // DECLARATIONS **************************************************
 
+  // To do: We  actually need to run through import declarations twice. This is
+  // because in C++, the import declarations must appear before any namespace
+  // declarations.
+
   public ST visit (Declarations node) {
     var st = group.getInstanceOf("interface/elements");
     st.add("moduleDeclaration", visit(node.packageDeclaration()));
@@ -161,7 +165,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
 
   // USING DECLARATIONS
 
-  public ST visit (UsingDeclaration node) {
+  public ST visit (UseDeclaration node) {
     if (!node.hasExportSpecifier()) {
       var st = group.getInstanceOf("common/declaration/usingDeclaration");
       st.add("qualifiedName", visit(node.qualifiedName()));
@@ -171,14 +175,14 @@ public class Generator2 extends BaseResultVisitor<ST> {
     }
   }
 
-  public ST visit (UsingQualifiedName node) {
+  public ST visit (UseQualifiedName node) {
     var st = group.getInstanceOf("common/declaration/usingQualifiedName");
     for (var name : node.names())
       st.add("name", visit(name));
     return st;
   }
 
-  public ST visit (UsingName node) {
+  public ST visit (UseName node) {
     return new ST(node.getToken().getLexeme());
   }
 

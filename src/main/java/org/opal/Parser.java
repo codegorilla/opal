@@ -116,6 +116,7 @@ public class Parser {
     var n = new Declarations();
     n.addChild(packageDeclaration());
     n.addChild(lookahead.getKind() == Token.Kind.IMPORT ? importDeclarations() : null);
+    n.addChild(lookahead.getKind() == Token.Kind.USE ? useDeclarations() : null);
     // To do: Could this be null or should we always assume there will be some other declarations?
     n.addChild(otherDeclarations());
     return n;
@@ -195,17 +196,58 @@ public class Parser {
     return n;
   }
 
-  // I don't know if it makes sense to be able to export using declarations in
-  // Opal. It is definitely possible in C++, and might come in handy for
-  // aggregating smaller packages into a "super package". However, unlike Opal,
-  // modules and namespaces are orthogonal concepts in C++, so there could be
-  // considerations in C++ that don't apply to Opal and/or vice versa. For now,
-  // we will allow using declarations to be exported, and re-evaluate later.
+  private AstNode useDeclarations () {
+    var n = new UseDeclarations();
+    while (lookahead.getKind() == Token.Kind.USE)
+      n.addChild(useDeclaration());
+    return n;
+  }
 
-  // Using declarations may need to appear in the module interface unit even if
-  // they are not being exported. This is because there could be references to
-  // a name introduced by a 'using' statement in a class declaration or routine
-  // prototype.
+  private AstNode useDeclaration () {
+    var n = new UseDeclaration(lookahead);
+    match(Token.Kind.USE);
+    n.addChild(useQualifiedName());
+    match(Token.Kind.SEMICOLON);
+    return n;
+  }
+
+  private AstNode useQualifiedName () {
+    var n = new UseQualifiedName(lookahead);
+    n.addChild(useName());
+    while (lookahead.getKind() == Token.Kind.PERIOD) {
+      match(Token.Kind.PERIOD);
+      var kind = lookahead.getKind();
+      if (kind == Token.Kind.IDENTIFIER) {
+        n.addChild(useName());
+      } else if (kind == Token.Kind.L_BRACE) {
+        n.addChild(useMany());
+        break;
+      } else if (kind == Token.Kind.ASTERISK) {
+        n.addChild(useAll());
+        break;
+      }
+    }
+    return n;
+  }
+
+  private AstNode useName () {
+    var n = new UseName(lookahead);
+    match(Token.Kind.IDENTIFIER);
+    return n;
+  }
+
+  private AstNode useMany () {
+    var n = new UseName(lookahead);
+    match(Token.Kind.L_BRACE);
+    match(Token.Kind.R_BRACE);
+    return n;
+  }
+
+  private AstNode useAll () {
+    var n = new UseName(lookahead);
+    match(Token.Kind.ASTERISK);
+    return n;
+  }
 
   private AstNode otherDeclarations () {
     var n = new OtherDeclarations();
@@ -228,18 +270,14 @@ public class Parser {
     if (lookahead.getKind() == Token.Kind.TEMPLATE) {
 //      n = templateDeclaration();
     } else {
-      if (lookahead.getKind() == Token.Kind.USING) {
-        n = usingDeclaration(spec);
-      } else {
-        modifiers();
-        n = switch (lookahead.getKind()) {
-          case Token.Kind.CLASS -> classDeclaration(spec);
-          case Token.Kind.TYPEALIAS -> typealiasDeclaration(spec);
-          case Token.Kind.DEF -> routineDeclaration(spec);
-          case Token.Kind.VAL, Token.Kind.VAR -> variableDeclaration(spec);
-          default -> null;
-        };
-      }
+      modifiers();
+      n = switch (lookahead.getKind()) {
+        case Token.Kind.CLASS -> classDeclaration(spec);
+        case Token.Kind.TYPEALIAS -> typealiasDeclaration(spec);
+        case Token.Kind.DEF -> routineDeclaration(spec);
+        case Token.Kind.VAL, Token.Kind.VAR -> variableDeclaration(spec);
+        default -> null;
+      };
     }
     return n;
   }
@@ -252,33 +290,6 @@ public class Parser {
   private ExportSpecifier exportSpecifier () {
     var n = new ExportSpecifier(lookahead);
     match(Token.Kind.PRIVATE);
-    return n;
-  }
-
-  // USING DECLARATIONS
-
-  private AstNode usingDeclaration (AstNode exportSpecifier) {
-    var n = new UsingDeclaration(lookahead);
-    match(Token.Kind.USING);
-    n.addChild(exportSpecifier);
-    n.addChild(usingQualifiedName());
-    match(Token.Kind.SEMICOLON);
-    return n;
-  }
-
-  private AstNode usingQualifiedName () {
-    var n = new UsingQualifiedName(lookahead);
-    n.addChild(usingName());
-    while (lookahead.getKind() == Token.Kind.PERIOD) {
-      match(Token.Kind.PERIOD);
-      n.addChild(usingName());
-    }
-    return n;
-  }
-
-  private AstNode usingName () {
-    var n = new UsingName(lookahead);
-    match(Token.Kind.IDENTIFIER);
     return n;
   }
 
@@ -406,17 +417,13 @@ public class Parser {
     AstNode n;
     var kind = lookahead.getKind();
     var spec = (kind == Token.Kind.PRIVATE || kind == Token.Kind.PROTECTED) ? memberAccessSpecifier() : null;
-    if (lookahead.getKind() == Token.Kind.USE)  {
-      n = memberUseDeclaration(spec);
-    } else {
-      memberModifiers();
-      n = switch (lookahead.getKind()) {
-        case Token.Kind.TYPEALIAS -> memberTypealiasDeclaration(spec);
-        case Token.Kind.DEF -> memberRoutineDeclaration(spec);
-        case Token.Kind.VAL, Token.Kind.VAR -> memberVariableDeclaration(spec);
-        default -> null;
-      };
-    }
+    memberModifiers();
+    n = switch (lookahead.getKind()) {
+      case Token.Kind.TYPEALIAS -> memberTypealiasDeclaration(spec);
+      case Token.Kind.DEF -> memberRoutineDeclaration(spec);
+      case Token.Kind.VAL, Token.Kind.VAR -> memberVariableDeclaration(spec);
+      default -> null;
+    };
     return n;
   }
 
@@ -450,21 +457,6 @@ public class Parser {
     n.addChild(typealiasName());
     match(Token.Kind.EQUAL);
     n.addChild(type());
-    match(Token.Kind.SEMICOLON);
-    return n;
-  }
-
-  // To do: Needs refactor
-
-  private AstNode memberUseDeclaration (AstNode accessSpecifier) {
-    var n = new MemberUseDeclaration(lookahead);
-    match(Token.Kind.USE);
-    n.addChild(accessSpecifier);
-    n.addChild(usingName());
-    while (lookahead.getKind() == Token.Kind.PERIOD) {
-      match(Token.Kind.PERIOD);
-      n.addChild(usingName());
-    }
     match(Token.Kind.SEMICOLON);
     return n;
   }

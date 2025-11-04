@@ -86,7 +86,7 @@ public class Generator3a extends BaseResultVisitor<ST> {
 
   // USING DECLARATIONS
 
-  public ST visit (UsingDeclaration node) {
+  public ST visit (UseDeclaration node) {
     if (pass == USING_PASS) {
       if (node.hasExportSpecifier()) {
         var st = group.getInstanceOf("common/declaration/usingDeclaration");
@@ -100,14 +100,14 @@ public class Generator3a extends BaseResultVisitor<ST> {
     }
   }
 
-  public ST visit (UsingQualifiedName node) {
+  public ST visit (UseQualifiedName node) {
     var st = group.getInstanceOf("common/declaration/usingQualifiedName");
     for (var name : node.names())
       st.add("name", visit(name));
     return st;
   }
 
-  public ST visit (UsingName node) {
+  public ST visit (UseName node) {
     return new ST(node.getToken().getLexeme());
   }
 

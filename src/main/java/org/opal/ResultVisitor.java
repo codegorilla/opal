@@ -28,10 +28,11 @@ public interface ResultVisitor <T> {
   public T visit (ImportName node);
   public T visit (ImportAsName node);
 
-  // Using declarations
-  public T visit (UsingDeclaration node);
-  public T visit (UsingQualifiedName node);
-  public T visit (UsingName node);
+  // Use declarations
+  public T visit (UseDeclarations node);
+  public T visit (UseDeclaration node);
+  public T visit (UseQualifiedName node);
+  public T visit (UseName node);
 
   // Other declarations
   public T visit (OtherDeclarations node);

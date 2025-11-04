@@ -40,8 +40,16 @@ public class Declarations extends AstNode {
     return getChild(1);
   }
 
-  public AstNode otherDeclarations () {
+  public boolean hasUseDeclarations () {
+    return getChild(2) != null;
+  }
+
+  public AstNode useDeclarations () {
     return getChild(2);
+  }
+
+  public AstNode otherDeclarations () {
+    return getChild(3);
   }
 
   // Deprecate?

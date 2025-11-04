@@ -38,9 +38,10 @@ public class BaseResultVisitor<T> implements ResultVisitor <T> {
   public T visit (ImportAsName node) { return null; }
 
   // Using declarations
-  public T visit (UsingDeclaration node) { return null; }
-  public T visit (UsingQualifiedName node) { return null; }
-  public T visit (UsingName node) { return null; }
+  public T visit (UseDeclarations node) { return null; }
+  public T visit (UseDeclaration node) { return null; }
+  public T visit (UseQualifiedName node) { return null; }
+  public T visit (UseName node) { return null; }
 
   // Other declarations
   public T visit (OtherDeclarations node) { return null; }

@@ -28,10 +28,11 @@ public interface Visitor {
   public void visit (ImportName node);
   public void visit (ImportAsName node);
 
-  // Using declarations
-  public void visit (UsingDeclaration node);
-  public void visit (UsingQualifiedName node);
-  public void visit (UsingName node);
+  // Use declarations
+  public void visit (UseDeclarations node);
+  public void visit (UseDeclaration node);
+  public void visit (UseQualifiedName node);
+  public void visit (UseName node);
 
   // Other declarations
   public void visit (OtherDeclarations node);
