@@ -33,6 +33,8 @@ public interface ResultVisitor <T> {
   public T visit (UseDeclaration node);
   public T visit (UseQualifiedName node);
   public T visit (UseName node);
+  public T visit (UseSomeNames node);
+  public T visit (UseAllNames node);
 
   // Other declarations
   public T visit (OtherDeclarations node);

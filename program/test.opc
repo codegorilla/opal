@@ -9,10 +9,9 @@ import opal.grinch as math;
 //import opal.lang.math;
 //import std.str;
 
-use lang.math.Bessel.;
-
-//use lang.math.{ Bessel, Widget };
-//use lang.math.*;
+use lang.math.Bessel;
+use lang.math.{ Bessel, Widget };
+use lang.math.*;
 
 private typealias IntPtr = *int[10];
 

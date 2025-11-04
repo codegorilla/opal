@@ -217,13 +217,13 @@ public class Parser {
     while (lookahead.getKind() == Token.Kind.PERIOD) {
       match(Token.Kind.PERIOD);
       var kind = lookahead.getKind();
-      if (kind == Token.Kind.IDENTIFIER) {
+        if (kind == Token.Kind.IDENTIFIER) {
         n.addChild(useName());
       } else if (kind == Token.Kind.L_BRACE) {
-        n.addChild(useMany());
+        n.addChild(useSomeNames());
         break;
       } else if (kind == Token.Kind.ASTERISK) {
-        n.addChild(useAll());
+        n.addChild(useAllNames());
         break;
       }
     }
@@ -236,15 +236,20 @@ public class Parser {
     return n;
   }
 
-  private AstNode useMany () {
-    var n = new UseName(lookahead);
+  private AstNode useSomeNames () {
+    var n = new UseSomeNames(lookahead);
     match(Token.Kind.L_BRACE);
+    n.addChild(useName());
+    while (lookahead.getKind() == Token.Kind.COMMA) {
+      match(Token.Kind.COMMA);
+      n.addChild(useName());
+    }
     match(Token.Kind.R_BRACE);
     return n;
   }
 
-  private AstNode useAll () {
-    var n = new UseName(lookahead);
+  private AstNode useAllNames () {
+    var n = new UseAllNames(lookahead);
     match(Token.Kind.ASTERISK);
     return n;
   }
