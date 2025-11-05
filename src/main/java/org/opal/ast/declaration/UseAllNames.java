@@ -21,4 +21,8 @@ public class UseAllNames extends AstNode {
     return v.visit(this);
   }
 
+  public AstNode useQualifiedName () {
+    return getChild(0);
+  }
+
 }

@@ -1,0 +1,3 @@
+usingAllNames (usingQualifiedName) ::= <<
+namespace <usingQualifiedName>
+>>

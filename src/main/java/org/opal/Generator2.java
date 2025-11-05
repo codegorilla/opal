@@ -76,6 +76,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
     var tempStack = genStack.reversed();
     while (!genStack.isEmpty())
       st.add("moduleName", tempStack.pop());
+    st.add("usingDeclarations", visit(node.useDeclarations()));
     st.add("otherDeclarations", visit(node.otherDeclarations()));
     return st;
   }
@@ -145,6 +146,52 @@ public class Generator2 extends BaseResultVisitor<ST> {
     return new ST(node.getToken().getLexeme());
   }
 
+  // USE DECLARATIONS
+
+  public ST visit (UseDeclarations node) {
+    var st = group.getInstanceOf("interface/declaration/usingDeclarations");
+    for (var useDeclaration : node.getChildren())
+      st.add("usingDeclaration", visit(useDeclaration));
+    return st;
+  }
+
+  // The use operand may either be a "use all names" node, a "use some names"
+  // node, or a plain "use qualified name" node (which is basically equivalent
+  // to a "use one name" node).
+
+  public ST visit (UseDeclaration node) {
+    var st = group.getInstanceOf("interface/declaration/usingDeclaration");
+    st.add("usingOperand", visit(node.useOperand()));
+    return st;
+  }
+
+  public ST visit (UseQualifiedName node) {
+    var st = group.getInstanceOf("interface/declaration/usingQualifiedName");
+    for (var useName : node.names())
+      st.add("usingName", visit(useName));
+    return st;
+  }
+
+  public ST visit (UseSomeNames node) {
+    var st = group.getInstanceOf("interface/declaration/usingSomeNames");
+    return st;
+  }
+
+  public ST visit (UseAllNames node) {
+    var st = group.getInstanceOf("interface/declaration/usingAllNames");
+    st.add("usingQualifiedName", visit(node.useQualifiedName()));
+    return st;
+  }
+
+  public ST visit (UseName node) {
+    return new ST(node.getToken().getLexeme());
+  }
+
+
+//  public ST visit (UseAllNames node) {
+//    var st = group.
+//  }
+
   // OTHER DECLARATIONS
 
   public ST visit (OtherDeclarations node) {
@@ -161,29 +208,6 @@ public class Generator2 extends BaseResultVisitor<ST> {
       default -> token.getLexeme();
     };
     return new ST(text);
-  }
-
-  // USING DECLARATIONS
-
-  public ST visit (UseDeclaration node) {
-    if (!node.hasExportSpecifier()) {
-      var st = group.getInstanceOf("common/declaration/usingDeclaration");
-      st.add("qualifiedName", visit(node.qualifiedName()));
-      return st;
-    } else {
-      return null;
-    }
-  }
-
-  public ST visit (UseQualifiedName node) {
-    var st = group.getInstanceOf("common/declaration/usingQualifiedName");
-    for (var name : node.names())
-      st.add("name", visit(name));
-    return st;
-  }
-
-  public ST visit (UseName node) {
-    return new ST(node.getToken().getLexeme());
   }
 
   // CLASS DECLARATIONS

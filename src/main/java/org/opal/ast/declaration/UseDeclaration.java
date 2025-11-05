@@ -21,16 +21,8 @@ public class UseDeclaration extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode exportSpecifier () {
+  public AstNode useOperand () {
     return getChild(0);
-  }
-
-  public boolean hasExportSpecifier () {
-    return getChild(0) != null;
-  }
-
-  public AstNode qualifiedName () {
-    return getChild(1);
   }
 
 }

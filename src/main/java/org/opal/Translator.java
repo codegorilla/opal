@@ -72,8 +72,8 @@ public class Translator {
     generator1.process();
     var generator2 = new Generator2(root);
     generator2.process();
-    var generator3 = new Generator3(root);
-    generator3.process();
+//    var generator3 = new Generator3(root);
+//    generator3.process();
   }
 
 }

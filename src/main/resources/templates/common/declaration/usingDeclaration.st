@@ -1,3 +1,0 @@
-usingDeclaration (qualifiedName) ::= <<
-using <qualifiedName>;
->>

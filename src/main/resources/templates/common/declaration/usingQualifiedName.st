@@ -1,3 +1,0 @@
-usingQualifiedName (name) ::= <<
-<name; separator="::">
->>

@@ -83,34 +83,7 @@ public class Generator3a extends BaseResultVisitor<ST> {
     };
     return new ST(text);
   }
-
-  // USING DECLARATIONS
-
-  public ST visit (UseDeclaration node) {
-    if (pass == USING_PASS) {
-      if (node.hasExportSpecifier()) {
-        var st = group.getInstanceOf("common/declaration/usingDeclaration");
-        st.add("qualifiedName", visit(node.qualifiedName()));
-        return st;
-      } else {
-        return null;
-      }
-    } else {
-      return null;
-    }
-  }
-
-  public ST visit (UseQualifiedName node) {
-    var st = group.getInstanceOf("common/declaration/usingQualifiedName");
-    for (var name : node.names())
-      st.add("name", visit(name));
-    return st;
-  }
-
-  public ST visit (UseName node) {
-    return new ST(node.getToken().getLexeme());
-  }
-
+  
   // CLASS DECLARATIONS
 
   // Might need declarations and definitions passes just as with routines

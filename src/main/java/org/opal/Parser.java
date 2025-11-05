@@ -212,19 +212,23 @@ public class Parser {
   }
 
   private AstNode useQualifiedName () {
-    var n = new UseQualifiedName(lookahead);
+    AstNode n = new UseQualifiedName(lookahead);
     n.addChild(useName());
     while (lookahead.getKind() == Token.Kind.PERIOD) {
       match(Token.Kind.PERIOD);
       var kind = lookahead.getKind();
-        if (kind == Token.Kind.IDENTIFIER) {
+      if (kind == Token.Kind.IDENTIFIER) {
         n.addChild(useName());
       } else if (kind == Token.Kind.L_BRACE) {
-        n.addChild(useSomeNames());
-        break;
+        var p = n;
+        n = useSomeNames();
+        n.addChild(p);
+        return n;
       } else if (kind == Token.Kind.ASTERISK) {
-        n.addChild(useAllNames());
-        break;
+        var p = n;
+        n = useAllNames();
+        n.addChild(p);
+        return n;
       }
     }
     return n;
