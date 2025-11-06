@@ -214,28 +214,11 @@ public class Generator2 extends BaseResultVisitor<ST> {
     return st;
   }
 
-//  public ST visit (UseAllNames node) {
-//    var st = group.getInstanceOf("interface/declaration/usingAllNames");
-//    st.add("usingQualifiedName", genStack.pop());
-//    return st;
-//  }
-
   public ST visit (UseName node) {
     var st = new ST(node.getToken().getLexeme());
     return st;
   }
-
-//  public ST visit (UseSomeNames node) {
-//    var st = group.getInstanceOf("interface/declaration/usingSomeNames");
-//
-//    return st;
-//  }
-//
-//
-//  public ST visit (UseName node) {
-//    return new ST(node.getToken().getLexeme());
-//  }
-
+  
   // OTHER DECLARATIONS
 
   public ST visit (OtherDeclarations node) {
