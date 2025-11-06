@@ -1,3 +1,3 @@
-usingOneName (usingQualifiedName) ::= <<
-using <usingQualifiedName>;
+usingOneName (usingQualifiedName, usingLast) ::= <<
+using <usingQualifiedName>::<usingLast>;
 >>

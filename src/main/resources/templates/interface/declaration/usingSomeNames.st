@@ -1,3 +1,3 @@
 usingSomeNames (usingSomeName) ::= <<
-<usingSomeName> // TBD
+<usingSomeName; separator="\n">
 >>

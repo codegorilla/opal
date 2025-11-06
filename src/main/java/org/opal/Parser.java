@@ -23,6 +23,9 @@ public class Parser {
   // Used to pass type nodes up and down during tree traversal
   private final LinkedList<Type> stack;
 
+  // Used to pass nodes up and down during tree traversal
+  private final LinkedList<AstNode> nodeStack;
+
   // Used to collect modifier nodes in preparation for aggregation into
   // specialized modifiers nodes.
   private final LinkedList<AstNode> modifierStack;
@@ -46,6 +49,7 @@ public class Parser {
     position = 0;
     lookahead = input.get(position);
     stack = new LinkedList<>();
+    nodeStack = new LinkedList<>();
     modifierStack = new LinkedList<>();
     builtinScope = new Scope(Scope.Kind.BUILT_IN);
     currentScope = builtinScope;
@@ -207,6 +211,15 @@ public class Parser {
     var n = new UseDeclaration(lookahead);
     match(Token.Kind.USE);
     n.addChild(useQualifiedName());
+    if (!nodeStack.isEmpty())
+      n.addChild(nodeStack.pop());
+    else {
+      var kind = lookahead.getKind();
+      if (kind == Token.Kind.L_BRACE)
+        n.addChild(useSomeNames());
+      else if (kind == Token.Kind.ASTERISK)
+        n.addChild(useAllNames());
+    }
     match(Token.Kind.SEMICOLON);
     return n;
   }
@@ -215,31 +228,30 @@ public class Parser {
     AstNode n = new UseQualifiedName(lookahead);
     n.addChild(useName());
     match(Token.Kind.PERIOD);
-    var kind = lookahead.getKind();
-    if (kind == Token.Kind.IDENTIFIER) {
-      n.addChild(useName());
-    } else if (kind == Token.Kind.L_BRACE) {
-      n.addChild(useSomeNames());
-      return n;
-    } else if (kind == Token.Kind.ASTERISK) {
-      n.addChild(useAllNames());
-      return n;
-    }
-    while (lookahead.getKind() == Token.Kind.PERIOD) {
-      match(Token.Kind.PERIOD);
-      kind = lookahead.getKind();
-      if (kind == Token.Kind.IDENTIFIER) {
-        n.addChild(useName());
-      } else if (kind == Token.Kind.L_BRACE) {
-        n.addChild(useSomeNames());
-        return n;
-      } else if (kind == Token.Kind.ASTERISK) {
-        n.addChild(useAllNames());
+    while (lookahead.getKind() == Token.Kind.IDENTIFIER) {
+      var save = useName();
+      if (lookahead.getKind() != Token.Kind.PERIOD) {
+        nodeStack.push(save);
         return n;
       }
+      n.addChild(save);
+      match(Token.Kind.PERIOD);
     }
     return n;
   }
+
+  /*
+  var kind = lookahead.getKind();
+    if (kind == Token.Kind.IDENTIFIER) {
+    n.addChild(useName());
+  } else if (kind == Token.Kind.L_BRACE) {
+    n.addChild(useSomeNames());
+    return n;
+  } else if (kind == Token.Kind.ASTERISK) {
+    n.addChild(useAllNames());
+    return n;
+  }
+  */
 
   private AstNode useName () {
     var n = new UseName(lookahead);

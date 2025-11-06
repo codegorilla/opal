@@ -180,12 +180,17 @@ public class Generator2 extends BaseResultVisitor<ST> {
   public ST oneName (UseDeclaration node) {
     var st = group.getInstanceOf("interface/declaration/usingOneName");
     st.add("usingQualifiedName", visit(node.useQualifiedName()));
+    st.add("usingLast", visit(node.getLastChild()));
     return st;
   }
 
   public ST someNames (UseDeclaration node) {
-    var st = group.getInstanceOf("interface/declaration/usingSomeNames");
-//    for (var name : node.useSomeNames())
+    //var st = group.getInstanceOf("interface/declaration/usingSomeNames");
+    //System.out.println("how many some = " + node.getLastChild().getChildCount());
+    //st.add("usingSomeName", visit(node.getLastChild()));
+//    for (var name : node.getLastChild().getChildren())
+//      st.add("usingSomeName", visit(node.useQualifiedName()));
+    var st = visit(node.getLastChild());
     return st;
   }
 
@@ -203,7 +208,9 @@ public class Generator2 extends BaseResultVisitor<ST> {
   }
 
   public ST visit (UseSomeNames node) {
-    var st = new ST(node.getToken().getLexeme());
+    var st = group.getInstanceOf("interface/declaration/usingSomeNames");
+    for (var name : node.getChildren())
+      st.add("usingSomeName", visit(name));
     return st;
   }
 

@@ -66,12 +66,8 @@ public class Pass20 extends BaseResultVisitor<UseDeclaration.Kind> {
   }
 
   public UseDeclaration.Kind visit (UseDeclaration node) {
-    node.setKind(visit(node.useQualifiedName()));
+    node.setKind(visit(node.getLastChild()));
     return null;
-  }
-
-  public UseDeclaration.Kind visit (UseQualifiedName node) {
-    return visit(node.getLastChild());
   }
 
   public UseDeclaration.Kind visit (UseName node) {
