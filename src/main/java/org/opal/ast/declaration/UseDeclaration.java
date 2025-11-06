@@ -7,6 +7,8 @@ import org.opal.ast.AstNode;
 
 public class UseDeclaration extends AstNode {
 
+  private Kind kind = null;
+
   public UseDeclaration (Token token) {
     super(token);
   }
@@ -21,8 +23,22 @@ public class UseDeclaration extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode useOperand () {
+  public AstNode useQualifiedName () {
     return getChild(0);
+  }
+
+  public void setKind (UseDeclaration.Kind kind) {
+    this.kind = kind;
+  }
+
+  public UseDeclaration.Kind getKind () {
+    return kind;
+  }
+
+  public enum Kind {
+    ONE_NAME,
+    SOME_NAMES,
+    ALL_NAMES
   }
 
 }

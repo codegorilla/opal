@@ -159,10 +159,37 @@ public class Generator2 extends BaseResultVisitor<ST> {
   // node, or a plain "use qualified name" node (which is basically equivalent
   // to a "use one name" node).
 
+  // one:
+  // using opal.math.Bessel;
+  // some:
+  // using opal.math.{ Bessel };
+  // all:
+  // using opal.math.*;
+
   public ST visit (UseDeclaration node) {
     var st = group.getInstanceOf("interface/declaration/usingDeclaration");
-    st.add("usingOperand", visit(node.useOperand()));
+    if (node.getKind() == UseDeclaration.Kind.ONE_NAME)
+      st.add("usingOperand", oneName(node));
+    else if (node.getKind() == UseDeclaration.Kind.SOME_NAMES)
+      st.add("usingOperand", someNames(node));
+    else if (node.getKind() == UseDeclaration.Kind.ALL_NAMES)
+      st.add("usingOperand", allNames(node));
     return st;
+  }
+
+  public ST oneName (UseDeclaration node) {
+    var st = group.getInstanceOf("interface/declaration/usingDeclarationOneName");
+    return st;
+  }
+
+  public ST someNames (UseDeclaration node) {
+    var st = group.getInstanceOf("interface/declaration/usingDeclarationSomeNames");
+
+  }
+
+  public ST allNames (UseDeclaration node) {
+    var st = group.getInstanceOf("interface/declaration/usingDeclarationAllNames");
+
   }
 
   public ST visit (UseQualifiedName node) {
@@ -173,24 +200,30 @@ public class Generator2 extends BaseResultVisitor<ST> {
   }
 
   public ST visit (UseSomeNames node) {
-    var st = group.getInstanceOf("interface/declaration/usingSomeNames");
-
+    var st = new ST(node.getToken().getLexeme());
     return st;
   }
 
   public ST visit (UseAllNames node) {
     var st = group.getInstanceOf("interface/declaration/usingAllNames");
-    st.add("usingQualifiedName", visit(node.useQualifiedName()));
+    st.add("usingQualifiedName", genStack.pop());
     return st;
   }
 
   public ST visit (UseName node) {
-    return new ST(node.getToken().getLexeme());
+    var st = new ST(node.getToken().getLexeme());
+    return st;
   }
 
-
-//  public ST visit (UseAllNames node) {
-//    var st = group.
+//  public ST visit (UseSomeNames node) {
+//    var st = group.getInstanceOf("interface/declaration/usingSomeNames");
+//
+//    return st;
+//  }
+//
+//
+//  public ST visit (UseName node) {
+//    return new ST(node.getToken().getLexeme());
 //  }
 
   // OTHER DECLARATIONS

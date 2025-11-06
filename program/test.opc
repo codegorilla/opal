@@ -8,8 +8,8 @@ import std.crypto;
 import std.str;
 
 use lang.math.Bessel;
-use lang.math.{ Bessel, Jacobian };
 use lang.math.*;
+use lang.math.{ Bessel, Jacobian };
 
 typealias IntPtr = *int[10];
 

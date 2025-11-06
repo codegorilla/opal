@@ -67,6 +67,8 @@ public class Translator {
     // Determine import aliases
     var pass10 = new Pass10(root, sourceLines);
     pass10.process();
+    var pass20 = new Pass20(root, sourceLines);
+    pass20.process();
 
     var generator1 = new Generator1(root);
     generator1.process();

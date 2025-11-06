@@ -211,36 +211,30 @@ public class Parser {
     return n;
   }
 
-  /*
-  private AstNode useQualifiedName() {
-    var n = new UseQualifiedName(lookahead);
-    n.addChild(useName());
-    match(Token.Kind.PERIOD);
-    while (lookahead.getKind() == Token.Kind.IDENTIFIER) {
-      var save = useName();
-      if (lookahead.getKind() != Token.Kind.PERIOD)
-    }
-    return n;
-  }
-  */
-
   private AstNode useQualifiedName () {
     AstNode n = new UseQualifiedName(lookahead);
     n.addChild(useName());
+    match(Token.Kind.PERIOD);
+    var kind = lookahead.getKind();
+    if (kind == Token.Kind.IDENTIFIER) {
+      n.addChild(useName());
+    } else if (kind == Token.Kind.L_BRACE) {
+      n.addChild(useSomeNames());
+      return n;
+    } else if (kind == Token.Kind.ASTERISK) {
+      n.addChild(useAllNames());
+      return n;
+    }
     while (lookahead.getKind() == Token.Kind.PERIOD) {
       match(Token.Kind.PERIOD);
-      var kind = lookahead.getKind();
+      kind = lookahead.getKind();
       if (kind == Token.Kind.IDENTIFIER) {
         n.addChild(useName());
       } else if (kind == Token.Kind.L_BRACE) {
-        var p = n;
-        n = useSomeNames();
-        n.addChild(p);
+        n.addChild(useSomeNames());
         return n;
       } else if (kind == Token.Kind.ASTERISK) {
-        var p = n;
-        n = useAllNames();
-        n.addChild(p);
+        n.addChild(useAllNames());
         return n;
       }
     }
