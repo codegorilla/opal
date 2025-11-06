@@ -1,3 +1,3 @@
 usingDeclaration (usingOperand) ::= <<
-using <usingOperand>;
+using <usingOperand>; // DEPRECATED
 >>

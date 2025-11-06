@@ -167,29 +167,32 @@ public class Generator2 extends BaseResultVisitor<ST> {
   // using opal.math.*;
 
   public ST visit (UseDeclaration node) {
-    var st = group.getInstanceOf("interface/declaration/usingDeclaration");
+    ST st = null;
     if (node.getKind() == UseDeclaration.Kind.ONE_NAME)
-      st.add("usingOperand", oneName(node));
+      st = oneName(node);
     else if (node.getKind() == UseDeclaration.Kind.SOME_NAMES)
-      st.add("usingOperand", someNames(node));
+      st = someNames(node);
     else if (node.getKind() == UseDeclaration.Kind.ALL_NAMES)
-      st.add("usingOperand", allNames(node));
+      st = allNames(node);
     return st;
   }
 
   public ST oneName (UseDeclaration node) {
-    var st = group.getInstanceOf("interface/declaration/usingDeclarationOneName");
+    var st = group.getInstanceOf("interface/declaration/usingOneName");
+    st.add("usingQualifiedName", visit(node.useQualifiedName()));
     return st;
   }
 
   public ST someNames (UseDeclaration node) {
-    var st = group.getInstanceOf("interface/declaration/usingDeclarationSomeNames");
-
+    var st = group.getInstanceOf("interface/declaration/usingSomeNames");
+//    for (var name : node.useSomeNames())
+    return st;
   }
 
   public ST allNames (UseDeclaration node) {
-    var st = group.getInstanceOf("interface/declaration/usingDeclarationAllNames");
-
+    var st = group.getInstanceOf("interface/declaration/usingAllNames");
+    st.add("usingQualifiedName", visit(node.useQualifiedName()));
+    return st;
   }
 
   public ST visit (UseQualifiedName node) {
@@ -204,11 +207,11 @@ public class Generator2 extends BaseResultVisitor<ST> {
     return st;
   }
 
-  public ST visit (UseAllNames node) {
-    var st = group.getInstanceOf("interface/declaration/usingAllNames");
-    st.add("usingQualifiedName", genStack.pop());
-    return st;
-  }
+//  public ST visit (UseAllNames node) {
+//    var st = group.getInstanceOf("interface/declaration/usingAllNames");
+//    st.add("usingQualifiedName", genStack.pop());
+//    return st;
+//  }
 
   public ST visit (UseName node) {
     var st = new ST(node.getToken().getLexeme());

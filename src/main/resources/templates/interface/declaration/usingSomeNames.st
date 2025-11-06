@@ -1,3 +1,3 @@
-usingSomeNames (usingQualifiedName) ::= <<
-USING SOME NAMES
+usingSomeNames (usingSomeName) ::= <<
+<usingSomeName> // TBD
 >>

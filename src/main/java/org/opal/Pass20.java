@@ -40,9 +40,9 @@ public class Pass20 extends BaseResultVisitor<UseDeclaration.Kind> {
 
   public UseDeclaration.Kind visit (AstNode node) {
     nodePath.push(node);
-    node.accept(this);
+    var kind = node.accept(this);
     nodePath.pop();
-    return null;
+    return kind;
   }
 
   public UseDeclaration.Kind visit (TranslationUnit node) {

@@ -24,5 +24,5 @@ public class UseQualifiedName extends AstNode {
   public Iterable<AstNode> names () {
     return getChildren();
   }
-
+  
 }
