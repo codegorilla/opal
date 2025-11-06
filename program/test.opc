@@ -11,7 +11,7 @@ use lang.math.Bessel;
 use lang.math.{ Bessel, Jacobian };
 use lang.math.*;
 
-private typealias IntPtr = *int[10];
+typealias IntPtr = *int[10];
 
 private def myfun1 (s: float, t: uint32) -> *int {
   var x: int = 0;

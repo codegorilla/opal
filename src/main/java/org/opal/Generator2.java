@@ -174,6 +174,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
 
   public ST visit (UseSomeNames node) {
     var st = group.getInstanceOf("interface/declaration/usingSomeNames");
+
     return st;
   }
 
