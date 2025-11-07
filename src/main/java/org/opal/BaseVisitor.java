@@ -42,6 +42,7 @@ public class BaseVisitor implements Visitor {
   public void visit (UseQualifiedName node) {}
   public void visit (UseName node) {}
   public void visit (UseSomeNames node) {}
+  public void visit (UseSomeName node) {}
   public void visit (UseAllNames node) {}
 
   // Other declarations
