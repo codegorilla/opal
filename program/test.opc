@@ -7,8 +7,8 @@ import opal.math as math;
 import std.crypto;
 import std.str;
 
-use lang.math.Matrix;
-use lang.math.{ Bessel, Jacobian };
+use opal.lang.math.{ Bessel, Jacobian };
+use lang.math.{ Matrix, cos };
 use lang.math.*;
 
 typealias IntPtr = *int[10];

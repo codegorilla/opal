@@ -211,9 +211,9 @@ public class Parser {
     var n = new UseDeclaration(lookahead);
     match(Token.Kind.USE);
     n.addChild(useQualifiedName());
-    if (!nodeStack.isEmpty())
-      n.addChild(nodeStack.pop());
-    else {
+    if (!nodeStack.isEmpty()) {
+      n.addChild(useOneName());
+    } else {
       var kind = lookahead.getKind();
       if (kind == Token.Kind.L_BRACE)
         n.addChild(useSomeNames());
@@ -246,6 +246,12 @@ public class Parser {
     return n;
   }
 
+  private AstNode useOneName () {
+    var n = new UseOneName();
+    n.addChild(nodeStack.pop());
+    return n;
+  }
+
   private AstNode useSomeNames () {
     var n = new UseSomeNames(lookahead);
     match(Token.Kind.L_BRACE);
@@ -269,6 +275,8 @@ public class Parser {
     match(Token.Kind.ASTERISK);
     return n;
   }
+
+  // OTHER DECLARATIONS
 
   private AstNode otherDeclarations () {
     var n = new OtherDeclarations();
