@@ -155,23 +155,11 @@ public class Generator2 extends BaseResultVisitor<ST> {
     return st;
   }
 
-  // The use operand may either be a "use all names" node, a "use some names"
-  // node, or a plain "use qualified name" node (which is basically equivalent
-  // to a "use one name" node).
-
-  // one:
-  // using opal.math.Bessel;
-  // some:
-  // using opal.math.{ Bessel };
-  // all:
-  // using opal.math.*;
-
   public ST visit (UseDeclaration node) {
+//    var st = group.getInstanceOf("interface/declaration/usingDeclarations");
     ST st = null;
     if (node.getKind() == UseDeclaration.Kind.ONE_NAME)
       st = oneName(node);
-    else if (node.getKind() == UseDeclaration.Kind.SOME_NAMES)
-      st = someNames(node);
     else if (node.getKind() == UseDeclaration.Kind.ALL_NAMES)
       st = allNames(node);
     return st;
@@ -181,16 +169,6 @@ public class Generator2 extends BaseResultVisitor<ST> {
     var st = group.getInstanceOf("interface/declaration/usingOneName");
     st.add("usingQualifiedName", visit(node.useQualifiedName()));
     st.add("usingLast", visit(node.getLastChild()));
-    return st;
-  }
-
-  public ST someNames (UseDeclaration node) {
-    //var st = group.getInstanceOf("interface/declaration/usingSomeNames");
-    //System.out.println("how many some = " + node.getLastChild().getChildCount());
-    //st.add("usingSomeName", visit(node.getLastChild()));
-//    for (var name : node.getLastChild().getChildren())
-//      st.add("usingSomeName", visit(node.useQualifiedName()));
-    var st = visit(node.getLastChild());
     return st;
   }
 
@@ -207,18 +185,11 @@ public class Generator2 extends BaseResultVisitor<ST> {
     return st;
   }
 
-  public ST visit (UseSomeNames node) {
-    var st = group.getInstanceOf("interface/declaration/usingSomeNames");
-    for (var name : node.getChildren())
-      st.add("usingSomeName", visit(name));
-    return st;
-  }
-
   public ST visit (UseName node) {
     var st = new ST(node.getToken().getLexeme());
     return st;
   }
-  
+
   // OTHER DECLARATIONS
 
   public ST visit (OtherDeclarations node) {

@@ -27,6 +27,16 @@ public class UseDeclaration extends AstNode {
     return getChild(0);
   }
 
+  // The second child may constitute one, some, or all names.
+
+  public AstNode useSomeNames () {
+    return getChild(1);
+  }
+
+  public AstNode useAllNames () {
+    return getChild(1);
+  }
+
   public void setKind (UseDeclaration.Kind kind) {
     this.kind = kind;
   }

@@ -53,8 +53,10 @@ public class Declarations extends AstNode {
   }
 
   // Deprecate?
+  /*
   public Iterable<AstNode> declarations () {
     return getChildren();
   }
+  */
 
 }

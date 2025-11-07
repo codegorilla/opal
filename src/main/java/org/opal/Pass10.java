@@ -62,7 +62,7 @@ public class Pass10 extends BaseVisitor {
   // Declarations
 
   public void visit (Declarations node) {
-    for (var declaration : node.declarations()) {
+    for (var declaration : node.getChildren()) {
       visit(declaration);
     }
 //    if (node.hasImportDeclarations())
