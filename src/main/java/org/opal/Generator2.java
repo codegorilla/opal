@@ -155,25 +155,13 @@ public class Generator2 extends BaseResultVisitor<ST> {
     return st;
   }
 
+  // We cannot put the using declaration template at this level because use
+  // declarations with multiple (i.e. some) elements need to spawn more than
+  // one declaration.
+
   public ST visit (UseDeclaration node) {
-    ST st = null;
-    if (node.getKind() == UseDeclaration.Kind.ONE_NAME)
-      st = oneName(node);
-    else if (node.getKind() == UseDeclaration.Kind.ALL_NAMES)
-      st = allNames(node);
-    return st;
-  }
-
-  public ST oneName (UseDeclaration node) {
-    var st = group.getInstanceOf("interface/declaration/usingDeclarationOneName");
-    st.add("usingQualifiedName", visit(node.useQualifiedName()));
-    st.add("usingLast", visit(node.useOneName()));
-    return st;
-  }
-
-  public ST allNames (UseDeclaration node) {
-    var st = group.getInstanceOf("interface/declaration/usingDeclarationAllNames");
-    st.add("usingQualifiedName", visit(node.useQualifiedName()));
+    genStack.push(visit(node.useQualifiedName()));
+    var st = visit(node.getLastChild());
     return st;
   }
 
@@ -186,6 +174,34 @@ public class Generator2 extends BaseResultVisitor<ST> {
 
   public ST visit (UseName node) {
     var st = new ST(node.getToken().getLexeme());
+    return st;
+  }
+
+  public ST visit (UseOneName node) {
+    var st = group.getInstanceOf("interface/declaration/usingDeclarationOneName");
+    st.add("usingQualifiedName", genStack.pop());
+    st.add("usingLast", visit(node.useName()));
+    return st;
+  }
+
+  public ST visit (UseSomeNames node) {
+    var st = group.getInstanceOf("interface/declaration/usingDeclarationSomeNames");
+    for (var someName : node.getChildren())
+      st.add("usingDeclarationSomeName", visit(someName));
+    genStack.pop();
+    return st;
+  }
+
+  public ST visit (UseSomeName node) {
+    var st = group.getInstanceOf("interface/declaration/usingDeclarationSomeName");
+    st.add("usingQualifiedName", genStack.peek());
+    st.add("usingLast", node.getToken().getLexeme());
+    return st;
+  }
+
+  public ST visit (UseAllNames node) {
+    var st = group.getInstanceOf("interface/declaration/usingDeclarationAllNames");
+    st.add("usingQualifiedName", genStack.pop());
     return st;
   }
 

@@ -70,7 +70,7 @@ public class Pass20 extends BaseResultVisitor<UseDeclaration.Kind> {
     return null;
   }
 
-  public UseDeclaration.Kind visit (UseName node) {
+  public UseDeclaration.Kind visit (UseOneName node) {
     return UseDeclaration.Kind.ONE_NAME;
   }
 
