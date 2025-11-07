@@ -167,7 +167,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
   public ST oneName (UseDeclaration node) {
     var st = group.getInstanceOf("interface/declaration/usingDeclarationOneName");
     st.add("usingQualifiedName", visit(node.useQualifiedName()));
-    st.add("usingLast", visit(node.getLastChild()));
+    st.add("usingLast", visit(node.useOneName()));
     return st;
   }
 
