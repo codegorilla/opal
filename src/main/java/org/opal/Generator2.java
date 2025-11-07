@@ -156,7 +156,6 @@ public class Generator2 extends BaseResultVisitor<ST> {
   }
 
   public ST visit (UseDeclaration node) {
-//    var st = group.getInstanceOf("interface/declaration/usingDeclarations");
     ST st = null;
     if (node.getKind() == UseDeclaration.Kind.ONE_NAME)
       st = oneName(node);
@@ -166,14 +165,14 @@ public class Generator2 extends BaseResultVisitor<ST> {
   }
 
   public ST oneName (UseDeclaration node) {
-    var st = group.getInstanceOf("interface/declaration/usingOneName");
+    var st = group.getInstanceOf("interface/declaration/usingDeclarationOneName");
     st.add("usingQualifiedName", visit(node.useQualifiedName()));
     st.add("usingLast", visit(node.getLastChild()));
     return st;
   }
 
   public ST allNames (UseDeclaration node) {
-    var st = group.getInstanceOf("interface/declaration/usingAllNames");
+    var st = group.getInstanceOf("interface/declaration/usingDeclarationAllNames");
     st.add("usingQualifiedName", visit(node.useQualifiedName()));
     return st;
   }

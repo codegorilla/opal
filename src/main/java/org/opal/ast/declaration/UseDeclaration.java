@@ -29,6 +29,10 @@ public class UseDeclaration extends AstNode {
 
   // The second child may constitute one, some, or all names.
 
+  public AstNode useOneName () {
+    return getChild(1);
+  }
+
   public AstNode useSomeNames () {
     return getChild(1);
   }
