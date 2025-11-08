@@ -24,6 +24,7 @@ public class Pass20 extends BaseResultVisitor<AstNode> {
     this.sourceLines = sourceLines;
   }
 
+  @Override
   public AstNode process () {
     visit(root);
     return null;
@@ -36,11 +37,13 @@ public class Pass20 extends BaseResultVisitor<AstNode> {
     return n;
   }
 
+  @Override
   public AstNode visit (TranslationUnit node) {
     visit(node.declarations());
     return null;
   }
 
+  @Override
   public AstNode visit (Declarations node) {
     visit(node.useDeclarations());
     return null;
@@ -52,6 +55,7 @@ public class Pass20 extends BaseResultVisitor<AstNode> {
   // compare them to any existing qualified names. Such qualified names can be
   // kept in a set data structure to ensure uniqueness.
 
+  @Override
   public AstNode visit (UseDeclarations node) {
     var n = ((Declarations)nodePath.get(1)).importDeclarations();
     for (var useDeclaration : node.getChildren())
@@ -59,12 +63,14 @@ public class Pass20 extends BaseResultVisitor<AstNode> {
     return null;
   }
 
+  @Override
   public AstNode visit (UseDeclaration node) {
     var n = new ImportDeclaration(null);
     n.addChild(visit(node.useQualifiedName()));
     return n;
   }
 
+  @Override
   public AstNode visit (UseQualifiedName node) {
     var n = new ImportQualifiedName(null);
     for (var useName : node.getChildren())
@@ -72,9 +78,9 @@ public class Pass20 extends BaseResultVisitor<AstNode> {
     return n;
   }
 
+  @Override
   public AstNode visit (UseName node) {
-    var n = new ImportName(node.getToken());
-    return n;
+    return new ImportName(node.getToken());
   }
 
 }

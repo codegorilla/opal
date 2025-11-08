@@ -53,7 +53,6 @@ public class Pass10 extends BaseVisitor {
     nodePath.pop();
   }
 
-
   public void visit (TranslationUnit node) {
     System.out.println("Translation unit");
     visit(node.declarations());
