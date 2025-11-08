@@ -46,11 +46,12 @@ public class Pass20 extends BaseResultVisitor<AstNode> {
     return null;
   }
 
-  // To do: Although it seems that C++ can handle multiple import declarations
-  // of the same module, we might want to avoid such duplication. One way to do
+  // To do: Although the C++ standard allows multiple import declarations of
+  // the same module, we might want to avoid such duplication. One way to do
   // this is to convert the qualified names to a string representation and then
-  // compare them to any existing qualified names. Such qualified names can be
-  // kept in a set data structure to ensure uniqueness.
+  // compare the strings to those of any existing qualified names. We could
+  // compare the hashes instead. Adding them to a set data structure may
+  // accomplish the same thing.
 
   @Override
   public AstNode visit (UseDeclarations node) {
