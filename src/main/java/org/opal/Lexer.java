@@ -311,14 +311,14 @@ public class Lexer {
                 // Skip line feeds(LF)
                 consume();
                 line += 1;
-                column = 0;
+                column = 1;
               } else if (current =='\r') {
                 // Skip carriage return +line feed(CR + LF) pairs
                 consume();
                 if (current == '\n') {
                   consume();
                   line += 1;
-                  column = 0;
+                  column = 1;
                 } else {
                   // Found carriage return (CR) by itself, which is invalid
                   System.out.println("error: invalid line ending");
@@ -517,7 +517,7 @@ public class Lexer {
         while (current == '\n') {
           consume();
           line += 1;
-          column = 0;
+          column = 1;
         }
       }
 
@@ -528,7 +528,7 @@ public class Lexer {
           if (current == '\n') {
             consume();
             line += 1;
-            column = 0;
+            column = 1;
           } else {
             // Should return error token here maybe
             // Found carriage return by itself, which is invalid (except on mac?)
@@ -538,18 +538,18 @@ public class Lexer {
       }
 
       else if (Character.isLetter(current) || current == '_') {
-        final var begin = position;
+        final var beginPosition = position;
+        final var beginColumn = column;
         do {
           consume();
         } while ((position < input.length()) && (Character.isLetter(current) || Character.isDigit(current) || current == '_'));
         // End index of slice is excluded from result
-        final var end = position;
-        lexeme = input.substring(begin, end);
+        lexeme = input.substring(beginPosition, position);
         if (keywordLookup.containsKey(lexeme))
           kind = keywordLookup.get(lexeme);
         else
           kind = Token.Kind.IDENTIFIER;
-        return new Token(kind, lexeme, position, line, column - lexeme.length() + 1);
+        return new Token(kind, lexeme, beginPosition, line, beginColumn);
       }
 
       else if (Character.isDigit(current))
@@ -1045,7 +1045,8 @@ public class Lexer {
 
   private Token number () {
     // This scans for an integer or floating point number.
-    final var begin = position;
+    final var beginPosition = position;
+    final var beginColumn = column;
     var state = State.NUM_START;
     Token token = null;
     while (token == null) {
@@ -1088,9 +1089,8 @@ public class Lexer {
             state = State.NUM_820;
           } else {
             // Accept
-            final var end = position;
-            final var lexeme = input.substring(begin, end);
-            token = new Token(Token.Kind.INT32_LITERAL, lexeme, position, line, column);
+            final var lexeme = input.substring(beginPosition, position);
+            token = new Token(Token.Kind.INT32_LITERAL, lexeme, beginPosition, line, beginColumn);
           }
           break;
         case State.NUM_200:
@@ -1124,9 +1124,8 @@ public class Lexer {
             consume();
             state = State.NUM_230;
           } else {
-            final var end = position;
-            final var lexeme = input.substring(begin, end);
-            token = new Token(Token.Kind.INT64_LITERAL, lexeme, position, line, column);
+            final var lexeme = input.substring(beginPosition, position);
+            token = new Token(Token.Kind.INT64_LITERAL, lexeme, beginPosition, line, beginColumn);
           }
           break;
         case State.NUM_220:
@@ -1135,17 +1134,15 @@ public class Lexer {
             state = State.NUM_230;
           } else {
             // Accept
-            final var end = position;
-            final var lexeme = input.substring(begin, end);
-            token = new Token(Token.Kind.UINT32_LITERAL, lexeme, position, line, column);
+            final var lexeme = input.substring(beginPosition, position);
+            token = new Token(Token.Kind.UINT32_LITERAL, lexeme, beginPosition, line, beginColumn);
           }
           break;
         case State.NUM_230:
           {
             // Accept
-            final var end = position;
-            final var lexeme = input.substring(begin, end);
-            token = new Token(Token.Kind.UINT64_LITERAL, lexeme, position, line, column);
+            final var lexeme = input.substring(beginPosition, position);
+            token = new Token(Token.Kind.UINT64_LITERAL, lexeme, beginPosition, line, beginColumn);
             break;
           }
         case State.NUM_300:
@@ -1175,9 +1172,8 @@ public class Lexer {
             state = State.NUM_820;
           } else {
             // Accept
-            final var end = position;
-            final var lexeme = input.substring(begin, end);
-            token = new Token(Token.Kind.FLOAT64_LITERAL, lexeme, position, line, column);
+            final var lexeme = input.substring(beginPosition, position);
+            token = new Token(Token.Kind.FLOAT64_LITERAL, lexeme, beginPosition, line, beginColumn);
           }
           break;
         case State.NUM_500:
@@ -1236,25 +1232,22 @@ public class Lexer {
             state = State.NUM_820;
           } else {
             // Accept
-            final var end = position;
-            final var lexeme = input.substring(begin, end);
-            token = new Token(Token.Kind.FLOAT64_LITERAL, lexeme, position, line, column);
+            final var lexeme = input.substring(beginPosition, position);
+            token = new Token(Token.Kind.FLOAT64_LITERAL, lexeme, beginPosition, line, beginColumn);
           }
           break;
         case State.NUM_810:
           {
             // Accept
-            final var end = position;
-            final var lexeme = input.substring(begin, end);
-            token = new Token(Token.Kind.FLOAT64_LITERAL, lexeme, position, line, column);
+            final var lexeme = input.substring(beginPosition, position);
+            token = new Token(Token.Kind.FLOAT64_LITERAL, lexeme, beginPosition, line, beginColumn);
           }
           break;
         case State.NUM_820:
           {
             // Accept
-            final var end = position;
-            final var lexeme = input.substring(begin, end);
-            token = new Token(Token.Kind.FLOAT32_LITERAL, lexeme, position, line, column);
+            final var lexeme = input.substring(beginPosition, position);
+            token = new Token(Token.Kind.FLOAT32_LITERAL, lexeme, beginPosition, line, beginColumn);
           }
           break;
         default:

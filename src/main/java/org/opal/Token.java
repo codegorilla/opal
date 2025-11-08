@@ -2,16 +2,25 @@ package org.opal;
 
 public class Token {
 
-  private Token.Kind kind;
-  private String lexeme;
-  private int position;
-  private int line;
-  private int column;
+  // Kind of token (e.g. IF, PLUS, SEMICOLON)
+  private final Token.Kind kind;
 
-  public Token (Token.Kind kind, String lexeme, int position, int line, int column) {
+  // Text contents of token
+  private final String lexeme;
+
+  // Position in input stream where first character occurs, counting from zero
+  private final int index;
+
+  // Line number of token, counting from one
+  private final int line;
+
+  // Column number where first character occurs, counting from one
+  private final int column;
+
+  public Token (Token.Kind kind, String lexeme, int index, int line, int column) {
     this.kind = kind;
     this.lexeme = lexeme;
-    this.position = position;
+    this.index = index;
     this.line = line;
     this.column = column;
   }
@@ -24,8 +33,8 @@ public class Token {
     return lexeme;
   }
 
-  public int getPosition () {
-    return position;
+  public int getIndex () {
+    return index;
   }
 
   public int getLine () {
@@ -43,7 +52,11 @@ public class Token {
         .append(",'")
         .append(lexeme)
         .append("',")
-        .append(position)
+        .append(index)
+        .append(",")
+        .append(line)
+        .append(",")
+        .append(column)
         .append(")")
         .toString();
   }

@@ -2,6 +2,7 @@ package org.opal;
 
 //import java.util.Deque;
 import java.util.LinkedList;
+import java.util.List;
 
 import org.opal.ast.*;
 import org.opal.ast.declaration.*;
@@ -9,16 +10,23 @@ import org.opal.ast.expression.*;
 import org.opal.ast.statement.*;
 import org.opal.ast.type.*;
 
+import org.opal.error.SemanticError;
+import org.opal.error.SyntaxError;
 import org.opal.symbol.Scope;
 import org.opal.symbol.PrimitiveTypeSymbol;
 
+// To do: We wish to implement some form of panic-mode and/or phrase-level
+// error recovery. See Wirth, 76.
+
 public class Parser {
 
-  private final int SLEEP_TIME = 10;
+  private final int SLEEP_TIME = 100;
 
   private final LinkedList<Token> input;
   private int position;
   private Token lookahead;
+
+  private final List<String> sourceLines;
 
   // Used to pass type nodes up and down during tree traversal
   private final LinkedList<Type> stack;
@@ -44,10 +52,11 @@ public class Parser {
   // Todo: We may decide that 'int', 'short', 'float', etc. should just be
   // typealiases for the various fixed size types.
 
-  public Parser (LinkedList<Token> input) {
+  public Parser (LinkedList<Token> input, List<String> sourceLines) {
     this.input = input;
     position = 0;
     lookahead = input.get(position);
+    this.sourceLines = sourceLines;
     stack = new LinkedList<>();
     nodeStack = new LinkedList<>();
     modifierStack = new LinkedList<>();
@@ -55,18 +64,20 @@ public class Parser {
     currentScope = builtinScope;
   }
 
+  private String friendlyKind (Token.Kind kind) {
+    return kind.toString().toLowerCase().replace("_", " ");
+  }
+
   private void match (Token.Kind kind) {
     if (lookahead.getKind() == kind)
       consume();
-    else
-      System.out.println("invalid token: expected " + kind + ", got " + lookahead.getKind());
-  }
-
-  private void match (String lexeme) {
-    if (lookahead.getLexeme().equals(lexeme))
-      consume();
-    else
-      System.out.println("invalid token: expected " + lexeme + ", got " + lookahead.getLexeme());
+    else {
+      var expected = friendlyKind(kind);
+      var actual = friendlyKind(lookahead.getKind());
+      var message = "expected " + expected + ", got " + actual;
+      var error = new SyntaxError(sourceLines, message, lookahead);
+      System.out.println(error.complete());
+    }
   }
 
   private void consume () {

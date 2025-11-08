@@ -1,5 +1,9 @@
-package main;
 
+
+
+package import main;
+
+/*
 import std.math;
 import lang.math;
 import opal.grinch as math;
@@ -44,3 +48,4 @@ def test () {
   typealias IntPtr = *int;
   var c: int = 0;
 }
+*/
