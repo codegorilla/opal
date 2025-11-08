@@ -3,9 +3,6 @@ package org.opal;
 import org.opal.ast.AstNode;
 import org.opal.ast.TranslationUnit;
 import org.opal.ast.declaration.*;
-import org.opal.state.ImportAliasContext;
-
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
