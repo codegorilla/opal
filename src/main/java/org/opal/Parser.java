@@ -10,7 +10,6 @@ import org.opal.ast.expression.*;
 import org.opal.ast.statement.*;
 import org.opal.ast.type.*;
 
-import org.opal.error.SemanticError;
 import org.opal.error.SyntaxError;
 import org.opal.symbol.Scope;
 import org.opal.symbol.PrimitiveTypeSymbol;
