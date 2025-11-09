@@ -5,14 +5,14 @@ import java.util.LinkedList;
 
 public class Lexer {
 
-  private final char EOF = (char) (-1);
+  private final char EOF = (char)(-1);
 
   private String input = null;
   private char current = EOF;
 
-  private int position = 0;
-  private final Counter line   = new Counter(1);
-  private final Counter column = new Counter(1);
+  private final Counter position = new Counter(0);
+  private final Counter line     = new Counter(1);
+  private final Counter column   = new Counter(1);
 
   private final HashMap<String, Token.Kind> keywordLookup = new HashMap<>();
 
@@ -24,17 +24,17 @@ public class Lexer {
   }
 
   private void consume () {
-    position += 1;
-    if (position < input.length())
-      current = input.charAt(position);
+    position.increment();
+    if (position.get() < input.length())
+      current = input.charAt(position.get());
     else
       current = EOF;
     column.increment();
   }
 
   private void backup () {
-    position -= 1;
-    current = input.charAt(position);
+    position.decrement();
+    current = input.charAt(position.get());
     column.decrement();
   }
 
@@ -155,7 +155,7 @@ public class Lexer {
           kind = Token.Kind.EQUAL;
           lexeme = "=";
         }
-        return new Token(kind, lexeme, position, line.get(), column.get());
+        return new Token(kind, lexeme, position.get(), line.get(), column.get());
       }
 
       else if (current == '|') {
@@ -172,7 +172,7 @@ public class Lexer {
           kind = Token.Kind.BAR;
           lexeme = "|";
         }
-        return new Token(kind, lexeme, position, line.get(), column.get());
+        return new Token(kind, lexeme, position.get(), line.get(), column.get());
       }
 
       else if (current == '^') {
@@ -185,7 +185,7 @@ public class Lexer {
           kind = Token.Kind.CARET;
           lexeme = "^";
         }
-        return new Token(kind, lexeme, position, line.get(), column.get());
+        return new Token(kind, lexeme, position.get(), line.get(), column.get());
       }
 
       else if (current == '&') {
@@ -202,7 +202,7 @@ public class Lexer {
           kind = Token.Kind.AMPERSAND;
           lexeme = "&";
         }
-        return new Token(kind, lexeme, position, line.get(), column.get());
+        return new Token(kind, lexeme, position.get(), line.get(), column.get());
       }
 
       else if (current == '>') {
@@ -225,7 +225,7 @@ public class Lexer {
           kind = Token.Kind.GREATER;
           lexeme = ">";
         }
-        return new Token(kind, lexeme, position, line.get(), column.get());
+        return new Token(kind, lexeme, position.get(), line.get(), column.get());
       }
 
       else if (current == '<') {
@@ -248,7 +248,7 @@ public class Lexer {
           kind = Token.Kind.LESS;
           lexeme = "<";
         }
-        return new Token(kind, lexeme, position, line.get(), column.get());
+        return new Token(kind, lexeme, position.get(), line.get(), column.get());
       }
 
       else if (current == '+') {
@@ -261,7 +261,7 @@ public class Lexer {
           kind = Token.Kind.PLUS;
           lexeme = "+";
         }
-        return new Token(kind, lexeme, position, line.get(), column.get());
+        return new Token(kind, lexeme, position.get(), line.get(), column.get());
       }
 
       else if (current == '-') {
@@ -278,7 +278,7 @@ public class Lexer {
           kind = Token.Kind.MINUS;
           lexeme = "-";
         }
-        return new Token(kind, lexeme, position, line.get(), column.get());
+        return new Token(kind, lexeme, position.get(), line.get(), column.get());
       }
 
       else if (current == '*') {
@@ -291,7 +291,7 @@ public class Lexer {
           kind = Token.Kind.ASTERISK;
           lexeme = "*";
         }
-        return new Token(kind, lexeme, position, line.get(), column.get());
+        return new Token(kind, lexeme, position.get(), line.get(), column.get());
       }
 
       // To do: Need to account for comments
@@ -301,7 +301,7 @@ public class Lexer {
           consume();
           kind = Token.Kind.SLASH_EQUAL;
           lexeme = "/=";
-          return new Token(kind, lexeme, position, line.get(), column.get());
+          return new Token(kind, lexeme, position.get(), line.get(), column.get());
         } else if (current == '*') {
           // Block comment
           consume();
@@ -346,7 +346,7 @@ public class Lexer {
         } else {
           kind = Token.Kind.SLASH;
           lexeme = "/";
-          return new Token(kind, lexeme, position, line.get(), column.get());
+          return new Token(kind, lexeme, position.get(), line.get(), column.get());
         }
       }
 
@@ -360,7 +360,7 @@ public class Lexer {
           kind = Token.Kind.PERCENT;
           lexeme = "%";
         }
-        return new Token(kind, lexeme, position, line.get(), column.get());
+        return new Token(kind, lexeme, position.get(), line.get(), column.get());
       }
 
       else if (current == '!') {
@@ -377,7 +377,7 @@ public class Lexer {
           kind = Token.Kind.EXCLAMATION;
           lexeme = "!";
         }
-        return new Token(kind, lexeme, position, line.get(), column.get());
+        return new Token(kind, lexeme, position.get(), line.get(), column.get());
       }
 
       else if (current == '~') {
@@ -390,12 +390,12 @@ public class Lexer {
           kind = Token.Kind.TILDE;
           lexeme = "~";
         }
-        return new Token(kind, lexeme, position, line.get(), column.get());
+        return new Token(kind, lexeme, position.get(), line.get(), column.get());
       }
 
       else if (current == '"') {
         // String
-        final var begin = position;
+        final var beginPosition = position.get();
         consume();
         while (current != '"' && current != EOF) {
           // Might need to put some logic in here to increment line
@@ -404,9 +404,8 @@ public class Lexer {
         }
         if (current == '"') {
           consume();
-          final var end = position;
-          final var value = input.substring(begin, end);
-          return new Token(Token.Kind.STRING_LITERAL, value, position, line.get(), column.get());
+          final var value = input.substring(beginPosition, position.get());
+          return new Token(Token.Kind.STRING_LITERAL, value, position.get(), line.get(), column.get());
         } else if (current == EOF) {
           // To do: probably should pretend terminator is there and return token
           System.out.println("error: missing string terminator");
@@ -415,7 +414,7 @@ public class Lexer {
 
       else if (current == '\'') {
         // Character
-        final var begin = position;
+        final var beginPosition = position.get();
         consume();
         while (current != '\'' && current != EOF) {
           // Might need to put some logic in here to increment line
@@ -424,9 +423,8 @@ public class Lexer {
         }
         if (current == '\'') {
           consume();
-          final var end = position;
-          final var value = input.substring(begin, end);
-          return new Token(Token.Kind.CHARACTER_LITERAL, value, position, line.get(), column.get());
+          final var value = input.substring(beginPosition, position.get());
+          return new Token(Token.Kind.CHARACTER_LITERAL, value, position.get(), line.get(), column.get());
         } else if (current == EOF) {
           // To) {: probably should pretend terminator is there and return token
           System.out.println("error: missing character terminator");
@@ -435,58 +433,58 @@ public class Lexer {
 
       else if (current == ':') {
         consume();
-        return new Token(Token.Kind.COLON, ":", position, line.get(), column.get());
+        return new Token(Token.Kind.COLON, ":", position.get(), line.get(), column.get());
       }
 
       else if (current == ';') {
         consume();
-        return new Token(Token.Kind.SEMICOLON, ";", position, line.get(), column.get());
+        return new Token(Token.Kind.SEMICOLON, ";", position.get(), line.get(), column.get());
       }
 
       else if (current == '.') {
         consume();
         if (current == '.') {
           consume();
-          return new Token(Token.Kind.PERIOD_PERIOD, "..", position, line.get(), column.get());
+          return new Token(Token.Kind.PERIOD_PERIOD, "..", position.get(), line.get(), column.get());
         } else if (Character.isDigit(current)) {
           return number();
         } else
-          return new Token(Token.Kind.PERIOD, ".", position, line.get(), column.get());
+          return new Token(Token.Kind.PERIOD, ".", position.get(), line.get(), column.get());
       }
 
       else if (current == ',') {
         consume();
-        return new Token(Token.Kind.COMMA, ",", position, line.get(), column.get());
+        return new Token(Token.Kind.COMMA, ",", position.get(), line.get(), column.get());
       }
 
       else if (current == '{') {
         consume();
-        return new Token(Token.Kind.L_BRACE, "{", position, line.get(), column.get());
+        return new Token(Token.Kind.L_BRACE, "{", position.get(), line.get(), column.get());
       }
 
       else if (current == '}') {
         consume();
-        return new Token(Token.Kind.R_BRACE, "}", position, line.get(), column.get());
+        return new Token(Token.Kind.R_BRACE, "}", position.get(), line.get(), column.get());
       }
 
       else if (current == '[') {
         consume();
-        return new Token(Token.Kind.L_BRACKET, "[", position, line.get(), column.get());
+        return new Token(Token.Kind.L_BRACKET, "[", position.get(), line.get(), column.get());
       }
 
       else if (current == ']') {
         consume();
-        return new Token(Token.Kind.R_BRACKET, "]", position, line.get(), column.get());
+        return new Token(Token.Kind.R_BRACKET, "]", position.get(), line.get(), column.get());
       }
 
       else if (current == '(') {
         consume();
-        return new Token(Token.Kind.L_PARENTHESIS, "(", position, line.get(), column.get());
+        return new Token(Token.Kind.L_PARENTHESIS, "(", position.get(), line.get(), column.get());
       }
 
       else if (current == ')') {
         consume();
-        return new Token(Token.Kind.R_PARENTHESIS, ")", position, line.get(), column.get());
+        return new Token(Token.Kind.R_PARENTHESIS, ")", position.get(), line.get(), column.get());
       }
 
       else if (current == '0') {
@@ -539,13 +537,13 @@ public class Lexer {
       }
 
       else if (Character.isLetter(current) || current == '_') {
-        final var beginPosition = position;
+        final var beginPosition = position.get();
         final var beginColumn = column.get();
         do {
           consume();
-        } while ((position < input.length()) && (Character.isLetter(current) || Character.isDigit(current) || current == '_'));
+        } while ((position.get() < input.length()) && (Character.isLetter(current) || Character.isDigit(current) || current == '_'));
         // End index of slice is excluded from result
-        lexeme = input.substring(beginPosition, position);
+        lexeme = input.substring(beginPosition, position.get());
         if (keywordLookup.containsKey(lexeme))
           kind = keywordLookup.get(lexeme);
         else
@@ -561,7 +559,7 @@ public class Lexer {
     }
 
     // Placeholder to avoid error
-    return new Token(Token.Kind.EOF, "<EOF>", position, line.get(), column.get());
+    return new Token(Token.Kind.EOF, "<EOF>", position.get(), line.get(), column.get());
   }
 
   private boolean isBinaryDigit (char ch) {
@@ -584,7 +582,7 @@ public class Lexer {
     // Note: We arrive at this function after lookahead or
     // backtracking, so we really should never fail to match the '0b'
     // portion, unless there is a bug in this program.
-    final var begin = position;
+    final var beginPosition = position.get();
     var state = State.BIN_START;
     Token token = null;
     while (token == null) {
@@ -644,9 +642,8 @@ public class Lexer {
             state = State.BIN_700;
           } else {
             // Accept
-            final var end = position;
-            final var lexeme = input.substring(begin, end);
-            token = new Token(Token.Kind.BINARY_INT32_LITERAL, lexeme, position, line.get(), column.get());
+            final var lexeme = input.substring(beginPosition, position.get());
+            token = new Token(Token.Kind.BINARY_INT32_LITERAL, lexeme, position.get(), line.get(), column.get());
           }
           break;
         case State.BIN_500:
@@ -672,9 +669,8 @@ public class Lexer {
             state = State.BIN_800;
           } else {
             // Accept
-            final var end = position;
-            final var lexeme = input.substring(begin, end);
-            token = new Token(Token.Kind.BINARY_INT64_LITERAL, lexeme, position, line.get(), column.get());
+            final var lexeme = input.substring(beginPosition, position.get());
+            token = new Token(Token.Kind.BINARY_INT64_LITERAL, lexeme, position.get(), line.get(), column.get());
           }
           break;
         case State.BIN_700:
@@ -683,16 +679,14 @@ public class Lexer {
             state = State.BIN_800;
           } else {
             // Accept
-            final var end = position;
-            final var lexeme = input.substring(begin, end);
-            token = new Token(Token.Kind.BINARY_UINT32_LITERAL, lexeme, position, line.get(), column.get());
+            final var lexeme = input.substring(beginPosition, position.get());
+            token = new Token(Token.Kind.BINARY_UINT32_LITERAL, lexeme, position.get(), line.get(), column.get());
           }
           break;
         case State.BIN_800:
           // Accept
-          final var end = position;
-          final var lexeme = input.substring(begin, end);
-          token = new Token(Token.Kind.BINARY_UINT64_LITERAL, lexeme, position, line.get(), column.get());
+          final var lexeme = input.substring(beginPosition, position.get());
+          token = new Token(Token.Kind.BINARY_UINT64_LITERAL, lexeme, position.get(), line.get(), column.get());
           break;
         default:
           // Invalid state. Can only be reached through a lexer bug.
@@ -707,7 +701,7 @@ public class Lexer {
     // Note: We arrive at this function after lookahead or
     // backtracking, so we really should never fail to match the '0o'
     // portion, unless there is a bug in this program.
-    final var begin = position;
+    final var beginPosition = position.get();
     var state = State.OCT_START;
     Token token = null;
     while (token == null) {
@@ -760,9 +754,8 @@ public class Lexer {
             state = State.OCT_700;
           } else {
             // Accept
-            final var end = position;
-            final var lexeme = input.substring(begin, end);
-            token = new Token(Token.Kind.OCTAL_INT32_LITERAL, lexeme, position, line.get(), column.get());
+              final var lexeme = input.substring(beginPosition, position.get());
+            token = new Token(Token.Kind.OCTAL_INT32_LITERAL, lexeme, position.get(), line.get(), column.get());
           }
           break;
         case State.OCT_500:
@@ -788,9 +781,8 @@ public class Lexer {
             state = State.OCT_800;
           } else {
             // Accept
-            final var end = position;
-            final var lexeme = input.substring(begin, end);
-            token = new Token(Token.Kind.OCTAL_INT64_LITERAL, lexeme, position, line.get(), column.get());
+              final var lexeme = input.substring(beginPosition, position.get());
+            token = new Token(Token.Kind.OCTAL_INT64_LITERAL, lexeme, position.get(), line.get(), column.get());
           }
           break;
         case State.OCT_700:
@@ -799,16 +791,14 @@ public class Lexer {
             state = State.OCT_800;
           } else {
             // Accept
-            final var end = position;
-            final var lexeme = input.substring(begin, end);
-            token = new Token(Token.Kind.OCTAL_UINT32_LITERAL, lexeme, position, line.get(), column.get());
+              final var lexeme = input.substring(beginPosition, position.get());
+            token = new Token(Token.Kind.OCTAL_UINT32_LITERAL, lexeme, position.get(), line.get(), column.get());
           }
           break;
         case State.OCT_800:
           // Accept
-          final var end = position;
-          final var lexeme = input.substring(begin, end);
-          token = new Token(Token.Kind.OCTAL_UINT64_LITERAL, lexeme, position, line.get(), column.get());
+          final var lexeme = input.substring(beginPosition, position.get());
+          token = new Token(Token.Kind.OCTAL_UINT64_LITERAL, lexeme, position.get(), line.get(), column.get());
           break;
         default:
           // Invalid state. Can only be reached through a lexer bug.
@@ -821,7 +811,7 @@ public class Lexer {
 
   private Token hexadecimalNumber () {
     // This scans for a hexadecimal integer or floating point number.
-    final var begin = position;
+    final var beginPosition = position.get();
     var state = State.HEX_START;
     Token token = null;
     while (token == null) {
@@ -889,9 +879,8 @@ public class Lexer {
             state = State.HEX_600;
           } else {
             // Accept
-            final var end = position;
-            final var lexeme = input.substring(begin, end);
-            token = new Token(Token.Kind.HEXADECIMAL_INT32_LITERAL, lexeme, position, line.get(), column.get());
+              final var lexeme = input.substring(beginPosition, position.get());
+            token = new Token(Token.Kind.HEXADECIMAL_INT32_LITERAL, lexeme, position.get(), line.get(), column.get());
           }
           break;
         case State.HEX_200:
@@ -920,9 +909,8 @@ public class Lexer {
             state = State.HEX_230;
           } else {
             // Accept
-            final var end = position;
-            final var lexeme = input.substring(begin, end);
-            token = new Token(Token.Kind.HEXADECIMAL_INT64_LITERAL, lexeme, position, line.get(), column.get());
+              final var lexeme = input.substring(beginPosition, position.get());
+            token = new Token(Token.Kind.HEXADECIMAL_INT64_LITERAL, lexeme, position.get(), line.get(), column.get());
           }
           break;
         case State.HEX_220:
@@ -931,16 +919,14 @@ public class Lexer {
             state = State.HEX_230;
           } else {
             // Accept
-            final var end = position;
-            final var lexeme = input.substring(begin, end);
-            token = new Token(Token.Kind.HEXADECIMAL_UINT32_LITERAL, lexeme, position, line.get(), column.get());
+              final var lexeme = input.substring(beginPosition, position.get());
+            token = new Token(Token.Kind.HEXADECIMAL_UINT32_LITERAL, lexeme, position.get(), line.get(), column.get());
           }
           break;
         case State.HEX_230: {
           // Accept
-          final var end = position;
-          final var lexeme = input.substring(begin, end);
-          token = new Token(Token.Kind.HEXADECIMAL_UINT64_LITERAL, lexeme, position, line.get(), column.get());
+          final var lexeme = input.substring(beginPosition, position.get());
+          token = new Token(Token.Kind.HEXADECIMAL_UINT64_LITERAL, lexeme, position.get(), line.get(), column.get());
           }
         case State.HEX_300:
           if (isHexadecimalDigit(current)) {
@@ -963,9 +949,8 @@ public class Lexer {
             consume();
             state = State.HEX_600;
           } else {
-            final var end = position;
-            final var lexeme = input.substring(begin, end);
-            token = new Token(Token.Kind.HEXADECIMAL_FLOAT64_LITERAL, lexeme, position, line.get(), column.get());
+              final var lexeme = input.substring(beginPosition, position.get());
+            token = new Token(Token.Kind.HEXADECIMAL_FLOAT64_LITERAL, lexeme, position.get(), line.get(), column.get());
           }
           break;
         case State.HEX_500:
@@ -1017,23 +1002,20 @@ public class Lexer {
             consume();
             state = State.HEX_820;
           } else {
-            final var end = position;
-            final var lexeme = input.substring(begin, end);
-            token = new Token(Token.Kind.HEXADECIMAL_FLOAT64_LITERAL, lexeme, position, line.get(), column.get());
+              final var lexeme = input.substring(beginPosition, position.get());
+            token = new Token(Token.Kind.HEXADECIMAL_FLOAT64_LITERAL, lexeme, position.get(), line.get(), column.get());
           }
           break;
         case State.HEX_810:
           {
-            final var end = position;
-            final var lexeme = input.substring(begin, end);
-            token = new Token(Token.Kind.HEXADECIMAL_FLOAT64_LITERAL, lexeme, position, line.get(), column.get());
+              final var lexeme = input.substring(beginPosition, position.get());
+            token = new Token(Token.Kind.HEXADECIMAL_FLOAT64_LITERAL, lexeme, position.get(), line.get(), column.get());
           }
           break;
         case State.HEX_820:
           {
-            final var end = position;
-            final var lexeme = input.substring(begin, end);
-            token = new Token(Token.Kind.HEXADECIMAL_FLOAT32_LITERAL, lexeme, position, line.get(), column.get());
+              final var lexeme = input.substring(beginPosition, position.get());
+            token = new Token(Token.Kind.HEXADECIMAL_FLOAT32_LITERAL, lexeme, position.get(), line.get(), column.get());
           }
           break;
         default:
@@ -1046,7 +1028,7 @@ public class Lexer {
 
   private Token number () {
     // This scans for an integer or floating point number.
-    final var beginPosition = position;
+    final var beginPosition = position.get();
     final var beginColumn = column.get();
     var state = State.NUM_START;
     Token token = null;
@@ -1090,7 +1072,7 @@ public class Lexer {
             state = State.NUM_820;
           } else {
             // Accept
-            final var lexeme = input.substring(beginPosition, position);
+            final var lexeme = input.substring(beginPosition, position.get());
             token = new Token(Token.Kind.INT32_LITERAL, lexeme, beginPosition, line.get(), beginColumn);
           }
           break;
@@ -1125,7 +1107,7 @@ public class Lexer {
             consume();
             state = State.NUM_230;
           } else {
-            final var lexeme = input.substring(beginPosition, position);
+            final var lexeme = input.substring(beginPosition, position.get());
             token = new Token(Token.Kind.INT64_LITERAL, lexeme, beginPosition, line.get(), beginColumn);
           }
           break;
@@ -1135,14 +1117,14 @@ public class Lexer {
             state = State.NUM_230;
           } else {
             // Accept
-            final var lexeme = input.substring(beginPosition, position);
+            final var lexeme = input.substring(beginPosition, position.get());
             token = new Token(Token.Kind.UINT32_LITERAL, lexeme, beginPosition, line.get(), beginColumn);
           }
           break;
         case State.NUM_230:
           {
             // Accept
-            final var lexeme = input.substring(beginPosition, position);
+            final var lexeme = input.substring(beginPosition, position.get());
             token = new Token(Token.Kind.UINT64_LITERAL, lexeme, beginPosition, line.get(), beginColumn);
             break;
           }
@@ -1173,7 +1155,7 @@ public class Lexer {
             state = State.NUM_820;
           } else {
             // Accept
-            final var lexeme = input.substring(beginPosition, position);
+            final var lexeme = input.substring(beginPosition, position.get());
             token = new Token(Token.Kind.FLOAT64_LITERAL, lexeme, beginPosition, line.get(), beginColumn);
           }
           break;
@@ -1233,21 +1215,21 @@ public class Lexer {
             state = State.NUM_820;
           } else {
             // Accept
-            final var lexeme = input.substring(beginPosition, position);
+            final var lexeme = input.substring(beginPosition, position.get());
             token = new Token(Token.Kind.FLOAT64_LITERAL, lexeme, beginPosition, line.get(), beginColumn);
           }
           break;
         case State.NUM_810:
           {
             // Accept
-            final var lexeme = input.substring(beginPosition, position);
+            final var lexeme = input.substring(beginPosition, position.get());
             token = new Token(Token.Kind.FLOAT64_LITERAL, lexeme, beginPosition, line.get(), beginColumn);
           }
           break;
         case State.NUM_820:
           {
             // Accept
-            final var lexeme = input.substring(beginPosition, position);
+            final var lexeme = input.substring(beginPosition, position.get());
             token = new Token(Token.Kind.FLOAT32_LITERAL, lexeme, beginPosition, line.get(), beginColumn);
           }
           break;
