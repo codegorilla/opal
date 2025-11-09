@@ -53,7 +53,7 @@ public class Parser {
 
   public Parser (LinkedList<Token> input, List<String> sourceLines) {
     this.input = input;
-    position = new Counter(0);
+    position = new Counter();
     lookahead = input.get(position.get());
     this.sourceLines = sourceLines;
     stack = new LinkedList<>();

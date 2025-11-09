@@ -10,7 +10,7 @@ public class Lexer {
   private String input = null;
   private char current = EOF;
 
-  private final Counter position = new Counter(0);
+  private final Counter position = new Counter();
   private final Counter line     = new Counter(1);
   private final Counter column   = new Counter(1);
 

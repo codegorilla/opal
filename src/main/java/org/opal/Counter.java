@@ -9,6 +9,11 @@ public class Counter {
   public final int start;
   public int current;
 
+  public Counter () {
+    this.start = 0;
+    current = this.start;
+  }
+
   public Counter (int start) {
     this.start = start;
     current = this.start;
