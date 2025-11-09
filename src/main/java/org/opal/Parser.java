@@ -22,7 +22,7 @@ public class Parser {
   private final int SLEEP_TIME = 100;
 
   private final LinkedList<Token> input;
-  private int position;
+  private final Counter position;
   private Token lookahead;
 
   private final List<String> sourceLines;
@@ -53,8 +53,8 @@ public class Parser {
 
   public Parser (LinkedList<Token> input, List<String> sourceLines) {
     this.input = input;
-    position = 0;
-    lookahead = input.get(position);
+    position = new Counter(0);
+    lookahead = input.get(position.get());
     this.sourceLines = sourceLines;
     stack = new LinkedList<>();
     nodeStack = new LinkedList<>();
@@ -80,8 +80,8 @@ public class Parser {
   }
 
   private void consume () {
-    position += 1;
-    lookahead = input.get(position);
+    position.increment();
+    lookahead = input.get(position.get());
   }
 
   public AstNode process () {
