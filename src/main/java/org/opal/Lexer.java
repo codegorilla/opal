@@ -144,9 +144,6 @@ public class Lexer {
     return tokens;
   }
 
-  // Todo: For multi-character lexemes, we need to ensure that the column is
-  // calculated as the start of the lexeme, not the end.
-
   private Token getToken () {
     Token.Kind kind = null;
     String lexeme = "";
