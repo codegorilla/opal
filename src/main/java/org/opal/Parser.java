@@ -1,7 +1,11 @@
 package org.opal;
 
-//import java.util.Deque;
 import java.util.*;
+
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import org.opal.ast.*;
 import org.opal.ast.declaration.*;
@@ -12,6 +16,8 @@ import org.opal.ast.type.*;
 import org.opal.error.SyntaxError;
 import org.opal.symbol.Scope;
 import org.opal.symbol.PrimitiveTypeSymbol;
+
+// To do: Implement debug logging
 
 // We wish to implement some form of panic-mode and/or phrase-level
 // error recovery discussed in the following references:
@@ -56,6 +62,11 @@ public class Parser {
   // Todo: We may decide that 'int', 'short', 'float', etc. should just be
   // typealiases for the various fixed size types.
 
+  private static final Logger LOGGER = LogManager.getLogger();
+
+//  public void truncateTable(String tableName) throws IOException {
+//  }
+
   public Parser (LinkedList<Token> input, List<String> sourceLines) {
     this.input = input;
     position = new Counter();
@@ -66,6 +77,14 @@ public class Parser {
     modifierStack = new LinkedList<>();
     builtinScope = new Scope(Scope.Kind.BUILT_IN);
     currentScope = builtinScope;
+
+    Level level;
+    // Set the level for the root logger. Just put the one you want on the
+    // bottom of the list to make it active.
+    level = Level.ERROR;
+    level = Level.INFO;
+    level = Level.WARN;
+    Configurator.setRootLevel(level);
   }
 
   // This is based on panic-mode error recovery discussed in [Wir76], [Aho82],
@@ -78,7 +97,7 @@ public class Parser {
       error(Token.Kind.PACKAGE);
       // Scan forward until we hit something in the FIRST or FOLLOW sets.
       while (!firstSet.contains(kind) && !followSet.contains(kind) && kind != Token.Kind.EOF) {
-        System.out.println("Skipping " + lookahead);
+        LOGGER.info("Skipping `{}`", lookahead);
         consume();
         kind = lookahead.getKind();
       }
