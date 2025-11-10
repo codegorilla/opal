@@ -64,8 +64,9 @@ public class Parser {
 
   private static final Logger LOGGER = LogManager.getLogger();
 
-//  public void truncateTable(String tableName) throws IOException {
-//  }
+  // Not sure if we will use these
+//  private static final HashMap<String, Set<Token.Kind>> FIRST = new HashMap<>();
+//  private static final HashMap<String, Set<Token.Kind>> FOLLOW = new HashMap<>();
 
   public Parser (LinkedList<Token> input, List<String> sourceLines) {
     this.input = input;
@@ -172,9 +173,6 @@ public class Parser {
   // Package declaration and import declarations must appear before any other
   // declarations in the translation unit.
 
-  private static final HashMap<String, Set<Token.Kind>> FIRST = new HashMap<>();
-  private static final HashMap<String, Set<Token.Kind>> FOLLOW = new HashMap<>();
-
   // An error may result in an empty declarations node so this needs to be
   // tested for during semantic analysis.
 
@@ -189,12 +187,12 @@ public class Parser {
   // already handle deletion, but we might want to investigate single-token
   // insertion in the future.
 
-  private static final Set<Token.Kind> FIRST_DECLS  = EnumSet.of(Token.Kind.PACKAGE);
-  private static final Set<Token.Kind> FOLLOW_DECLS = EnumSet.of(Token.Kind.IMPORT);
+  private static final Set<Token.Kind> FIRST_DECLARATIONS  = EnumSet.of(Token.Kind.PACKAGE);
+  private static final Set<Token.Kind> FOLLOW_DECLARATIONS = EnumSet.of(Token.Kind.IMPORT);
 
   private AstNode declarations () {
     var n = new Declarations();
-    check(FIRST_DECLS, FOLLOW_DECLS);
+    check(FIRST_DECLARATIONS, FOLLOW_DECLARATIONS);
     if (lookahead.getKind() == Token.Kind.PACKAGE) {
       n.addChild(packageDeclaration());
       n.addChild(lookahead.getKind() == Token.Kind.IMPORT ? importDeclarations() : null);
