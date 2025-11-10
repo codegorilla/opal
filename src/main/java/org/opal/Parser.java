@@ -1,8 +1,7 @@
 package org.opal;
 
 //import java.util.Deque;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 import org.opal.ast.*;
 import org.opal.ast.declaration.*;
@@ -14,8 +13,14 @@ import org.opal.error.SyntaxError;
 import org.opal.symbol.Scope;
 import org.opal.symbol.PrimitiveTypeSymbol;
 
-// To do: We wish to implement some form of panic-mode and/or phrase-level
-// error recovery. See Wirth, 76.
+// We wish to implement some form of panic-mode and/or phrase-level
+// error recovery discussed in the following references:
+// Aho, A., 2007, Sec. 4.4.5
+// Louden, K., 1997, Sec. 4.5
+// Parr, T., 2012, Sec. 9.3
+// Scott, M., 2025, Companion site, Ch. 2
+// Topor, R., 1982
+// Wirth, N., 1976, Sec. 5.9
 
 public class Parser {
 
@@ -63,6 +68,23 @@ public class Parser {
     currentScope = builtinScope;
   }
 
+  // This is based on panic-mode error recovery discussed in [Wir76], [Aho82],
+  // and others references (see above).
+
+  private void check (Set<Token.Kind> firstSet, Set<Token.Kind> followSet) {
+    var kind = lookahead.getKind();
+    if (!firstSet.contains(kind)) {
+      // To do: The error should be based on FIRST set, not hard-coded to package
+      error(Token.Kind.PACKAGE);
+      // Scan forward until we hit something in the FIRST or FOLLOW sets.
+      while (!firstSet.contains(kind) && !followSet.contains(kind) && kind != Token.Kind.EOF) {
+        System.out.println("Skipping " + lookahead);
+        consume();
+        kind = lookahead.getKind();
+      }
+    }
+  }
+
   private String friendlyKind (Token.Kind kind) {
     return kind.toString().toLowerCase().replace("_", " ");
   }
@@ -71,17 +93,29 @@ public class Parser {
     if (lookahead.getKind() == kind)
       consume();
     else {
-      var expected = friendlyKind(kind);
-      var actual = friendlyKind(lookahead.getKind());
-      var message = "expected " + expected + ", got " + actual;
-      var error = new SyntaxError(sourceLines, message, lookahead);
-      System.out.println(error.complete());
+      // Report error
+      error(kind);
+//      var expected = friendlyKind(kind);
+//      var actual = friendlyKind(lookahead.getKind());
+//      var message = "expected " + expected + ", got " + actual;
+//      var error = new SyntaxError(sourceLines, message, lookahead);
+//      System.out.println(error.complete());
+      // For panic-mode recovery, we discard tokens until we get to a synchro set
+      // For phrase-level recovery, we define tailored synchro sets
     }
   }
 
   private void consume () {
     position.increment();
     lookahead = input.get(position.get());
+  }
+
+  private void error (Token.Kind expected) {
+    var expectedKindFriendly = friendlyKind(expected);
+    var actualKindFriendly   = friendlyKind(lookahead.getKind());
+    var message = "expected " + expectedKindFriendly + ", got " + actualKindFriendly;
+    var error = new SyntaxError(sourceLines, message, lookahead);
+    System.out.println(error.complete());
   }
 
   public AstNode process () {
@@ -126,13 +160,36 @@ public class Parser {
   // Package declaration and import declarations must appear before any other
   // declarations in the translation unit.
 
+  private static final HashMap<String, Set<Token.Kind>> FIRST = new HashMap<>();
+  private static final HashMap<String, Set<Token.Kind>> FOLLOW = new HashMap<>();
+
+  // An error may result in an empty declarations node so this needs to be
+  // tested for during semantic analysis.
+
+  // We might want to implement Damerau–Levenshtein distance algorithm to
+  // auto-correct spellings (e.g. packge > package, esle > else). This can be
+  // accomplished with the Apache Commons Text library or other means.
+
+  // In The Definitive ANTLR4 Reference, Parr describes ANTLR's error recovery
+  // in detail. His algorithm attempts phrase-level recovery through
+  // single-token deletion or insertion, followed by context-informed
+  // panic-mode recovery. Wirth's standard phrase-level recovery seems to
+  // already handle deletion, but we might want to investigate single-token
+  // insertion in the future.
+
+  private static final Set<Token.Kind> FIRST_DECLS  = EnumSet.of(Token.Kind.PACKAGE);
+  private static final Set<Token.Kind> FOLLOW_DECLS = EnumSet.of(Token.Kind.IMPORT);
+
   private AstNode declarations () {
     var n = new Declarations();
-    n.addChild(packageDeclaration());
-    n.addChild(lookahead.getKind() == Token.Kind.IMPORT ? importDeclarations() : null);
-    n.addChild(lookahead.getKind() == Token.Kind.USE ? useDeclarations() : null);
-    // To do: Could this be null or should we always assume there will be some other declarations?
-    n.addChild(otherDeclarations());
+    check(FIRST_DECLS, FOLLOW_DECLS);
+    if (lookahead.getKind() == Token.Kind.PACKAGE) {
+      n.addChild(packageDeclaration());
+      n.addChild(lookahead.getKind() == Token.Kind.IMPORT ? importDeclarations() : null);
+      n.addChild(lookahead.getKind() == Token.Kind.USE ? useDeclarations() : null);
+      // To do: Could this be null or should we always assume there will be some other declarations?
+      n.addChild(otherDeclarations());
+    }
     return n;
   }
 
@@ -141,15 +198,35 @@ public class Parser {
   // basically a direct 1:1 translation to a C++ module and namespace of the
   // same name.
 
+  // Experiment with panic mode and phrase-level recovery
+//  private LinkedList<Token.Kind> FIRST = new LinkedList<>(List.of(Token.Kind.PACKAGE));
+//  private LinkedList<Token.Kind> FOLLOW = new LinkedList<>(List.of(Token.Kind.SEMICOLON));
+
   private AstNode packageDeclaration () {
     var n = new PackageDeclaration(lookahead);
-    match(Token.Kind.PACKAGE);
-    n.addChild(packageName());
-    while (lookahead.getKind() == Token.Kind.PERIOD) {
-      match(Token.Kind.PERIOD);
-      n.addChild(packageName());
+//    System.out.println(FIRST);
+//    if (!FIRST.contains(lookahead.getKind()))
+    if (lookahead.getKind() != Token.Kind.PACKAGE) {
+      // Scan ahead until you see a member of first set or follow set
+      // print an error here
+      match(Token.Kind.PACKAGE);
+      while (
+        lookahead.getKind() != Token.Kind.PACKAGE &&
+        lookahead.getKind() != Token.Kind.IMPORT &&
+        lookahead.getKind() != Token.Kind.EOF
+      ) {
+        consume();
+      }
     }
-    match(Token.Kind.SEMICOLON);
+    if (lookahead.getKind() == Token.Kind.PACKAGE) {
+      match(Token.Kind.PACKAGE);
+      n.addChild(packageName());
+      while (lookahead.getKind() == Token.Kind.PERIOD) {
+        match(Token.Kind.PERIOD);
+        n.addChild(packageName());
+      }
+      match(Token.Kind.SEMICOLON);
+    }
     return n;
   }
 
@@ -160,6 +237,7 @@ public class Parser {
   }
 
   private AstNode importDeclarations () {
+    System.out.println("GOT IMPORT DECLS");
     var n = new ImportDeclarations();
     while (lookahead.getKind() == Token.Kind.IMPORT)
       n.addChild(importDeclaration());

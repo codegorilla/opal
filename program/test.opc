@@ -1,9 +1,9 @@
 
-package import main;
+packager main;
 
-/*
 import std.math;
 import lang.math;
+/*
 import opal.grinch as math;
 import opal.math as math;
 import std.crypto;
