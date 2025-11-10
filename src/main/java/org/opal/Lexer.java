@@ -14,6 +14,9 @@ public class Lexer {
   private final Counter line     = new Counter(1);
   private final Counter column   = new Counter(1);
 
+  private final Marker markPosition = new Marker();
+  private final Marker markColumn   = new Marker();
+
   private final HashMap<String, Token.Kind> keywordLookup = new HashMap<>();
 
   public Lexer (String input) {
@@ -36,6 +39,11 @@ public class Lexer {
     position.decrement();
     current = input.charAt(position.get());
     column.decrement();
+  }
+
+  private void mark () {
+    markPosition.set(position.get());
+    markColumn.set(column.get());
   }
 
   private void error (String message) {
@@ -146,6 +154,7 @@ public class Lexer {
     while (current != EOF) {
 
       if (current == '=') {
+        mark();
         consume();
         if (current == '=') {
           consume();
@@ -155,10 +164,11 @@ public class Lexer {
           kind = Token.Kind.EQUAL;
           lexeme = "=";
         }
-        return new Token(kind, lexeme, position.get(), line.get(), column.get());
+        return new Token(kind, lexeme, markPosition.get(), line.get(), markColumn.get());
       }
 
       else if (current == '|') {
+        mark();
         consume();
         if (current == '|') {
           consume();
@@ -172,10 +182,11 @@ public class Lexer {
           kind = Token.Kind.BAR;
           lexeme = "|";
         }
-        return new Token(kind, lexeme, position.get(), line.get(), column.get());
+        return new Token(kind, lexeme, markPosition.get(), line.get(), markColumn.get());
       }
 
       else if (current == '^') {
+        mark();
         consume();
         if (current == '=') {
           consume();
@@ -185,10 +196,11 @@ public class Lexer {
           kind = Token.Kind.CARET;
           lexeme = "^";
         }
-        return new Token(kind, lexeme, position.get(), line.get(), column.get());
+        return new Token(kind, lexeme, markPosition.get(), line.get(), markColumn.get());
       }
 
       else if (current == '&') {
+        mark();
         consume();
         if (current == '&') {
           consume();
@@ -202,10 +214,11 @@ public class Lexer {
           kind = Token.Kind.AMPERSAND;
           lexeme = "&";
         }
-        return new Token(kind, lexeme, position.get(), line.get(), column.get());
+        return new Token(kind, lexeme, markPosition.get(), line.get(), markColumn.get());
       }
 
       else if (current == '>') {
+        mark();
         consume();
         if (current == '>') {
           consume();
@@ -225,10 +238,11 @@ public class Lexer {
           kind = Token.Kind.GREATER;
           lexeme = ">";
         }
-        return new Token(kind, lexeme, position.get(), line.get(), column.get());
+        return new Token(kind, lexeme, markPosition.get(), line.get(), markColumn.get());
       }
 
       else if (current == '<') {
+        mark();
         consume();
         if (current == '<') {
           consume();
@@ -248,10 +262,11 @@ public class Lexer {
           kind = Token.Kind.LESS;
           lexeme = "<";
         }
-        return new Token(kind, lexeme, position.get(), line.get(), column.get());
+        return new Token(kind, lexeme, markPosition.get(), line.get(), markColumn.get());
       }
 
       else if (current == '+') {
+        mark();
         consume();
         if (current == '=') {
           consume();
@@ -261,10 +276,11 @@ public class Lexer {
           kind = Token.Kind.PLUS;
           lexeme = "+";
         }
-        return new Token(kind, lexeme, position.get(), line.get(), column.get());
+        return new Token(kind, lexeme, markPosition.get(), line.get(), markColumn.get());
       }
 
       else if (current == '-') {
+        mark();
         consume();
         if (current == '>') {
           consume();
@@ -278,10 +294,11 @@ public class Lexer {
           kind = Token.Kind.MINUS;
           lexeme = "-";
         }
-        return new Token(kind, lexeme, position.get(), line.get(), column.get());
+        return new Token(kind, lexeme, markPosition.get(), line.get(), markColumn.get());
       }
 
       else if (current == '*') {
+        mark();
         consume();
         if (current == '=') {
           consume();
@@ -291,17 +308,18 @@ public class Lexer {
           kind = Token.Kind.ASTERISK;
           lexeme = "*";
         }
-        return new Token(kind, lexeme, position.get(), line.get(), column.get());
+        return new Token(kind, lexeme, markPosition.get(), line.get(), markColumn.get());
       }
 
       // To do: Need to account for comments
       else if (current == '/') {
+        mark();
         consume();
         if (current == '=') {
           consume();
           kind = Token.Kind.SLASH_EQUAL;
           lexeme = "/=";
-          return new Token(kind, lexeme, position.get(), line.get(), column.get());
+          return new Token(kind, lexeme, markPosition.get(), line.get(), markColumn.get());
         } else if (current == '*') {
           // Block comment
           consume();
@@ -346,11 +364,12 @@ public class Lexer {
         } else {
           kind = Token.Kind.SLASH;
           lexeme = "/";
-          return new Token(kind, lexeme, position.get(), line.get(), column.get());
+          return new Token(kind, lexeme, markPosition.get(), line.get(), markColumn.get());
         }
       }
 
       else if (current == '%') {
+        mark();
         consume();
         if (current == '=') {
           consume();
@@ -360,10 +379,11 @@ public class Lexer {
           kind = Token.Kind.PERCENT;
           lexeme = "%";
         }
-        return new Token(kind, lexeme, position.get(), line.get(), column.get());
+        return new Token(kind, lexeme, markPosition.get(), line.get(), markColumn.get());
       }
 
       else if (current == '!') {
+        mark();
         consume();
         if (current == '=') {
           consume();
@@ -377,10 +397,11 @@ public class Lexer {
           kind = Token.Kind.EXCLAMATION;
           lexeme = "!";
         }
-        return new Token(kind, lexeme, position.get(), line.get(), column.get());
+        return new Token(kind, lexeme, markPosition.get(), line.get(), markColumn.get());
       }
 
       else if (current == '~') {
+        mark();
         consume();
         if (current == '=') {
           consume();
@@ -390,7 +411,7 @@ public class Lexer {
           kind = Token.Kind.TILDE;
           lexeme = "~";
         }
-        return new Token(kind, lexeme, position.get(), line.get(), column.get());
+        return new Token(kind, lexeme, markPosition.get(), line.get(), markColumn.get());
       }
 
       else if (current == '"') {
@@ -432,59 +453,70 @@ public class Lexer {
       }
 
       else if (current == ':') {
+        mark();
         consume();
-        return new Token(Token.Kind.COLON, ":", position.get(), line.get(), column.get());
+        return new Token(Token.Kind.COLON, ":", markPosition.get(), line.get(), markColumn.get());
       }
 
       else if (current == ';') {
+        mark();
         consume();
-        return new Token(Token.Kind.SEMICOLON, ";", position.get(), line.get(), column.get());
+        return new Token(Token.Kind.SEMICOLON, ";", markPosition.get(), line.get(), markColumn.get());
       }
 
       else if (current == '.') {
+        mark();
         consume();
         if (current == '.') {
           consume();
-          return new Token(Token.Kind.PERIOD_PERIOD, "..", position.get(), line.get(), column.get());
+          return new Token(Token.Kind.PERIOD_PERIOD, "..", markPosition.get(), line.get(), markColumn.get());
         } else if (Character.isDigit(current)) {
           return number();
-        } else
-          return new Token(Token.Kind.PERIOD, ".", position.get(), line.get(), column.get());
+        } else {
+          return new Token(Token.Kind.PERIOD, ".", markPosition.get(), line.get(), markColumn.get());
+        }
       }
 
       else if (current == ',') {
+        mark();
         consume();
-        return new Token(Token.Kind.COMMA, ",", position.get(), line.get(), column.get());
+        return new Token(Token.Kind.COMMA, ",", markPosition.get(), line.get(), markColumn.get());
       }
 
       else if (current == '{') {
+        mark();
         consume();
-        return new Token(Token.Kind.L_BRACE, "{", position.get(), line.get(), column.get());
+        return new Token(Token.Kind.L_BRACE, "{", markPosition.get(), line.get(), markColumn.get());
       }
 
       else if (current == '}') {
+        mark();
         consume();
-        return new Token(Token.Kind.R_BRACE, "}", position.get(), line.get(), column.get());
+        return new Token(Token.Kind.R_BRACE, "}", markPosition.get(), line.get(), markColumn.get());
       }
 
       else if (current == '[') {
+        mark();
         consume();
-        return new Token(Token.Kind.L_BRACKET, "[", position.get(), line.get(), column.get());
+        return new Token(Token.Kind.L_BRACKET, "[", markPosition.get(), line.get(), markColumn.get());
       }
 
       else if (current == ']') {
+        mark();
         consume();
-        return new Token(Token.Kind.R_BRACKET, "]", position.get(), line.get(), column.get());
+        return new Token(Token.Kind.R_BRACKET, "]", markPosition.get(), line.get(), markColumn.get());
       }
 
       else if (current == '(') {
+        mark();
         consume();
-        return new Token(Token.Kind.L_PARENTHESIS, "(", position.get(), line.get(), column.get());
+        return new Token(Token.Kind.L_PARENTHESIS, "(", markPosition.get(), line.get(), markColumn.get());
       }
 
       else if (current == ')') {
+        mark();
         consume();
-        return new Token(Token.Kind.R_PARENTHESIS, ")", position.get(), line.get(), column.get());
+        return new Token(Token.Kind.R_PARENTHESIS, ")", markPosition.get(), line.get(), markColumn.get());
       }
 
       else if (current == '0') {
@@ -537,18 +569,17 @@ public class Lexer {
       }
 
       else if (Character.isLetter(current) || current == '_') {
-        final var beginPosition = position.get();
-        final var beginColumn = column.get();
+        mark();
         do {
           consume();
         } while ((position.get() < input.length()) && (Character.isLetter(current) || Character.isDigit(current) || current == '_'));
         // End index of slice is excluded from result
-        lexeme = input.substring(beginPosition, position.get());
+        lexeme = input.substring(markPosition.get(), position.get());
         if (keywordLookup.containsKey(lexeme))
           kind = keywordLookup.get(lexeme);
         else
           kind = Token.Kind.IDENTIFIER;
-        return new Token(kind, lexeme, beginPosition, line.get(), beginColumn);
+        return new Token(kind, lexeme, markPosition.get(), line.get(), markColumn.get());
       }
 
       else if (Character.isDigit(current))

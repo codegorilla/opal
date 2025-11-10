@@ -1,8 +1,9 @@
 package org.opal;
 
 // This class provides a counter that can be initialized with a chosen starting
-// value. It can only be incremented, decremented, or reset to its initial
-// starting value.
+// value (which defaults to zero). The counter can only be incremented,
+// decremented, or reset to its initial starting value. The current value of
+// the counter is available through the get() method.
 
 public class Counter {
 
@@ -11,7 +12,7 @@ public class Counter {
 
   public Counter () {
     this.start = 0;
-    current = this.start;
+    current = 0;
   }
 
   public Counter (int start) {
