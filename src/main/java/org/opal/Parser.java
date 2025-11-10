@@ -88,7 +88,7 @@ public class Parser {
   }
 
   // This is based on panic-mode error recovery discussed in [Wir76], [Aho82],
-  // and others references (see above).
+  // and other references (see above).
 
   private void check (Set<Token.Kind> firstSet, Set<Token.Kind> followSet) {
     var kind = lookahead.getKind();
@@ -112,15 +112,7 @@ public class Parser {
     if (lookahead.getKind() == kind)
       consume();
     else {
-      // Report error
       error(kind);
-//      var expected = friendlyKind(kind);
-//      var actual = friendlyKind(lookahead.getKind());
-//      var message = "expected " + expected + ", got " + actual;
-//      var error = new SyntaxError(sourceLines, message, lookahead);
-//      System.out.println(error.complete());
-      // For panic-mode recovery, we discard tokens until we get to a synchro set
-      // For phrase-level recovery, we define tailored synchro sets
     }
   }
 
@@ -162,7 +154,8 @@ public class Parser {
   }
 
   // To do: What is the lookahead on the translation unit? I think this should
-  // be removed. Not all AST nodes need to have a token.
+  // be removed. Not all AST nodes need to have a token. Update: Is this still
+  // relevant?
 
   private AstNode translationUnit () {
     var n = new TranslationUnit(lookahead);
