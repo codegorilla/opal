@@ -138,6 +138,10 @@ public class Parser {
   // (1) single-token deletion if possible, (2) single-token insertion if
   // possible, (3) panic-mode recovery.
 
+  // To do: We might want to also implement single-token replacement. If
+  // deletion or insertion aren't possible, and the expected token is a
+  // specific keyword, we can check if the token is just mis-spelled.
+
   // Although single-token deletion might seem redundant with panic-mode (since
   // a panicking parser will start off by deleting the current lookahead token)
   // this is not the case, because we want to try single-token insertion before
@@ -149,22 +153,7 @@ public class Parser {
   // token would follow, which also would not exist.
 
   private boolean match (Token.Kind expectedKind) {
-    if (lookahead.getKind() == expectedKind) {
-      consume();
-      return true;
-    }
-    else {
-      error(expectedKind);
-      if (lookahead.getKind() != Token.Kind.EOF) {
-        // Perform single-token deletion if possible
-        var peek = input.get(position.get() + 1);
-        if (peek.getKind() == expectedKind) {
-          consume();
-          consume();
-        }
-      }
-      return false;
-    }
+    return match(expectedKind, null);
   }
 
   private boolean match (Token.Kind expectedKind, Token.Kind followingKind) {
@@ -173,20 +162,38 @@ public class Parser {
       return true;
     }
     else {
-      error(expectedKind);
       if (lookahead.getKind() != Token.Kind.EOF) {
         // Perform single-token deletion if possible
         var peek = input.get(position.get() + 1);
         if (peek.getKind() == expectedKind) {
+          extraneousError(expectedKind);
           consume();
           consume();
         }
         // Otherwise, perform single-token insertion if possible
         else if (lookahead.getKind() == followingKind) {
+          missingError(expectedKind);
           previous = new Token(expectedKind, "<MISSING>", lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
+        } else {
+          error(expectedKind);
         }
       }
       return false;
+    }
+  }
+
+  // Confirm is similar to match, but it does not perform any error recovery
+  // and does not return a result. Instead, it throws an exception. Token
+  // confirmation can only fail if there is a bug in the compiler.
+
+  private void confirm (Token.Kind expectedKind) {
+    if (lookahead.getKind() == expectedKind)
+      consume();
+    else {
+      var expectedKindFriendly = friendlyKind(expectedKind);
+      var actualKindFriendly = friendlyKind(lookahead.getKind());
+      var message = "expected " + expectedKindFriendly + ", got " + actualKindFriendly;
+      throw new IllegalArgumentException("internal error: " + message);
     }
   }
 
@@ -194,6 +201,22 @@ public class Parser {
     previous = lookahead;
     position.increment();
     lookahead = input.get(position.get());
+  }
+
+  private void extraneousError (Token.Kind expected) {
+    var expectedKindFriendly = friendlyKind(expected);
+    var actualKindFriendly   = friendlyKind(lookahead.getKind());
+    var message = "expected " + expectedKindFriendly + ", got extraneous " + actualKindFriendly;
+    var error = new SyntaxError(sourceLines, message, lookahead);
+    System.out.println(error.complete());
+  }
+
+  private void missingError (Token.Kind expected) {
+    var expectedKindFriendly = friendlyKind(expected);
+    var actualKindFriendly   = friendlyKind(lookahead.getKind());
+    var message = "missing " + expectedKindFriendly + ", got unexpected " + actualKindFriendly;
+    var error = new SyntaxError(sourceLines, message, lookahead);
+    System.out.println(error.complete());
   }
 
   private void error (Token.Kind expected) {
@@ -315,16 +338,16 @@ public class Parser {
     //checkIn(FIRST_PACKAGE_DECLARATION, FOLLOW_PACKAGE_DECLARATION);
     AstNode n = null;
     if (lookahead.getKind() == Token.Kind.PACKAGE) {
-      n = new PackageDeclaration(lookahead);
-      match(Token.Kind.PACKAGE);
+      confirm(Token.Kind.PACKAGE);
+      n = new PackageDeclaration(previous);
       n.addChild(packageName());
       while (lookahead.getKind() == Token.Kind.PERIOD) {
-        match(Token.Kind.PERIOD);
+        confirm(Token.Kind.PERIOD);
         n.addChild(packageName());
       }
       match(Token.Kind.SEMICOLON);
     } else {
-      n = new ErrorNode();
+      n = new ErrorNode(previous);
     }
 //    checkOut(FOLLOW_PACKAGE_DECLARATION);
     return n;
@@ -334,7 +357,7 @@ public class Parser {
     if (match(Token.Kind.IDENTIFIER, Token.Kind.SEMICOLON))
       return new PackageName(previous);
     else
-      return new ErrorNode();
+      return new ErrorNode(previous);
   }
 
   private AstNode importDeclarations () {

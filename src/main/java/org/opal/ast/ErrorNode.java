@@ -1,6 +1,7 @@
 package org.opal.ast;
 
 import org.opal.ResultVisitor;
+import org.opal.Token;
 import org.opal.Visitor;
 
 // It would be more consistent to just call this error, but we want to
@@ -9,8 +10,8 @@ import org.opal.Visitor;
 
 public class ErrorNode extends AstNode {
 
-  public ErrorNode () {
-    super();
+  public ErrorNode (Token token) {
+    super(token);
   }
 
   @Override
