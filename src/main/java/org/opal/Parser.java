@@ -149,36 +149,43 @@ public class Parser {
       return true;
     }
     else {
-      // First try single-token deletion. We need to get LA(2).
-      // To do: Only possible if not at EOF.
       error(expectedKind);
-      var peek = input.get(position.get() + 1);
-      if (peek.getKind() == expectedKind) {
-        consume();
-        consume();
+      // If possible, try single-token deletion
+      if (lookahead.getKind() != Token.Kind.EOF) {
+        var peek = input.get(position.get() + 1);
+        if (peek.getKind() == expectedKind) {
+          consume();
+          consume();
+        }
       }
       return false;
     }
   }
 
+  // Neither single-token deletion nor single-token insertion make sense if the
+  // current token is EOF. The former requires that we look at the next token,
+  // which would not exist. The latter requires consideration of what kind of
+  // token would follow, which also would not exist.
+
   // Experimental to support single-token-insertion
-  private boolean match (Token.Kind expectedKind, Token.Kind followerKind) {
+  private boolean match (Token.Kind expectedKind, Token.Kind followingKind) {
     if (lookahead.getKind() == expectedKind) {
       consume();
       return true;
     }
     else {
       error(expectedKind);
-      // First try single-token deletion. We need to get LA(2).
-      // To do: Only possible if not at EOF.
-      var peek = input.get(position.get() + 1);
-      if (peek.getKind() == expectedKind) {
-        consume();
-        consume();
-      } else if (lookahead.getKind() == followerKind) {
-        System.out.println("INSERTING FAKE TOKEN! ***");
-        // Now try single-token insertion (fake token)
-        previous = new Token(Token.Kind.NIL, "nil", 0, 0, 0);
+      if (lookahead.getKind() != Token.Kind.EOF) {
+        // If possible, try single-token deletion
+        var peek = input.get(position.get() + 1);
+        if (peek.getKind() == expectedKind) {
+          consume();
+          consume();
+        }
+        // Otherwise, if possible, try single-token insertion
+        else if (lookahead.getKind() == followingKind) {
+          previous = new Token(followingKind, "<MISSING>", lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
+        }
       }
       return false;
     }
