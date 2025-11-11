@@ -1,3 +1,50 @@
-packager main food;
 
-import hello;
+package main;
+
+importer std.math;
+
+/*
+import lang.math;
+import opal.grinch as math;
+import opal.math as math;
+import std.crypto;
+import std.str;
+
+use opal.lang.math.{ Bessel, Jacobian };
+use lang.math.cos;
+use lang.math.*;
+
+typealias IntPtr = *int[10];
+
+private def myfun1 (s: float, t: uint32) -> *int {
+  var x: int = 0;
+}
+
+private var b: int = 0.5;
+
+final class Token extends Object, Number {
+
+  static var x: int = 1;
+
+  typealias FloatPtr = *float;
+
+  private static def getLexeme () const -> String {
+    var a: int = 0;
+  }
+
+  private virtual final def getLexeme1 () const {
+    var a: int = 0;
+  }
+
+  virtual abstract override def getToken (x: IntPtr) const & -> *int {
+    typealias IntPtr = *int;
+    var b: int = 0;
+  }
+
+}
+
+def test () {
+  typealias IntPtr = *int;
+  var c: int = 0;
+}
+*/

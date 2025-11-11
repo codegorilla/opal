@@ -320,7 +320,7 @@ public class Parser {
   // basically a direct 1:1 translation to a C++ module and namespace of the
   // same name.
 
-  private static final Set<Token.Kind> FIRST_PACKAGE_DECLARATION  = EnumSet.of(Token.Kind.PACKAGE);
+  private static final Set<Token.Kind> FIRST_PACKAGE_DECLARATION  = EnumSet.of (Token.Kind.PACKAGE);
   private static final Set<Token.Kind> FOLLOW_PACKAGE_DECLARATION = EnumSet.of (
     Token.Kind.IMPORT,
     Token.Kind.USE,
@@ -332,8 +332,7 @@ public class Parser {
   );
 
   private AstNode packageDeclaration () {
-    System.out.println("GOT PACKAGE DECL");
-    //checkIn(FIRST_PACKAGE_DECLARATION, FOLLOW_PACKAGE_DECLARATION);
+    checkIn(FIRST_PACKAGE_DECLARATION, FOLLOW_PACKAGE_DECLARATION);
     AstNode n = null;
     if (lookahead.getKind() == Token.Kind.PACKAGE) {
       confirm(Token.Kind.PACKAGE);
@@ -358,6 +357,17 @@ public class Parser {
       return new ErrorNode(previous);
   }
 
+  private static final Set<Token.Kind> FIRST_IMPORT_DECLARATIONS  = EnumSet.of (Token.Kind.IMPORT);
+  private static final Set<Token.Kind> FOLLOW_IMPORT_DECLARATIONS = EnumSet.of (
+    Token.Kind.IMPORT,
+    Token.Kind.USE,
+    Token.Kind.PRIVATE,
+    Token.Kind.VAL,
+    Token.Kind.VAR,
+    Token.Kind.DEF,
+    Token.Kind.CLASS
+  );
+
   private AstNode importDeclarations () {
     System.out.println("GOT IMPORT DECLS");
     var n = new ImportDeclarations();
@@ -373,12 +383,30 @@ public class Parser {
   // declaration. We choose to go with the latter case because that is the
   // easiest implementation and the others hold no advantages for our use case.
 
+  private static final Set<Token.Kind> FIRST_IMPORT_DECLARATION  = EnumSet.of (Token.Kind.IMPORT);
+  private static final Set<Token.Kind> FOLLOW_IMPORT_DECLARATION = EnumSet.of (
+    Token.Kind.IMPORT,
+    Token.Kind.USE,
+    Token.Kind.PRIVATE,
+    Token.Kind.VAL,
+    Token.Kind.VAR,
+    Token.Kind.DEF,
+    Token.Kind.CLASS
+  );
+
   private AstNode importDeclaration () {
-    var n = new ImportDeclaration(lookahead);
-    match(Token.Kind.IMPORT);
-    n.addChild(importQualifiedName());
-    n.addChild(lookahead.getKind() == Token.Kind.AS ? importAsName() : null);
-    match(Token.Kind.SEMICOLON);
+    //checkIn(FIRST_IMPORT_DECLARATION, FOLLOW_IMPORT_DECLARATION);
+    System.out.println("GOT IMPORT DECL");
+    AstNode n = null;
+    if (lookahead.getKind() == Token.Kind.IMPORT) {
+      confirm(Token.Kind.IMPORT);
+      n = new ImportDeclaration(previous);
+      n.addChild(importQualifiedName());
+      n.addChild(lookahead.getKind() == Token.Kind.AS ? importAsName() : null);
+      match(Token.Kind.SEMICOLON);
+    } else {
+      n = new ErrorNode(previous);
+    }
     return n;
   }
 
