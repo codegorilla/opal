@@ -143,6 +143,11 @@ public class Parser {
   // this is not the case, because we want to try single-token insertion before
   // resorting to full panic-mode.
 
+  // Neither single-token deletion nor single-token insertion make sense if the
+  // current token is EOF. The former requires that we look at the next token,
+  // which would not exist. The latter requires consideration of what kind of
+  // token would follow, which also would not exist.
+
   private boolean match (Token.Kind expectedKind) {
     if (lookahead.getKind() == expectedKind) {
       consume();
@@ -150,8 +155,8 @@ public class Parser {
     }
     else {
       error(expectedKind);
-      // If possible, try single-token deletion
       if (lookahead.getKind() != Token.Kind.EOF) {
+        // Perform single-token deletion if possible
         var peek = input.get(position.get() + 1);
         if (peek.getKind() == expectedKind) {
           consume();
@@ -162,12 +167,6 @@ public class Parser {
     }
   }
 
-  // Neither single-token deletion nor single-token insertion make sense if the
-  // current token is EOF. The former requires that we look at the next token,
-  // which would not exist. The latter requires consideration of what kind of
-  // token would follow, which also would not exist.
-
-  // Experimental to support single-token-insertion
   private boolean match (Token.Kind expectedKind, Token.Kind followingKind) {
     if (lookahead.getKind() == expectedKind) {
       consume();
@@ -176,15 +175,15 @@ public class Parser {
     else {
       error(expectedKind);
       if (lookahead.getKind() != Token.Kind.EOF) {
-        // If possible, try single-token deletion
+        // Perform single-token deletion if possible
         var peek = input.get(position.get() + 1);
         if (peek.getKind() == expectedKind) {
           consume();
           consume();
         }
-        // Otherwise, if possible, try single-token insertion
+        // Otherwise, perform single-token insertion if possible
         else if (lookahead.getKind() == followingKind) {
-          previous = new Token(followingKind, "<MISSING>", lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
+          previous = new Token(expectedKind, "<MISSING>", lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
         }
       }
       return false;
