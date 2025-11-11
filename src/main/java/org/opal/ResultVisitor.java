@@ -1,6 +1,7 @@
 package org.opal;
 
-import org.opal.ast.TranslationUnit;
+import org.opal.ast.*;
+import org.opal.ast.ErrorNode;
 import org.opal.ast.declaration.*;
 import org.opal.ast.expression.*;
 import org.opal.ast.statement.*;
@@ -147,6 +148,7 @@ public interface ResultVisitor <T> {
   // Special
   public T visit (Name node);
   public T visit (This node);
+  public T visit (ErrorNode node);
 
   // TYPES
 

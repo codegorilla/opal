@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import org.opal.ast.*;
+import org.opal.ast.ErrorNode;
 import org.opal.ast.declaration.*;
 import org.opal.ast.expression.*;
 import org.opal.ast.statement.*;
@@ -35,6 +36,9 @@ public class Parser {
   private final LinkedList<Token> input;
   private final Counter position;
   private Token lookahead;
+
+  // Experimental
+  private Token previous;
 
   private final List<String> sourceLines;
 
@@ -72,6 +76,7 @@ public class Parser {
     this.input = input;
     position = new Counter();
     lookahead = input.get(position.get());
+    previous = null;
     this.sourceLines = sourceLines;
     stack = new LinkedList<>();
     nodeStack = new LinkedList<>();
@@ -91,7 +96,7 @@ public class Parser {
   // This is based on panic-mode error recovery discussed in [Wir76], [Aho82],
   // and other references (see above).
 
-  private void check (Set<Token.Kind> firstSet, Set<Token.Kind> followSet) {
+  private void checkIn (Set<Token.Kind> firstSet, Set<Token.Kind> followSet) {
     var kind = lookahead.getKind();
     if (!firstSet.contains(kind)) {
       // To do: The error should be based on FIRST set, not hard-coded to package
@@ -105,19 +110,82 @@ public class Parser {
     }
   }
 
+  private void checkOut (Set<Token.Kind> followSet) {
+    var kind = lookahead.getKind();
+    if (!followSet.contains(kind)) {
+      if (followSet.size() > 1) {
+        System.out.print("Error: Expected one of ");
+        for (var k : followSet)
+          System.out.print(k + ", ");
+        System.out.println("got " + lookahead.getKind());
+      } else {
+        System.out.print("Error: Expected " + followSet.stream().toList().get(0) + ", ");
+        System.out.println("got " + lookahead.getKind());
+      }
+      while (!followSet.contains(kind) && kind != Token.Kind.EOF) {
+        LOGGER.info("Skipping `{}`", lookahead);
+        consume();
+        kind = lookahead.getKind();
+      }
+    }
+  }
+
   private String friendlyKind (Token.Kind kind) {
     return kind.toString().toLowerCase().replace("_", " ");
   }
 
-  private void match (Token.Kind kind) {
-    if (lookahead.getKind() == kind)
+  // We want to implement error recovery in the following order of priority:
+  // (1) single-token deletion if possible, (2) single-token insertion if
+  // possible, (3) panic-mode recovery.
+
+  // Although single-token deletion might seem redundant with panic-mode (since
+  // a panicking parser will start off by deleting the current lookahead token)
+  // this is not the case, because we want to try single-token insertion before
+  // resorting to full panic-mode.
+
+  private boolean match (Token.Kind expectedKind) {
+    if (lookahead.getKind() == expectedKind) {
       consume();
+      return true;
+    }
     else {
-      error(kind);
+      // First try single-token deletion. We need to get LA(2).
+      // To do: Only possible if not at EOF.
+      error(expectedKind);
+      var peek = input.get(position.get() + 1);
+      if (peek.getKind() == expectedKind) {
+        consume();
+        consume();
+      }
+      return false;
+    }
+  }
+
+  // Experimental to support single-token-insertion
+  private boolean match (Token.Kind expectedKind, Token.Kind followerKind) {
+    if (lookahead.getKind() == expectedKind) {
+      consume();
+      return true;
+    }
+    else {
+      error(expectedKind);
+      // First try single-token deletion. We need to get LA(2).
+      // To do: Only possible if not at EOF.
+      var peek = input.get(position.get() + 1);
+      if (peek.getKind() == expectedKind) {
+        consume();
+        consume();
+      } else if (lookahead.getKind() == followerKind) {
+        System.out.println("INSERTING FAKE TOKEN! ***");
+        // Now try single-token insertion (fake token)
+        previous = new Token(Token.Kind.NIL, "nil", 0, 0, 0);
+      }
+      return false;
     }
   }
 
   private void consume () {
+    previous = lookahead;
     position.increment();
     lookahead = input.get(position.get());
   }
@@ -187,12 +255,30 @@ public class Parser {
   // already handle deletion, but we might want to investigate single-token
   // insertion in the future.
 
-  private static final Set<Token.Kind> FIRST_DECLARATIONS  = EnumSet.of(Token.Kind.PACKAGE);
-  private static final Set<Token.Kind> FOLLOW_DECLARATIONS = EnumSet.of(Token.Kind.IMPORT);
+  // Package declaration is normally followed by import and use declarations,
+  // but it doesn't have to be. It is possible for translation unit to contain
+  // no import or use declarations.
+
+  private static final Set<Token.Kind> FIRST_DECLARATIONS  = EnumSet.of (Token.Kind.PACKAGE);
+  private static final Set<Token.Kind> FOLLOW_DECLARATIONS = EnumSet.of (
+    Token.Kind.IMPORT,
+    Token.Kind.USE,
+    Token.Kind.PRIVATE,
+    Token.Kind.VAL,
+    Token.Kind.VAR,
+    Token.Kind.DEF,
+    Token.Kind.CLASS
+  );
+
+  // In some cases, we need to augment the follow declarations, such as with
+  // expressions. This is to avoid the case where, say the follow set only
+  // consists of a semicolon, and this may be easily skipped (see [Aho07]).
+  // However, I think in most cases, the follow set should be enough.
+  // private static final Set<Token.Kind> SYNC_DECLARATIONS;
 
   private AstNode declarations () {
     var n = new Declarations();
-    check(FIRST_DECLARATIONS, FOLLOW_DECLARATIONS);
+    //checkIn(FIRST_DECLARATIONS, FOLLOW_DECLARATIONS);
     if (lookahead.getKind() == Token.Kind.PACKAGE) {
       n.addChild(packageDeclaration());
       n.addChild(lookahead.getKind() == Token.Kind.IMPORT ? importDeclarations() : null);
@@ -208,27 +294,22 @@ public class Parser {
   // basically a direct 1:1 translation to a C++ module and namespace of the
   // same name.
 
-  // Experiment with panic mode and phrase-level recovery
-//  private LinkedList<Token.Kind> FIRST = new LinkedList<>(List.of(Token.Kind.PACKAGE));
-//  private LinkedList<Token.Kind> FOLLOW = new LinkedList<>(List.of(Token.Kind.SEMICOLON));
+  private static final Set<Token.Kind> FIRST_PACKAGE_DECLARATION  = EnumSet.of(Token.Kind.PACKAGE);
+  private static final Set<Token.Kind> FOLLOW_PACKAGE_DECLARATION = EnumSet.of (
+    Token.Kind.IMPORT,
+    Token.Kind.USE,
+    Token.Kind.PRIVATE,
+    Token.Kind.VAL,
+    Token.Kind.VAR,
+    Token.Kind.DEF,
+    Token.Kind.CLASS
+  );
 
   private AstNode packageDeclaration () {
-    var n = new PackageDeclaration(lookahead);
-//    System.out.println(FIRST);
-//    if (!FIRST.contains(lookahead.getKind()))
-    if (lookahead.getKind() != Token.Kind.PACKAGE) {
-      // Scan ahead until you see a member of first set or follow set
-      // print an error here
-      match(Token.Kind.PACKAGE);
-      while (
-        lookahead.getKind() != Token.Kind.PACKAGE &&
-        lookahead.getKind() != Token.Kind.IMPORT &&
-        lookahead.getKind() != Token.Kind.EOF
-      ) {
-        consume();
-      }
-    }
+    //checkIn(FIRST_PACKAGE_DECLARATION, FOLLOW_PACKAGE_DECLARATION);
+    AstNode n = null;
     if (lookahead.getKind() == Token.Kind.PACKAGE) {
+      n = new PackageDeclaration(lookahead);
       match(Token.Kind.PACKAGE);
       n.addChild(packageName());
       while (lookahead.getKind() == Token.Kind.PERIOD) {
@@ -236,14 +317,18 @@ public class Parser {
         n.addChild(packageName());
       }
       match(Token.Kind.SEMICOLON);
+    } else {
+      n = new ErrorNode();
     }
+//    checkOut(FOLLOW_PACKAGE_DECLARATION);
     return n;
   }
 
   private AstNode packageName () {
-    var n = new PackageName(lookahead);
-    match(Token.Kind.IDENTIFIER);
-    return n;
+    if (match(Token.Kind.IDENTIFIER, Token.Kind.SEMICOLON))
+      return new PackageName(previous);
+    else
+      return new ErrorNode();
   }
 
   private AstNode importDeclarations () {

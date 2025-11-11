@@ -1,7 +1,7 @@
 package org.opal;
 
-import org.opal.ast.AstNode;
-import org.opal.ast.TranslationUnit;
+import org.opal.ast.*;
+import org.opal.ast.ErrorNode;
 import org.opal.ast.declaration.*;
 import org.opal.ast.expression.*;
 import org.opal.ast.statement.*;
@@ -156,6 +156,7 @@ public class BaseResultVisitor<T> implements ResultVisitor <T> {
   // Special
   public T visit (Name node) { return null; }
   public T visit (This node) { return null; }
+  public T visit (ErrorNode node) { return null; }
 
   // TYPES
 

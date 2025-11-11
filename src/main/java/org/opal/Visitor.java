@@ -1,6 +1,7 @@
 package org.opal;
 
 import org.opal.ast.*;
+import org.opal.ast.ErrorNode;
 import org.opal.ast.declaration.*;
 import org.opal.ast.expression.*;
 import org.opal.ast.statement.*;
@@ -147,6 +148,7 @@ public interface Visitor {
   // Special
   public void visit (Name node);
   public void visit (This node);
+  public void visit (ErrorNode node);
 
   // TYPES
 
