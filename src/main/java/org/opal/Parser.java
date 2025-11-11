@@ -84,13 +84,8 @@ public class Parser {
     builtinScope = new Scope(Scope.Kind.BUILT_IN);
     currentScope = builtinScope;
 
-    Level level;
-    // Set the level for the root logger. Just put the one you want on the
-    // bottom of the list to make it active.
-    level = Level.ERROR;
-    level = Level.INFO;
-    level = Level.WARN;
-    Configurator.setRootLevel(level);
+    var level = Level.INFO;
+//    Configurator.setRootLevel(level);
   }
 
   // This is based on panic-mode error recovery discussed in [Wir76], [Aho82],
@@ -229,7 +224,9 @@ public class Parser {
 
   public AstNode process () {
     definePrimitiveTypes();
+    LOGGER.info("*** Parsing started... ***");
     var node = translationUnit();
+    LOGGER.info("*** Parsing complete! ***");
 
     // Inspect builtin scope
 //    var s = builtinScope.getSymbolTable().getData;
@@ -307,7 +304,7 @@ public class Parser {
 
   private AstNode declarations () {
     var n = new Declarations();
-    //checkIn(FIRST_DECLARATIONS, FOLLOW_DECLARATIONS);
+    checkIn(FIRST_DECLARATIONS, FOLLOW_DECLARATIONS);
     if (lookahead.getKind() == Token.Kind.PACKAGE) {
       n.addChild(packageDeclaration());
       n.addChild(lookahead.getKind() == Token.Kind.IMPORT ? importDeclarations() : null);
@@ -335,6 +332,7 @@ public class Parser {
   );
 
   private AstNode packageDeclaration () {
+    System.out.println("GOT PACKAGE DECL");
     //checkIn(FIRST_PACKAGE_DECLARATION, FOLLOW_PACKAGE_DECLARATION);
     AstNode n = null;
     if (lookahead.getKind() == Token.Kind.PACKAGE) {

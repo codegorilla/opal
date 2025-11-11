@@ -61,6 +61,8 @@ public class Translator {
     var parser = new Parser(tokens, sourceLines);
     var root = parser.process();
 
+    System.out.println("*** DONE PARSING ***");
+
     var pass1 = new Pass1(root);
     pass1.process();
 
