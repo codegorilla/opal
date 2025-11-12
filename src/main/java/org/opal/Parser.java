@@ -61,6 +61,10 @@ public class Parser {
 
   private final HashMap<Token.Kind, String> reverseKeywordLookup = new HashMap<>();
 
+  // Note: Leave this disabled for now so the error recovery code can be built
+  // with the most raw output to make it easier to understand behavior and
+  // troubleshoot.
+
   // Tracks whether error recovery mode is enabled to avoid cascading error
   // messages. See [Par12] Sec. 9.3 for details.
   boolean errorRecoveryMode = false;
@@ -103,7 +107,7 @@ public class Parser {
     if (!firstSet.contains(kind)) {
       if (!errorRecoveryMode) {
         checkError(firstSet);
-        errorRecoveryMode = true;
+        errorRecoveryMode = false;
       }
       // Scan forward until we hit something in the FIRST or FOLLOW sets
       while (!firstSet.contains(kind) && !followSet.contains(kind) && kind != Token.Kind.EOF) {
@@ -119,7 +123,7 @@ public class Parser {
     if (!followSet.contains(kind)) {
       if (!errorRecoveryMode) {
         checkError(followSet);
-        errorRecoveryMode = true;
+        errorRecoveryMode = false;
       }
       // Scan forward until we hit something in the FOLLOW set
       while (!followSet.contains(kind) && kind != Token.Kind.EOF) {
@@ -186,7 +190,7 @@ public class Parser {
         if (peek.getKind() == expectedKind) {
           if (!errorRecoveryMode) {
             extraneousError(expectedKind);
-            errorRecoveryMode = true;
+            errorRecoveryMode = false;
           }
           consume();
           consume();
@@ -195,13 +199,13 @@ public class Parser {
         else if (lookahead.getKind() == followingKind) {
           if (!errorRecoveryMode) {
             missingError(expectedKind);
-            errorRecoveryMode = true;
+            errorRecoveryMode = false;
           }
           previous = new Token(expectedKind, "<MISSING>", lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
         } else {
           if (!errorRecoveryMode) {
             generalError(expectedKind);
-            errorRecoveryMode = true;
+            errorRecoveryMode = false;
           }
         }
       }
