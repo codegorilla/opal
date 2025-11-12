@@ -7,8 +7,8 @@ import org.opal.ast.AstNode;
 
 public class ImportQualifiedName extends AstNode {
 
-  public ImportQualifiedName (Token token) {
-    super(token);
+  public ImportQualifiedName () {
+    super();
   }
 
   @Override

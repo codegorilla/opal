@@ -70,7 +70,7 @@ public class Pass20 extends BaseResultVisitor<AstNode> {
 
   @Override
   public AstNode visit (UseQualifiedName node) {
-    var n = new ImportQualifiedName(null);
+    var n = new ImportQualifiedName();
     for (var useName : node.getChildren())
       n.addChild(visit(useName));
     return n;

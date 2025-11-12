@@ -1,7 +1,10 @@
 
 package main;
 
-importer std.math;
+import std-math;
+
+//.math;
+
 
 /*
 import lang.math;

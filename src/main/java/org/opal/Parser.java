@@ -88,7 +88,7 @@ public class Parser {
     currentScope = builtinScope;
 
     var level = Level.INFO;
-//    Configurator.setRootLevel(level);
+    Configurator.setRootLevel(level);
   }
 
   // The check-in and check-out methods are based on panic-mode error recovery
@@ -122,7 +122,7 @@ public class Parser {
 
   private void checkError (Set<Token.Kind> expectedKinds) {
     var expectedKindsString = expectedKinds.stream()
-      .map(reverseKeywordLookup::get)
+      .map(kind -> reverseKeywordLookup.getOrDefault(kind, friendlyKind(kind)))
       .sorted()
       .collect(Collectors.joining(", "));
     var actualKind = lookahead.getKind();
@@ -333,7 +333,6 @@ public class Parser {
     reverseKeywordLookup.put(Token.Kind.FLOAT32, "float32");
     reverseKeywordLookup.put(Token.Kind.FLOAT64, "float64");
     reverseKeywordLookup.put(Token.Kind.VOID, "void");
-
   }
 
   private void definePrimitiveTypes () {
@@ -495,9 +494,11 @@ public class Parser {
     Token.Kind.CLASS
   );
 
+  // Due to a possible epsilon production, I don't think we need the check-in
+  // on this method.
+
   private AstNode importDeclaration () {
     //checkIn(FIRST_IMPORT_DECLARATION, FOLLOW_IMPORT_DECLARATION);
-    System.out.println("GOT IMPORT DECL");
     AstNode n = null;
     if (lookahead.getKind() == Token.Kind.IMPORT) {
       confirm(Token.Kind.IMPORT);
@@ -511,20 +512,54 @@ public class Parser {
     return n;
   }
 
+  private static final Set<Token.Kind> FIRST_IMPORT_QUALIFIED_NAME  = EnumSet.of (Token.Kind.IDENTIFIER);
+  private static final Set<Token.Kind> FOLLOW_IMPORT_QUALIFIED_NAME = EnumSet.of (Token.Kind.SEMICOLON);
+
   private AstNode importQualifiedName () {
-    var n = new ImportQualifiedName(lookahead);
-    n.addChild(importName());
-    while (lookahead.getKind() == Token.Kind.PERIOD) {
-      match(Token.Kind.PERIOD);
+    checkIn(FIRST_IMPORT_QUALIFIED_NAME, FOLLOW_IMPORT_QUALIFIED_NAME);
+    AstNode n = null;
+    if (lookahead.getKind() == Token.Kind.IDENTIFIER) {
+      n = new ImportQualifiedName();
       n.addChild(importName());
+      while (lookahead.getKind() == Token.Kind.PERIOD) {
+        confirm(Token.Kind.PERIOD);
+        n.addChild(importName());
+      }
+    } else {
+      n = new ErrorNode(previous);
     }
+    System.out.println("HERE 2");
+    checkOut(FOLLOW_IMPORT_QUALIFIED_NAME);
+//    System.out.println("HERE 3");
     return n;
   }
 
-  private AstNode importName () {
-    var n = new ImportName(lookahead);
-    match(Token.Kind.IDENTIFIER);
+  /*
+  private AstNode packageDeclaration () {
+    checkIn(FIRST_PACKAGE_DECLARATION, FOLLOW_PACKAGE_DECLARATION);
+    AstNode n = null;
+    if (lookahead.getKind() == Token.Kind.PACKAGE) {
+      confirm(Token.Kind.PACKAGE);
+      n = new PackageDeclaration(previous);
+      n.addChild(packageName());
+      while (lookahead.getKind() == Token.Kind.PERIOD) {
+        confirm(Token.Kind.PERIOD);
+        n.addChild(packageName());
+      }
+      match(Token.Kind.SEMICOLON);
+    } else {
+      n = new ErrorNode(previous);
+    }
+    checkOut(FOLLOW_PACKAGE_DECLARATION);
     return n;
+  }
+  */
+
+  private AstNode importName () {
+    if (match(Token.Kind.IDENTIFIER))
+      return new ImportName(previous);
+    else
+      return new ErrorNode(previous);
   }
 
   // This works differently from else clause and variable name, etc. The
