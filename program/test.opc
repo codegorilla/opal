@@ -1,7 +1,8 @@
 
 package main;
 
-import std-math;
+import std.-;
+import opal-lang.+;
 
 //.math;
 

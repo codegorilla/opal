@@ -61,6 +61,10 @@ public class Parser {
 
   private final HashMap<Token.Kind, String> reverseKeywordLookup = new HashMap<>();
 
+  // Tracks whether error recovery mode is enabled to avoid cascading error
+  // messages. See [Par12] Sec. 9.3 for details.
+  boolean errorRecoveryMode = false;
+
   // Todo: we may also need a 'null_t' type, for which there is exactly one
   // value, which is 'null'. This is to match the C++ 'nullptr_t' type and its
   // corresponding single 'nullptr' value. I am not sure if this is a primitive
@@ -88,7 +92,7 @@ public class Parser {
     currentScope = builtinScope;
 
     var level = Level.INFO;
-    Configurator.setRootLevel(level);
+//    Configurator.setRootLevel(level);
   }
 
   // The check-in and check-out methods are based on panic-mode error recovery
@@ -97,7 +101,10 @@ public class Parser {
   private void checkIn (Set<Token.Kind> firstSet, Set<Token.Kind> followSet) {
     var kind = lookahead.getKind();
     if (!firstSet.contains(kind)) {
-      checkError(firstSet);
+      if (!errorRecoveryMode) {
+        checkError(firstSet);
+        errorRecoveryMode = true;
+      }
       // Scan forward until we hit something in the FIRST or FOLLOW sets
       while (!firstSet.contains(kind) && !followSet.contains(kind) && kind != Token.Kind.EOF) {
         LOGGER.info("Skipping `{}`", lookahead);
@@ -110,7 +117,10 @@ public class Parser {
   private void checkOut (Set<Token.Kind> followSet) {
     var kind = lookahead.getKind();
     if (!followSet.contains(kind)) {
-      checkError(followSet);
+      if (!errorRecoveryMode) {
+        checkError(followSet);
+        errorRecoveryMode = true;
+      }
       // Scan forward until we hit something in the FOLLOW set
       while (!followSet.contains(kind) && kind != Token.Kind.EOF) {
         LOGGER.info("Skipping `{}`", lookahead);
@@ -161,8 +171,11 @@ public class Parser {
     return match(expectedKind, null);
   }
 
+  // A valid match will reset the errorRecoveryMode flag
+
   private boolean match (Token.Kind expectedKind, Token.Kind followingKind) {
     if (lookahead.getKind() == expectedKind) {
+      errorRecoveryMode = false;
       consume();
       return true;
     }
@@ -171,16 +184,25 @@ public class Parser {
         // Perform single-token deletion if possible
         var peek = input.get(position.get() + 1);
         if (peek.getKind() == expectedKind) {
-          extraneousError(expectedKind);
+          if (!errorRecoveryMode) {
+            extraneousError(expectedKind);
+            errorRecoveryMode = true;
+          }
           consume();
           consume();
         }
         // Otherwise, perform single-token insertion if possible
         else if (lookahead.getKind() == followingKind) {
-          missingError(expectedKind);
+          if (!errorRecoveryMode) {
+            missingError(expectedKind);
+            errorRecoveryMode = true;
+          }
           previous = new Token(expectedKind, "<MISSING>", lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
         } else {
-          generalError(expectedKind);
+          if (!errorRecoveryMode) {
+            generalError(expectedKind);
+            errorRecoveryMode = true;
+          }
         }
       }
       return false;
@@ -193,7 +215,7 @@ public class Parser {
   // generates a "missing token" error. Otherwise, the "general error" is used.
 
   private void extraneousError (Token.Kind expectedKind) {
-    var expectedKindString = reverseKeywordLookup.get(expectedKind);
+    var expectedKindString = reverseKeywordLookup.getOrDefault(expectedKind, friendlyKind(expectedKind));
     var actualKind = lookahead.getKind();
     var actualKindString = reverseKeywordLookup.getOrDefault(actualKind, friendlyKind(actualKind));
     var message = "expected " + expectedKindString + ", got extraneous " + actualKindString;
@@ -202,7 +224,7 @@ public class Parser {
   }
 
   private void missingError (Token.Kind expectedKind) {
-    var expectedKindString = reverseKeywordLookup.get(expectedKind);
+    var expectedKindString = reverseKeywordLookup.getOrDefault(expectedKind, friendlyKind(expectedKind));
     var actualKind = lookahead.getKind();
     var actualKindString = reverseKeywordLookup.getOrDefault(actualKind, friendlyKind(actualKind));
     var message = "missing " + expectedKindString + ", got unexpected " + actualKindString;
@@ -211,7 +233,7 @@ public class Parser {
   }
 
   private void generalError (Token.Kind expectedKind) {
-    var expectedKindString = reverseKeywordLookup.get(expectedKind);
+    var expectedKindString = reverseKeywordLookup.getOrDefault(expectedKind, friendlyKind(expectedKind));
     var actualKind = lookahead.getKind();
     var actualKindString = reverseKeywordLookup.getOrDefault(actualKind, friendlyKind(actualKind));
     var message = "expected " + expectedKindString + ", got " + actualKindString;
@@ -333,6 +355,10 @@ public class Parser {
     reverseKeywordLookup.put(Token.Kind.FLOAT32, "float32");
     reverseKeywordLookup.put(Token.Kind.FLOAT64, "float64");
     reverseKeywordLookup.put(Token.Kind.VOID, "void");
+    // Experimental, showing that this is a reverse token lookup, not
+    // necessarily a reverse keyword lookup
+    reverseKeywordLookup.put(Token.Kind.MINUS, "'-'");
+    reverseKeywordLookup.put(Token.Kind.PLUS, "'+'");
   }
 
   private void definePrimitiveTypes () {
@@ -469,7 +495,6 @@ public class Parser {
   );
 
   private AstNode importDeclarations () {
-    System.out.println("GOT IMPORT DECLS");
     var n = new ImportDeclarations();
     while (lookahead.getKind() == Token.Kind.IMPORT)
       n.addChild(importDeclaration());
@@ -528,38 +553,19 @@ public class Parser {
     } else {
       n = new ErrorNode(previous);
     }
-    System.out.println("HERE 2");
     checkOut(FOLLOW_IMPORT_QUALIFIED_NAME);
-//    System.out.println("HERE 3");
     return n;
   }
-
-  /*
-  private AstNode packageDeclaration () {
-    checkIn(FIRST_PACKAGE_DECLARATION, FOLLOW_PACKAGE_DECLARATION);
-    AstNode n = null;
-    if (lookahead.getKind() == Token.Kind.PACKAGE) {
-      confirm(Token.Kind.PACKAGE);
-      n = new PackageDeclaration(previous);
-      n.addChild(packageName());
-      while (lookahead.getKind() == Token.Kind.PERIOD) {
-        confirm(Token.Kind.PERIOD);
-        n.addChild(packageName());
-      }
-      match(Token.Kind.SEMICOLON);
-    } else {
-      n = new ErrorNode(previous);
-    }
-    checkOut(FOLLOW_PACKAGE_DECLARATION);
-    return n;
-  }
-  */
 
   private AstNode importName () {
-    if (match(Token.Kind.IDENTIFIER))
-      return new ImportName(previous);
-    else
-      return new ErrorNode(previous);
+    AstNode n = null;
+    if (match(Token.Kind.IDENTIFIER)) {
+      n = new ImportName(previous);
+   }
+    else {
+      n = new ErrorNode(previous);
+    }
+    return n;
   }
 
   // This works differently from else clause and variable name, etc. The
