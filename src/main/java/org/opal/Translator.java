@@ -53,6 +53,15 @@ public class Translator {
     // Lines are used for error analysis. We don't necessarily want the lexer
     // to operate on lines of text since program elements may span multiple
     // lines or multiple elements may occur on a single line.
+
+    // Note: A line with no content is not counted by lines(). This means that
+    // the EOF token may appear on a line that doesn't exist in sourceLines.
+    // Thus, if we ever try to print an error message with EOF, then it might
+    // cause an out of bound exception. I don't know if this can ever occur in
+    // a proper parser with no bugs, but it can if there are bugs. For example,
+    // not having EOF in the FOLLOW set of the start symbol caused this
+    // problem.
+
     var sourceLines = source.lines().toList();
 
     var lexer = new Lexer(source);

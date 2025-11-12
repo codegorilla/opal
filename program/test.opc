@@ -2,10 +2,7 @@
 package main;
 
 import std.-;
-import opal-lang.+;
-
-//.math;
-
+//import opal-lang.+;
 
 /*
 import lang.math;

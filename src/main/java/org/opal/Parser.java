@@ -437,7 +437,8 @@ public class Parser {
     checkIn(FIRST_DECLARATIONS, FOLLOW_DECLARATIONS);
     if (lookahead.getKind() == Token.Kind.PACKAGE) {
       n.addChild(packageDeclaration());
-      n.addChild(lookahead.getKind() == Token.Kind.IMPORT ? importDeclarations() : null);
+      n.addChild(importDeclarations());
+      //n.addChild(lookahead.getKind() == Token.Kind.IMPORT ? importDeclarations() : null);
       n.addChild(lookahead.getKind() == Token.Kind.USE ? useDeclarations() : null);
       // To do: Could this be null or should we always assume there will be some other declarations?
       n.addChild(otherDeclarations());
@@ -450,6 +451,9 @@ public class Parser {
   // basically a direct 1:1 translation to a C++ module and namespace of the
   // same name.
 
+  // According to online sources, EOF should be in the FOLLOW set of the start
+  // symbol. It may be in the follow sets of other non-terminals.
+
   private static final Set<Token.Kind> FIRST_PACKAGE_DECLARATION  = EnumSet.of (Token.Kind.PACKAGE);
   private static final Set<Token.Kind> FOLLOW_PACKAGE_DECLARATION = EnumSet.of (
     Token.Kind.IMPORT,
@@ -458,7 +462,8 @@ public class Parser {
     Token.Kind.VAL,
     Token.Kind.VAR,
     Token.Kind.DEF,
-    Token.Kind.CLASS
+    Token.Kind.CLASS,
+    Token.Kind.EOF
   );
 
   private AstNode packageDeclaration () {
@@ -499,10 +504,14 @@ public class Parser {
   );
 
   private AstNode importDeclarations () {
-    var n = new ImportDeclarations();
-    while (lookahead.getKind() == Token.Kind.IMPORT)
-      n.addChild(importDeclaration());
-    return n;
+    if (lookahead.getKind() == Token.Kind.IMPORT) {
+      var n = new ImportDeclarations();
+      while (lookahead.getKind() == Token.Kind.IMPORT)
+        n.addChild(importDeclaration());
+      return n;
+    } else {
+      return null;
+    }
   }
 
   // We could implement this several ways. First, we could use a binary tree
@@ -672,6 +681,8 @@ public class Parser {
     Token.Kind.DEF,
     Token.Kind.CLASS
   );
+
+  // To do: Other declarations needs to be optional
 
   private AstNode otherDeclarations () {
     var n = new OtherDeclarations();
