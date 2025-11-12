@@ -187,26 +187,10 @@ public class Parser {
     }
   }
 
-  // Confirm is similar to match, but it does not perform any error recovery
-  // and does not return a result. Instead, it throws an exception. Token
-  // confirmation can only fail if there is a bug in the compiler.
-
-  private void confirm (Token.Kind expectedKind) {
-    if (lookahead.getKind() == expectedKind)
-      consume();
-    else {
-      var expectedKindFriendly = friendlyKind(expectedKind);
-      var actualKindFriendly = friendlyKind(lookahead.getKind());
-      var message = "expected " + expectedKindFriendly + ", got " + actualKindFriendly;
-      throw new IllegalArgumentException("internal error: " + message);
-    }
-  }
-
-  private void consume () {
-    previous = lookahead;
-    position.increment();
-    lookahead = input.get(position.get());
-  }
+  // These error methods pertain to the match method. The specific error method
+  // called depends on how an error was corrected. Single-token deletion
+  // generates an "extraneous token" error, while single-token insertion
+  // generates a "missing token" error. Otherwise, the "general error" is used.
 
   private void extraneousError (Token.Kind expectedKind) {
     var expectedKindString = reverseKeywordLookup.get(expectedKind);
@@ -233,6 +217,27 @@ public class Parser {
     var message = "expected " + expectedKindString + ", got " + actualKindString;
     var error = new SyntaxError(sourceLines, message, lookahead);
     System.out.println(error.complete());
+  }
+
+  // Confirm is similar to match, but it does not perform any error recovery
+  // and does not return a result. Instead, it throws an exception. This can
+  // only fail if there is a bug in the compiler.
+
+  private void confirm (Token.Kind expectedKind) {
+    if (lookahead.getKind() == expectedKind)
+      consume();
+    else {
+      var expectedKindFriendly = friendlyKind(expectedKind);
+      var actualKindFriendly = friendlyKind(lookahead.getKind());
+      var message = "expected " + expectedKindFriendly + ", got " + actualKindFriendly;
+      throw new IllegalArgumentException("internal error: " + message);
+    }
+  }
+
+  private void consume () {
+    previous = lookahead;
+    position.increment();
+    lookahead = input.get(position.get());
   }
 
   public AstNode process () {
