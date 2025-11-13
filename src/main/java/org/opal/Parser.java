@@ -423,7 +423,6 @@ public class Parser {
   // Determining the members of a SYNC set is a bit of an art, but the
   // starting point is the corresponding follow set.
 
-  private static final Set<Token.Kind> FIRST_DECLARATIONS  = EnumSet.of (Token.Kind.PACKAGE);
   private static final Set<Token.Kind> FOLLOW_DECLARATIONS = EnumSet.of (Token.Kind.EOF);
   private static final Set<Token.Kind> SYNC_DECLARATIONS = EnumSet.of (
     Token.Kind.IMPORT,
@@ -517,7 +516,6 @@ public class Parser {
       return new ErrorNode(previous);
   }
 
-  private static final Set<Token.Kind> FIRST_IMPORT_DECLARATIONS  = EnumSet.of (Token.Kind.IMPORT);
   private static final Set<Token.Kind> FOLLOW_IMPORT_DECLARATIONS = EnumSet.of (
     Token.Kind.USE,
     Token.Kind.PRIVATE,
@@ -545,7 +543,6 @@ public class Parser {
   // declaration. We choose to go with the latter case because that is the
   // easiest implementation and the others hold no advantages for our use case.
 
-  private static final Set<Token.Kind> FIRST_IMPORT_DECLARATION  = EnumSet.of (Token.Kind.IMPORT);
   private static final Set<Token.Kind> FOLLOW_IMPORT_DECLARATION = EnumSet.of (
     Token.Kind.IMPORT,
     Token.Kind.USE,
@@ -574,14 +571,11 @@ public class Parser {
     return n;
   }
 
-  private static final Set<Token.Kind> FIRST_IMPORT_QUALIFIED_NAME  = EnumSet.of (Token.Kind.IDENTIFIER);
-  private static final Set<Token.Kind> FOLLOW_IMPORT_QUALIFIED_NAME = EnumSet.of (Token.Kind.SEMICOLON);
-
   // This might be a candidate for error recovery of epsilon production.
   // Input "import opal-lang;" doesn't provide a great error message.
 
   private AstNode importQualifiedName () {
-    checkIn(FIRST_IMPORT_QUALIFIED_NAME, FOLLOW_IMPORT_QUALIFIED_NAME);
+    checkIn(FirstSets.IMPORT_QUALIFIED_NAME, FollowSets.IMPORT_QUALIFIED_NAME);
     AstNode n = null;
     if (lookahead.getKind() == Token.Kind.IDENTIFIER) {
       n = new ImportQualifiedName();
@@ -593,7 +587,7 @@ public class Parser {
     } else {
       n = new ErrorNode(previous);
     }
-    checkOut(FOLLOW_IMPORT_QUALIFIED_NAME);
+    checkOut(FollowSets.IMPORT_QUALIFIED_NAME);
     return n;
   }
 

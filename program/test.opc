@@ -2,6 +2,10 @@
 package main;
 
 //import std-;
+
+// This should print an error, but doesn't. Why?
+import opal.lang.math
+
 import opal-lang.+;
 
 imprt math.phi;
