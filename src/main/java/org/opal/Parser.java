@@ -79,6 +79,9 @@ public class Parser {
 
   private static final Logger LOGGER = LogManager.getLogger();
 
+  // Represents epsilon productions
+  private static final AstNode EPSILON = null;
+
   // Not sure if we will use these
 //  private static final HashMap<String, Set<Token.Kind>> FIRST = new HashMap<>();
 //  private static final HashMap<String, Set<Token.Kind>> FOLLOW = new HashMap<>();
@@ -464,8 +467,6 @@ public class Parser {
   // this might be too overzealous. Rudimentary test showed that this might not
   // improve error recovery that much because surrounding methods are already
   // good enough.
-
-  private static final AstNode EPSILON = null;
 
   private AstNode declarations () {
     var n = new Declarations();
