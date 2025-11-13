@@ -454,6 +454,7 @@ public class Parser {
 
   // For epsilon productions, I believe we need to perform manual checks
 
+  /*
   private void scanTo (Set<Token.Kind> syncSet) {
     var kind = lookahead.getKind();
     while (!syncSet.contains(kind) && kind != Token.Kind.EOF) {
@@ -462,11 +463,12 @@ public class Parser {
       kind = lookahead.getKind();
     }
   }
+  */
 
   // We could check for proper FOLLOW sets on the epsilon productions, but
   // this might be too overzealous. Rudimentary test showed that this might not
-  // improve error recovery that much because surrounding methods are already
-  // good enough.
+  // improve error recovery that much because the error recovery of surrounding
+  // methods are already good enough.
 
   private AstNode declarations () {
     var n = new Declarations();
@@ -488,24 +490,9 @@ public class Parser {
   // basically a direct 1:1 translation to a C++ module and namespace of the
   // same name.
 
-  // According to online sources, EOF should be in the FOLLOW set of the start
-  // symbol. It may be in the follow sets of other non-terminals.
-
-  private static final Set<Token.Kind> FIRST_PACKAGE_DECLARATION  = EnumSet.of (Token.Kind.PACKAGE);
-  private static final Set<Token.Kind> FOLLOW_PACKAGE_DECLARATION = EnumSet.of (
-    Token.Kind.IMPORT,
-    Token.Kind.USE,
-    Token.Kind.PRIVATE,
-    Token.Kind.VAL,
-    Token.Kind.VAR,
-    Token.Kind.DEF,
-    Token.Kind.CLASS,
-    Token.Kind.EOF
-  );
-
   private AstNode packageDeclaration () {
     System.out.println("GOT HERE2");
-    checkIn(FIRST_PACKAGE_DECLARATION, FOLLOW_PACKAGE_DECLARATION);
+    checkIn(FirstSets.PACKAGE_DECLARATION, FollowSets.PACKAGE_DECLARATION);
     AstNode n;
     if (lookahead.getKind() == Token.Kind.PACKAGE) {
       confirm(Token.Kind.PACKAGE);
@@ -519,7 +506,7 @@ public class Parser {
     } else {
       n = new ErrorNode(previous);
     }
-    checkOut(FOLLOW_PACKAGE_DECLARATION);
+    checkOut(FollowSets.PACKAGE_DECLARATION);
     return n;
   }
 
@@ -589,6 +576,9 @@ public class Parser {
 
   private static final Set<Token.Kind> FIRST_IMPORT_QUALIFIED_NAME  = EnumSet.of (Token.Kind.IDENTIFIER);
   private static final Set<Token.Kind> FOLLOW_IMPORT_QUALIFIED_NAME = EnumSet.of (Token.Kind.SEMICOLON);
+
+  // This might be a candidate for error recovery of epsilon production.
+  // Input "import opal-lang;" doesn't provide a great error message.
 
   private AstNode importQualifiedName () {
     checkIn(FIRST_IMPORT_QUALIFIED_NAME, FOLLOW_IMPORT_QUALIFIED_NAME);
