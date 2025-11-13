@@ -111,7 +111,7 @@ public class Parser {
       }
       // Scan forward until we hit something in the FIRST or FOLLOW sets
       while (!firstSet.contains(kind) && !followSet.contains(kind) && kind != Token.Kind.EOF) {
-        LOGGER.info("Skipping `{}`", lookahead);
+        LOGGER.info("Skipping {}", lookahead);
         consume();
         kind = lookahead.getKind();
       }
@@ -127,7 +127,7 @@ public class Parser {
       }
       // Scan forward until we hit something in the FOLLOW set
       while (!followSet.contains(kind) && kind != Token.Kind.EOF) {
-        LOGGER.info("Skipping `{}`", lookahead);
+        LOGGER.info("Skipping {}", lookahead);
         consume();
         kind = lookahead.getKind();
       }
@@ -454,7 +454,7 @@ public class Parser {
   private void scanTo (Set<Token.Kind> syncSet) {
     var kind = lookahead.getKind();
     while (!syncSet.contains(kind) && kind != Token.Kind.EOF) {
-      LOGGER.info("Skipping `{}`", lookahead);
+      LOGGER.info("Skipping {}", lookahead);
       consume();
       kind = lookahead.getKind();
     }

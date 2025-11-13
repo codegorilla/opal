@@ -72,6 +72,9 @@ public class Translator {
 
     System.out.println("*** DONE PARSING ***");
 
+    // Temporary exit
+    System.exit(0);
+
     var pass1 = new Pass1(root);
     pass1.process();
 
