@@ -460,33 +460,19 @@ public class Parser {
     }
   }
 
+  // We could check for proper FOLLOW sets on the epsilon productions, but
+  // this might be too overzealous. Rudimentary test showed that this might not
+  // improve error recovery that much because surrounding methods are already
+  // good enough.
+
   private static final AstNode EPSILON = null;
 
   private AstNode declarations () {
     var n = new Declarations();
     //checkIn(FIRST_DECLARATIONS, SYNC_DECLARATIONS);
     n.addChild(packageDeclaration());
-    // Might be able to create a checkEpsilon() method to encapsulate this
-    if (lookahead.getKind() == Token.Kind.IMPORT) {
-      n.addChild(importDeclarations());
-    } else if (FOLLOW_IMPORT_DECLARATIONS.contains(lookahead.getKind())) {
-      System.out.println("EPS FOUND");
-      n.addChild(EPSILON);
-    } else {
-      // Maybe report error here?
-      System.out.println("error: expected import or one of " + FOLLOW_IMPORT_DECLARATIONS + ", got " + lookahead.getKind());
-      n.addChild(new ErrorNode(lookahead));
-      scanTo(FOLLOW_IMPORT_DECLARATIONS);
-    }
-    // Might be able to create a checkEpsilon() method to encapsulate this
-    if (lookahead.getKind() == Token.Kind.USE) {
-      n.addChild(useDeclarations());
-    } else if (FOLLOW_USE_DECLARATIONS.contains(lookahead.getKind())) {
-      n.addChild(EPSILON);
-    } else {
-      // Maybe insert error node and report error here?
-      scanTo(FOLLOW_USE_DECLARATIONS);
-    }
+    n.addChild(lookahead.getKind() == Token.Kind.IMPORT ? importDeclarations() : EPSILON);
+    n.addChild(lookahead.getKind() == Token.Kind.USE ? useDeclarations() : EPSILON);
     // To do: Could this be null or should we always assume there will be some
     // other declarations?
     n.addChild(otherDeclarations());
