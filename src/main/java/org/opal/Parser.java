@@ -449,15 +449,48 @@ public class Parser {
   // will be subject to the token kind check. This might not be what is
   // desired, so it may depend on the specific situation.
 
+  // For epsilon productions, I believe we need to perform manual checks
+
+  private void scanTo (Set<Token.Kind> syncSet) {
+    var kind = lookahead.getKind();
+    while (!syncSet.contains(kind) && kind != Token.Kind.EOF) {
+      LOGGER.info("Skipping `{}`", lookahead);
+      consume();
+      kind = lookahead.getKind();
+    }
+  }
+
+  private static final AstNode EPSILON = null;
+
   private AstNode declarations () {
     var n = new Declarations();
-    checkIn(FIRST_DECLARATIONS, SYNC_DECLARATIONS);
-      n.addChild(packageDeclaration());
+    //checkIn(FIRST_DECLARATIONS, SYNC_DECLARATIONS);
+    n.addChild(packageDeclaration());
+    // Might be able to create a checkEpsilon() method to encapsulate this
+    if (lookahead.getKind() == Token.Kind.IMPORT) {
       n.addChild(importDeclarations());
-      n.addChild(lookahead.getKind() == Token.Kind.USE ? useDeclarations() : null);
-      // To do: Could this be null or should we always assume there will be some other declarations?
-      n.addChild(otherDeclarations());
-    checkOut(SYNC_DECLARATIONS);
+    } else if (FOLLOW_IMPORT_DECLARATIONS.contains(lookahead.getKind())) {
+      n.addChild(EPSILON);
+    } else {
+      // Maybe report error here?
+      n.addChild(new ErrorNode(lookahead));
+      scanTo(FOLLOW_IMPORT_DECLARATIONS);
+    }
+    // Might be able to create a checkEpsilon() method to encapsulate this
+    if (lookahead.getKind() == Token.Kind.USE) {
+      n.addChild(useDeclarations());
+    } else if (FOLLOW_USE_DECLARATIONS.contains(lookahead.getKind())) {
+      n.addChild(EPSILON);
+    } else {
+      // Maybe insert error node and report error here?
+      scanTo(FOLLOW_USE_DECLARATIONS);
+    }
+    // To do: Could this be null or should we always assume there will be some
+    // other declarations?
+    n.addChild(otherDeclarations());
+    // Sync or follow? I think it must be follow, because that is the only
+    // thing that could possibly make sense once all declarations are done.
+    //checkOut(FOLLOW_DECLARATIONS);
     return n;
   }
 
@@ -510,7 +543,6 @@ public class Parser {
 
   private static final Set<Token.Kind> FIRST_IMPORT_DECLARATIONS  = EnumSet.of (Token.Kind.IMPORT);
   private static final Set<Token.Kind> FOLLOW_IMPORT_DECLARATIONS = EnumSet.of (
-    Token.Kind.IMPORT,
     Token.Kind.USE,
     Token.Kind.PRIVATE,
     Token.Kind.VAL,
@@ -608,6 +640,14 @@ public class Parser {
     match(Token.Kind.IDENTIFIER);
     return n;
   }
+
+  private static final Set<Token.Kind> FOLLOW_USE_DECLARATIONS = EnumSet.of (
+    Token.Kind.PRIVATE,
+    Token.Kind.VAL,
+    Token.Kind.VAR,
+    Token.Kind.DEF,
+    Token.Kind.CLASS
+  );
 
   private AstNode useDeclarations () {
     var n = new UseDeclarations();

@@ -1,8 +1,10 @@
 
 packge main;
 
-import std.-;
+import std-;
 //import opal-lang.+;
+
+tuse math.phi;
 
 /*
 import lang.math;
