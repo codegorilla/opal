@@ -470,9 +470,11 @@ public class Parser {
     if (lookahead.getKind() == Token.Kind.IMPORT) {
       n.addChild(importDeclarations());
     } else if (FOLLOW_IMPORT_DECLARATIONS.contains(lookahead.getKind())) {
+      System.out.println("EPS FOUND");
       n.addChild(EPSILON);
     } else {
       // Maybe report error here?
+      System.out.println("error: expected import or one of " + FOLLOW_IMPORT_DECLARATIONS + ", got " + lookahead.getKind());
       n.addChild(new ErrorNode(lookahead));
       scanTo(FOLLOW_IMPORT_DECLARATIONS);
     }
