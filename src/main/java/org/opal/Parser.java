@@ -96,7 +96,7 @@ public class Parser {
     currentScope = builtinScope;
 
     var level = Level.INFO;
-//    Configurator.setRootLevel(level);
+    Configurator.setRootLevel(level);
   }
 
   // The check-in and check-out methods are based on panic-mode error recovery
@@ -383,7 +383,7 @@ public class Parser {
   // relevant?
 
   private AstNode translationUnit () {
-    var n = new TranslationUnit(lookahead);
+    var n = new TranslationUnit();
     n.addChild(declarations());
     //var scope = new Scope(Scope.Kind.GLOBAL);
     //scope.setEnclosingScope(currentScope);
@@ -415,15 +415,22 @@ public class Parser {
   // but it doesn't have to be. It is possible for translation unit to contain
   // no import or use declarations.
 
+  // SYNC sets can be more broad than FOLLOW sets. If we use strictly follow
+  // sets, then we may miss opportunities for additional error reporting.
+  // Determining the members of a SYNC set is a bit of an art, but the
+  // starting point is the corresponding follow set.
+
   private static final Set<Token.Kind> FIRST_DECLARATIONS  = EnumSet.of (Token.Kind.PACKAGE);
-  private static final Set<Token.Kind> FOLLOW_DECLARATIONS = EnumSet.of (
+  private static final Set<Token.Kind> FOLLOW_DECLARATIONS = EnumSet.of (Token.Kind.EOF);
+  private static final Set<Token.Kind> SYNC_DECLARATIONS = EnumSet.of (
     Token.Kind.IMPORT,
     Token.Kind.USE,
     Token.Kind.PRIVATE,
     Token.Kind.VAL,
     Token.Kind.VAR,
     Token.Kind.DEF,
-    Token.Kind.CLASS
+    Token.Kind.CLASS,
+    Token.Kind.EOF
   );
 
   // In some cases, we need to augment the follow declarations, such as with
@@ -432,17 +439,25 @@ public class Parser {
   // However, I think in most cases, the follow set should be enough.
   // private static final Set<Token.Kind> SYNC_DECLARATIONS;
 
+  // It is also possible that we may wish to refrain from entering panic mode
+  // on aggregating productions (i.e. those that group or contain sequences of
+  // other productions).
+
+  // One question that arises is whether we should do a token kind check on the
+  // caller side or on the called side. Generally, I like doing it in the
+  // called size. However, this means that ALL callers of the called production
+  // will be subject to the token kind check. This might not be what is
+  // desired, so it may depend on the specific situation.
+
   private AstNode declarations () {
     var n = new Declarations();
-    checkIn(FIRST_DECLARATIONS, FOLLOW_DECLARATIONS);
-    if (lookahead.getKind() == Token.Kind.PACKAGE) {
+    checkIn(FIRST_DECLARATIONS, SYNC_DECLARATIONS);
       n.addChild(packageDeclaration());
       n.addChild(importDeclarations());
-      //n.addChild(lookahead.getKind() == Token.Kind.IMPORT ? importDeclarations() : null);
       n.addChild(lookahead.getKind() == Token.Kind.USE ? useDeclarations() : null);
       // To do: Could this be null or should we always assume there will be some other declarations?
       n.addChild(otherDeclarations());
-    }
+    checkOut(SYNC_DECLARATIONS);
     return n;
   }
 
@@ -467,8 +482,9 @@ public class Parser {
   );
 
   private AstNode packageDeclaration () {
+    System.out.println("GOT HERE2");
     checkIn(FIRST_PACKAGE_DECLARATION, FOLLOW_PACKAGE_DECLARATION);
-    AstNode n = null;
+    AstNode n;
     if (lookahead.getKind() == Token.Kind.PACKAGE) {
       confirm(Token.Kind.PACKAGE);
       n = new PackageDeclaration(previous);

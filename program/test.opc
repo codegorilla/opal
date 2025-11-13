@@ -1,5 +1,5 @@
 
-package main;
+packge main;
 
 import std.-;
 //import opal-lang.+;
