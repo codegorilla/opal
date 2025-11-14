@@ -179,7 +179,7 @@ public class Parser {
   }
 
   // A valid match will reset the errorRecoveryMode flag
-
+  
   private boolean match (Token.Kind expectedKind, Token.Kind followingKind) {
     if (lookahead.getKind() == expectedKind) {
       errorRecoveryMode = false;
@@ -206,6 +206,8 @@ public class Parser {
           }
           previous = new Token(expectedKind, "<MISSING>", lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
         } else {
+          // Do we fall back to sync-and-return here? If so, then we'll need a
+          // FOLLOW set passed in.
           if (!errorRecoveryMode) {
             generalError(expectedKind);
             errorRecoveryMode = false;
