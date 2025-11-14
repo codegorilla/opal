@@ -525,15 +525,16 @@ public class Parser {
     Token.Kind.CLASS
   );
 
+  // No check-in is required here because it is an optional production. We can
+  // only reach this through an immediately preceding import keyword.
+
   private AstNode importDeclarations () {
-    if (lookahead.getKind() == Token.Kind.IMPORT) {
-      var n = new ImportDeclarations();
-      while (lookahead.getKind() == Token.Kind.IMPORT)
-        n.addChild(importDeclaration());
-      return n;
-    } else {
-      return null;
-    }
+    // No check-in required (optional production)
+    confirm(Token.Kind.IMPORT);
+    var n = new ImportDeclarations();
+    while (lookahead.getKind() == Token.Kind.IMPORT)
+      n.addChild(importDeclaration());
+    return n;
   }
 
   // We could implement this several ways. First, we could use a binary tree
@@ -543,10 +544,8 @@ public class Parser {
   // declaration. We choose to go with the latter case because that is the
   // easiest implementation and the others hold no advantages for our use case.
 
-  // No check-in is required here because it is an optional production.
-  // Reaching this implies that the import keyword must have been seen.
-
   private AstNode importDeclaration () {
+    // No check-in required (optional production)
     confirm(Token.Kind.IMPORT);
     var n = new ImportDeclaration(previous);
     n.addChild(importQualifiedName());
@@ -577,23 +576,19 @@ public class Parser {
   }
 
   private AstNode importName () {
-     return match(Token.Kind.IDENTIFIER) ? new ImportName(previous) : new ErrorNode(previous);
+    // No check-in or check-out required (terminal production)
+    return match(Token.Kind.IDENTIFIER) ? new ImportName(previous) : new ErrorNode(previous);
   }
-
-  // This works differently from else clause and variable name, etc. The
-  // ImportAsName node does not have a child node containing the name. This is
-  // fine, but it doesn't align with the rest of the parser so we might want to
-  // change this to to importAsClause as a pass-through to importName() or
-  // importAsName().
-
 
   private AstNode importAsClause () {
     // No check-in required (optional production)
     confirm(Token.Kind.AS);
     return importAsName();
+    // No check-out required (follow-set is singleton)
   }
 
   private AstNode importAsName () {
+    // No check-in or check-out required (terminal production)
     return match(Token.Kind.IDENTIFIER) ? new ImportAsName(previous) : new ErrorNode(previous);
   }
 
