@@ -530,10 +530,10 @@ public class Parser {
 
   private AstNode importDeclarations () {
     // No check-in required (optional production)
-    confirm(Token.Kind.IMPORT);
     var n = new ImportDeclarations();
     while (lookahead.getKind() == Token.Kind.IMPORT)
       n.addChild(importDeclaration());
+    // No check-out required (redundant with preceding check-out)
     return n;
   }
 
