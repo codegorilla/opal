@@ -3,7 +3,7 @@ package org.opal;
 import java.util.EnumSet;
 import java.util.Set;
 
-public class FirstSets {
+public class FirstSet {
 
   public static final Set<Token.Kind> DECLARATIONS = EnumSet.of (Token.Kind.PACKAGE);
 

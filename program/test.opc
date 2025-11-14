@@ -3,14 +3,19 @@ package main;
 
 //import std-;
 
-// This should print an error, but doesn't. Why?
-import opal.lang.math
+// This should print an error, but doesn't. If I move the other import to
+// the same line, then it prints an error. Why is there a difference in
+// behavior, since newlines should be thrown out by the lexer?
+// Oh, it is catching it, but its printing the second line as the source line!
+// Maybe we need special handling for semicolons.
+
+import opal.math
 
 import opal-lang.+;
 
-imprt math.phi;
+//imprt math.phi;
 
-use math.lang;
+//use math.lang;
 
 /*
 import lang.math;

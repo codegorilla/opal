@@ -491,7 +491,7 @@ public class Parser {
 
   private AstNode packageDeclaration () {
     System.out.println("GOT HERE2");
-    checkIn(FirstSets.PACKAGE_DECLARATION, FollowSets.PACKAGE_DECLARATION);
+    checkIn(FirstSet.PACKAGE_DECLARATION, FollowSet.PACKAGE_DECLARATION);
     AstNode n;
     if (lookahead.getKind() == Token.Kind.PACKAGE) {
       confirm(Token.Kind.PACKAGE);
@@ -505,7 +505,7 @@ public class Parser {
     } else {
       n = new ErrorNode(previous);
     }
-    checkOut(FollowSets.PACKAGE_DECLARATION);
+    checkOut(FollowSet.PACKAGE_DECLARATION);
     return n;
   }
 
@@ -543,31 +543,16 @@ public class Parser {
   // declaration. We choose to go with the latter case because that is the
   // easiest implementation and the others hold no advantages for our use case.
 
-  private static final Set<Token.Kind> FOLLOW_IMPORT_DECLARATION = EnumSet.of (
-    Token.Kind.IMPORT,
-    Token.Kind.USE,
-    Token.Kind.PRIVATE,
-    Token.Kind.VAL,
-    Token.Kind.VAR,
-    Token.Kind.DEF,
-    Token.Kind.CLASS
-  );
-
-  // Due to a possible epsilon production, I don't think we need the check-in
-  // on this method.
+  // No check-in is required here because it is an optional production.
+  // Reaching this implies that the import keyword must have been seen.
 
   private AstNode importDeclaration () {
-    //checkIn(FIRST_IMPORT_DECLARATION, FOLLOW_IMPORT_DECLARATION);
-    AstNode n = null;
-    if (lookahead.getKind() == Token.Kind.IMPORT) {
-      confirm(Token.Kind.IMPORT);
-      n = new ImportDeclaration(previous);
-      n.addChild(importQualifiedName());
-      n.addChild(lookahead.getKind() == Token.Kind.AS ? importAsName() : null);
-      match(Token.Kind.SEMICOLON);
-    } else {
-      n = new ErrorNode(previous);
-    }
+    confirm(Token.Kind.IMPORT);
+    var n = new ImportDeclaration(previous);
+    n.addChild(importQualifiedName());
+    n.addChild(lookahead.getKind() == Token.Kind.AS ? importAsClause() : EPSILON);
+    match(Token.Kind.SEMICOLON);
+    checkOut(FollowSet.IMPORT_DECLARATION);
     return n;
   }
 
@@ -575,8 +560,8 @@ public class Parser {
   // Input "import opal-lang;" doesn't provide a great error message.
 
   private AstNode importQualifiedName () {
-    checkIn(FirstSets.IMPORT_QUALIFIED_NAME, FollowSets.IMPORT_QUALIFIED_NAME);
-    AstNode n = null;
+    checkIn(FirstSet.IMPORT_QUALIFIED_NAME, FollowSet.IMPORT_QUALIFIED_NAME);
+    final AstNode n;
     if (lookahead.getKind() == Token.Kind.IDENTIFIER) {
       n = new ImportQualifiedName();
       n.addChild(importName());
@@ -587,31 +572,29 @@ public class Parser {
     } else {
       n = new ErrorNode(previous);
     }
-    checkOut(FollowSets.IMPORT_QUALIFIED_NAME);
+    checkOut(FollowSet.IMPORT_QUALIFIED_NAME);
     return n;
   }
 
   private AstNode importName () {
-    AstNode n = null;
-    if (match(Token.Kind.IDENTIFIER)) {
-      n = new ImportName(previous);
-   }
-    else {
-      n = new ErrorNode(previous);
-    }
-    return n;
+     return match(Token.Kind.IDENTIFIER) ? new ImportName(previous) : new ErrorNode(previous);
   }
 
   // This works differently from else clause and variable name, etc. The
   // ImportAsName node does not have a child node containing the name. This is
   // fine, but it doesn't align with the rest of the parser so we might want to
-  // change this to match the others.
+  // change this to to importAsClause as a pass-through to importName() or
+  // importAsName().
+
+
+  private AstNode importAsClause () {
+    // No check-in required (optional production)
+    confirm(Token.Kind.AS);
+    return importAsName();
+  }
 
   private AstNode importAsName () {
-    match(Token.Kind.AS);
-    var n = new ImportAsName(lookahead);
-    match(Token.Kind.IDENTIFIER);
-    return n;
+    return match(Token.Kind.IDENTIFIER) ? new ImportAsName(previous) : new ErrorNode(previous);
   }
 
   private static final Set<Token.Kind> FOLLOW_USE_DECLARATIONS = EnumSet.of (

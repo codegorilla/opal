@@ -3,7 +3,7 @@ package org.opal;
 import java.util.EnumSet;
 import java.util.Set;
 
-public class FollowSets {
+public class FollowSet {
 
   // Short aliases - not sure if we want to use these
 //  private static final Token.Kind IMPORT = Token.Kind.IMPORT;
