@@ -693,7 +693,7 @@ public class Parser {
     confirm(IMPORT);
     var n = new ImportDeclaration(previous);
     n.addChild(importQualifiedName(EnumSet.of(AS, SEMICOLON)));
-    n.addChild(lookahead.getKind() == Token.Kind.AS ? importAsClause(EnumSet.of(SEMICOLON)) : EPSILON);
+    n.addChild(lookahead.getKind() == AS ? importAsClause(EnumSet.of(SEMICOLON)) : EPSILON);
     match(SEMICOLON);
     syncSetStack.pop();
     return n;
@@ -709,8 +709,8 @@ public class Parser {
       n = new ImportQualifiedName();
       var ss = EnumSet.of(PERIOD);
       n.addChild(importName(ss));
-      while (lookahead.getKind() == Token.Kind.PERIOD) {
-        confirm(Token.Kind.PERIOD);
+      while (lookahead.getKind() == PERIOD) {
+        confirm(PERIOD);
         n.addChild(importName(ss));
       }
     } else {
@@ -753,53 +753,49 @@ public class Parser {
     return n;
   }
 
-
-  private static final EnumSet<Token.Kind> FOLLOW_USE_DECLARATIONS = EnumSet.of (
-    Token.Kind.PRIVATE,
-    Token.Kind.VAL,
-    Token.Kind.VAR,
-    Token.Kind.DEF,
-    Token.Kind.CLASS
-  );
-
   private AstNode useDeclarations (EnumSet<Token.Kind> syncSet) {
     syncSetStack.push(syncSet);
     var n = new UseDeclarations();
-    while (lookahead.getKind() == Token.Kind.USE)
-      n.addChild(useDeclaration());
+    var ss = EnumSet.of(USE);
+    while (lookahead.getKind() == USE)
+      n.addChild(useDeclaration(ss));
     syncSetStack.pop();
     return n;
   }
 
-  private AstNode useDeclaration () {
-    var n = new UseDeclaration(lookahead);
-    match(Token.Kind.USE);
+
+  private AstNode useDeclaration (EnumSet<Token.Kind> syncSet) {
+    syncSetStack.push(syncSet);
+    confirm(USE);
+    var n = new UseDeclaration(previous);
+    // LEFT OFF HERE -- Need to create syncSet to pass in
     n.addChild(useQualifiedName());
     if (!nodeStack.isEmpty()) {
       n.addChild(useOneName());
     } else {
       var kind = lookahead.getKind();
-      if (kind == Token.Kind.L_BRACE)
+      if (kind == L_BRACE)
         n.addChild(useSomeNames());
-      else if (kind == Token.Kind.ASTERISK)
+      else if (kind == ASTERISK)
         n.addChild(useAllNames());
     }
     match(SEMICOLON);
+    syncSetStack.pop();
     return n;
   }
 
   private AstNode useQualifiedName () {
     AstNode n = new UseQualifiedName(lookahead);
     n.addChild(useName());
-    match(Token.Kind.PERIOD);
+    match(PERIOD);
     while (lookahead.getKind() == Token.Kind.IDENTIFIER) {
       var save = useName();
-      if (lookahead.getKind() != Token.Kind.PERIOD) {
+      if (lookahead.getKind() != PERIOD) {
         nodeStack.push(save);
         return n;
       }
       n.addChild(save);
-      match(Token.Kind.PERIOD);
+      match(PERIOD);
     }
     return n;
   }
