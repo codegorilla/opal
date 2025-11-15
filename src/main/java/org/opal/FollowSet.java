@@ -24,20 +24,6 @@ public class FollowSet {
   // According to online sources, EOF should be in the FOLLOW set of the start
   // symbol. It may be in the follow sets of other non-terminals.
 
-  public static final Set<Token.Kind> TRANSLATION_UNIT = EnumSet.of (
-    Token.Kind.EOF
-  );
-
-  public static final Set<Token.Kind> PACKAGE_DECLARATION = EnumSet.of (
-    Token.Kind.IMPORT,
-    Token.Kind.USE,
-    Token.Kind.PRIVATE,
-    Token.Kind.CLASS,
-    Token.Kind.DEF,
-    Token.Kind.VAL,
-    Token.Kind.VAR
-  );
-
   public static final Set<Token.Kind> IMPORT_DECLARATION = EnumSet.of (
     Token.Kind.IMPORT,
     Token.Kind.USE,
@@ -50,43 +36,6 @@ public class FollowSet {
 
   public static final Set<Token.Kind> IMPORT_QUALIFIED_NAME = EnumSet.of (
     Token.Kind.SEMICOLON
-  );
-
-  public static final Set<Token.Kind> USE_DECLARATION = EnumSet.of (
-    Token.Kind.USE,
-    Token.Kind.PRIVATE,
-    Token.Kind.CLASS,
-    Token.Kind.DEF,
-    Token.Kind.VAL,
-    Token.Kind.VAR,
-    Token.Kind.EOF
-  );
-
-  public static final Set<Token.Kind> CLASS_DECLARATION = EnumSet.of (
-    Token.Kind.PRIVATE,
-    Token.Kind.CLASS,
-    Token.Kind.DEF,
-    Token.Kind.VAL,
-    Token.Kind.VAR,
-    Token.Kind.EOF
-  );
-
-  public static final Set<Token.Kind> ROUTINE_DECLARATION = EnumSet.of (
-    Token.Kind.PRIVATE,
-    Token.Kind.CLASS,
-    Token.Kind.DEF,
-    Token.Kind.VAL,
-    Token.Kind.VAR,
-    Token.Kind.EOF
-  );
-
-  public static final Set<Token.Kind> VARIABLE_DECLARATION = EnumSet.of (
-    Token.Kind.PRIVATE,
-    Token.Kind.CLASS,
-    Token.Kind.DEF,
-    Token.Kind.VAL,
-    Token.Kind.VAR,
-    Token.Kind.EOF
   );
 
 }

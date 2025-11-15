@@ -1,6 +1,8 @@
 
 package 5 8 5 improt tom.main+;
 
+var t: int = 0;
+
 //import std-;
 
 // This should print an error, but doesn't. If I move the other import to

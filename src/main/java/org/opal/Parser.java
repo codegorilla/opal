@@ -319,21 +319,15 @@ public class Parser {
     lookahead = input.get(position.get());
   }
 
-  private final static EnumSet<Token.Kind> FOLLOWING_TRANSLATION_UNIT = EnumSet.of(Token.Kind.EOF);
-
   public AstNode process () {
     buildReverseKeywordLookupTable();
     definePrimitiveTypes();
     LOGGER.info("*** Parsing started... ***");
-    var syncSet = FOLLOWING_TRANSLATION_UNIT;
-    syncSetStack.push(syncSet);
-    var node = translationUnit();
+    var node = translationUnit(EnumSet.of(Token.Kind.EOF));
     LOGGER.info("*** Parsing complete! ***");
-
     // Inspect builtin scope
 //    var s = builtinScope.getSymbolTable().getData;
 //    System.out.println(s);
-
     return node;
   }
 
@@ -435,98 +429,57 @@ public class Parser {
     builtinScope.define(new PrimitiveTypeSymbol("void"));
   }
 
-  // To do: What is the lookahead on the translation unit? I think this should
-  // be removed. Not all AST nodes need to have a token. Update: Is this still
-  // relevant?
+  // Declarations sync set is empty so we don't need to define one, let alone
+  // push and pop it in the declarations production.
 
-  // Declarations following set is empty, so no need to define and push/pop a
-  // set for it.
-
-  private AstNode translationUnit () {
+  private AstNode translationUnit (EnumSet<Token.Kind> syncSet) {
+    syncSetStack.push(syncSet);
     var n = new TranslationUnit();
     n.addChild(declarations());
     //var scope = new Scope(Scope.Kind.GLOBAL);
     //scope.setEnclosingScope(currentScope);
     //currentScope = scope;
     //n.setScope(currentScope);
+    syncSetStack.pop();
     return n;
   }
 
   // DECLARATIONS **************************************************
 
-  // Package declaration and import declarations must appear before any other
-  // declarations in the translation unit.
+  // Package, import, and use declarations must appear (in that order) before
+  // any other declarations in the translation unit.
 
-  // An error may result in an empty declarations node so this needs to be
-  // tested for during semantic analysis.
+  // In The Definitive ANTLR4 Reference, Parr describes ANTLR's error recovery
+  // in detail. His algorithm attempts phrase-level recovery through
+  // single-token deletion or insertion, followed by context-informed
+  // panic-mode recovery.
 
   // We might want to implement Damerau–Levenshtein distance algorithm to
   // auto-correct spellings (e.g. packge > package, esle > else). This can be
   // accomplished with the Apache Commons Text library or other means.
 
-  // In The Definitive ANTLR4 Reference, Parr describes ANTLR's error recovery
-  // in detail. His algorithm attempts phrase-level recovery through
-  // single-token deletion or insertion, followed by context-informed
-  // panic-mode recovery. Wirth's standard phrase-level recovery seems to
-  // already handle deletion, but we might want to investigate single-token
-  // insertion in the future.
-
   // Package declaration is normally followed by import and use declarations,
   // but it doesn't have to be. It is possible for translation unit to contain
   // no import or use declarations.
 
-  // SYNC sets can be more broad than FOLLOW sets. If we use strictly follow
-  // sets, then we may miss opportunities for additional error reporting.
-  // Determining the members of a SYNC set is a bit of an art, but the
-  // starting point is the corresponding follow set.
-
-  private static final Set<Token.Kind> FOLLOWING_PACKAGE_DECLARATION =
-    EnumSet.of(Token.Kind.IMPORT, Token.Kind.USE, Token.Kind.PRIVATE, Token.Kind.VAL, Token.Kind.VAR, Token.Kind.DEF, Token.Kind.CLASS);
-
-  // In some cases, we need to augment the follow declarations, such as with
-  // expressions. This is to avoid the case where, say the follow set only
-  // consists of a semicolon, and this may be easily skipped (see [Aho07]).
-  // However, I think in most cases, the follow set should be enough.
-  // private static final Set<Token.Kind> SYNC_DECLARATIONS;
-
-  // It is also possible that we may wish to refrain from entering panic mode
-  // on aggregating productions (i.e. those that group or contain sequences of
-  // other productions).
-
-  // One question that arises is whether we should do a token kind check on the
-  // caller side or on the called side. Generally, I like doing it in the
-  // called size. However, this means that ALL callers of the called production
-  // will be subject to the token kind check. This might not be what is
-  // desired, so it may depend on the specific situation.
-
-  // For epsilon productions, I believe we need to perform manual checks
-
-  /*
-  private void scanTo (Set<Token.Kind> syncSet) {
-    var kind = lookahead.getKind();
-    while (!syncSet.contains(kind) && kind != Token.Kind.EOF) {
-      LOGGER.info("Skipping {}", lookahead);
-      consume();
-      kind = lookahead.getKind();
-    }
-  }
-  */
-
-  // We could check for proper FOLLOW sets on the epsilon productions, but
-  // this might be too overzealous. Rudimentary test showed that this might not
-  // improve error recovery that much because the error recovery of surrounding
-  // methods are already good enough.
-
-
   private AstNode declarations () {
+    var ssu = EnumSet.of (
+      Token.Kind.USE,
+      Token.Kind.PRIVATE,
+      Token.Kind.VAL,
+      Token.Kind.VAR,
+      Token.Kind.DEF,
+      Token.Kind.CLASS
+    );
+    var ssi = EnumSet.copyOf(ssu);
+    ssi.add(Token.Kind.IMPORT);
+    var ssp = ssi;
     var n = new Declarations();
-    // No additional synchronization set
-    n.addChild(packageDeclaration());
-    n.addChild(lookahead.getKind() == Token.Kind.IMPORT ? importDeclarations() : EPSILON);
-    n.addChild(lookahead.getKind() == Token.Kind.USE ? useDeclarations() : EPSILON);
-    // To do: Could this be null or should we always assume there will be some
-    // other declarations?
-    n.addChild(otherDeclarations());
+    n.addChild(packageDeclaration(ssp));
+    n.addChild(lookahead.getKind() == Token.Kind.IMPORT ? importDeclarations(ssi) : EPSILON);
+    n.addChild(lookahead.getKind() == Token.Kind.USE ? useDeclarations(ssu) : EPSILON);
+    if (FirstSet.OTHER_DECLARATIONS.contains(lookahead.getKind()))
+      n.addChild(otherDeclarations());
     return n;
   }
 
@@ -535,15 +488,8 @@ public class Parser {
   // basically a direct 1:1 translation to a C++ module and namespace of the
   // same name.
 
-  // Need to pass in appropriate sync tokens.
-  // Need to pass in EOF
-  // FOLLOW set of packageDecl already has EOF, so not sure if it needs to be
-  // passed in and combined. Question: In what other cases does this occur?
-
-//  private final static EnumSet<Token.Kind> FOLLOWING_PACKAGE_NAME =
-//    EnumSet.of(Token.Kind.PERIOD, Token.Kind.SEMICOLON);
-
-  private AstNode packageDeclaration () {
+  private AstNode packageDeclaration (EnumSet<Token.Kind> syncSet) {
+    syncSetStack.push(syncSet);
     AstNode n;
     if (match(Token.Kind.PACKAGE, Token.Kind.IDENTIFIER)) {
       n = new PackageDeclaration(previous);
@@ -553,17 +499,17 @@ public class Parser {
         confirm(Token.Kind.PERIOD);
         n.addChild(packageName(ss));
       }
-      //syncSetStack.pop();
       match(Token.Kind.SEMICOLON);
     } else {
       // Not sure it even makes sense to put a token in the error node
       n = new ErrorNode(lookahead);
       sync();
     }
+    syncSetStack.pop();
     return n;
   }
 
-  private AstNode packageName (Set<Token.Kind> syncSet) {
+  private AstNode packageName (EnumSet<Token.Kind> syncSet) {
     syncSetStack.push(syncSet);
     AstNode n;
     if (match(Token.Kind.IDENTIFIER, Token.Kind.SEMICOLON))
@@ -576,25 +522,12 @@ public class Parser {
     return n;
   }
 
-  private static final Set<Token.Kind> FOLLOW_IMPORT_DECLARATIONS = EnumSet.of (
-    Token.Kind.USE,
-    Token.Kind.PRIVATE,
-    Token.Kind.VAL,
-    Token.Kind.VAR,
-    Token.Kind.DEF,
-    Token.Kind.CLASS
-  );
-
-  // No check-in is required here because it is an optional production. We can
-  // only reach this through an immediately preceding import keyword.
-
-  private AstNode importDeclarations () {
-    System.out.println("Import Decl");
-    // No check-in required (optional production)
+  private AstNode importDeclarations (EnumSet<Token.Kind> syncSet) {
+    syncSetStack.push(syncSet);
     var n = new ImportDeclarations();
     while (lookahead.getKind() == Token.Kind.IMPORT)
       n.addChild(importDeclaration());
-    // No check-out required (redundant with preceding check-out)
+    syncSetStack.pop();
     return n;
   }
 
@@ -603,7 +536,8 @@ public class Parser {
   // simply have a chain of names, with each child names being under its
   // respective parent. Lastly, we can have a list of names under the import
   // declaration. We choose to go with the latter case because that is the
-  // easiest implementation and the others hold no advantages for our use case.
+  // easiest implementation and the others hold no advantages for our
+  // particular use case.
 
   private AstNode importDeclaration () {
     // No check-in required (optional production)
@@ -653,7 +587,7 @@ public class Parser {
     return match(Token.Kind.IDENTIFIER) ? new ImportAsName(previous) : new ErrorNode(previous);
   }
 
-  private static final Set<Token.Kind> FOLLOW_USE_DECLARATIONS = EnumSet.of (
+  private static final EnumSet<Token.Kind> FOLLOW_USE_DECLARATIONS = EnumSet.of (
     Token.Kind.PRIVATE,
     Token.Kind.VAL,
     Token.Kind.VAR,
@@ -661,10 +595,12 @@ public class Parser {
     Token.Kind.CLASS
   );
 
-  private AstNode useDeclarations () {
+  private AstNode useDeclarations (EnumSet<Token.Kind> syncSet) {
+    syncSetStack.push(syncSet);
     var n = new UseDeclarations();
     while (lookahead.getKind() == Token.Kind.USE)
       n.addChild(useDeclaration());
+    syncSetStack.pop();
     return n;
   }
 
@@ -739,17 +675,6 @@ public class Parser {
 
   // OTHER DECLARATIONS
 
-  private static final Set<Token.Kind> FIRST_OTHER_DECLARATIONS  = EnumSet.of (Token.Kind.IMPORT);
-  private static final Set<Token.Kind> FOLLOW_OTHER_DECLARATIONS = EnumSet.of (
-    Token.Kind.IMPORT,
-    Token.Kind.USE,
-    Token.Kind.PRIVATE,
-    Token.Kind.VAL,
-    Token.Kind.VAR,
-    Token.Kind.DEF,
-    Token.Kind.CLASS
-  );
-
   // To do: Other declarations needs to be optional
 
   private AstNode otherDeclarations () {
@@ -767,14 +692,14 @@ public class Parser {
     return n;
   }
 
-  private static final Set<Token.Kind> FIRST_OTHER_DECLARATION  = EnumSet.of (
+  private static final EnumSet<Token.Kind> FIRST_OTHER_DECLARATION  = EnumSet.of (
     Token.Kind.PRIVATE,
     Token.Kind.CLASS,
     Token.Kind.DEF,
     Token.Kind.VAL,
     Token.Kind.VAR
   );
-  private static final Set<Token.Kind> FOLLOW_OTHER_DECLARATION = EnumSet.of (
+  private static final EnumSet<Token.Kind> FOLLOW_OTHER_DECLARATION = EnumSet.of (
     Token.Kind.PRIVATE,
     Token.Kind.CLASS,
     Token.Kind.DEF,
