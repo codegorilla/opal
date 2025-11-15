@@ -82,6 +82,9 @@ public class Parser {
   // Represents epsilon productions
   private static final AstNode EPSILON = null;
 
+  // Stack for sync sets
+  private final LinkedList<Set<Token.Kind>> syncSetStack;
+
   // Not sure if we will use these
 //  private static final HashMap<String, Set<Token.Kind>> FIRST = new HashMap<>();
 //  private static final HashMap<String, Set<Token.Kind>> FOLLOW = new HashMap<>();
@@ -98,8 +101,11 @@ public class Parser {
     builtinScope = new Scope(Scope.Kind.BUILT_IN);
     currentScope = builtinScope;
 
+    syncSetStack = new LinkedList<>();
+
     var level = Level.INFO;
     Configurator.setRootLevel(level);
+
   }
 
   // The check-in and check-out methods are based on panic-mode error recovery
@@ -163,18 +169,26 @@ public class Parser {
   // expressions where the follow-set is just a semicolon - what if that
   // semicolon is also missing?
 
-  private void sync (Set<Token.Kind> syncSet) {
-    LOGGER.info("Sync: Performing synchronization");
+  private void sync () {
+    LOGGER.info("sync: synchronization started");
+    // Create combined sync set of all sync sets on stack
+    var combinedSyncSet = EnumSet.noneOf(Token.Kind.class);
+    for (var syncSet : syncSetStack)
+      combinedSyncSet.addAll(syncSet);
     var kind = lookahead.getKind();
-    if (!syncSet.contains(kind)) {
-      // Scan forward until we hit something in the FOLLOW set
-      while (!syncSet.contains(kind) && kind != Token.Kind.EOF) {
-        LOGGER.info("Skipping {}", lookahead);
+    // To do: Nested while inside if is probably redundant
+    if (!combinedSyncSet.contains(kind)) {
+      // Scan forward until we hit something in the sync set
+      // To do: We probably don't need the EOF test anymore because it is
+      // already included in the sync set from translation unit's FOLLOW set.
+      while (!combinedSyncSet.contains(kind) && kind != Token.Kind.EOF) {
+        LOGGER.info("sync: skipped {}", lookahead);
         consume();
         kind = lookahead.getKind();
       }
+      LOGGER.info("sync: stopped at {}", lookahead);
     }
-    LOGGER.info("Sync: Synchronization complete");
+    LOGGER.info("sync: synchronization complete");
   }
 
   // *** END EXPERIMENT ***
@@ -205,7 +219,7 @@ public class Parser {
 
   private boolean match (Token.Kind expectedKind, Token.Kind followingKind) {
     if (lookahead.getKind() == expectedKind) {
-      LOGGER.info("Match: good match");
+      LOGGER.info("Match: Matched " + lookahead);
       errorRecoveryMode = false;
       consume();
       return true;
@@ -234,7 +248,7 @@ public class Parser {
           previous = new Token(expectedKind, "<MISSING>", lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
           return true;
         } else {
-          LOGGER.info("Match: No action taken, sync required");
+          LOGGER.info("Match: No action taken, synchronization required");
           // Do we fall back to sync-and-return here? If so, then we'll need a
           // FOLLOW set passed in. Or we can just leave that to a separate sync
           // method. I don't think we want to sync here because then we lose
@@ -288,9 +302,10 @@ public class Parser {
   // only fail if there is a bug in the compiler.
 
   private void confirm (Token.Kind expectedKind) {
-    if (lookahead.getKind() == expectedKind)
+    if (lookahead.getKind() == expectedKind) {
+      LOGGER.info("Confirm: Confirmed " + lookahead);
       consume();
-    else {
+    } else {
       var expectedKindFriendly = friendlyKind(expectedKind);
       var actualKindFriendly = friendlyKind(lookahead.getKind());
       var message = "expected " + expectedKindFriendly + ", got " + actualKindFriendly;
@@ -304,10 +319,14 @@ public class Parser {
     lookahead = input.get(position.get());
   }
 
+  private final static EnumSet<Token.Kind> FOLLOWING_TRANSLATION_UNIT = EnumSet.of(Token.Kind.EOF);
+
   public AstNode process () {
     buildReverseKeywordLookupTable();
     definePrimitiveTypes();
     LOGGER.info("*** Parsing started... ***");
+    var syncSet = FOLLOWING_TRANSLATION_UNIT;
+    syncSetStack.push(syncSet);
     var node = translationUnit();
     LOGGER.info("*** Parsing complete! ***");
 
@@ -420,6 +439,9 @@ public class Parser {
   // be removed. Not all AST nodes need to have a token. Update: Is this still
   // relevant?
 
+  // Declarations following set is empty, so no need to define and push/pop a
+  // set for it.
+
   private AstNode translationUnit () {
     var n = new TranslationUnit();
     n.addChild(declarations());
@@ -458,17 +480,8 @@ public class Parser {
   // Determining the members of a SYNC set is a bit of an art, but the
   // starting point is the corresponding follow set.
 
-  private static final Set<Token.Kind> FOLLOW_DECLARATIONS = EnumSet.of (Token.Kind.EOF);
-  private static final Set<Token.Kind> SYNC_DECLARATIONS = EnumSet.of (
-    Token.Kind.IMPORT,
-    Token.Kind.USE,
-    Token.Kind.PRIVATE,
-    Token.Kind.VAL,
-    Token.Kind.VAR,
-    Token.Kind.DEF,
-    Token.Kind.CLASS,
-    Token.Kind.EOF
-  );
+  private static final Set<Token.Kind> FOLLOWING_PACKAGE_DECLARATION =
+    EnumSet.of(Token.Kind.IMPORT, Token.Kind.USE, Token.Kind.PRIVATE, Token.Kind.VAL, Token.Kind.VAR, Token.Kind.DEF, Token.Kind.CLASS);
 
   // In some cases, we need to augment the follow declarations, such as with
   // expressions. This is to avoid the case where, say the follow set only
@@ -504,8 +517,10 @@ public class Parser {
   // improve error recovery that much because the error recovery of surrounding
   // methods are already good enough.
 
+
   private AstNode declarations () {
     var n = new Declarations();
+    // No additional synchronization set
     n.addChild(packageDeclaration());
     n.addChild(lookahead.getKind() == Token.Kind.IMPORT ? importDeclarations() : EPSILON);
     n.addChild(lookahead.getKind() == Token.Kind.USE ? useDeclarations() : EPSILON);
@@ -525,36 +540,39 @@ public class Parser {
   // FOLLOW set of packageDecl already has EOF, so not sure if it needs to be
   // passed in and combined. Question: In what other cases does this occur?
 
+//  private final static EnumSet<Token.Kind> FOLLOWING_PACKAGE_NAME =
+//    EnumSet.of(Token.Kind.PERIOD, Token.Kind.SEMICOLON);
+
   private AstNode packageDeclaration () {
     AstNode n;
     if (match(Token.Kind.PACKAGE, Token.Kind.IDENTIFIER)) {
       n = new PackageDeclaration(previous);
-      var combined = EnumSet.copyOf(FollowSet.PACKAGE_DECLARATION);
-      n.addChild(packageName(combined));
-      System.out.println("HERE");
+      var ss = EnumSet.of(Token.Kind.PERIOD, Token.Kind.SEMICOLON);
+      n.addChild(packageName(ss));
       while (lookahead.getKind() == Token.Kind.PERIOD) {
         confirm(Token.Kind.PERIOD);
-        n.addChild(packageName(combined));
+        n.addChild(packageName(ss));
       }
+      //syncSetStack.pop();
       match(Token.Kind.SEMICOLON);
     } else {
       // Not sure it even makes sense to put a token in the error node
       n = new ErrorNode(lookahead);
-      sync(FollowSet.PACKAGE_DECLARATION);
+      sync();
     }
     return n;
   }
 
   private AstNode packageName (Set<Token.Kind> syncSet) {
+    syncSetStack.push(syncSet);
     AstNode n;
     if (match(Token.Kind.IDENTIFIER, Token.Kind.SEMICOLON))
       n = new PackageName(previous);
     else {
       n = new ErrorNode(lookahead);
-      var combined = EnumSet.of(Token.Kind.PERIOD, Token.Kind.SEMICOLON);
-      combined.addAll(syncSet);
-      sync(combined);
+      sync();
     }
+    syncSetStack.pop();
     return n;
   }
 

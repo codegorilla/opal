@@ -19,10 +19,12 @@ public class FollowSet {
   // because what may follow a production terminal depends on context. How to
   // handle this?
 
+  // These are really FOLLOWING SETS, i.e subsets of FOLLOW SETS, not FOLLOW SETS!
+
   // According to online sources, EOF should be in the FOLLOW set of the start
   // symbol. It may be in the follow sets of other non-terminals.
 
-  public static final Set<Token.Kind> DECLARATIONS = EnumSet.of (
+  public static final Set<Token.Kind> TRANSLATION_UNIT = EnumSet.of (
     Token.Kind.EOF
   );
 
@@ -33,8 +35,7 @@ public class FollowSet {
     Token.Kind.CLASS,
     Token.Kind.DEF,
     Token.Kind.VAL,
-    Token.Kind.VAR,
-    Token.Kind.EOF
+    Token.Kind.VAR
   );
 
   public static final Set<Token.Kind> IMPORT_DECLARATION = EnumSet.of (
@@ -44,8 +45,7 @@ public class FollowSet {
     Token.Kind.CLASS,
     Token.Kind.DEF,
     Token.Kind.VAL,
-    Token.Kind.VAR,
-    Token.Kind.EOF
+    Token.Kind.VAR
   );
 
   public static final Set<Token.Kind> IMPORT_QUALIFIED_NAME = EnumSet.of (
