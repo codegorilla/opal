@@ -316,10 +316,12 @@ public class Parser {
   // token would follow, which also would not exist.
 
   private boolean match (Token.Kind expectedKind) {
-    return match(expectedKind, null);
+    return match(expectedKind, (Token.Kind)null);
   }
 
   // A valid match will reset the errorRecoveryMode flag
+
+  // For SINGLE following kind
 
   private boolean match (Token.Kind expectedKind, Token.Kind followingKind) {
     if (lookahead.getKind() == expectedKind) {
@@ -344,6 +346,56 @@ public class Parser {
         }
         // Otherwise, perform single-token insertion if possible
         else if (lookahead.getKind() == followingKind) {
+          LOGGER.info("Match: Performing single-token insertion");
+          if (!errorRecoveryMode) {
+            missingError(expectedKind);
+            errorRecoveryMode = false;
+          }
+          previous = new Token(expectedKind, "<MISSING>", lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
+          return true;
+        } else {
+          LOGGER.info("Match: No action taken, synchronization required");
+          // Do we fall back to sync-and-return here? If so, then we'll need a
+          // FOLLOW set passed in. Or we can just leave that to a separate sync
+          // method. I don't think we want to sync here because then we lose
+          // the reference to the "previous" token that needs to be put into an
+          // error node. So that means sync need to be external to this method.
+          if (!errorRecoveryMode) {
+            generalError(expectedKind);
+            errorRecoveryMode = false;
+          }
+          return false;
+        }
+      }
+      return false;
+    }
+  }
+
+  // For MULTIPLE following kinds
+
+  private boolean match (Token.Kind expectedKind, EnumSet<Token.Kind> followingSet) {
+    if (lookahead.getKind() == expectedKind) {
+      LOGGER.info("Match: Matched " + lookahead);
+      errorRecoveryMode = false;
+      consume();
+      return true;
+    }
+    else {
+      if (lookahead.getKind() != Token.Kind.EOF) {
+        // Perform single-token deletion if possible
+        var peek = input.get(position.get() + 1);
+        if (peek.getKind() == expectedKind) {
+          LOGGER.info("Match: Performing single-token deletion");
+          if (!errorRecoveryMode) {
+            extraneousError(expectedKind);
+            errorRecoveryMode = false;
+          }
+          consume();
+          consume();
+          return true;
+        }
+        // Otherwise, perform single-token insertion if possible
+        if (followingSet.contains(lookahead.getKind())) {
           LOGGER.info("Match: Performing single-token insertion");
           if (!errorRecoveryMode) {
             missingError(expectedKind);
@@ -567,11 +619,10 @@ public class Parser {
   // no import or use declarations.
 
   private AstNode declarations () {
-    var ssu = EnumSet.of(USE, PRIVATE, VAL, VAR, DEF, CLASS);
-    var ssi = EnumSet.copyOf(ssu);
-    ssi.add(IMPORT);
-    var ssp = ssi;
     var n = new Declarations();
+    var ssp = EnumSet.of(PRIVATE, VAL, VAR, DEF, CLASS, USE, IMPORT);
+    var ssi = EnumSet.of(PRIVATE, VAL, VAR, DEF, CLASS, USE);
+    var ssu = EnumSet.of(PRIVATE, VAL, VAR, DEF, CLASS);
     n.addChild(packageDeclaration(ssp));
     n.addChild(lookahead.getKind() == IMPORT ? importDeclarations(ssi) : EPSILON);
     n.addChild(lookahead.getKind() == USE ? useDeclarations(ssu) : EPSILON);
@@ -622,8 +673,9 @@ public class Parser {
   private AstNode importDeclarations (EnumSet<Token.Kind> syncSet) {
     syncSetStack.push(syncSet);
     var n = new ImportDeclarations();
+    var ss = EnumSet.of(IMPORT);
     while (lookahead.getKind() == IMPORT)
-      n.addChild(importDeclaration());
+      n.addChild(importDeclaration(ss));
     syncSetStack.pop();
     return n;
   }
@@ -636,51 +688,71 @@ public class Parser {
   // easiest implementation and the others hold no advantages for our
   // particular use case.
 
-  private AstNode importDeclaration () {
+  private AstNode importDeclaration (EnumSet<Token.Kind> syncSet) {
+    syncSetStack.push(syncSet);
     confirm(IMPORT);
     var n = new ImportDeclaration(previous);
-    n.addChild(importQualifiedName());
-    n.addChild(lookahead.getKind() == Token.Kind.AS ? importAsClause() : EPSILON);
+    n.addChild(importQualifiedName(EnumSet.of(AS, SEMICOLON)));
+    n.addChild(lookahead.getKind() == Token.Kind.AS ? importAsClause(EnumSet.of(SEMICOLON)) : EPSILON);
     match(SEMICOLON);
+    syncSetStack.pop();
     return n;
   }
 
   // This might be a candidate for error recovery of epsilon production.
   // Input "import opal-lang;" doesn't provide a great error message.
 
-  private AstNode importQualifiedName () {
-    checkIn(FirstSet.IMPORT_QUALIFIED_NAME, FollowSet.IMPORT_QUALIFIED_NAME);
-    final AstNode n;
+  private AstNode importQualifiedName (EnumSet<Token.Kind> syncSet) {
+    syncSetStack.push(syncSet);
+    AstNode n;
     if (lookahead.getKind() == Token.Kind.IDENTIFIER) {
       n = new ImportQualifiedName();
-      n.addChild(importName());
+      var ss = EnumSet.of(PERIOD);
+      n.addChild(importName(ss));
       while (lookahead.getKind() == Token.Kind.PERIOD) {
         confirm(Token.Kind.PERIOD);
-        n.addChild(importName());
+        n.addChild(importName(ss));
       }
     } else {
       n = new ErrorNode(previous);
+      sync();
     }
-    checkOut(FollowSet.IMPORT_QUALIFIED_NAME);
+    syncSetStack.pop();
     return n;
   }
 
-  private AstNode importName () {
-    // No check-in or check-out required (terminal production)
-    return match(Token.Kind.IDENTIFIER) ? new ImportName(previous) : new ErrorNode(previous);
+  private AstNode importName (EnumSet<Token.Kind> syncSet) {
+    syncSetStack.push(syncSet);
+    AstNode n;
+    if (match(Token.Kind.IDENTIFIER, EnumSet.of(AS, PERIOD, SEMICOLON)))
+      n = new ImportName(previous);
+    else {
+      n = new ErrorNode(lookahead);
+      sync();
+    }
+    syncSetStack.pop();
+    return n;
   }
 
-  private AstNode importAsClause () {
-    // No check-in required (optional production)
-    confirm(Token.Kind.AS);
-    return importAsName();
-    // No check-out required (follow-set is singleton)
+  private AstNode importAsClause (EnumSet<Token.Kind> syncSet) {
+    syncSetStack.push(syncSet);
+    confirm(AS);
+    var n = importAsName();
+    syncSetStack.pop();
+    return n;
   }
 
   private AstNode importAsName () {
-    // No check-in or check-out required (terminal production)
-    return match(Token.Kind.IDENTIFIER) ? new ImportAsName(previous) : new ErrorNode(previous);
+    AstNode n;
+    if (match(Token.Kind.IDENTIFIER, SEMICOLON))
+      n = new ImportAsName(previous);
+    else {
+      n = new ErrorNode(previous);
+      sync();
+    }
+    return n;
   }
+
 
   private static final EnumSet<Token.Kind> FOLLOW_USE_DECLARATIONS = EnumSet.of (
     Token.Kind.PRIVATE,

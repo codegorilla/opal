@@ -1,7 +1,11 @@
 
-package 5 8 5 improt tom.main+;
+package main;
 
-var t: int = 0;
+import std.math. .+link as;
+
+//package 5 8 5 improt tom.main+;
+
+//var t: int = 0;
 
 //import std-;
 
