@@ -32,7 +32,7 @@ import org.opal.symbol.PrimitiveTypeSymbol;
 
 public class Parser {
 
-  private final int SLEEP_TIME = 100;
+  private final int SLEEP_TIME = 10;
 
   private final LinkedList<Token> input;
   private final Counter position;
@@ -85,9 +85,113 @@ public class Parser {
   // Stack for sync sets
   private final LinkedList<Set<Token.Kind>> syncSetStack;
 
-  // Not sure if we will use these
-//  private static final HashMap<String, Set<Token.Kind>> FIRST = new HashMap<>();
-//  private static final HashMap<String, Set<Token.Kind>> FOLLOW = new HashMap<>();
+  // Convenience aliases
+  private static final Token.Kind ABSTRACT = Token.Kind.ABSTRACT;
+  private static final Token.Kind AND = Token.Kind.AND;
+  private static final Token.Kind AS = Token.Kind.AS;
+  private static final Token.Kind BREAK = Token.Kind.BREAK;
+  private static final Token.Kind CASE = Token.Kind.CASE;
+  private static final Token.Kind CAST = Token.Kind.CAST;
+  private static final Token.Kind CATCH = Token.Kind.CATCH;
+  private static final Token.Kind CLASS = Token.Kind.CLASS;
+  private static final Token.Kind CONST = Token.Kind.CONST;
+  private static final Token.Kind CONSTEVAL = Token.Kind.CONSTEVAL;
+  private static final Token.Kind CONSTEXPR = Token.Kind.CONSTEXPR;
+  private static final Token.Kind CONTINUE = Token.Kind.CONTINUE;
+  private static final Token.Kind DEF = Token.Kind.DEF;
+  private static final Token.Kind DEFAULT = Token.Kind.DEFAULT;
+  private static final Token.Kind DELETE = Token.Kind.DELETE;
+  private static final Token.Kind DIVINE = Token.Kind.DIVINE;
+  private static final Token.Kind DO = Token.Kind.DO;
+  private static final Token.Kind ELSE = Token.Kind.ELSE;
+  private static final Token.Kind ENUM = Token.Kind.ENUM;
+  private static final Token.Kind EXTENDS = Token.Kind.EXTENDS;
+  private static final Token.Kind FALSE = Token.Kind.FALSE;
+  private static final Token.Kind FINAL = Token.Kind.FINAL;
+  private static final Token.Kind FOR = Token.Kind.FOR;
+  private static final Token.Kind FN = Token.Kind.FN;
+  private static final Token.Kind FUN = Token.Kind.FUN;
+  private static final Token.Kind GOTO = Token.Kind.GOTO;
+  private static final Token.Kind IF = Token.Kind.IF;
+  private static final Token.Kind IMPORT = Token.Kind.IMPORT;
+  private static final Token.Kind IN = Token.Kind.IN;
+  private static final Token.Kind INCLUDE = Token.Kind.INCLUDE;
+  private static final Token.Kind LOOP = Token.Kind.LOOP;
+  private static final Token.Kind NEW = Token.Kind.NEW;
+  private static final Token.Kind NIL = Token.Kind.NIL;
+  private static final Token.Kind NOEXCEPT = Token.Kind.NOEXCEPT;
+  private static final Token.Kind NULL = Token.Kind.NULL;
+  private static final Token.Kind OR = Token.Kind.OR;
+  private static final Token.Kind OVERRIDE = Token.Kind.OVERRIDE;
+  private static final Token.Kind PACKAGE = Token.Kind.PACKAGE;
+  private static final Token.Kind PRIVATE = Token.Kind.PRIVATE;
+  private static final Token.Kind PROTECTED = Token.Kind.PROTECTED;
+  private static final Token.Kind RETURN = Token.Kind.RETURN;
+  private static final Token.Kind STATIC = Token.Kind.STATIC;
+  private static final Token.Kind STRUCT = Token.Kind.STRUCT;
+  private static final Token.Kind SWITCH = Token.Kind.SWITCH;
+  private static final Token.Kind TEMPLATE = Token.Kind.TEMPLATE;
+  private static final Token.Kind THIS = Token.Kind.THIS;
+  private static final Token.Kind TRAIT = Token.Kind.TRAIT;
+  private static final Token.Kind TRANSMUTE = Token.Kind.TRANSMUTE;
+  private static final Token.Kind TRUE = Token.Kind.TRUE;
+  private static final Token.Kind TRY = Token.Kind.TRY;
+  private static final Token.Kind TYPEALIAS = Token.Kind.TYPEALIAS;
+  private static final Token.Kind UNION = Token.Kind.UNION;
+  private static final Token.Kind UNTIL = Token.Kind.UNTIL;
+  private static final Token.Kind USE = Token.Kind.USE;
+  private static final Token.Kind VAL = Token.Kind.VAL;
+  private static final Token.Kind VAR = Token.Kind.VAR;
+  private static final Token.Kind VIRTUAL = Token.Kind.VIRTUAL;
+  private static final Token.Kind VOLATILE = Token.Kind.VOLATILE;
+  private static final Token.Kind WHEN = Token.Kind.WHEN;
+  private static final Token.Kind WHILE = Token.Kind.WHILE;
+  private static final Token.Kind WITH = Token.Kind.WITH;
+  private static final Token.Kind AMPERSAND = Token.Kind.AMPERSAND;
+  private static final Token.Kind AMPERSAND_AMPERSAND = Token.Kind.AMPERSAND_AMPERSAND;
+  private static final Token.Kind AMPERSAND_EQUAL = Token.Kind.AMPERSAND_EQUAL;
+  private static final Token.Kind ASTERISK = Token.Kind.ASTERISK;
+  private static final Token.Kind ASTERISK_EQUAL = Token.Kind.ASTERISK_EQUAL;
+  private static final Token.Kind BAR = Token.Kind.BAR;
+  private static final Token.Kind BAR_BAR = Token.Kind.BAR_BAR;
+  private static final Token.Kind BAR_EQUAL = Token.Kind.BAR_EQUAL;
+  private static final Token.Kind CARET = Token.Kind.CARET;
+  private static final Token.Kind CARET_EQUAL = Token.Kind.CARET_EQUAL;
+  private static final Token.Kind COLON = Token.Kind.COLON;
+  private static final Token.Kind COMMA = Token.Kind.COMMA;
+  private static final Token.Kind EQUAL = Token.Kind.EQUAL;
+  private static final Token.Kind EQUAL_EQUAL = Token.Kind.EQUAL_EQUAL;
+  private static final Token.Kind EXCLAMATION = Token.Kind.EXCLAMATION;
+  private static final Token.Kind EXCLAMATION_EQUAL = Token.Kind.EXCLAMATION_EQUAL;
+  private static final Token.Kind EXCLAMATION_LESS = Token.Kind.EXCLAMATION_LESS;
+  private static final Token.Kind GREATER = Token.Kind.GREATER;
+  private static final Token.Kind GREATER_EQUAL = Token.Kind.GREATER_EQUAL;
+  private static final Token.Kind GREATER_GREATER = Token.Kind.GREATER_GREATER;
+  private static final Token.Kind GREATER_GREATER_EQUAL = Token.Kind.GREATER_GREATER_EQUAL;
+  private static final Token.Kind L_BRACE = Token.Kind.L_BRACE;
+  private static final Token.Kind L_BRACKET = Token.Kind.L_BRACKET;
+  private static final Token.Kind L_PARENTHESIS = Token.Kind.L_PARENTHESIS;
+  private static final Token.Kind LESS = Token.Kind.LESS;
+  private static final Token.Kind LESS_EQUAL = Token.Kind.LESS_EQUAL;
+  private static final Token.Kind LESS_LESS = Token.Kind.LESS_LESS;
+  private static final Token.Kind LESS_LESS_EQUAL = Token.Kind.LESS_LESS_EQUAL;
+  private static final Token.Kind MINUS = Token.Kind.MINUS;
+  private static final Token.Kind MINUS_EQUAL = Token.Kind.MINUS_EQUAL;
+  private static final Token.Kind MINUS_GREATER = Token.Kind.MINUS_GREATER;
+  private static final Token.Kind PERCENT = Token.Kind.PERCENT;
+  private static final Token.Kind PERCENT_EQUAL = Token.Kind.PERCENT_EQUAL;
+  private static final Token.Kind PERIOD = Token.Kind.PERIOD;
+  private static final Token.Kind PERIOD_PERIOD = Token.Kind.PERIOD_PERIOD;
+  private static final Token.Kind PLUS = Token.Kind.PLUS;
+  private static final Token.Kind PLUS_EQUAL = Token.Kind.PLUS_EQUAL;
+  private static final Token.Kind R_BRACE = Token.Kind.R_BRACE;
+  private static final Token.Kind R_BRACKET = Token.Kind.R_BRACKET;
+  private static final Token.Kind R_PARENTHESIS = Token.Kind.R_PARENTHESIS;
+  private static final Token.Kind SEMICOLON = Token.Kind.SEMICOLON;
+  private static final Token.Kind SLASH = Token.Kind.SLASH;
+  private static final Token.Kind SLASH_EQUAL = Token.Kind.SLASH_EQUAL;
+  private static final Token.Kind TILDE = Token.Kind.TILDE;
+  private static final Token.Kind TILDE_EQUAL = Token.Kind.TILDE_EQUAL;
 
   public Parser (LinkedList<Token> input, List<String> sourceLines) {
     this.input = input;
@@ -463,21 +567,14 @@ public class Parser {
   // no import or use declarations.
 
   private AstNode declarations () {
-    var ssu = EnumSet.of (
-      Token.Kind.USE,
-      Token.Kind.PRIVATE,
-      Token.Kind.VAL,
-      Token.Kind.VAR,
-      Token.Kind.DEF,
-      Token.Kind.CLASS
-    );
+    var ssu = EnumSet.of(USE, PRIVATE, VAL, VAR, DEF, CLASS);
     var ssi = EnumSet.copyOf(ssu);
-    ssi.add(Token.Kind.IMPORT);
+    ssi.add(IMPORT);
     var ssp = ssi;
     var n = new Declarations();
     n.addChild(packageDeclaration(ssp));
-    n.addChild(lookahead.getKind() == Token.Kind.IMPORT ? importDeclarations(ssi) : EPSILON);
-    n.addChild(lookahead.getKind() == Token.Kind.USE ? useDeclarations(ssu) : EPSILON);
+    n.addChild(lookahead.getKind() == IMPORT ? importDeclarations(ssi) : EPSILON);
+    n.addChild(lookahead.getKind() == USE ? useDeclarations(ssu) : EPSILON);
     if (FirstSet.OTHER_DECLARATIONS.contains(lookahead.getKind()))
       n.addChild(otherDeclarations());
     return n;
@@ -491,15 +588,15 @@ public class Parser {
   private AstNode packageDeclaration (EnumSet<Token.Kind> syncSet) {
     syncSetStack.push(syncSet);
     AstNode n;
-    if (match(Token.Kind.PACKAGE, Token.Kind.IDENTIFIER)) {
+    if (match(PACKAGE, Token.Kind.IDENTIFIER)) {
       n = new PackageDeclaration(previous);
-      var ss = EnumSet.of(Token.Kind.PERIOD, Token.Kind.SEMICOLON);
+      var ss = EnumSet.of(PERIOD, SEMICOLON);
       n.addChild(packageName(ss));
-      while (lookahead.getKind() == Token.Kind.PERIOD) {
-        confirm(Token.Kind.PERIOD);
+      while (lookahead.getKind() == PERIOD) {
+        confirm(PERIOD);
         n.addChild(packageName(ss));
       }
-      match(Token.Kind.SEMICOLON);
+      match(SEMICOLON);
     } else {
       // Not sure it even makes sense to put a token in the error node
       n = new ErrorNode(lookahead);
@@ -512,7 +609,7 @@ public class Parser {
   private AstNode packageName (EnumSet<Token.Kind> syncSet) {
     syncSetStack.push(syncSet);
     AstNode n;
-    if (match(Token.Kind.IDENTIFIER, Token.Kind.SEMICOLON))
+    if (match(Token.Kind.IDENTIFIER, SEMICOLON))
       n = new PackageName(previous);
     else {
       n = new ErrorNode(lookahead);
@@ -525,7 +622,7 @@ public class Parser {
   private AstNode importDeclarations (EnumSet<Token.Kind> syncSet) {
     syncSetStack.push(syncSet);
     var n = new ImportDeclarations();
-    while (lookahead.getKind() == Token.Kind.IMPORT)
+    while (lookahead.getKind() == IMPORT)
       n.addChild(importDeclaration());
     syncSetStack.pop();
     return n;
@@ -540,13 +637,11 @@ public class Parser {
   // particular use case.
 
   private AstNode importDeclaration () {
-    // No check-in required (optional production)
-    confirm(Token.Kind.IMPORT);
+    confirm(IMPORT);
     var n = new ImportDeclaration(previous);
     n.addChild(importQualifiedName());
     n.addChild(lookahead.getKind() == Token.Kind.AS ? importAsClause() : EPSILON);
-    match(Token.Kind.SEMICOLON);
-    checkOut(FollowSet.IMPORT_DECLARATION);
+    match(SEMICOLON);
     return n;
   }
 
@@ -617,7 +712,7 @@ public class Parser {
       else if (kind == Token.Kind.ASTERISK)
         n.addChild(useAllNames());
     }
-    match(Token.Kind.SEMICOLON);
+    match(SEMICOLON);
     return n;
   }
 
@@ -902,7 +997,7 @@ public class Parser {
     n.addChild(typealiasName());
     match(Token.Kind.EQUAL);
     n.addChild(type());
-    match(Token.Kind.SEMICOLON);
+    match(SEMICOLON);
     return n;
   }
 
@@ -969,7 +1064,7 @@ public class Parser {
     n.addChild(variableName());
     n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier() : null);
     n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer() : null);
-    match(Token.Kind.SEMICOLON);
+    match(SEMICOLON);
     return n;
   }
 
@@ -982,7 +1077,7 @@ public class Parser {
     n.addChild(typealiasName());
     match(Token.Kind.EQUAL);
     n.addChild(type());
-    match(Token.Kind.SEMICOLON);
+    match(SEMICOLON);
     return n;
   }
 
@@ -998,7 +1093,7 @@ public class Parser {
     n.addChild(typealiasName());
     match(Token.Kind.EQUAL);
     n.addChild(type());
-    match(Token.Kind.SEMICOLON);
+    match(SEMICOLON);
     return n;
   }
 
@@ -1136,7 +1231,7 @@ public class Parser {
     n.addChild(variableName());
     n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier() : null);
     n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer() : null);
-    match(Token.Kind.SEMICOLON);
+    match(SEMICOLON);
     return n;
   }
 
@@ -1174,7 +1269,7 @@ public class Parser {
     n.addChild(variableName());
     n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier() : null);
     n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer() : null);
-    match(Token.Kind.SEMICOLON);
+    match(SEMICOLON);
     return n;
   }
 
@@ -1194,7 +1289,7 @@ public class Parser {
       kind == Token.Kind.DO        ||
       kind == Token.Kind.FOR       ||
       kind == Token.Kind.LOOP      ||
-      kind == Token.Kind.SEMICOLON ||
+      kind == SEMICOLON ||
       kind == Token.Kind.IF        ||
       kind == Token.Kind.RETURN    ||
       kind == Token.Kind.UNTIL     ||
@@ -1243,7 +1338,7 @@ public class Parser {
         n = continueStatement();
       case Token.Kind.DO ->
         n = doStatement();
-      case Token.Kind.SEMICOLON ->
+      case SEMICOLON ->
         n = emptyStatement();
       case Token.Kind.FOR ->
         n = forStatement();
@@ -1266,7 +1361,7 @@ public class Parser {
   private AstNode breakStatement () {
     var n = new BreakStatement(lookahead);
     match(Token.Kind.BREAK);
-    match(Token.Kind.SEMICOLON);
+    match(SEMICOLON);
     return n;
   }
 
@@ -1289,7 +1384,7 @@ public class Parser {
   private AstNode continueStatement () {
     var n = new ContinueStatement(lookahead);
     match(Token.Kind.CONTINUE);
-    match(Token.Kind.SEMICOLON);
+    match(SEMICOLON);
     return n;
   }
 
@@ -1372,7 +1467,7 @@ public class Parser {
 
   private AstNode emptyStatement () {
     var n = new EmptyStatement(lookahead);
-    match(Token.Kind.SEMICOLON);
+    match(SEMICOLON);
     return n;
   }
 
@@ -1383,7 +1478,7 @@ public class Parser {
   private AstNode expressionStatement () {
     var n = new ExpressionStatement();
     n.addChild(expression(true));
-    match(Token.Kind.SEMICOLON);
+    match(SEMICOLON);
     return n;
   }
 
@@ -1439,10 +1534,10 @@ public class Parser {
   private AstNode loopControl () {
     var n = new LoopControl(lookahead);
     match(Token.Kind.L_PARENTHESIS);
-    n.addChild(lookahead.getKind() != Token.Kind.SEMICOLON ? loopInitializer() : null);
-    match(Token.Kind.SEMICOLON);
-    n.addChild(lookahead.getKind() != Token.Kind.SEMICOLON ? loopCondition() : null);
-    match(Token.Kind.SEMICOLON);
+    n.addChild(lookahead.getKind() != SEMICOLON ? loopInitializer() : null);
+    match(SEMICOLON);
+    n.addChild(lookahead.getKind() != SEMICOLON ? loopCondition() : null);
+    match(SEMICOLON);
     n.addChild(lookahead.getKind() != Token.Kind.R_PARENTHESIS ? loopUpdate() : null);
     match(Token.Kind.R_PARENTHESIS);
     return n;
@@ -1484,9 +1579,9 @@ public class Parser {
   private AstNode returnStatement () {
     var n = new ReturnStatement(lookahead);
     match(Token.Kind.RETURN);
-    if (lookahead.getKind() != Token.Kind.SEMICOLON) {
+    if (lookahead.getKind() != SEMICOLON) {
       n.addChild(expression(true));
-      match(Token.Kind.SEMICOLON);
+      match(SEMICOLON);
     }
     return n;
   }
