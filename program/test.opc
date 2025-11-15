@@ -1,5 +1,5 @@
 
-package main;
+package 5 8 5 improt tom.main+;
 
 //import std-;
 
@@ -9,9 +9,9 @@ package main;
 // Oh, it is catching it, but its printing the second line as the source line!
 // Maybe we need special handling for semicolons.
 
-import opal.math
+//import opal.math;
 
-import opal-lang.+;
+//import opal-lang.+;
 
 //imprt math.phi;
 

@@ -156,6 +156,29 @@ public class Parser {
     return kind.toString().toLowerCase().replace("_", " ");
   }
 
+  // *** EXPERIMENTAL ***
+
+  // Not really a follow set, more of a sync set? It might include the
+  // follow-set and some members of the first set. For example, consider
+  // expressions where the follow-set is just a semicolon - what if that
+  // semicolon is also missing?
+
+  private void sync (Set<Token.Kind> syncSet) {
+    LOGGER.info("Sync: Performing synchronization");
+    var kind = lookahead.getKind();
+    if (!syncSet.contains(kind)) {
+      // Scan forward until we hit something in the FOLLOW set
+      while (!syncSet.contains(kind) && kind != Token.Kind.EOF) {
+        LOGGER.info("Skipping {}", lookahead);
+        consume();
+        kind = lookahead.getKind();
+      }
+    }
+    LOGGER.info("Sync: Synchronization complete");
+  }
+
+  // *** END EXPERIMENT ***
+
   // We want to implement error recovery in the following order of priority:
   // (1) single-token deletion if possible, (2) single-token insertion if
   // possible, (3) panic-mode recovery.
@@ -179,9 +202,10 @@ public class Parser {
   }
 
   // A valid match will reset the errorRecoveryMode flag
-  
+
   private boolean match (Token.Kind expectedKind, Token.Kind followingKind) {
     if (lookahead.getKind() == expectedKind) {
+      LOGGER.info("Match: good match");
       errorRecoveryMode = false;
       consume();
       return true;
@@ -191,27 +215,36 @@ public class Parser {
         // Perform single-token deletion if possible
         var peek = input.get(position.get() + 1);
         if (peek.getKind() == expectedKind) {
+          LOGGER.info("Match: Performing single-token deletion");
           if (!errorRecoveryMode) {
             extraneousError(expectedKind);
             errorRecoveryMode = false;
           }
           consume();
           consume();
+          return true;
         }
         // Otherwise, perform single-token insertion if possible
         else if (lookahead.getKind() == followingKind) {
+          LOGGER.info("Match: Performing single-token insertion");
           if (!errorRecoveryMode) {
             missingError(expectedKind);
             errorRecoveryMode = false;
           }
           previous = new Token(expectedKind, "<MISSING>", lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
+          return true;
         } else {
+          LOGGER.info("Match: No action taken, sync required");
           // Do we fall back to sync-and-return here? If so, then we'll need a
-          // FOLLOW set passed in.
+          // FOLLOW set passed in. Or we can just leave that to a separate sync
+          // method. I don't think we want to sync here because then we lose
+          // the reference to the "previous" token that needs to be put into an
+          // error node. So that means sync need to be external to this method.
           if (!errorRecoveryMode) {
             generalError(expectedKind);
             errorRecoveryMode = false;
           }
+          return false;
         }
       }
       return false;
@@ -473,16 +506,12 @@ public class Parser {
 
   private AstNode declarations () {
     var n = new Declarations();
-    //checkIn(FIRST_DECLARATIONS, SYNC_DECLARATIONS);
     n.addChild(packageDeclaration());
     n.addChild(lookahead.getKind() == Token.Kind.IMPORT ? importDeclarations() : EPSILON);
     n.addChild(lookahead.getKind() == Token.Kind.USE ? useDeclarations() : EPSILON);
     // To do: Could this be null or should we always assume there will be some
     // other declarations?
     n.addChild(otherDeclarations());
-    // Sync or follow? I think it must be follow, because that is the only
-    // thing that could possibly make sense once all declarations are done.
-    //checkOut(FOLLOW_DECLARATIONS);
     return n;
   }
 
@@ -491,31 +520,42 @@ public class Parser {
   // basically a direct 1:1 translation to a C++ module and namespace of the
   // same name.
 
+  // Need to pass in appropriate sync tokens.
+  // Need to pass in EOF
+  // FOLLOW set of packageDecl already has EOF, so not sure if it needs to be
+  // passed in and combined. Question: In what other cases does this occur?
+
   private AstNode packageDeclaration () {
-    System.out.println("GOT HERE2");
-    checkIn(FirstSet.PACKAGE_DECLARATION, FollowSet.PACKAGE_DECLARATION);
     AstNode n;
-    if (lookahead.getKind() == Token.Kind.PACKAGE) {
-      confirm(Token.Kind.PACKAGE);
+    if (match(Token.Kind.PACKAGE, Token.Kind.IDENTIFIER)) {
       n = new PackageDeclaration(previous);
-      n.addChild(packageName());
+      var combined = EnumSet.copyOf(FollowSet.PACKAGE_DECLARATION);
+      n.addChild(packageName(combined));
+      System.out.println("HERE");
       while (lookahead.getKind() == Token.Kind.PERIOD) {
         confirm(Token.Kind.PERIOD);
-        n.addChild(packageName());
+        n.addChild(packageName(combined));
       }
       match(Token.Kind.SEMICOLON);
     } else {
-      n = new ErrorNode(previous);
+      // Not sure it even makes sense to put a token in the error node
+      n = new ErrorNode(lookahead);
+      sync(FollowSet.PACKAGE_DECLARATION);
     }
-    checkOut(FollowSet.PACKAGE_DECLARATION);
     return n;
   }
 
-  private AstNode packageName () {
+  private AstNode packageName (Set<Token.Kind> syncSet) {
+    AstNode n;
     if (match(Token.Kind.IDENTIFIER, Token.Kind.SEMICOLON))
-      return new PackageName(previous);
-    else
-      return new ErrorNode(previous);
+      n = new PackageName(previous);
+    else {
+      n = new ErrorNode(lookahead);
+      var combined = EnumSet.of(Token.Kind.PERIOD, Token.Kind.SEMICOLON);
+      combined.addAll(syncSet);
+      sync(combined);
+    }
+    return n;
   }
 
   private static final Set<Token.Kind> FOLLOW_IMPORT_DECLARATIONS = EnumSet.of (
@@ -531,6 +571,7 @@ public class Parser {
   // only reach this through an immediately preceding import keyword.
 
   private AstNode importDeclarations () {
+    System.out.println("Import Decl");
     // No check-in required (optional production)
     var n = new ImportDeclarations();
     while (lookahead.getKind() == Token.Kind.IMPORT)
