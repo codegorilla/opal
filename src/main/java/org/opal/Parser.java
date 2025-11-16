@@ -82,8 +82,11 @@ public class Parser {
   // Represents epsilon productions
   private static final AstNode EPSILON = null;
 
-  // Stack for sync sets
-  private final LinkedList<Set<Token.Kind>> syncSetStack;
+  // Following sets are like FOLLOW sets, but are context aware, so they are
+  // subsets of FOLLOW sets.
+
+  // Stack for following sets
+  private final LinkedList<Set<Token.Kind>> followingSetStack;
 
   // Convenience aliases
   private static final Token.Kind ABSTRACT = Token.Kind.ABSTRACT;
@@ -205,7 +208,7 @@ public class Parser {
     builtinScope = new Scope(Scope.Kind.BUILT_IN);
     currentScope = builtinScope;
 
-    syncSetStack = new LinkedList<>();
+    followingSetStack = new LinkedList<>();
 
     var level = Level.INFO;
     Configurator.setRootLevel(level);
@@ -268,24 +271,19 @@ public class Parser {
 
   // *** EXPERIMENTAL ***
 
-  // Not really a follow set, more of a sync set? It might include the
-  // follow-set and some members of the first set. For example, consider
-  // expressions where the follow-set is just a semicolon - what if that
-  // semicolon is also missing?
-
   private void sync () {
     LOGGER.info("sync: synchronization started");
-    // Create combined sync set of all sync sets on stack
-    var combinedSyncSet = EnumSet.noneOf(Token.Kind.class);
-    for (var syncSet : syncSetStack)
-      combinedSyncSet.addAll(syncSet);
+    // Combine all following sets on stack into a sync set
+    var syncSet = EnumSet.noneOf(Token.Kind.class);
+    for (var followingSet : followingSetStack)
+      syncSet.addAll(followingSet);
     var kind = lookahead.getKind();
     // To do: Nested while inside if is probably redundant
-    if (!combinedSyncSet.contains(kind)) {
+    if (!syncSet.contains(kind)) {
       // Scan forward until we hit something in the sync set
       // To do: We probably don't need the EOF test anymore because it is
-      // already included in the sync set from translation unit's FOLLOW set.
-      while (!combinedSyncSet.contains(kind) && kind != Token.Kind.EOF) {
+      // already included in the translation unit's following set.
+      while (!syncSet.contains(kind) && kind != Token.Kind.EOF) {
         LOGGER.info("sync: skipped {}", lookahead);
         consume();
         kind = lookahead.getKind();
@@ -585,18 +583,18 @@ public class Parser {
     builtinScope.define(new PrimitiveTypeSymbol("void"));
   }
 
-  // Declarations sync set is empty so we don't need to define one, let alone
+  // Declarations following set is empty so we don't need to define one, let alone
   // push and pop it in the declarations production.
 
-  private AstNode translationUnit (EnumSet<Token.Kind> syncSet) {
-    syncSetStack.push(syncSet);
+  private AstNode translationUnit (EnumSet<Token.Kind> followingSet) {
+    followingSetStack.push(followingSet);
     var n = new TranslationUnit();
     n.addChild(declarations());
     //var scope = new Scope(Scope.Kind.GLOBAL);
     //scope.setEnclosingScope(currentScope);
     //currentScope = scope;
     //n.setScope(currentScope);
-    syncSetStack.pop();
+    followingSetStack.pop();
     return n;
   }
 
@@ -636,8 +634,8 @@ public class Parser {
   // basically a direct 1:1 translation to a C++ module and namespace of the
   // same name.
 
-  private AstNode packageDeclaration (EnumSet<Token.Kind> syncSet) {
-    syncSetStack.push(syncSet);
+  private AstNode packageDeclaration (EnumSet<Token.Kind> followingSet) {
+    followingSetStack.push(followingSet);
     AstNode n;
     if (match(PACKAGE, Token.Kind.IDENTIFIER)) {
       n = new PackageDeclaration(previous);
@@ -653,12 +651,12 @@ public class Parser {
       n = new ErrorNode(lookahead);
       sync();
     }
-    syncSetStack.pop();
+    followingSetStack.pop();
     return n;
   }
 
-  private AstNode packageName (EnumSet<Token.Kind> syncSet) {
-    syncSetStack.push(syncSet);
+  private AstNode packageName (EnumSet<Token.Kind> followingSet) {
+    followingSetStack.push(followingSet);
     AstNode n;
     if (match(Token.Kind.IDENTIFIER, SEMICOLON))
       n = new PackageName(previous);
@@ -666,17 +664,17 @@ public class Parser {
       n = new ErrorNode(lookahead);
       sync();
     }
-    syncSetStack.pop();
+    followingSetStack.pop();
     return n;
   }
 
-  private AstNode importDeclarations (EnumSet<Token.Kind> syncSet) {
-    syncSetStack.push(syncSet);
+  private AstNode importDeclarations (EnumSet<Token.Kind> followingSet) {
+    followingSetStack.push(followingSet);
     var n = new ImportDeclarations();
     var ss = EnumSet.of(IMPORT);
     while (lookahead.getKind() == IMPORT)
       n.addChild(importDeclaration(ss));
-    syncSetStack.pop();
+    followingSetStack.pop();
     return n;
   }
 
@@ -688,8 +686,8 @@ public class Parser {
   // easiest implementation and the others hold no advantages for our
   // particular use case.
 
-  private AstNode importDeclaration (EnumSet<Token.Kind> syncSet) {
-    syncSetStack.push(syncSet);
+  private AstNode importDeclaration (EnumSet<Token.Kind> followingSet) {
+    followingSetStack.push(followingSet);
     confirm(IMPORT);
     var n = new ImportDeclaration(previous);
     var ss1 = EnumSet.of(SEMICOLON, AS);
@@ -697,7 +695,7 @@ public class Parser {
     var ss2 = EnumSet.of(SEMICOLON);
     n.addChild(lookahead.getKind() == AS ? importAsClause(ss2) : EPSILON);
     match(SEMICOLON);
-    syncSetStack.pop();
+    followingSetStack.pop();
     return n;
   }
 
@@ -709,8 +707,8 @@ public class Parser {
   // To do: I don't think we want to do an identifier check here. This is
   // basically just an aggregation production.
 
-  private AstNode importQualifiedName (EnumSet<Token.Kind> syncSet) {
-    syncSetStack.push(syncSet);
+  private AstNode importQualifiedName (EnumSet<Token.Kind> followingSet) {
+    followingSetStack.push(followingSet);
     AstNode n;
     if (lookahead.getKind() == Token.Kind.IDENTIFIER) {
       n = new ImportQualifiedName();
@@ -724,12 +722,12 @@ public class Parser {
       n = new ErrorNode(previous);
       sync();
     }
-    syncSetStack.pop();
+    followingSetStack.pop();
     return n;
   }
 
-  private AstNode importName (EnumSet<Token.Kind> syncSet) {
-    syncSetStack.push(syncSet);
+  private AstNode importName (EnumSet<Token.Kind> followingSet) {
+    followingSetStack.push(followingSet);
     AstNode n;
     if (match(Token.Kind.IDENTIFIER, EnumSet.of(AS, PERIOD, SEMICOLON)))
       n = new ImportName(previous);
@@ -737,15 +735,15 @@ public class Parser {
       n = new ErrorNode(lookahead);
       sync();
     }
-    syncSetStack.pop();
+    followingSetStack.pop();
     return n;
   }
 
-  private AstNode importAsClause (EnumSet<Token.Kind> syncSet) {
-    syncSetStack.push(syncSet);
+  private AstNode importAsClause (EnumSet<Token.Kind> followingSet) {
+    followingSetStack.push(followingSet);
     confirm(AS);
     var n = importAsName();
-    syncSetStack.pop();
+    followingSetStack.pop();
     return n;
   }
 
@@ -760,30 +758,30 @@ public class Parser {
     return n;
   }
 
-  private AstNode useDeclarations (EnumSet<Token.Kind> syncSet) {
-    syncSetStack.push(syncSet);
+  private AstNode useDeclarations (EnumSet<Token.Kind> followingSet) {
+    followingSetStack.push(followingSet);
     var n = new UseDeclarations();
     var ss = EnumSet.of(USE);
     while (lookahead.getKind() == USE)
       n.addChild(useDeclaration(ss));
-    syncSetStack.pop();
+    followingSetStack.pop();
     return n;
   }
 
 
-  private AstNode useDeclaration (EnumSet<Token.Kind> syncSet) {
-    syncSetStack.push(syncSet);
+  private AstNode useDeclaration (EnumSet<Token.Kind> followingSet) {
+    followingSetStack.push(followingSet);
     confirm(USE);
     var n = new UseDeclaration(previous);
     n.addChild(useQualifiedName(FollowingSet.SEMICOLON));
     // Put if here and re-sync as required
     match(SEMICOLON);
-    syncSetStack.pop();
+    followingSetStack.pop();
     return n;
   }
 
-  private AstNode useQualifiedName (EnumSet<Token.Kind> syncSet) {
-    syncSetStack.push(syncSet);
+  private AstNode useQualifiedName (EnumSet<Token.Kind> followingSet) {
+    followingSetStack.push(followingSet);
     AstNode n = new UseQualifiedName();
     n.addChild(useName(MatchSet.PERIOD));
     match(PERIOD); // Needs match set?
@@ -791,7 +789,7 @@ public class Parser {
     // jumping into the next method since we know the next thing should be '*',
     // '{', or ID. See [Par12] pg. 164.
     n.addChild(useQualifiedNameTail());
-    syncSetStack.pop();
+    followingSetStack.pop();
     return n;
   }
 

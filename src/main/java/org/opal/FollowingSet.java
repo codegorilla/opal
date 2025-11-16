@@ -2,6 +2,15 @@ package org.opal;
 
 import java.util.EnumSet;
 
+// To do: We don't necessarily want FOLLOW sets, but rather following sets
+// because what may follow a production terminal depends on context.
+
+// These are really FOLLOWING sets, i.e subsets of FOLLOW sets, rather than
+// actual FOLLOW sets.
+
+// According to online sources, EOF should be in the FOLLOW set of the start
+// symbol. It may be in the follow sets of other non-terminals.
+
 public class FollowingSet {
 
   public static final EnumSet<Token.Kind> PERIOD =
