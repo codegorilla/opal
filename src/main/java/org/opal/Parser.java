@@ -618,12 +618,12 @@ public class Parser {
 
   private AstNode declarations () {
     var n = new Declarations();
-    var ssp = EnumSet.of(PRIVATE, VAL, VAR, DEF, CLASS, USE, IMPORT);
-    var ssi = EnumSet.of(PRIVATE, VAL, VAR, DEF, CLASS, USE);
-    var ssu = EnumSet.of(PRIVATE, VAL, VAR, DEF, CLASS);
-    n.addChild(packageDeclaration(ssp));
-    n.addChild(lookahead.getKind() == IMPORT ? importDeclarations(ssi) : EPSILON);
-    n.addChild(lookahead.getKind() == USE ? useDeclarations(ssu) : EPSILON);
+    var fsp = EnumSet.of(PRIVATE, VAL, VAR, DEF, CLASS, USE, IMPORT);
+    var fsi = EnumSet.of(PRIVATE, VAL, VAR, DEF, CLASS, USE);
+    var fsu = EnumSet.of(PRIVATE, VAL, VAR, DEF, CLASS);
+    n.addChild(packageDeclaration(fsp));
+    n.addChild(lookahead.getKind() == IMPORT ? importDeclarations(fsi) : EPSILON);
+    n.addChild(lookahead.getKind() == USE ? useDeclarations(fsu) : EPSILON);
     if (FirstSet.OTHER_DECLARATIONS.contains(lookahead.getKind()))
       n.addChild(otherDeclarations());
     return n;
@@ -774,8 +774,9 @@ public class Parser {
     confirm(USE);
     var n = new UseDeclaration(previous);
     n.addChild(useQualifiedName(FollowingSet.SEMICOLON));
-    // Put if here and re-sync as required
-    match(SEMICOLON);
+    var ms = EnumSet.of(PRIVATE, VAL, VAR, DEF, CLASS, USE);
+    if (!match(SEMICOLON, ms))
+      sync();
     followingSetStack.pop();
     return n;
   }
