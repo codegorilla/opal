@@ -768,7 +768,6 @@ public class Parser {
     return n;
   }
 
-
   private AstNode useDeclaration (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
     confirm(USE);
@@ -781,15 +780,27 @@ public class Parser {
     return n;
   }
 
+  // Match sets are used in two different ways, depending on whether or not the
+  // token needs to be captured in an AstNode or not. If so, it is passed into
+  // a "terminal wrapper" method, where it gets used in a match method call.
+  // Otherwise, it is used directly in a match method call.
+
+  // To do: Change "match set" to "follower set"?
+
   private AstNode useQualifiedName (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
     AstNode n = new UseQualifiedName();
-    n.addChild(useName(MatchSet.PERIOD));
-    match(PERIOD); // Needs match set?
+    var p = useName(FollowerSet.PERIOD);
+    n.addChild(p);
+    match(PERIOD, FollowerSet.IDENTIFIER);
     // To do: We should be able to do single-token deletion here prior to
     // jumping into the next method since we know the next thing should be '*',
-    // '{', or ID. See [Par12] pg. 164.
-    n.addChild(useQualifiedNameTail());
+    // '{', or ID. See [Par12] pg. 164. We cannot do single-token insertion
+    // however, because it would depending on knowing which alternative is
+    // being taken, since some alternatives might have the same follower
+    // tokens. (It might actually be possible in some limited situations, but
+    // would be too much trouble to implement).
+    p.addChild(useQualifiedNameTail());
     followingSetStack.pop();
     return n;
   }
@@ -815,6 +826,7 @@ public class Parser {
     return n;
   }
 
+  @Terminal
   private AstNode useNameWildcard () {
     confirm(ASTERISK);
     var n = new UseNameWildcard(previous);
@@ -824,16 +836,25 @@ public class Parser {
   private AstNode useNameGroup () {
     confirm(L_BRACE);
     var n = new UseNameGroup(previous);
-    n.addChild(useName(MatchSet.COMMA_R_BRACE));
+    n.addChild(useName(FollowerSet.COMMA_R_BRACE));
     while (lookahead.getKind() == COMMA) {
       confirm(COMMA);
-      n.addChild(useName(MatchSet.COMMA_R_BRACE));
+      n.addChild(useName(FollowerSet.COMMA_R_BRACE));
     }
     // To do: Do we check and sync on punctuation?
     match(R_BRACE);
     return n;
   }
 
+  // The @Terminal annotation doesn't do anything, but serves as an indicator
+  // that this production wraps a terminal. The literature on recursive descent
+  // parsing usually states that terminals do not need their own productions.
+  // However, this doesn't take into account the need for AST construction and
+  // especially error recovery code. Once those are added, wrapping certain
+  // terminals (namely those that produce AST nodes) with a terminal production
+  // helps to reduce code duplication.
+
+  @Terminal
   private AstNode useName () {
     AstNode n;
     if (match(Token.Kind.IDENTIFIER))
@@ -845,6 +866,7 @@ public class Parser {
     return n;
   }
 
+  @Terminal
   private AstNode useName (EnumSet<Token.Kind> matchSet) {
     AstNode n;
     if (match(Token.Kind.IDENTIFIER, matchSet))

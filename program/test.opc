@@ -1,7 +1,10 @@
 
 package main;
 
-use math.cos;
+use opal.lang.*;
+
+//use opal.lang.{ Math, Util };
+//use opal.lang.*;
 
 //import std.math. .+link as;
 

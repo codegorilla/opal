@@ -11,6 +11,7 @@ public class Pass1 extends BaseVisitor {
   }
 
   public void process () {
+    System.out.println("---");
     visit(root);
   }
 
@@ -29,7 +30,7 @@ public class Pass1 extends BaseVisitor {
     var spaces = " ".repeat(INDENT_SPACES * depth.get());
     var className = node.getClass().getSimpleName();
     var token = node.getToken();
-    System.out.println( spaces + "- " + className + (token != null ? ": " + token : ""));
+    System.out.println(spaces + "- " + className + (token != null ? ": " + token : ""));
   }
 
 }
