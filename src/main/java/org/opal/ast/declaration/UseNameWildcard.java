@@ -5,9 +5,9 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class UseAllNames extends AstNode {
+public class UseNameWildcard extends AstNode {
 
-  public UseAllNames (Token token) {
+  public UseNameWildcard (Token token) {
     super(token);
   }
 

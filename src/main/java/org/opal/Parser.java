@@ -775,79 +775,85 @@ public class Parser {
     syncSetStack.push(syncSet);
     confirm(USE);
     var n = new UseDeclaration(previous);
-    var ss = EnumSet.of(SEMICOLON);
-    n.addChild(useQualifiedName(ss));
-    if (!nodeStack.isEmpty()) {
-      n.addChild(useOneName());
-    } else {
-      var kind = lookahead.getKind();
-      if (kind == L_BRACE)
-        n.addChild(useSomeNames());
-      else if (kind == ASTERISK)
-        n.addChild(useAllNames());
-    }
+    n.addChild(useQualifiedName(FollowingSet.SEMICOLON));
+    // Put if here and re-sync as required
     match(SEMICOLON);
     syncSetStack.pop();
     return n;
   }
 
-  // Qualified names are very similar to aggregation productions
-
-  // Use qualified names are slightly different from import qualified names
-  // because they must have at least one period in the name.
-
   private AstNode useQualifiedName (EnumSet<Token.Kind> syncSet) {
     syncSetStack.push(syncSet);
     AstNode n = new UseQualifiedName();
-    var ss = EnumSet.of(PERIOD);
-    n.addChild(useName(ss));
-    match(PERIOD);
-    while (lookahead.getKind() == Token.Kind.IDENTIFIER) {
-      var save = useName(ss);
-      if (lookahead.getKind() != PERIOD) {
-        nodeStack.push(save);
-        return n;
-      }
-      n.addChild(save);
-      match(PERIOD);
-    }
+    n.addChild(useName(MatchSet.PERIOD));
+    match(PERIOD); // Needs match set?
+    // To do: We should be able to do single-token deletion here prior to
+    // jumping into the next method since we know the next thing should be '*',
+    // '{', or ID. See [Par12] pg. 164.
+    n.addChild(useQualifiedNameTail());
     syncSetStack.pop();
     return n;
   }
 
-  private AstNode useName (EnumSet<Token.Kind> syncSet) {
-    var n = new UseName(lookahead);
-    match(Token.Kind.IDENTIFIER);
-    return n;
-  }
-
-  private AstNode useOneName () {
-    var n = new UseOneName();
-    n.addChild(nodeStack.pop());
-    return n;
-  }
-
-  private AstNode useSomeNames () {
-    var n = new UseSomeNames(lookahead);
-    match(Token.Kind.L_BRACE);
-    n.addChild(useSomeName());
-    while (lookahead.getKind() == Token.Kind.COMMA) {
-      match(Token.Kind.COMMA);
-      n.addChild(useSomeName());
+  private AstNode useQualifiedNameTail () {
+    AstNode n;
+    var kind = lookahead.getKind();
+    if (kind == ASTERISK)
+      n = useNameWildcard();
+    else if (kind == L_BRACE)
+      n = useNameGroup();
+    else if (kind == Token.Kind.IDENTIFIER) {
+      n = useName();
+      if (lookahead.getKind() == PERIOD) {
+        confirm(PERIOD);
+        n.addChild(useQualifiedNameTail());
+      }
+    } else {
+      // Maybe print error sync message?
+      n = new ErrorNode(lookahead);
+      sync();
     }
-    match(Token.Kind.R_BRACE);
     return n;
   }
 
-  private AstNode useSomeName () {
-    var n = new UseSomeName(lookahead);
-    match(Token.Kind.IDENTIFIER);
+  private AstNode useNameWildcard () {
+    confirm(ASTERISK);
+    var n = new UseNameWildcard(previous);
     return n;
   }
 
-  private AstNode useAllNames () {
-    var n = new UseAllNames(lookahead);
-    match(Token.Kind.ASTERISK);
+  private AstNode useNameGroup () {
+    confirm(L_BRACE);
+    var n = new UseNameGroup(previous);
+    n.addChild(useName(MatchSet.COMMA_R_BRACE));
+    while (lookahead.getKind() == COMMA) {
+      confirm(COMMA);
+      n.addChild(useName(MatchSet.COMMA_R_BRACE));
+    }
+    // To do: Do we check and sync on punctuation?
+    match(R_BRACE);
+    return n;
+  }
+
+  private AstNode useName () {
+    AstNode n;
+    if (match(Token.Kind.IDENTIFIER))
+      n = new UseName(previous);
+    else {
+      n = new ErrorNode(lookahead);
+      sync();
+    }
+    return n;
+  }
+
+  private AstNode useName (EnumSet<Token.Kind> matchSet) {
+    AstNode n;
+    if (match(Token.Kind.IDENTIFIER, matchSet))
+      n = new UseName(previous);
+    else {
+      n = new ErrorNode(lookahead);
+      sync();
+    }
     return n;
   }
 
