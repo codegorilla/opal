@@ -780,12 +780,11 @@ public class Parser {
     return n;
   }
 
-  // Match sets are used in two different ways, depending on whether or not the
-  // token needs to be captured in an AstNode or not. If so, it is passed into
-  // a "terminal wrapper" method, where it gets used in a match method call.
-  // Otherwise, it is used directly in a match method call.
-
-  // To do: Change "match set" to "follower set"?
+  // Follower sets are used in two different ways, depending on whether or not
+  // the token needs to be captured in an AST node or not. If so, it is passed
+  // into a "terminal" production method, where it gets used in a match method
+  // call. Otherwise, it is used directly in a match method call within the
+  // non-terminal production method.
 
   private AstNode useQualifiedName (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
