@@ -14,6 +14,8 @@ import org.opal.ast.type.*;
 
 public class Pass1 extends BaseVisitor {
 
+  private final int indentSpaces = 2;
+
   private static final Logger LOGGER = LogManager.getLogger();
 
   private final Counter depth = new Counter();
@@ -26,46 +28,42 @@ public class Pass1 extends BaseVisitor {
   }
 
   public void process () {
-    root.accept(this);
+    visit(root);
+  }
+
+  public void visit (AstNode node) {
+//    nodePath.push(node);
+    printNode(node);
+    depth.increment();
+    node.accept(this);
+    depth.decrement();
+//    nodePath.pop();
+  }
+
+  public void printNode (AstNode node) {
+    var spaces = " ".repeat(indentSpaces * depth.get());
+    System.out.println( spaces + "- " + node.getClass().getSimpleName() + ": " + node.getToken());
   }
 
   public void visit (TranslationUnit node) {
-    LOGGER.trace("TranslationUnit");
-    System.out.print(" ".repeat(2*depth.get()));
-    System.out.println(node.getClass().getSimpleName() + " " + node.getToken());
-    var child = node.declarations();
-    child.accept(this);
+    visit(node.declarations());
   }
 
   // Declarations
 
   public void visit (Declarations node) {
-    LOGGER.trace("Declarations");
-    depth.increment();
-    System.out.print(" ".repeat(2*depth.get()));
-    System.out.println(node.getClass().getSimpleName() + " " + node.getToken());
     var children = node.getChildren();
     for (var child : children) {
-      child.accept(this);
+      if (child != null)
+        visit(child);
     }
-    depth.decrement();
   }
 
   public void visit (PackageDeclaration node) {
-    LOGGER.trace("PackageDeclaration");
-    depth.increment();
-    System.out.print(" ".repeat(2*depth.get()));
-    System.out.println(node.getClass().getSimpleName() + " " + node.getToken());
-    node.getChild(0).accept(this);
-    depth.decrement();
+    visit(node.getChild(0));
   }
 
   public void visit (PackageName node) {
-    LOGGER.trace("PackageName");
-    depth.increment();
-    System.out.print(" ".repeat(2*depth.get()));
-    System.out.println(node.getClass().getSimpleName() + " " + node.getToken());
-    depth.decrement();
   }
 
   public void visit (ImportDeclaration node) {
