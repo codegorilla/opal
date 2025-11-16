@@ -7,8 +7,8 @@ import org.opal.ast.AstNode;
 
 public class UseQualifiedName extends AstNode {
 
-  public UseQualifiedName (Token token) {
-    super(token);
+  public UseQualifiedName () {
+    super();
   }
 
   @Override
@@ -24,5 +24,5 @@ public class UseQualifiedName extends AstNode {
   public Iterable<AstNode> names () {
     return getChildren();
   }
-  
+
 }

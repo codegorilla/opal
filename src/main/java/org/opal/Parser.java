@@ -692,8 +692,10 @@ public class Parser {
     syncSetStack.push(syncSet);
     confirm(IMPORT);
     var n = new ImportDeclaration(previous);
-    n.addChild(importQualifiedName(EnumSet.of(AS, SEMICOLON)));
-    n.addChild(lookahead.getKind() == AS ? importAsClause(EnumSet.of(SEMICOLON)) : EPSILON);
+    var ss1 = EnumSet.of(SEMICOLON, AS);
+    n.addChild(importQualifiedName(ss1));
+    var ss2 = EnumSet.of(SEMICOLON);
+    n.addChild(lookahead.getKind() == AS ? importAsClause(ss2) : EPSILON);
     match(SEMICOLON);
     syncSetStack.pop();
     return n;
@@ -701,6 +703,11 @@ public class Parser {
 
   // This might be a candidate for error recovery of epsilon production.
   // Input "import opal-lang;" doesn't provide a great error message.
+
+  // Qualified names are very similar to aggregation productions
+
+  // To do: I don't think we want to do an identifier check here. This is
+  // basically just an aggregation production.
 
   private AstNode importQualifiedName (EnumSet<Token.Kind> syncSet) {
     syncSetStack.push(syncSet);
@@ -747,7 +754,7 @@ public class Parser {
     if (match(Token.Kind.IDENTIFIER, SEMICOLON))
       n = new ImportAsName(previous);
     else {
-      n = new ErrorNode(previous);
+      n = new ErrorNode(lookahead);
       sync();
     }
     return n;
@@ -768,8 +775,8 @@ public class Parser {
     syncSetStack.push(syncSet);
     confirm(USE);
     var n = new UseDeclaration(previous);
-    // LEFT OFF HERE -- Need to create syncSet to pass in
-    n.addChild(useQualifiedName());
+    var ss = EnumSet.of(SEMICOLON);
+    n.addChild(useQualifiedName(ss));
     if (!nodeStack.isEmpty()) {
       n.addChild(useOneName());
     } else {
@@ -784,12 +791,19 @@ public class Parser {
     return n;
   }
 
-  private AstNode useQualifiedName () {
-    AstNode n = new UseQualifiedName(lookahead);
-    n.addChild(useName());
+  // Qualified names are very similar to aggregation productions
+
+  // Use qualified names are slightly different from import qualified names
+  // because they must have at least one period in the name.
+
+  private AstNode useQualifiedName (EnumSet<Token.Kind> syncSet) {
+    syncSetStack.push(syncSet);
+    AstNode n = new UseQualifiedName();
+    var ss = EnumSet.of(PERIOD);
+    n.addChild(useName(ss));
     match(PERIOD);
     while (lookahead.getKind() == Token.Kind.IDENTIFIER) {
-      var save = useName();
+      var save = useName(ss);
       if (lookahead.getKind() != PERIOD) {
         nodeStack.push(save);
         return n;
@@ -797,10 +811,11 @@ public class Parser {
       n.addChild(save);
       match(PERIOD);
     }
+    syncSetStack.pop();
     return n;
   }
 
-  private AstNode useName () {
+  private AstNode useName (EnumSet<Token.Kind> syncSet) {
     var n = new UseName(lookahead);
     match(Token.Kind.IDENTIFIER);
     return n;

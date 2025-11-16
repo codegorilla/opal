@@ -1,7 +1,9 @@
 
 package main;
 
-import std.math. .+link as;
+use math.cos;
+
+//import std.math. .+link as;
 
 //package 5 8 5 improt tom.main+;
 
