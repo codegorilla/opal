@@ -621,6 +621,7 @@ public class Parser {
   private AstNode declarations () {
     var n = new Declarations();
     n.addChild(packageDeclaration(EnumSet.of(IMPORT, USE, PRIVATE, VAL, VAR, DEF, CLASS)));
+    System.out.println("HERE1");
     if (lookahead.getKind() == IMPORT)
       n.addChild(importDeclarations(EnumSet.of(USE, PRIVATE, VAL, VAR, DEF, CLASS)));
     else
@@ -639,6 +640,7 @@ public class Parser {
     ) {
       n.addChild(otherDeclarations());
     }
+    System.out.println("HERE2");
     return n;
   }
 
@@ -654,24 +656,16 @@ public class Parser {
     AstNode n;
     if (match(PACKAGE, Token.Kind.IDENTIFIER)) {
       n = new PackageDeclaration(previous);
-      if (match(Token.Kind.IDENTIFIER, FollowerSet.SEMICOLON))
+      if (match(Token.Kind.IDENTIFIER, FollowerSet.SEMICOLON)) {
         n.addChild(new PackageName(previous));
-      else {
+        if (!match(SEMICOLON, EnumSet.of(IMPORT, USE, PRIVATE, VAL, VAR, DEF, CLASS))) {
+          System.out.println("HERE0");
+          sync();
+        }
+      } else {
         n.addChild(new ErrorNode(lookahead));
         sync();
       }
-      while (lookahead.getKind() == PERIOD) {
-        confirm(PERIOD);
-        if (match(Token.Kind.IDENTIFIER, FollowerSet.SEMICOLON))
-          n.addChild(new PackageName(previous));
-        else {
-          n.addChild(new ErrorNode(lookahead));
-          sync();
-        }
-      }
-      // Add follower set?
-      System.out.println(" GOT HERE BEFORE SEMI *********");
-      match(SEMICOLON);
     } else {
       n = new ErrorNode(lookahead);
       sync();
