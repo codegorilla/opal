@@ -1,5 +1,7 @@
 
-package main;
+// Fset = $ IMPORT USE, etc.
+
+package +;
 
 use opal.lang.*;
 

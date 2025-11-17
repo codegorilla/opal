@@ -329,6 +329,7 @@ public class Parser {
       return true;
     }
     else {
+      LOGGER.info("Match: Found " + lookahead);
       if (lookahead.getKind() != Token.Kind.EOF) {
         // Perform single-token deletion if possible
         var peek = input.get(position.get() + 1);
@@ -379,6 +380,7 @@ public class Parser {
       return true;
     }
     else {
+      LOGGER.info("Match: Found " + lookahead);
       if (lookahead.getKind() != Token.Kind.EOF) {
         // Perform single-token deletion if possible
         var peek = input.get(position.get() + 1);
@@ -618,14 +620,25 @@ public class Parser {
 
   private AstNode declarations () {
     var n = new Declarations();
-    var fsp = EnumSet.of(PRIVATE, VAL, VAR, DEF, CLASS, USE, IMPORT);
-    var fsi = EnumSet.of(PRIVATE, VAL, VAR, DEF, CLASS, USE);
-    var fsu = EnumSet.of(PRIVATE, VAL, VAR, DEF, CLASS);
-    n.addChild(packageDeclaration(fsp));
-    n.addChild(lookahead.getKind() == IMPORT ? importDeclarations(fsi) : EPSILON);
-    n.addChild(lookahead.getKind() == USE ? useDeclarations(fsu) : EPSILON);
-    if (FirstSet.OTHER_DECLARATIONS.contains(lookahead.getKind()))
+    n.addChild(packageDeclaration(EnumSet.of(IMPORT, USE, PRIVATE, VAL, VAR, DEF, CLASS)));
+    if (lookahead.getKind() == IMPORT)
+      n.addChild(importDeclarations(EnumSet.of(USE, PRIVATE, VAL, VAR, DEF, CLASS)));
+    else
+      n.addChild(EPSILON);
+    if (lookahead.getKind() == USE)
+      n.addChild(useDeclarations(EnumSet.of(PRIVATE, VAL, VAR, DEF, CLASS)));
+    else
+      n.addChild(EPSILON);
+    var kind = lookahead.getKind();
+    if (
+      kind == PRIVATE ||
+      kind == CLASS   ||
+      kind == DEF     ||
+      kind == VAL     ||
+      kind == VAR
+    ) {
       n.addChild(otherDeclarations());
+    }
     return n;
   }
 
@@ -634,20 +647,32 @@ public class Parser {
   // basically a direct 1:1 translation to a C++ module and namespace of the
   // same name.
 
+  // To do: Support qualified names for packages
+
   private AstNode packageDeclaration (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
     AstNode n;
     if (match(PACKAGE, Token.Kind.IDENTIFIER)) {
       n = new PackageDeclaration(previous);
-      var ss = EnumSet.of(PERIOD, SEMICOLON);
-      n.addChild(packageName(ss));
+      if (match(Token.Kind.IDENTIFIER, FollowerSet.SEMICOLON))
+        n.addChild(new PackageName(previous));
+      else {
+        n.addChild(new ErrorNode(lookahead));
+        sync();
+      }
       while (lookahead.getKind() == PERIOD) {
         confirm(PERIOD);
-        n.addChild(packageName(ss));
+        if (match(Token.Kind.IDENTIFIER, FollowerSet.SEMICOLON))
+          n.addChild(new PackageName(previous));
+        else {
+          n.addChild(new ErrorNode(lookahead));
+          sync();
+        }
       }
+      // Add follower set?
+      System.out.println(" GOT HERE BEFORE SEMI *********");
       match(SEMICOLON);
     } else {
-      // Not sure it even makes sense to put a token in the error node
       n = new ErrorNode(lookahead);
       sync();
     }
@@ -655,6 +680,7 @@ public class Parser {
     return n;
   }
 
+  /*
   private AstNode packageName (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
     AstNode n;
@@ -667,6 +693,7 @@ public class Parser {
     followingSetStack.pop();
     return n;
   }
+  */
 
   private AstNode importDeclarations (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
@@ -761,9 +788,8 @@ public class Parser {
   private AstNode useDeclarations (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
     var n = new UseDeclarations();
-    var ss = EnumSet.of(USE);
     while (lookahead.getKind() == USE)
-      n.addChild(useDeclaration(ss));
+      n.addChild(useDeclaration(FollowingSet.USE));
     followingSetStack.pop();
     return n;
   }
@@ -773,8 +799,7 @@ public class Parser {
     confirm(USE);
     var n = new UseDeclaration(previous);
     n.addChild(useQualifiedName(FollowingSet.SEMICOLON));
-    var ms = EnumSet.of(PRIVATE, VAL, VAR, DEF, CLASS, USE);
-    if (!match(SEMICOLON, ms))
+    if (!match(SEMICOLON, FollowerSet.OTHER_DECLARATION_USE))
       sync();
     followingSetStack.pop();
     return n;

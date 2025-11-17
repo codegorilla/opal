@@ -19,4 +19,7 @@ public class FollowingSet {
   public static final EnumSet<Token.Kind> SEMICOLON =
     EnumSet.of(Token.Kind.SEMICOLON);
 
+  public static final EnumSet<Token.Kind> USE =
+    EnumSet.of(Token.Kind.PERIOD);
+
 }

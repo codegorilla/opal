@@ -25,4 +25,9 @@ public class FollowerSet {
   public static final EnumSet<Token.Kind> PERIOD_SEMICOLON =
     EnumSet.of(Token.Kind.PERIOD, Token.Kind.SEMICOLON);
 
+  public static final EnumSet<Token.Kind> SEMICOLON =
+    EnumSet.of(Token.Kind.SEMICOLON);
+
+  public static final EnumSet<Token.Kind> OTHER_DECLARATION_USE =
+    EnumSet.of(Token.Kind.PRIVATE, Token.Kind.VAL, Token.Kind.VAR, Token.Kind.DEF, Token.Kind.CLASS, Token.Kind.USE);
 }
