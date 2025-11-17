@@ -1,7 +1,7 @@
 
 // Fset = $ IMPORT USE, etc.
 
-package math
+package +
 
 fuse ; opal.lang.*;
 

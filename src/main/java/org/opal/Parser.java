@@ -340,6 +340,7 @@ public class Parser {
             errorRecoveryMode = false;
           }
           consume();
+          LOGGER.info("Match: Found " + lookahead);
           consume();
           return true;
         }
@@ -390,7 +391,9 @@ public class Parser {
             extraneousError(expectedKind);
             errorRecoveryMode = false;
           }
+          LOGGER.info("Match: Deleted " + lookahead);
           consume();
+          LOGGER.info("Match: Matched " + lookahead);
           consume();
           return true;
         }
@@ -480,6 +483,10 @@ public class Parser {
     definePrimitiveTypes();
     LOGGER.info("*** Parsing started... ***");
     var node = translationUnit(EnumSet.of(Token.Kind.EOF));
+    // We need to check for EOF at the end to make sure there are no garbage
+    // characters left over at end of parsing. We might want to create a
+    // special match method for EOF so we can print a user-friendly message.
+    match(Token.Kind.EOF);
     LOGGER.info("*** Parsing complete! ***");
     // Inspect builtin scope
 //    var s = builtinScope.getSymbolTable().getData;
@@ -592,6 +599,7 @@ public class Parser {
     followingSetStack.push(followingSet);
     var n = new TranslationUnit();
     n.addChild(declarations());
+    System.out.println("HERE3");
     //var scope = new Scope(Scope.Kind.GLOBAL);
     //scope.setEnclosingScope(currentScope);
     //currentScope = scope;
@@ -621,7 +629,6 @@ public class Parser {
   private AstNode declarations () {
     var n = new Declarations();
     n.addChild(packageDeclaration(EnumSet.of(IMPORT, USE, PRIVATE, VAL, VAR, DEF, CLASS)));
-    System.out.println("HERE1");
     if (lookahead.getKind() == IMPORT)
       n.addChild(importDeclarations(EnumSet.of(USE, PRIVATE, VAL, VAR, DEF, CLASS)));
     else
@@ -640,7 +647,6 @@ public class Parser {
     ) {
       n.addChild(otherDeclarations());
     }
-    System.out.println("HERE2");
     return n;
   }
 
@@ -658,10 +664,8 @@ public class Parser {
       n = new PackageDeclaration(previous);
       if (match(Token.Kind.IDENTIFIER, FollowerSet.SEMICOLON)) {
         n.addChild(new PackageName(previous));
-        if (!match(SEMICOLON, EnumSet.of(IMPORT, USE, PRIVATE, VAL, VAR, DEF, CLASS))) {
-          System.out.println("HERE0");
+        if (!match(SEMICOLON, EnumSet.of(IMPORT, USE, PRIVATE, VAL, VAR, DEF, CLASS)))
           sync();
-        }
       } else {
         n.addChild(new ErrorNode(lookahead));
         sync();
@@ -675,8 +679,8 @@ public class Parser {
   }
 
   /*
-  private AstNode packageName (EnumSet<Token.Kind> followingSet) {
-    followingSetStack.push(followingSet);
+  @Terminal
+  private AstNode packageName () {
     AstNode n;
     if (match(Token.Kind.IDENTIFIER, SEMICOLON))
       n = new PackageName(previous);
@@ -684,10 +688,10 @@ public class Parser {
       n = new ErrorNode(lookahead);
       sync();
     }
-    followingSetStack.pop();
     return n;
   }
-  */
+
+   */
 
   private AstNode importDeclarations (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
