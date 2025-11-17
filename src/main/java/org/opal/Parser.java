@@ -217,41 +217,6 @@ public class Parser {
 
   }
 
-  // The check-in and check-out methods are based on panic-mode error recovery
-  // discussed in [Wir76], [Top82], [Aho07], and others (see above).
-
-  private void checkIn (Set<Token.Kind> firstSet, Set<Token.Kind> followSet) {
-    var kind = lookahead.getKind();
-    if (!firstSet.contains(kind)) {
-      if (!errorRecoveryMode) {
-        checkError(firstSet);
-        errorRecoveryMode = false;
-      }
-      // Scan forward until we hit something in the FIRST or FOLLOW sets
-      while (!firstSet.contains(kind) && !followSet.contains(kind) && kind != Token.Kind.EOF) {
-        LOGGER.info("Skipping {}", lookahead);
-        consume();
-        kind = lookahead.getKind();
-      }
-    }
-  }
-
-  private void checkOut (Set<Token.Kind> followSet) {
-    var kind = lookahead.getKind();
-    if (!followSet.contains(kind)) {
-      if (!errorRecoveryMode) {
-        checkError(followSet);
-        errorRecoveryMode = false;
-      }
-      // Scan forward until we hit something in the FOLLOW set
-      while (!followSet.contains(kind) && kind != Token.Kind.EOF) {
-        LOGGER.info("Skipping {}", lookahead);
-        consume();
-        kind = lookahead.getKind();
-      }
-    }
-  }
-
   private void checkError (Set<Token.Kind> expectedKinds) {
     var expectedKindsString = expectedKinds.stream()
       .map(kind -> reverseKeywordLookup.getOrDefault(kind, friendlyKind(kind)))
@@ -273,7 +238,31 @@ public class Parser {
 
   // *** EXPERIMENTAL ***
 
+  // Note: Instead of an ERROR kind, we could just mark whatever the lookahead
+  // is and then annotate the token with an error flag.
+
   private void sync () {
+    LOGGER.info("Match: synchronization required");
+    mark = new Token(Token.Kind.ERROR, lookahead.getLexeme(), lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
+    LOGGER.info("Match: Created " + mark);
+    LOGGER.info("Match: synchronization started");
+    // Combine all following sets into a sync set
+    var syncSet = EnumSet.noneOf(Token.Kind.class);
+    for (var followingSet : followingSetStack)
+      syncSet.addAll(followingSet);
+    var kind = lookahead.getKind();
+    // Scan forward until we hit something in the sync set
+    while (!syncSet.contains(kind)) {
+      LOGGER.info("Match: skipped {}", lookahead);
+      consume();
+      kind = lookahead.getKind();
+    }
+    LOGGER.info("Match: stopped at {}", lookahead);
+    LOGGER.info("Match: synchronization complete");
+  }
+
+/*
+  private void sync1 () {
     LOGGER.info("sync: synchronization started");
     // Combine all following sets on stack into a sync set
     var syncSet = EnumSet.noneOf(Token.Kind.class);
@@ -294,6 +283,7 @@ public class Parser {
     }
     LOGGER.info("sync: synchronization complete");
   }
+*/
 
   // *** END EXPERIMENT ***
 
@@ -696,30 +686,11 @@ public class Parser {
           LOGGER.info("Match: Inserted " + mark);
           return true;
         } else {
-          LOGGER.info("Match: synchronization required");
           if (!errorRecoveryMode) {
             generalError(expectedKind);
             errorRecoveryMode = false;
           }
-          mark = new Token(Token.Kind.ERROR, lookahead.getLexeme(), lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
-          LOGGER.info("Match: Created " + mark);
-          // Note: Instead of an ERROR kind, we could just mark whatever the
-          // lookahead is and then annotate the token with an error flag.
-          LOGGER.info("Match: synchronization started");
-          // Combine all following sets on stack into a sync set
-          var syncSet = EnumSet.noneOf(Token.Kind.class);
-          for (var followingSet : followingSetStack)
-            syncSet.addAll(followingSet);
-          var kind = lookahead.getKind();
-          // Scan forward until we hit something in the sync set
-          while (!syncSet.contains(kind)) {
-            LOGGER.info("Match: skipped {}", lookahead);
-            consume();
-            kind = lookahead.getKind();
-          }
-          LOGGER.info("Match: stopped at {}", lookahead);
-          LOGGER.info("Match: synchronization complete");
-
+          sync();
           return false;
         }
       }
@@ -1019,7 +990,6 @@ public class Parser {
 
   private AstNode otherDeclaration () {
     System.out.println("OTHER DECL");
-    checkIn(FIRST_OTHER_DECLARATION, FOLLOW_OTHER_DECLARATION);
     AstNode n = null;
     var spec = (lookahead.getKind() == Token.Kind.PRIVATE) ? exportSpecifier() : null;
     if (lookahead.getKind() == Token.Kind.TEMPLATE) {
