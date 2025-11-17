@@ -227,6 +227,9 @@ public class Token {
     TILDE,
     TILDE_EQUAL,
 
+    // Error
+    ERROR,
+
     // End of file
     EOF
   }

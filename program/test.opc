@@ -1,9 +1,9 @@
 
 // Fset = $ IMPORT USE, etc.
 
-package +
+package + 8 math;
 
-fuse ; opal.lang.*;
+//fuse ; opal.lang.*;
 
 //use opal.lang.{ Math, Util };
 //use opal.lang.*;

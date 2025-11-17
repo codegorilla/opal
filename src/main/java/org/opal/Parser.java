@@ -40,6 +40,7 @@ public class Parser {
 
   // Experimental
   private Token previous;
+  private Token mark;
 
   private final List<String> sourceLines;
 
@@ -201,6 +202,7 @@ public class Parser {
     position = new Counter();
     lookahead = input.get(position.get());
     previous = null;
+    mark = null;
     this.sourceLines = sourceLines;
     stack = new LinkedList<>();
     nodeStack = new LinkedList<>();
@@ -486,7 +488,7 @@ public class Parser {
     // We need to check for EOF at the end to make sure there are no garbage
     // characters left over at end of parsing. We might want to create a
     // special match method for EOF so we can print a user-friendly message.
-    match(Token.Kind.EOF);
+    //match(Token.Kind.EOF);
     LOGGER.info("*** Parsing complete! ***");
     // Inspect builtin scope
 //    var s = builtinScope.getSymbolTable().getData;
@@ -657,6 +659,87 @@ public class Parser {
 
   // To do: Support qualified names for packages
 
+  private boolean matchX (Token.Kind expectedKind, Token.Kind followingKind) {
+    if (lookahead.getKind() == expectedKind) {
+      LOGGER.info("Match: Matched " + lookahead);
+      errorRecoveryMode = false;
+      mark = lookahead;
+      consume();
+      return true;
+    }
+    else {
+      if (lookahead.getKind() != Token.Kind.EOF) {
+        // Perform single-token deletion if possible
+        var peek = input.get(position.get() + 1);
+        if (peek.getKind() == expectedKind) {
+          LOGGER.info("Match: Performing single-token deletion");
+          if (!errorRecoveryMode) {
+            extraneousError(expectedKind);
+            errorRecoveryMode = false;
+          }
+          LOGGER.info("Match: Deleted " + lookahead);
+          consume();
+          LOGGER.info("Match: Matched " + lookahead);
+          mark = lookahead;
+          consume();
+          return true;
+        }
+        // Otherwise, perform single-token insertion if possible
+        else if (lookahead.getKind() == followingKind) {
+          LOGGER.info("Match: Performing single-token insertion");
+          if (!errorRecoveryMode) {
+            missingError(expectedKind);
+            errorRecoveryMode = false;
+          }
+          previous = new Token(expectedKind, "<MISSING>", lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
+          mark = previous;
+          LOGGER.info("Match: Inserted " + mark);
+          return true;
+        } else {
+          LOGGER.info("Match: synchronization required");
+          if (!errorRecoveryMode) {
+            generalError(expectedKind);
+            errorRecoveryMode = false;
+          }
+          mark = new Token(Token.Kind.ERROR, lookahead.getLexeme(), lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
+          LOGGER.info("Match: Created " + mark);
+          // Note: Instead of an ERROR kind, we could just mark whatever the
+          // lookahead is and then annotate the token with an error flag.
+          LOGGER.info("Match: synchronization started");
+          // Combine all following sets on stack into a sync set
+          var syncSet = EnumSet.noneOf(Token.Kind.class);
+          for (var followingSet : followingSetStack)
+            syncSet.addAll(followingSet);
+          var kind = lookahead.getKind();
+          // Scan forward until we hit something in the sync set
+          while (!syncSet.contains(kind)) {
+            LOGGER.info("Match: skipped {}", lookahead);
+            consume();
+            kind = lookahead.getKind();
+          }
+          LOGGER.info("Match: stopped at {}", lookahead);
+          LOGGER.info("Match: synchronization complete");
+
+          return false;
+        }
+      }
+      return false;
+    }
+  }
+
+  private AstNode packageDeclaration (EnumSet<Token.Kind> followingSet) {
+    followingSetStack.push(followingSet);
+    AstNode n;
+    matchX(PACKAGE, Token.Kind.IDENTIFIER);
+    n = new PackageDeclaration(mark);
+    matchX(Token.Kind.IDENTIFIER, SEMICOLON);
+    n.addChild(new PackageName(mark));
+    match(SEMICOLON, EnumSet.of(IMPORT, USE, PRIVATE, VAL, VAR, DEF, CLASS));
+    followingSetStack.pop();
+    return n;
+  }
+
+  /*
   private AstNode packageDeclaration (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
     AstNode n;
