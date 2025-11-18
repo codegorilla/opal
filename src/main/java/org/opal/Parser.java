@@ -277,24 +277,21 @@ public class Parser {
     LOGGER.info("Match: synchronization complete");
   }
 
-  private void matchX (Token.Kind expectedKind, Token.Kind followingKind) {
+  private void matchX (Token.Kind expectedKind, EnumSet<Token.Kind> followerSet) {
     if (lookahead.getKind() == expectedKind) {
       LOGGER.info("Match: matched " + lookahead);
       mark = lookahead;
       consume();
       errorRecoveryMode = false;
-    }
-    else {
+    } else {
       if (lookahead.getKind() != Token.Kind.EOF) {
         // Try single-token deletion
         var peek = input.get(position.get() + 1);
-        if (peek.getKind() == expectedKind) {
+        if (peek.getKind() == expectedKind)
           delete(expectedKind);
-        }
         // Otherwise, try single-token insertion
-        else if (lookahead.getKind() == followingKind) {
+        else if (followerSet != null && followerSet.contains(lookahead.getKind()))
           insert(expectedKind);
-        }
         // Otherwise, fall back to panic-mode
         else {
           if (!errorRecoveryMode)
@@ -307,7 +304,20 @@ public class Parser {
     }
   }
 
+  private void matchX (Token.Kind expectedKind) {
+    matchX(expectedKind, null);
+  }
+
   // *** END EXPERIMENT ***
+
+  // In The Definitive ANTLR4 Reference, Parr describes ANTLR's error recovery
+  // in detail. His algorithm attempts phrase-level recovery through
+  // single-token deletion or insertion, followed by context-informed
+  // panic-mode recovery.
+
+  // We might want to implement Damerau–Levenshtein distance algorithm to
+  // auto-correct spellings (e.g. packge > package, esle > else). This can be
+  // accomplished with the Apache Commons Text library or other means.
 
   // We want to implement error recovery in the following order of priority:
   // (1) single-token deletion if possible, (2) single-token insertion if
@@ -327,70 +337,14 @@ public class Parser {
   // which would not exist. The latter requires consideration of what kind of
   // token would follow, which also would not exist.
 
+  @Deprecated
   private boolean match (Token.Kind expectedKind) {
-    return match(expectedKind, (Token.Kind)null);
+    return match(expectedKind, null);
   }
 
   // A valid match will reset the errorRecoveryMode flag
 
-  // For SINGLE following kind
-
-  // DEPRECATED
-
-  private boolean match (Token.Kind expectedKind, Token.Kind followingKind) {
-    if (lookahead.getKind() == expectedKind) {
-      LOGGER.info("Match: MATCHED " + lookahead);
-      errorRecoveryMode = false;
-      consume();
-      return true;
-    }
-    else {
-      LOGGER.info("Match: FOUND " + lookahead);
-      if (lookahead.getKind() != Token.Kind.EOF) {
-        // Perform single-token deletion if possible
-        var peek = input.get(position.get() + 1);
-        if (peek.getKind() == expectedKind) {
-          LOGGER.info("Match: Performing single-token deletion");
-          if (!errorRecoveryMode) {
-            extraneousError(expectedKind);
-            errorRecoveryMode = false;
-          }
-          consume();
-          LOGGER.info("Match: FOUND " + lookahead);
-          consume();
-          return true;
-        }
-        // Otherwise, perform single-token insertion if possible
-        else if (lookahead.getKind() == followingKind) {
-          LOGGER.info("Match: Performing single-token insertion");
-          if (!errorRecoveryMode) {
-            missingError(expectedKind);
-            errorRecoveryMode = false;
-          }
-          previous = new Token(expectedKind, "<MISSING>", lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
-          return true;
-        } else {
-          LOGGER.info("Match: No action taken, synchronization required");
-          // Do we fall back to sync-and-return here? If so, then we'll need a
-          // FOLLOW set passed in. Or we can just leave that to a separate sync
-          // method. I don't think we want to sync here because then we lose
-          // the reference to the "previous" token that needs to be put into an
-          // error node. So that means sync need to be external to this method.
-          if (!errorRecoveryMode) {
-            generalError(expectedKind);
-            errorRecoveryMode = false;
-          }
-          return false;
-        }
-      }
-      return false;
-    }
-  }
-
-  // For MULTIPLE following kinds
-
-  // DEPRECATED
-
+  @Deprecated
   private boolean match (Token.Kind expectedKind, EnumSet<Token.Kind> followingSet) {
     if (lookahead.getKind() == expectedKind) {
       LOGGER.info("Match: MATCHED " + lookahead);
@@ -610,49 +564,18 @@ public class Parser {
     builtinScope.define(new PrimitiveTypeSymbol("void"));
   }
 
-  // Declarations following set is empty so we don't need to define one, let alone
-  // push and pop it in the declarations production.
+  // TRANSLATION UNIT *********************************************************
 
   private AstNode translationUnit (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
     var n = new TranslationUnit();
-    n.addChild(declarations());
-    System.out.println("HERE3");
-    //var scope = new Scope(Scope.Kind.GLOBAL);
-    //scope.setEnclosingScope(currentScope);
-    //currentScope = scope;
-    //n.setScope(currentScope);
-    followingSetStack.pop();
-    return n;
-  }
-
-  // DECLARATIONS **************************************************
-
-  // Package, import, and use declarations must appear (in that order) before
-  // any other declarations in the translation unit.
-
-  // In The Definitive ANTLR4 Reference, Parr describes ANTLR's error recovery
-  // in detail. His algorithm attempts phrase-level recovery through
-  // single-token deletion or insertion, followed by context-informed
-  // panic-mode recovery.
-
-  // We might want to implement Damerau–Levenshtein distance algorithm to
-  // auto-correct spellings (e.g. packge > package, esle > else). This can be
-  // accomplished with the Apache Commons Text library or other means.
-
-  // Package declaration is normally followed by import and use declarations,
-  // but it doesn't have to be. It is possible for translation unit to contain
-  // no import or use declarations.
-
-  private AstNode declarations () {
-    var n = new Declarations();
-    n.addChild(packageDeclaration(EnumSet.of(IMPORT, USE, PRIVATE, VAL, VAR, DEF, CLASS)));
+    n.addChild(packageDeclaration(EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE, IMPORT)));
     if (lookahead.getKind() == IMPORT)
-      n.addChild(importDeclarations(EnumSet.of(USE, PRIVATE, VAL, VAR, DEF, CLASS)));
+      n.addChild(importDeclarations(EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE)));
     else
       n.addChild(EPSILON);
     if (lookahead.getKind() == USE)
-      n.addChild(useDeclarations(EnumSet.of(PRIVATE, VAL, VAR, DEF, CLASS)));
+      n.addChild(useDeclarations(EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR)));
     else
       n.addChild(EPSILON);
     var kind = lookahead.getKind();
@@ -665,8 +588,22 @@ public class Parser {
     ) {
       n.addChild(otherDeclarations());
     }
+    //var scope = new Scope(Scope.Kind.GLOBAL);
+    //scope.setEnclosingScope(currentScope);
+    //currentScope = scope;
+    //n.setScope(currentScope);
+    followingSetStack.pop();
     return n;
   }
+
+  // DECLARATIONS *************************************************************
+
+  // Package, import, and use declarations must appear (in that order) before
+  // any other declarations in the translation unit.
+
+  // Package declaration is normally followed by import and use declarations,
+  // but it doesn't have to be. It is possible for translation unit to contain
+  // no import or use declarations.
 
   // The package declaration is special in that there is only one per
   // translation unit, and it must appear at the very top. A package is
@@ -677,13 +614,11 @@ public class Parser {
 
   private AstNode packageDeclaration (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
-    AstNode n;
-    matchX(PACKAGE, Token.Kind.IDENTIFIER);
-    n = new PackageDeclaration(mark);
-    matchX(Token.Kind.IDENTIFIER, SEMICOLON);
+    matchX(PACKAGE, FollowerSet.IDENTIFIER);
+    var n = new PackageDeclaration(mark);
+    matchX(Token.Kind.IDENTIFIER, FollowerSet.SEMICOLON);
     n.addChild(new PackageName(mark));
-    // Need to update matchX to support sets
-    match(SEMICOLON, EnumSet.of(IMPORT, USE, PRIVATE, VAL, VAR, DEF, CLASS));
+    matchX(SEMICOLON, EnumSet.of(IMPORT, USE, PRIVATE, VAL, VAR, DEF, CLASS));
     followingSetStack.pop();
     return n;
   }
@@ -691,9 +626,8 @@ public class Parser {
   private AstNode importDeclarations (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
     var n = new ImportDeclarations();
-    var ss = EnumSet.of(IMPORT);
     while (lookahead.getKind() == IMPORT)
-      n.addChild(importDeclaration(ss));
+      n.addChild(importDeclaration());
     followingSetStack.pop();
     return n;
   }
@@ -706,8 +640,8 @@ public class Parser {
   // easiest implementation and the others hold no advantages for our
   // particular use case.
 
-  private AstNode importDeclaration (EnumSet<Token.Kind> followingSet) {
-    followingSetStack.push(followingSet);
+  private AstNode importDeclaration () {
+    followingSetStack.push(FollowingSet.IMPORT);
     confirm(IMPORT);
     var n = new ImportDeclaration(previous);
     var ss1 = EnumSet.of(SEMICOLON, AS);
@@ -769,7 +703,7 @@ public class Parser {
 
   private AstNode importAsName () {
     AstNode n;
-    if (match(Token.Kind.IDENTIFIER, SEMICOLON))
+    if (match(Token.Kind.IDENTIFIER, FollowerSet.SEMICOLON))
       n = new ImportAsName(previous);
     else {
       n = new ErrorNode(lookahead);

@@ -13,6 +13,9 @@ import java.util.EnumSet;
 
 public class FollowingSet {
 
+  public static final EnumSet<Token.Kind> IMPORT =
+    EnumSet.of(Token.Kind.IMPORT);
+
   public static final EnumSet<Token.Kind> PERIOD =
     EnumSet.of(Token.Kind.PERIOD);
 
