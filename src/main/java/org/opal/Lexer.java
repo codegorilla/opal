@@ -587,7 +587,7 @@ public class Lexer {
     }
 
     // Placeholder to avoid error
-    return new Token(Token.Kind.EOF, "$", position.get(), line.get(), column.get());
+    return new Token(Token.Kind.EOF, "<EOF>", position.get(), line.get(), column.get());
   }
 
   private boolean isBinaryDigit (char ch) {

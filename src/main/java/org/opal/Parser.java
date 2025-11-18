@@ -470,6 +470,10 @@ public class Parser {
     definePrimitiveTypes();
     LOGGER.info("*** Parsing started... ***");
     var node = translationUnit(EnumSet.of(Token.Kind.EOF));
+    // EOF is the only token in the follow set of translationUnit. Must match
+    // it to ensure there is no garbage left over.
+    matchX(Token.Kind.EOF);
+
     LOGGER.info("*** Parsing complete! ***");
     // Inspect builtin scope
 //    var s = builtinScope.getSymbolTable().getData;
@@ -577,6 +581,8 @@ public class Parser {
 
   // TRANSLATION UNIT *********************************************************
 
+  // translationUnit is the start symbol for parsing.
+
   private AstNode translationUnit (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
     var n = new TranslationUnit();
@@ -596,8 +602,6 @@ public class Parser {
     ) {
       n.addChild(otherDeclarations());
     }
-    matchX(Token.Kind.EOF);
-
     //var scope = new Scope(Scope.Kind.GLOBAL);
     //scope.setEnclosingScope(currentScope);
     //currentScope = scope;
