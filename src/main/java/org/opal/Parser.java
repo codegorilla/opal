@@ -292,11 +292,11 @@ public class Parser {
           insert(expectedKind);
         // Otherwise, fall back to panic-mode?
         // Does this make sense if lookahead is at EOF?
-//        else {
-//          if (!errorRecoveryMode)
-//            generalError(expectedKind);
-//          sync();
-//        }
+        else {
+          if (!errorRecoveryMode)
+            generalError(expectedKind);
+          sync();
+        }
       }
       else {
         // Try single-token deletion
@@ -663,7 +663,12 @@ public class Parser {
   }
 
   // This might be a candidate for error recovery of epsilon production.
-  // Input "import opal-lang;" doesn't provide a great error message.
+  // Input "import opal-lang;" gives an error but the resulting ERROR token
+  // does not get captured in the AST even though it is not able to be
+  // corrected. This demonstrates that if an error occurs at all, we cannot
+  // rely on it being apparent from looking at the AST. Also, the error given
+  // is not a great one (due to epsilon production). It shows that there might
+  // be room for improvement.
 
   private AstNode importQualifiedName (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
