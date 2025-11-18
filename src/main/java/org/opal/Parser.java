@@ -279,28 +279,42 @@ public class Parser {
 
   private void matchX (Token.Kind expectedKind, EnumSet<Token.Kind> followerSet) {
     if (lookahead.getKind() == expectedKind) {
+      // Happy path
       LOGGER.info("Match: matched " + lookahead);
       mark = lookahead;
       consume();
       errorRecoveryMode = false;
     } else {
-      if (lookahead.getKind() != Token.Kind.EOF) {
-        // Try single-token deletion
-        var peek = input.get(position.get() + 1);
-        if (peek.getKind() == expectedKind)
-          delete(expectedKind);
-        // Otherwise, try single-token insertion
-        else if (followerSet != null && followerSet.contains(lookahead.getKind()))
+      // Sad path
+      if (lookahead.getKind() == Token.Kind.EOF) {
+        // Try single-token insertion
+        if (followerSet != null && followerSet.contains(lookahead.getKind()))
           insert(expectedKind);
-        // Otherwise, fall back to panic-mode
+        // Otherwise, fall back to panic-mode?
+        // Does this make sense if lookahead is at EOF?
         else {
           if (!errorRecoveryMode)
             generalError(expectedKind);
           sync();
         }
-        // Should be true, but can set to false for development
-        errorRecoveryMode = false;
       }
+      else {
+        // Try single-token deletion
+        var peek = input.get(position.get() + 1);
+        if (peek.getKind() == expectedKind)
+          delete(expectedKind);
+          // Otherwise, try single-token insertion
+        else if (followerSet != null && followerSet.contains(lookahead.getKind()))
+          insert(expectedKind);
+          // Otherwise, fall back to panic-mode
+        else {
+          if (!errorRecoveryMode)
+            generalError(expectedKind);
+          sync();
+        }
+      }
+      // Should be true, but can set to false for development
+      errorRecoveryMode = false;
     }
   }
 
@@ -434,7 +448,8 @@ public class Parser {
 
   private void confirm (Token.Kind expectedKind) {
     if (lookahead.getKind() == expectedKind) {
-      LOGGER.info("Confirm: Confirmed " + lookahead);
+      LOGGER.info("Confirm: confirmed " + lookahead);
+      mark = lookahead;
       consume();
     } else {
       var expectedKindFriendly = friendlyKind(expectedKind);
@@ -445,9 +460,9 @@ public class Parser {
   }
 
   private void consume () {
-    mark = lookahead;
     position.increment();
-    lookahead = input.get(position.get());
+    if (position.get() < input.size())
+      lookahead = input.get(position.get());
   }
 
   public AstNode process () {
@@ -455,10 +470,6 @@ public class Parser {
     definePrimitiveTypes();
     LOGGER.info("*** Parsing started... ***");
     var node = translationUnit(EnumSet.of(Token.Kind.EOF));
-    // We need to check for EOF at the end to make sure there are no garbage
-    // characters left over at end of parsing. We might want to create a
-    // special match method for EOF so we can print a user-friendly message.
-    //match(Token.Kind.EOF);
     LOGGER.info("*** Parsing complete! ***");
     // Inspect builtin scope
 //    var s = builtinScope.getSymbolTable().getData;
@@ -585,6 +596,8 @@ public class Parser {
     ) {
       n.addChild(otherDeclarations());
     }
+    matchX(Token.Kind.EOF);
+
     //var scope = new Scope(Scope.Kind.GLOBAL);
     //scope.setEnclosingScope(currentScope);
     //currentScope = scope;
@@ -644,7 +657,7 @@ public class Parser {
     var n = new ImportDeclaration(mark);
     n.addChild(importQualifiedName(EnumSet.of(SEMICOLON, AS)));
     n.addChild(lookahead.getKind() == AS ? importAsClause() : EPSILON);
-    matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE, IMPORT));
+    matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE, IMPORT, Token.Kind.EOF));
     followingSetStack.pop();
     return n;
   }

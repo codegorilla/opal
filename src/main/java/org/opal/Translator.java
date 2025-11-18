@@ -7,6 +7,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -62,11 +64,19 @@ public class Translator {
     // not having EOF in the FOLLOW set of the start symbol caused this
     // problem.
 
-    var sourceLines = source.lines().toList();
+    var sourceLines = source.lines().collect(Collectors.toCollection(ArrayList::new));
+//    var sourceLines = Arrays.stream(source.split("\\R", -1)).toList();
+
 
     var lexer = new Lexer(source);
     var tokens = lexer.process();
     System.out.println(tokens);
+
+    // I think we can just append an empty line if Token line > num lines
+    var eofLine = tokens.getLast().getLine();
+    if (eofLine > sourceLines.size())
+      sourceLines.add("");
+
     var parser = new Parser(tokens, sourceLines);
     var root = parser.process();
 
