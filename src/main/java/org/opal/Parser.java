@@ -292,11 +292,11 @@ public class Parser {
           insert(expectedKind);
         // Otherwise, fall back to panic-mode?
         // Does this make sense if lookahead is at EOF?
-        else {
-          if (!errorRecoveryMode)
-            generalError(expectedKind);
-          sync();
-        }
+//        else {
+//          if (!errorRecoveryMode)
+//            generalError(expectedKind);
+//          sync();
+//        }
       }
       else {
         // Try single-token deletion
