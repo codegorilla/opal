@@ -7,7 +7,7 @@ The grammar for use declarations is as follows:
 
 ```
 useDeclarations
-  : useDeclaration*
+  : useDeclaration+
   ;
 
 useDeclaration

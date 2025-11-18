@@ -445,7 +445,7 @@ public class Parser {
   }
 
   private void consume () {
-    previous = lookahead;
+    mark = lookahead;
     position.increment();
     lookahead = input.get(position.get());
   }
@@ -569,15 +569,12 @@ public class Parser {
   private AstNode translationUnit (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
     var n = new TranslationUnit();
-    n.addChild(packageDeclaration(EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE, IMPORT)));
-    if (lookahead.getKind() == IMPORT)
-      n.addChild(importDeclarations(EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE)));
-    else
-      n.addChild(EPSILON);
-    if (lookahead.getKind() == USE)
-      n.addChild(useDeclarations(EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR)));
-    else
-      n.addChild(EPSILON);
+    var fsp = EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE, IMPORT);
+    var fsi = EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE);
+    var fsu = EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR);
+    n.addChild(packageDeclaration(fsp));
+    n.addChild(lookahead.getKind() == IMPORT ? importDeclarations(fsi) : EPSILON);
+    n.addChild(lookahead.getKind() == USE ? useDeclarations(fsu) : EPSILON);
     var kind = lookahead.getKind();
     if (
       kind == PRIVATE ||
@@ -618,7 +615,7 @@ public class Parser {
     var n = new PackageDeclaration(mark);
     matchX(Token.Kind.IDENTIFIER, FollowerSet.SEMICOLON);
     n.addChild(new PackageName(mark));
-    matchX(SEMICOLON, EnumSet.of(IMPORT, USE, PRIVATE, VAL, VAR, DEF, CLASS));
+    matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE, IMPORT));
     followingSetStack.pop();
     return n;
   }
@@ -626,6 +623,7 @@ public class Parser {
   private AstNode importDeclarations (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
     var n = new ImportDeclarations();
+    n.addChild(importDeclaration());
     while (lookahead.getKind() == IMPORT)
       n.addChild(importDeclaration());
     followingSetStack.pop();
@@ -643,12 +641,10 @@ public class Parser {
   private AstNode importDeclaration () {
     followingSetStack.push(FollowingSet.IMPORT);
     confirm(IMPORT);
-    var n = new ImportDeclaration(previous);
-    var ss1 = EnumSet.of(SEMICOLON, AS);
-    n.addChild(importQualifiedName(ss1));
-    var ss2 = EnumSet.of(SEMICOLON);
-    n.addChild(lookahead.getKind() == AS ? importAsClause(ss2) : EPSILON);
-    match(SEMICOLON);
+    var n = new ImportDeclaration(mark);
+    n.addChild(importQualifiedName(EnumSet.of(SEMICOLON, AS)));
+    n.addChild(lookahead.getKind() == AS ? importAsClause() : EPSILON);
+    matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE, IMPORT));
     followingSetStack.pop();
     return n;
   }
@@ -656,65 +652,34 @@ public class Parser {
   // This might be a candidate for error recovery of epsilon production.
   // Input "import opal-lang;" doesn't provide a great error message.
 
-  // Qualified names are very similar to aggregation productions
-
-  // To do: I don't think we want to do an identifier check here. This is
-  // basically just an aggregation production.
-
   private AstNode importQualifiedName (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
-    AstNode n;
-    if (lookahead.getKind() == Token.Kind.IDENTIFIER) {
-      n = new ImportQualifiedName();
-      var ss = EnumSet.of(PERIOD);
-      n.addChild(importName(ss));
-      while (lookahead.getKind() == PERIOD) {
-        confirm(PERIOD);
-        n.addChild(importName(ss));
-      }
-    } else {
-      n = new ErrorNode(previous);
-      sync();
+    var n = new ImportQualifiedName();
+    var followerSet = EnumSet.of(AS, PERIOD, SEMICOLON);
+    matchX(Token.Kind.IDENTIFIER, followerSet);
+    n.addChild(new ImportName(mark));
+    while (lookahead.getKind() == PERIOD) {
+      confirm(PERIOD);
+      matchX(Token.Kind.IDENTIFIER, followerSet);
+      n.addChild(new ImportName(mark));
     }
     followingSetStack.pop();
     return n;
   }
 
-  private AstNode importName (EnumSet<Token.Kind> followingSet) {
-    followingSetStack.push(followingSet);
-    AstNode n;
-    if (match(Token.Kind.IDENTIFIER, EnumSet.of(AS, PERIOD, SEMICOLON)))
-      n = new ImportName(previous);
-    else {
-      n = new ErrorNode(lookahead);
-      sync();
-    }
-    followingSetStack.pop();
-    return n;
-  }
-
-  private AstNode importAsClause (EnumSet<Token.Kind> followingSet) {
-    followingSetStack.push(followingSet);
+  private AstNode importAsClause () {
+    followingSetStack.push(FollowingSet.SEMICOLON);
     confirm(AS);
-    var n = importAsName();
+    matchX(Token.Kind.IDENTIFIER, FollowerSet.SEMICOLON);
+    var n = new ImportName(mark);
     followingSetStack.pop();
-    return n;
-  }
-
-  private AstNode importAsName () {
-    AstNode n;
-    if (match(Token.Kind.IDENTIFIER, FollowerSet.SEMICOLON))
-      n = new ImportAsName(previous);
-    else {
-      n = new ErrorNode(lookahead);
-      sync();
-    }
     return n;
   }
 
   private AstNode useDeclarations (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
     var n = new UseDeclarations();
+    n.addChild(useDeclaration(FollowingSet.USE));
     while (lookahead.getKind() == USE)
       n.addChild(useDeclaration(FollowingSet.USE));
     followingSetStack.pop();

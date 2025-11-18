@@ -5,6 +5,9 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
+// DEPRECATED - I think we can just use ImportName. During semantic analysis,
+// we can just check the parent to know if we are in an "as clause".
+
 public class ImportAsName extends AstNode {
 
   public ImportAsName (Token token) {
