@@ -60,7 +60,8 @@ public class Parser {
   private final Scope builtinScope;
   private Scope currentScope;
 
-  private final HashMap<Token.Kind, String> reverseKeywordLookup = new HashMap<>();
+  // Reverse keyword mapping from token-kind to string
+  private final HashMap<Token.Kind, String> keywordLookup;
 
   // Note: Leave this disabled for now so the error recovery code can be built
   // with the most raw output to make it easier to understand behavior and
@@ -212,23 +213,12 @@ public class Parser {
 
     followingSetStack = new LinkedList<>();
 
+    var keywordTable = new KeywordTable();
+    keywordLookup = keywordTable.getReverseLookupTable();
+    buildReverseKeywordLookupTable();
+
     var level = Level.INFO;
     Configurator.setRootLevel(level);
-
-  }
-
-  private void checkError (Set<Token.Kind> expectedKinds) {
-    var expectedKindsString = expectedKinds.stream()
-      .map(kind -> reverseKeywordLookup.getOrDefault(kind, friendlyKind(kind)))
-      .sorted()
-      .collect(Collectors.joining(", "));
-    var actualKind = lookahead.getKind();
-    var actualKindString = reverseKeywordLookup.getOrDefault(actualKind, friendlyKind(actualKind));
-    var messageSome = "expected one of " + expectedKindsString + "; got " + actualKindString;
-    var messageOne  = "expected "        + expectedKindsString + ", got " + actualKindString;
-    var message = expectedKinds.size() > 1 ? messageSome : messageOne;
-    var error = new SyntaxError(sourceLines, message, lookahead);
-    System.out.println(error.complete());
   }
 
   // Maybe replace this with a map that maps kinds back to strings
@@ -356,8 +346,6 @@ public class Parser {
     return match(expectedKind, null);
   }
 
-  // A valid match will reset the errorRecoveryMode flag
-
   @Deprecated
   private boolean match (Token.Kind expectedKind, EnumSet<Token.Kind> followingSet) {
     if (lookahead.getKind() == expectedKind) {
@@ -368,43 +356,10 @@ public class Parser {
     }
     else {
       LOGGER.info("Match: FOUND " + lookahead);
-      if (lookahead.getKind() != Token.Kind.EOF) {
-        // Perform single-token deletion if possible
-        var peek = input.get(position.get() + 1);
-        if (peek.getKind() == expectedKind) {
-          LOGGER.info("Match: Performing single-token deletion");
-          if (!errorRecoveryMode) {
-            extraneousError(expectedKind);
-            errorRecoveryMode = false;
-          }
-          LOGGER.info("Match: DELETED " + lookahead);
-          consume();
-          LOGGER.info("Match: MATCHED " + lookahead);
-          consume();
-          return true;
-        }
-        // Otherwise, perform single-token insertion if possible
-        if (followingSet.contains(lookahead.getKind())) {
-          LOGGER.info("Match: Performing single-token insertion");
-          if (!errorRecoveryMode) {
-            missingError(expectedKind);
-            errorRecoveryMode = false;
-          }
-          previous = new Token(expectedKind, "<MISSING>", lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
-          return true;
-        } else {
-          LOGGER.info("Match: No action taken, synchronization required");
-          // Do we fall back to sync-and-return here? If so, then we'll need a
-          // FOLLOW set passed in. Or we can just leave that to a separate sync
-          // method. I don't think we want to sync here because then we lose
-          // the reference to the "previous" token that needs to be put into an
-          // error node. So that means sync need to be external to this method.
-          if (!errorRecoveryMode) {
-            generalError(expectedKind);
-            errorRecoveryMode = false;
-          }
-          return false;
-        }
+      LOGGER.info("Match: No action taken, synchronization required");
+      if (!errorRecoveryMode) {
+        generalError(expectedKind);
+        errorRecoveryMode = false;
       }
       return false;
     }
@@ -416,28 +371,43 @@ public class Parser {
   // generates a "missing token" error. Otherwise, the "general error" is used.
 
   private void extraneousError (Token.Kind expectedKind) {
-    var expectedKindString = reverseKeywordLookup.getOrDefault(expectedKind, friendlyKind(expectedKind));
+    var expectedKindString = keywordLookup.getOrDefault(expectedKind, friendlyKind(expectedKind));
     var actualKind = lookahead.getKind();
-    var actualKindString = reverseKeywordLookup.getOrDefault(actualKind, friendlyKind(actualKind));
+    var actualKindString = keywordLookup.getOrDefault(actualKind, friendlyKind(actualKind));
     var message = "expected " + expectedKindString + ", got extraneous " + actualKindString;
     var error = new SyntaxError(sourceLines, message, lookahead);
     System.out.println(error.complete());
   }
 
   private void missingError (Token.Kind expectedKind) {
-    var expectedKindString = reverseKeywordLookup.getOrDefault(expectedKind, friendlyKind(expectedKind));
+    var expectedKindString = keywordLookup.getOrDefault(expectedKind, friendlyKind(expectedKind));
     var actualKind = lookahead.getKind();
-    var actualKindString = reverseKeywordLookup.getOrDefault(actualKind, friendlyKind(actualKind));
+    var actualKindString = keywordLookup.getOrDefault(actualKind, friendlyKind(actualKind));
     var message = "missing " + expectedKindString + ", got unexpected " + actualKindString;
     var error = new SyntaxError(sourceLines, message, lookahead);
     System.out.println(error.complete());
   }
 
   private void generalError (Token.Kind expectedKind) {
-    var expectedKindString = reverseKeywordLookup.getOrDefault(expectedKind, friendlyKind(expectedKind));
+    var expectedKindString = keywordLookup.getOrDefault(expectedKind, friendlyKind(expectedKind));
     var actualKind = lookahead.getKind();
-    var actualKindString = reverseKeywordLookup.getOrDefault(actualKind, friendlyKind(actualKind));
+    var actualKindString = keywordLookup.getOrDefault(actualKind, friendlyKind(actualKind));
     var message = "expected " + expectedKindString + ", got " + actualKindString;
+    var error = new SyntaxError(sourceLines, message, lookahead);
+    System.out.println(error.complete());
+  }
+
+  @Deprecated
+  private void checkError (Set<Token.Kind> expectedKinds) {
+    var expectedKindsString = expectedKinds.stream()
+      .map(kind -> keywordLookup.getOrDefault(kind, friendlyKind(kind)))
+      .sorted()
+      .collect(Collectors.joining(", "));
+    var actualKind = lookahead.getKind();
+    var actualKindString = keywordLookup.getOrDefault(actualKind, friendlyKind(actualKind));
+    var messageSome = "expected one of " + expectedKindsString + "; got " + actualKindString;
+    var messageOne  = "expected "        + expectedKindsString + ", got " + actualKindString;
+    var message = expectedKinds.size() > 1 ? messageSome : messageOne;
     var error = new SyntaxError(sourceLines, message, lookahead);
     System.out.println(error.complete());
   }
@@ -482,88 +452,10 @@ public class Parser {
   }
 
   private void buildReverseKeywordLookupTable () {
-    reverseKeywordLookup.put(Token.Kind.ABSTRACT, "abstract");
-    reverseKeywordLookup.put(Token.Kind.AND, "and");
-    reverseKeywordLookup.put(Token.Kind.AS, "as");
-    reverseKeywordLookup.put(Token.Kind.BREAK, "break");
-    reverseKeywordLookup.put(Token.Kind.CASE, "case");
-    reverseKeywordLookup.put(Token.Kind.CAST, "cast");
-    reverseKeywordLookup.put(Token.Kind.CATCH, "catch");
-    reverseKeywordLookup.put(Token.Kind.CLASS, "class");
-    reverseKeywordLookup.put(Token.Kind.CONST, "const");
-    reverseKeywordLookup.put(Token.Kind.CONSTEVAL, "consteval");
-    reverseKeywordLookup.put(Token.Kind.CONSTEXPR, "constexpr");
-    reverseKeywordLookup.put(Token.Kind.CONTINUE, "continue");
-    reverseKeywordLookup.put(Token.Kind.DEF, "def");
-    reverseKeywordLookup.put(Token.Kind.DEFAULT, "default");
-    reverseKeywordLookup.put(Token.Kind.DELETE, "delete");
-    reverseKeywordLookup.put(Token.Kind.DIVINE, "divine");
-    reverseKeywordLookup.put(Token.Kind.DO, "do");
-    reverseKeywordLookup.put(Token.Kind.ELSE, "else");
-    reverseKeywordLookup.put(Token.Kind.ENUM, "enum");
-    reverseKeywordLookup.put(Token.Kind.EXTENDS, "extends");
-    reverseKeywordLookup.put(Token.Kind.FALSE, "false");
-    reverseKeywordLookup.put(Token.Kind.FINAL, "final");
-    reverseKeywordLookup.put(Token.Kind.FOR, "for");
-    reverseKeywordLookup.put(Token.Kind.FN, "fn");
-    reverseKeywordLookup.put(Token.Kind.FUN, "fun");
-    reverseKeywordLookup.put(Token.Kind.GOTO, "goto");
-    reverseKeywordLookup.put(Token.Kind.IF, "if");
-    reverseKeywordLookup.put(Token.Kind.IMPORT, "import");
-    reverseKeywordLookup.put(Token.Kind.IN, "in");
-    reverseKeywordLookup.put(Token.Kind.INCLUDE, "include");
-    reverseKeywordLookup.put(Token.Kind.LOOP, "loop");
-    reverseKeywordLookup.put(Token.Kind.NEW, "new");
-    reverseKeywordLookup.put(Token.Kind.NIL, "nil");
-    reverseKeywordLookup.put(Token.Kind.NOEXCEPT, "noexcept");
-    reverseKeywordLookup.put(Token.Kind.NULL, "null");
-    reverseKeywordLookup.put(Token.Kind.OR, "or");
-    reverseKeywordLookup.put(Token.Kind.OVERRIDE, "override");
-    reverseKeywordLookup.put(Token.Kind.PACKAGE, "package");
-    reverseKeywordLookup.put(Token.Kind.PRIVATE, "private");
-    reverseKeywordLookup.put(Token.Kind.PROTECTED, "protected");
-    reverseKeywordLookup.put(Token.Kind.RETURN, "return");
-    reverseKeywordLookup.put(Token.Kind.STATIC, "static");
-    reverseKeywordLookup.put(Token.Kind.STRUCT, "struct");
-    reverseKeywordLookup.put(Token.Kind.SWITCH, "switch");
-    reverseKeywordLookup.put(Token.Kind.TEMPLATE, "template");
-    reverseKeywordLookup.put(Token.Kind.THIS, "this");
-    reverseKeywordLookup.put(Token.Kind.TRAIT, "trait");
-    reverseKeywordLookup.put(Token.Kind.TRANSMUTE, "transmute");
-    reverseKeywordLookup.put(Token.Kind.TRUE, "true");
-    reverseKeywordLookup.put(Token.Kind.TRY, "try");
-    reverseKeywordLookup.put(Token.Kind.TYPEALIAS, "typealias");
-    reverseKeywordLookup.put(Token.Kind.UNION, "union");
-    reverseKeywordLookup.put(Token.Kind.UNTIL, "until");
-    reverseKeywordLookup.put(Token.Kind.USE, "use");
-    reverseKeywordLookup.put(Token.Kind.VAL, "val");
-    reverseKeywordLookup.put(Token.Kind.VAR, "var");
-    reverseKeywordLookup.put(Token.Kind.VIRTUAL, "virtual");
-    reverseKeywordLookup.put(Token.Kind.VOLATILE, "volatile");
-    reverseKeywordLookup.put(Token.Kind.WHEN, "when");
-    reverseKeywordLookup.put(Token.Kind.WHILE, "while");
-    reverseKeywordLookup.put(Token.Kind.WITH, "with");
-    reverseKeywordLookup.put(Token.Kind.SHORT, "short");
-    reverseKeywordLookup.put(Token.Kind.INT, "int");
-    reverseKeywordLookup.put(Token.Kind.LONG, "long");
-    reverseKeywordLookup.put(Token.Kind.INT8, "int8");
-    reverseKeywordLookup.put(Token.Kind.INT16, "int16");
-    reverseKeywordLookup.put(Token.Kind.INT32, "int32");
-    reverseKeywordLookup.put(Token.Kind.INT64, "int64");
-    reverseKeywordLookup.put(Token.Kind.UINT, "uint");
-    reverseKeywordLookup.put(Token.Kind.UINT8, "uint8");
-    reverseKeywordLookup.put(Token.Kind.UINT16, "uint16");
-    reverseKeywordLookup.put(Token.Kind.UINT32, "uint32");
-    reverseKeywordLookup.put(Token.Kind.UINT64, "uint64");
-    reverseKeywordLookup.put(Token.Kind.FLOAT, "float");
-    reverseKeywordLookup.put(Token.Kind.DOUBLE, "double");
-    reverseKeywordLookup.put(Token.Kind.FLOAT32, "float32");
-    reverseKeywordLookup.put(Token.Kind.FLOAT64, "float64");
-    reverseKeywordLookup.put(Token.Kind.VOID, "void");
     // Experimental, showing that this is a reverse token lookup, not
     // necessarily a reverse keyword lookup
-    reverseKeywordLookup.put(Token.Kind.MINUS, "'-'");
-    reverseKeywordLookup.put(Token.Kind.PLUS, "'+'");
+    keywordLookup.put(Token.Kind.MINUS, "'-'");
+    keywordLookup.put(Token.Kind.PLUS, "'+'");
   }
 
   private void definePrimitiveTypes () {

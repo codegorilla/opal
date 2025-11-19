@@ -17,13 +17,14 @@ public class Lexer {
   private final Marker markPosition = new Marker();
   private final Marker markColumn   = new Marker();
 
-  private final HashMap<String, Token.Kind> keywordLookup = new HashMap<>();
+  private final HashMap<String, Token.Kind> keywordLookup;
 
   public Lexer (String input) {
     this.input = input;
     if (!input.isEmpty())
       current = input.charAt(0);
-    buildKeywordLookupTable();
+    var keywordTable = new KeywordTable();
+    keywordLookup = keywordTable.getForwardLookupTable();
   }
 
   private void consume () {
@@ -49,88 +50,6 @@ public class Lexer {
   private void error (String message) {
     var coords = "(" + line + "," + column.get() + ")";
     System.out.println(coords + ": error:" + message);
-  }
-
-  private void buildKeywordLookupTable () {
-    // Populate keyword lookup table
-    keywordLookup.put("abstract", Token.Kind.ABSTRACT);
-    keywordLookup.put("and", Token.Kind.AND);
-    keywordLookup.put("as", Token.Kind.AS);
-    keywordLookup.put("break", Token.Kind.BREAK);
-    keywordLookup.put("case", Token.Kind.CASE);
-    keywordLookup.put("cast", Token.Kind.CAST);
-    keywordLookup.put("catch", Token.Kind.CATCH);
-    keywordLookup.put("class", Token.Kind.CLASS);
-    keywordLookup.put("const", Token.Kind.CONST);
-    keywordLookup.put("consteval", Token.Kind.CONSTEVAL);
-    keywordLookup.put("constexpr", Token.Kind.CONSTEXPR);
-    keywordLookup.put("continue", Token.Kind.CONTINUE);
-    keywordLookup.put("def", Token.Kind.DEF);
-    keywordLookup.put("default", Token.Kind.DEFAULT);
-    keywordLookup.put("delete", Token.Kind.DELETE);
-    keywordLookup.put("divine", Token.Kind.DIVINE);
-    keywordLookup.put("do", Token.Kind.DO);
-    keywordLookup.put("else", Token.Kind.ELSE);
-    keywordLookup.put("enum", Token.Kind.ENUM);
-    keywordLookup.put("extends", Token.Kind.EXTENDS);
-    keywordLookup.put("false", Token.Kind.FALSE);
-    keywordLookup.put("final", Token.Kind.FINAL);
-    keywordLookup.put("for", Token.Kind.FOR);
-    keywordLookup.put("fn", Token.Kind.FN);
-    keywordLookup.put("fun", Token.Kind.FUN);
-    keywordLookup.put("goto", Token.Kind.GOTO);
-    keywordLookup.put("if", Token.Kind.IF);
-    keywordLookup.put("import", Token.Kind.IMPORT);
-    keywordLookup.put("in", Token.Kind.IN);
-    keywordLookup.put("include", Token.Kind.INCLUDE);
-    keywordLookup.put("loop", Token.Kind.LOOP);
-    keywordLookup.put("new", Token.Kind.NEW);
-    keywordLookup.put("nil", Token.Kind.NIL);
-    keywordLookup.put("noexcept", Token.Kind.NOEXCEPT);
-    keywordLookup.put("null", Token.Kind.NULL);
-    keywordLookup.put("or", Token.Kind.OR);
-    keywordLookup.put("override", Token.Kind.OVERRIDE);
-    keywordLookup.put("package", Token.Kind.PACKAGE);
-    keywordLookup.put("private", Token.Kind.PRIVATE);
-    keywordLookup.put("protected", Token.Kind.PROTECTED);
-    keywordLookup.put("return", Token.Kind.RETURN);
-    keywordLookup.put("static", Token.Kind.STATIC);
-    keywordLookup.put("struct", Token.Kind.STRUCT);
-    keywordLookup.put("switch", Token.Kind.SWITCH);
-    keywordLookup.put("template", Token.Kind.TEMPLATE);
-    keywordLookup.put("this", Token.Kind.THIS);
-    keywordLookup.put("trait", Token.Kind.TRAIT);
-    keywordLookup.put("transmute", Token.Kind.TRANSMUTE);
-    keywordLookup.put("true", Token.Kind.TRUE);
-    keywordLookup.put("try", Token.Kind.TRY);
-    keywordLookup.put("typealias", Token.Kind.TYPEALIAS);
-    keywordLookup.put("union", Token.Kind.UNION);
-    keywordLookup.put("until", Token.Kind.UNTIL);
-    keywordLookup.put("use", Token.Kind.USE);
-    keywordLookup.put("val", Token.Kind.VAL);
-    keywordLookup.put("var", Token.Kind.VAR);
-    keywordLookup.put("virtual", Token.Kind.VIRTUAL);
-    keywordLookup.put("volatile", Token.Kind.VOLATILE);
-    keywordLookup.put("when", Token.Kind.WHEN);
-    keywordLookup.put("while", Token.Kind.WHILE);
-    keywordLookup.put("with", Token.Kind.WITH);
-    keywordLookup.put("short", Token.Kind.SHORT);
-    keywordLookup.put("int", Token.Kind.INT);
-    keywordLookup.put("long", Token.Kind.LONG);
-    keywordLookup.put("int8", Token.Kind.INT8);
-    keywordLookup.put("int16", Token.Kind.INT16);
-    keywordLookup.put("int32", Token.Kind.INT32);
-    keywordLookup.put("int64", Token.Kind.INT64);
-    keywordLookup.put("uint", Token.Kind.UINT);
-    keywordLookup.put("uint8", Token.Kind.UINT8);
-    keywordLookup.put("uint16", Token.Kind.UINT16);
-    keywordLookup.put("uint32", Token.Kind.UINT32);
-    keywordLookup.put("uint64", Token.Kind.UINT64);
-    keywordLookup.put("float", Token.Kind.FLOAT);
-    keywordLookup.put("double", Token.Kind.DOUBLE);
-    keywordLookup.put("float32", Token.Kind.FLOAT32);
-    keywordLookup.put("float64", Token.Kind.FLOAT64);
-    keywordLookup.put("void", Token.Kind.VOID);
   }
 
   public LinkedList<Token> process () {
