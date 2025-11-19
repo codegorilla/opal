@@ -291,14 +291,15 @@ public class Parser {
         var peek = input.get(position.get() + 1);
         if (peek.getKind() == expectedKind)
           delete(expectedKind);
-          // Otherwise, try single-token insertion
+        // Otherwise, try single-token insertion
         else if (followerSet != null && followerSet.contains(lookahead.getKind()))
           insert(expectedKind);
-          // Otherwise, fall back to panic-mode
+        // Otherwise, fall back to panic-mode
         else {
           if (!errorRecoveryMode)
             generalError(expectedKind);
-          sync();
+          if (expectedKind != Token.Kind.EOF)
+            sync();
         }
       }
       // Should be true, but can set to false for development
@@ -308,6 +309,29 @@ public class Parser {
 
   private void matchX (Token.Kind expectedKind) {
     matchX(expectedKind, null);
+  }
+
+  // Special match if expecting EOF. Maybe we can fold this into the normal
+  // match method.
+
+  private void matchEOF () {
+    if (lookahead.getKind() == Token.Kind.EOF) {
+      // Happy path
+      LOGGER.info("Match: matched " + lookahead);
+      mark = lookahead;
+      consume();
+      errorRecoveryMode = false;
+    } else {
+      // Sad path
+      // Try single-token deletion
+      var peek = input.get(position.get() + 1);
+      if (peek.getKind() == Token.Kind.EOF)
+        delete(Token.Kind.EOF);
+      // Otherwise, done
+      else
+        generalError(Token.Kind.EOF);
+      // Maybe we want to consume until EOF?
+    }
   }
 
   // *** END EXPERIMENT ***
@@ -443,7 +467,7 @@ public class Parser {
     var node = translationUnit(EnumSet.of(Token.Kind.EOF));
     // EOF is the only token in the follow set of translationUnit. Must match
     // it to ensure there is no garbage left over.
-    matchX(Token.Kind.EOF);
+    matchEOF();
 
     LOGGER.info("*** Parsing complete! ***");
     // Inspect builtin scope
@@ -526,7 +550,7 @@ public class Parser {
     var n = new PackageDeclaration(mark);
     matchX(Token.Kind.IDENTIFIER, FollowerSet.SEMICOLON);
     n.addChild(new PackageName(mark));
-    matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE, IMPORT));
+    matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE, IMPORT, Token.Kind.EOF));
     followingSetStack.pop();
     return n;
   }
@@ -607,8 +631,7 @@ public class Parser {
     confirm(USE);
     var n = new UseDeclaration(mark);
     n.addChild(useQualifiedName(FollowingSet.SEMICOLON));
-    // Should EOF be in the follower set?
-    matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE));
+    matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE, Token.Kind.EOF));
     followingSetStack.pop();
     return n;
   }
