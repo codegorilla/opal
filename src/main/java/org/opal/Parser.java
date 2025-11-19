@@ -280,12 +280,10 @@ public class Parser {
         // Try single-token insertion
         if (followerSet != null && followerSet.contains(lookahead.getKind()))
           insert(expectedKind);
-        // Otherwise, fall back to panic-mode?
-        // Does this make sense if lookahead is at EOF?
+        // Otherwise, done
         else {
           if (!errorRecoveryMode)
             generalError(expectedKind);
-          sync();
         }
       }
       else {
@@ -397,8 +395,11 @@ public class Parser {
     System.out.println(error.complete());
   }
 
-  @Deprecated
-  private void checkError (Set<Token.Kind> expectedKinds) {
+  // This probably only pertains when there are a finite set of multiple
+  // options. Thus expected kinds will always be greater than one. But this has
+  // not been proven yet.
+
+  private void checkError (EnumSet<Token.Kind> expectedKinds) {
     var expectedKindsString = expectedKinds.stream()
       .map(kind -> keywordLookup.getOrDefault(kind, friendlyKind(kind)))
       .sorted()
@@ -473,7 +474,8 @@ public class Parser {
 
   // TRANSLATION UNIT *********************************************************
 
-  // translationUnit is the start symbol for parsing.
+  // In parsing lingo, the top-most production is known as the "start symbol".
+  // Thus, our start symbol is the translation unit.
 
   private AstNode translationUnit (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
@@ -532,9 +534,9 @@ public class Parser {
   private AstNode importDeclarations (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
     var n = new ImportDeclarations();
-    n.addChild(importDeclaration());
+    n.addChild(importDeclaration(FollowingSet.IMPORT));
     while (lookahead.getKind() == IMPORT)
-      n.addChild(importDeclaration());
+      n.addChild(importDeclaration(FollowingSet.IMPORT));
     followingSetStack.pop();
     return n;
   }
@@ -547,12 +549,12 @@ public class Parser {
   // easiest implementation and the others hold no advantages for our
   // particular use case.
 
-  private AstNode importDeclaration () {
-    followingSetStack.push(FollowingSet.IMPORT);
+  private AstNode importDeclaration (EnumSet<Token.Kind> followingSet) {
+    followingSetStack.push(followingSet);
     confirm(IMPORT);
     var n = new ImportDeclaration(mark);
     n.addChild(importQualifiedName(EnumSet.of(SEMICOLON, AS)));
-    n.addChild(lookahead.getKind() == AS ? importAsClause() : EPSILON);
+    n.addChild(lookahead.getKind() == AS ? importAsClause(FollowingSet.SEMICOLON) : EPSILON);
     matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE, IMPORT, Token.Kind.EOF));
     followingSetStack.pop();
     return n;
@@ -581,8 +583,8 @@ public class Parser {
     return n;
   }
 
-  private AstNode importAsClause () {
-    followingSetStack.push(FollowingSet.SEMICOLON);
+  private AstNode importAsClause (EnumSet<Token.Kind> followingSet) {
+    followingSetStack.push(followingSet);
     confirm(AS);
     matchX(Token.Kind.IDENTIFIER, FollowerSet.SEMICOLON);
     var n = new ImportName(mark);
@@ -603,10 +605,10 @@ public class Parser {
   private AstNode useDeclaration (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
     confirm(USE);
-    var n = new UseDeclaration(previous);
+    var n = new UseDeclaration(mark);
     n.addChild(useQualifiedName(FollowingSet.SEMICOLON));
-    if (!match(SEMICOLON, FollowerSet.OTHER_DECLARATION_USE))
-      sync();
+    // Should EOF be in the follower set?
+    matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE));
     followingSetStack.pop();
     return n;
   }
@@ -620,16 +622,10 @@ public class Parser {
   private AstNode useQualifiedName (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
     AstNode n = new UseQualifiedName();
-    var p = useName(FollowerSet.PERIOD);
+    matchX(Token.Kind.IDENTIFIER, FollowerSet.PERIOD);
+    var p = new UseName(mark);
     n.addChild(p);
     match(PERIOD, FollowerSet.IDENTIFIER);
-    // To do: We should be able to do single-token deletion here prior to
-    // jumping into the next method since we know the next thing should be '*',
-    // '{', or ID. See [Par12] pg. 164. We cannot do single-token insertion
-    // however, because it would depending on knowing which alternative is
-    // being taken, since some alternatives might have the same follower
-    // tokens. (It might actually be possible in some limited situations, but
-    // would be too much trouble to implement).
     p.addChild(useQualifiedNameTail());
     followingSetStack.pop();
     return n;
@@ -638,73 +634,41 @@ public class Parser {
   private AstNode useQualifiedNameTail () {
     AstNode n;
     var kind = lookahead.getKind();
-    if (kind == ASTERISK)
-      n = useNameWildcard();
-    else if (kind == L_BRACE)
+    if (kind == ASTERISK) {
+      confirm(ASTERISK);
+      n = new UseNameWildcard(mark);
+    } else if (kind == L_BRACE) {
       n = useNameGroup();
-    else if (kind == Token.Kind.IDENTIFIER) {
-      n = useName();
+    } else if (kind == Token.Kind.IDENTIFIER) {
+      confirm(Token.Kind.IDENTIFIER);
+      n = new UseName(mark);
       if (lookahead.getKind() == PERIOD) {
         confirm(PERIOD);
         n.addChild(useQualifiedNameTail());
       }
     } else {
-      // Maybe print error sync message?
-      n = new ErrorNode(lookahead);
+      // No viable alternative. We should be able to improve upon this.
+      checkError(EnumSet.of(ASTERISK, L_BRACE, Token.Kind.IDENTIFIER));
+      mark = lookahead;
       sync();
+      // We don't know which kind of node this is so we need to make a generic
+      // error node, perhaps NoViableAlt, like ANTLR?
+      n = new ErrorNode(mark);
     }
-    return n;
-  }
-
-  @Terminal
-  private AstNode useNameWildcard () {
-    confirm(ASTERISK);
-    var n = new UseNameWildcard(previous);
     return n;
   }
 
   private AstNode useNameGroup () {
     confirm(L_BRACE);
-    var n = new UseNameGroup(previous);
-    n.addChild(useName(FollowerSet.COMMA_R_BRACE));
+    var n = new UseNameGroup(mark);
+    matchX(Token.Kind.IDENTIFIER, EnumSet.of(COMMA, R_BRACE));
+    n.addChild(new UseName(mark));
     while (lookahead.getKind() == COMMA) {
       confirm(COMMA);
-      n.addChild(useName(FollowerSet.COMMA_R_BRACE));
+      matchX(Token.Kind.IDENTIFIER, EnumSet.of(COMMA, R_BRACE));
+      n.addChild(new UseName(mark));
     }
-    // To do: Do we check and sync on punctuation?
-    match(R_BRACE);
-    return n;
-  }
-
-  // The @Terminal annotation doesn't do anything, but serves as an indicator
-  // that this production wraps a terminal. The literature on recursive descent
-  // parsing usually states that terminals do not need their own productions.
-  // However, this doesn't take into account the need for AST construction and
-  // especially error recovery code. Once those are added, wrapping certain
-  // terminals (namely those that produce AST nodes) with a terminal production
-  // helps to reduce code duplication.
-
-  @Terminal
-  private AstNode useName () {
-    AstNode n;
-    if (match(Token.Kind.IDENTIFIER))
-      n = new UseName(previous);
-    else {
-      n = new ErrorNode(lookahead);
-      sync();
-    }
-    return n;
-  }
-
-  @Terminal
-  private AstNode useName (EnumSet<Token.Kind> matchSet) {
-    AstNode n;
-    if (match(Token.Kind.IDENTIFIER, matchSet))
-      n = new UseName(previous);
-    else {
-      n = new ErrorNode(lookahead);
-      sync();
-    }
+    matchX(R_BRACE, FollowerSet.SEMICOLON);
     return n;
   }
 
