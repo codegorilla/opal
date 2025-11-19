@@ -276,62 +276,49 @@ public class Parser {
       errorRecoveryMode = false;
     } else {
       // Sad path
-      if (lookahead.getKind() == Token.Kind.EOF) {
-        // Try single-token insertion
-        if (followerSet != null && followerSet.contains(lookahead.getKind()))
-          insert(expectedKind);
-        // Otherwise, done
-        else {
-          if (!errorRecoveryMode)
-            generalError(expectedKind);
-        }
-      }
-      else {
+      LOGGER.info("Match: entering sad path");
+      if (expectedKind == Token.Kind.EOF) {
         // Try single-token deletion
         var peek = input.get(position.get() + 1);
-        if (peek.getKind() == expectedKind)
-          delete(expectedKind);
-        // Otherwise, try single-token insertion
-        else if (followerSet != null && followerSet.contains(lookahead.getKind()))
-          insert(expectedKind);
-        // Otherwise, fall back to panic-mode
-        else {
-          if (!errorRecoveryMode)
-            generalError(expectedKind);
-          if (expectedKind != Token.Kind.EOF)
-            sync();
+        if (peek.getKind() == Token.Kind.EOF)
+          delete(Token.Kind.EOF);
+        // Otherwise, done
+        else
+          generalError(Token.Kind.EOF);
+      } else {
+        if (lookahead.getKind() == Token.Kind.EOF) {
+          // Try single-token insertion
+          if (followerSet != null && followerSet.contains(lookahead.getKind()))
+            insert(expectedKind);
+          // Otherwise, done
+          else {
+            if (!errorRecoveryMode)
+              generalError(expectedKind);
+          }
         }
+        else {
+          // Try single-token deletion
+          var peek = input.get(position.get() + 1);
+          if (peek.getKind() == expectedKind)
+            delete(expectedKind);
+          // Otherwise, try single-token insertion
+          else if (followerSet != null && followerSet.contains(lookahead.getKind()))
+            insert(expectedKind);
+          // Otherwise, fall back to panic-mode
+          else {
+            if (!errorRecoveryMode)
+              generalError(expectedKind);
+            sync();
+          }
+        }
+        // Should be true, but can set to false for development
+        errorRecoveryMode = false;
       }
-      // Should be true, but can set to false for development
-      errorRecoveryMode = false;
     }
   }
 
   private void matchX (Token.Kind expectedKind) {
     matchX(expectedKind, null);
-  }
-
-  // Special match if expecting EOF. Maybe we can fold this into the normal
-  // match method.
-
-  private void matchEOF () {
-    if (lookahead.getKind() == Token.Kind.EOF) {
-      // Happy path
-      LOGGER.info("Match: matched " + lookahead);
-      mark = lookahead;
-      consume();
-      errorRecoveryMode = false;
-    } else {
-      // Sad path
-      // Try single-token deletion
-      var peek = input.get(position.get() + 1);
-      if (peek.getKind() == Token.Kind.EOF)
-        delete(Token.Kind.EOF);
-      // Otherwise, done
-      else
-        generalError(Token.Kind.EOF);
-      // Maybe we want to consume until EOF?
-    }
   }
 
   // *** END EXPERIMENT ***
@@ -467,7 +454,7 @@ public class Parser {
     var node = translationUnit(EnumSet.of(Token.Kind.EOF));
     // EOF is the only token in the follow set of translationUnit. Must match
     // it to ensure there is no garbage left over.
-    matchEOF();
+    matchX(Token.Kind.EOF);
 
     LOGGER.info("*** Parsing complete! ***");
     // Inspect builtin scope
