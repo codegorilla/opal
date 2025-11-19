@@ -4,6 +4,6 @@ package main;
 import opal as op;
 
 use opal.math.cos;
-use opal.math.*;
 use opal.math.{ Bessel, Gamma };
+use opal.math.*;
 
