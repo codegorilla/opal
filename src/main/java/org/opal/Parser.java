@@ -968,7 +968,8 @@ public class Parser {
     n.addChild(accessSpecifier);
     n.addChild(variableModifiers());
     n.addChild(variableName());
-    n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier() : null);
+    // SHOULD NOT BE NULL - JUST A PLACEHOLDER
+    n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier(null) : null);
     // SHOULD NOT BE NULL - JUST A PLACEHOLDER
     n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer(null) : null);
     match(SEMICOLON);
@@ -1134,6 +1135,32 @@ public class Parser {
   // uncertain path. So do we match or do we confirm? I think we need to match,
   // which is a more fail-safe option.
 
+//  private final EnumSet<Token.Kind> fsv1 = EnumSet.of (
+//    Token.Kind.IDENTIFIER,
+//    Token.Kind.BOOL,
+//    Token.Kind.DOUBLE,
+//    Token.Kind.FLOAT,
+//    Token.Kind.FLOAT32,
+//    Token.Kind.FLOAT64,
+//    Token.Kind.INT,
+//    Token.Kind.INT8,
+//    Token.Kind.INT16,
+//    Token.Kind.INT32,
+//    Token.Kind.INT64,
+//    Token.Kind.LONG,
+//    Token.Kind.NULL_T,
+//    Token.Kind.SHORT,
+//    Token.Kind.UINT,
+//    Token.Kind.UINT8,
+//    Token.Kind.UINT16,
+//    Token.Kind.UINT32,
+//    Token.Kind.UINT64,
+//    Token.Kind.VOID,
+//    ASTERISK,
+//    CARET,
+//    L_PARENTHESIS
+//  );
+
   private AstNode variableDeclaration (AstNode exportSpecifier) {
     confirm(lookahead.getKind() == VAL ? VAL : VAR);
     var n = new VariableDeclaration(mark);
@@ -1142,7 +1169,7 @@ public class Parser {
     matchX(Token.Kind.IDENTIFIER, EnumSet.of(COLON, EQUAL));
     n.addChild(new VariableName(mark));
     if (lookahead.getKind() == COLON) {
-      n.addChild(variableTypeSpecifier());
+      n.addChild(variableTypeSpecifier(FollowingSet.EQUAL));
       if (lookahead.getKind() == EQUAL)
         n.addChild(variableInitializer(FollowingSet.SEMICOLON));
       else
@@ -1171,14 +1198,16 @@ public class Parser {
     return n;
   }
 
-  private AstNode variableTypeSpecifier () {
+  private AstNode variableTypeSpecifier (EnumSet<Token.Kind> followingSet) {
+    followingSetStack.push(followingSet);
     var n = new VariableTypeSpecifier(lookahead);
-    match(Token.Kind.COLON);
+    matchX(Token.Kind.COLON, EnumSet.of(EQUAL, SEMICOLON));
     n.addChild(type());
+    followingSetStack.pop();
     return n;
   }
 
-  private EnumSet fs1 = EnumSet.of (
+  private final EnumSet<Token.Kind> fsv2 = EnumSet.of (
     Token.Kind.IDENTIFIER,
     Token.Kind.INT32_LITERAL,
     Token.Kind.INT64_LITERAL,
@@ -1201,7 +1230,7 @@ public class Parser {
   private AstNode variableInitializer (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
     var n = new VariableInitializer(lookahead);
-    matchX(EQUAL, fs1);
+    matchX(EQUAL, fsv2);
     n.addChild(expression(true));
     followingSetStack.pop();
     return n;
@@ -1212,7 +1241,8 @@ public class Parser {
     match(Token.Kind.VAR);
     n.addChild(variableModifiers());
     n.addChild(variableName());
-    n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier() : null);
+    // SHOULD NOT BE NULL - JUST A PLACEHOLDER FOR NOW
+    n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier(null) : null);
     // SHOULD NOT BE NULL - JUST A PLACEHOLDER FOR NOW
     n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer(null) : null);
     match(SEMICOLON);

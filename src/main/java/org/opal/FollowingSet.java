@@ -13,6 +13,9 @@ import java.util.EnumSet;
 
 public class FollowingSet {
 
+  public static final EnumSet<Token.Kind> EQUAL =
+    EnumSet.of(Token.Kind.EQUAL);
+
   public static final EnumSet<Token.Kind> IMPORT =
     EnumSet.of(Token.Kind.IMPORT);
 
