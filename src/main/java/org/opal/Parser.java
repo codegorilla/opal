@@ -226,7 +226,32 @@ public class Parser {
     return kind.toString().toLowerCase().replace("_", " ");
   }
 
-  // *** EXPERIMENTAL ***
+  // In The Definitive ANTLR4 Reference, Parr describes ANTLR's error recovery
+  // in detail. His algorithm attempts phrase-level recovery through
+  // single-token deletion or insertion, followed by context-informed
+  // panic-mode recovery.
+
+  // We might want to implement Damerau–Levenshtein distance algorithm to
+  // auto-correct spellings (e.g. packge > package, esle > else). This can be
+  // accomplished with the Apache Commons Text library or other means.
+
+  // We want to implement error recovery in the following order of priority:
+  // (1) single-token deletion if possible, (2) single-token insertion if
+  // possible, (3) panic-mode recovery.
+
+  // To do: We might want to also implement single-token replacement. If
+  // deletion or insertion aren't possible, and the expected token is a
+  // specific keyword, we can check if the token is just mis-spelled.
+
+  // Although single-token deletion might seem redundant with panic-mode (since
+  // a panicking parser will start off by deleting the current lookahead token)
+  // this is not the case, because we want to try single-token insertion before
+  // resorting to full panic-mode.
+
+  // Neither single-token deletion nor single-token insertion make sense if the
+  // current token is EOF. The former requires that we look at the next token,
+  // which would not exist. The latter requires consideration of what kind of
+  // token would follow, which also would not exist.
 
   private void delete (Token.Kind expectedKind) {
     if (!errorRecoveryMode)
@@ -269,13 +294,13 @@ public class Parser {
 
   private void matchX (Token.Kind expectedKind, EnumSet<Token.Kind> followerSet) {
     if (lookahead.getKind() == expectedKind) {
-      // Happy path
+      // Happy path :)
       LOGGER.info("Match: matched " + lookahead);
       mark = lookahead;
       consume();
       errorRecoveryMode = false;
     } else {
-      // Sad path
+      // Sad path :(
       LOGGER.info("Match: entering sad path");
       if (expectedKind == Token.Kind.EOF) {
         // Try single-token deletion
@@ -295,8 +320,7 @@ public class Parser {
             if (!errorRecoveryMode)
               generalError(expectedKind);
           }
-        }
-        else {
+        } else {
           // Try single-token deletion
           var peek = input.get(position.get() + 1);
           if (peek.getKind() == expectedKind)
@@ -321,34 +345,7 @@ public class Parser {
     matchX(expectedKind, null);
   }
 
-  // *** END EXPERIMENT ***
-
-  // In The Definitive ANTLR4 Reference, Parr describes ANTLR's error recovery
-  // in detail. His algorithm attempts phrase-level recovery through
-  // single-token deletion or insertion, followed by context-informed
-  // panic-mode recovery.
-
-  // We might want to implement Damerau–Levenshtein distance algorithm to
-  // auto-correct spellings (e.g. packge > package, esle > else). This can be
-  // accomplished with the Apache Commons Text library or other means.
-
-  // We want to implement error recovery in the following order of priority:
-  // (1) single-token deletion if possible, (2) single-token insertion if
-  // possible, (3) panic-mode recovery.
-
-  // To do: We might want to also implement single-token replacement. If
-  // deletion or insertion aren't possible, and the expected token is a
-  // specific keyword, we can check if the token is just mis-spelled.
-
-  // Although single-token deletion might seem redundant with panic-mode (since
-  // a panicking parser will start off by deleting the current lookahead token)
-  // this is not the case, because we want to try single-token insertion before
-  // resorting to full panic-mode.
-
-  // Neither single-token deletion nor single-token insertion make sense if the
-  // current token is EOF. The former requires that we look at the next token,
-  // which would not exist. The latter requires consideration of what kind of
-  // token would follow, which also would not exist.
+  // DEPRECATED
 
   @Deprecated
   private boolean match (Token.Kind expectedKind) {
@@ -485,8 +482,8 @@ public class Parser {
 
   // TRANSLATION UNIT *********************************************************
 
-  // In parsing lingo, the top-most production is known as the "start symbol".
-  // Thus, our start symbol is the translation unit.
+  // In parsing theory lingo, the top-most production is known as the "start
+  // symbol". Thus, the translation unit is our start symbol.
 
   private AstNode translationUnit (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
@@ -684,65 +681,65 @@ public class Parser {
 
   // OTHER DECLARATIONS
 
-  // To do: Other declarations needs to be optional
+//      System.out.println("Sleeping for " + SLEEP_TIME + " seconds in declarations...");
+//      try {
+//        Thread.sleep(SLEEP_TIME);
+//      } catch (InterruptedException e) {
+//        throw new RuntimeException(e);
+//      }
 
   private AstNode otherDeclarations () {
     var n = new OtherDeclarations();
-    while (lookahead.getKind() != Token.Kind.EOF) {
-      // Infinite loop, need to consume
-      System.out.println("Sleeping for " + SLEEP_TIME + " seconds in declarations...");
-      try {
-        Thread.sleep(SLEEP_TIME);
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
-      n.addChild(otherDeclaration());
+    var kind = lookahead.getKind();
+    var fso = EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR);
+    while (
+      kind == PRIVATE ||
+      kind == CLASS   ||
+      kind == DEF     ||
+      kind == VAL     ||
+      kind == VAR
+    ) {
+      n.addChild(otherDeclaration(fso));
+      kind = lookahead.getKind();
     }
     return n;
   }
 
-  private static final EnumSet<Token.Kind> FIRST_OTHER_DECLARATION  = EnumSet.of (
-    Token.Kind.PRIVATE,
-    Token.Kind.CLASS,
-    Token.Kind.DEF,
-    Token.Kind.VAL,
-    Token.Kind.VAR
-  );
-  private static final EnumSet<Token.Kind> FOLLOW_OTHER_DECLARATION = EnumSet.of (
-    Token.Kind.PRIVATE,
-    Token.Kind.CLASS,
-    Token.Kind.DEF,
-    Token.Kind.VAL,
-    Token.Kind.VAR
-  );
+  // Entities may be declared as private, indicating that they are not
+  // exported. Otherwise, they are considered public, i.e. exported.
 
-  private AstNode otherDeclaration () {
-    System.out.println("OTHER DECL");
+  private AstNode otherDeclaration (EnumSet<Token.Kind> followingSet) {
+    followingSetStack.push(followingSet);
+    AstNode p;
+    if (lookahead.getKind() == PRIVATE) {
+      confirm(PRIVATE);
+      p = new ExportSpecifier(mark);
+    } else {
+      p = EPSILON;
+    }
     AstNode n = null;
-    var spec = (lookahead.getKind() == Token.Kind.PRIVATE) ? exportSpecifier() : null;
-    if (lookahead.getKind() == Token.Kind.TEMPLATE) {
+    if (lookahead.getKind() == TEMPLATE) {
 //      n = templateDeclaration();
     } else {
       modifiers();
-      n = switch (lookahead.getKind()) {
-        case Token.Kind.CLASS -> classDeclaration(spec);
-        case Token.Kind.TYPEALIAS -> typealiasDeclaration(spec);
-        case Token.Kind.DEF -> routineDeclaration(spec);
-        case Token.Kind.VAL, Token.Kind.VAR -> variableDeclaration(spec);
-        default -> null;
-      };
+      var kind = lookahead.getKind();
+      if (kind == CLASS)
+        n = classDeclaration(p);
+      else if (kind == TYPEALIAS)
+        n = typealiasDeclaration(p);
+      else if (kind == DEF)
+        n = routineDeclaration(p);
+      else if (kind == VAL || kind == VAR)
+        n = variableDeclaration(p);
+      else {
+        checkError(EnumSet.of(CLASS, TYPEALIAS, DEF, VAL, VAR));
+        mark = lookahead;
+        sync();
+        modifierStack.clear();
+        n = new ErrorNode(mark);
+      }
     }
-    return n;
-  }
-
-  // EXPORT SPECIFIERS
-
-  // Entities may be declared as private, indicating that they are not
-  // exported. Otherwise, they are considered public and exported.
-
-  private ExportSpecifier exportSpecifier () {
-    var n = new ExportSpecifier(lookahead);
-    match(Token.Kind.PRIVATE);
+    followingSetStack.pop();
     return n;
   }
 
@@ -774,21 +771,16 @@ public class Parser {
   private void modifiers () {
     var kind = lookahead.getKind();
     while (
-      kind == Token.Kind.ABSTRACT  ||
-      kind == Token.Kind.CONST     ||
-      kind == Token.Kind.CONSTEXPR ||
-      kind == Token.Kind.FINAL     ||
-      kind == Token.Kind.VOLATILE
+      kind == ABSTRACT  ||
+      kind == CONST     ||
+      kind == CONSTEXPR ||
+      kind == FINAL     ||
+      kind == VOLATILE
     ) {
-      modifier();
+      confirm(kind);
+      modifierStack.push(new Modifier(mark));
       kind = lookahead.getKind();
     }
-  }
-
-  private void modifier () {
-    var n = new Modifier(lookahead);
-    match(lookahead.getKind());
-    modifierStack.push(n);
   }
 
   // CLASS DECLARATIONS
@@ -898,7 +890,8 @@ public class Parser {
       kind == Token.Kind.VIRTUAL   ||
       kind == Token.Kind.VOLATILE
     ) {
-      modifier();
+      confirm(kind);
+      modifierStack.push(new Modifier(mark));
       kind = lookahead.getKind();
     }
   }
@@ -1019,7 +1012,7 @@ public class Parser {
   // For now, there are no local routines, so no need to distinguish between
   // global and local routines.
 
-  private AstNode routineDeclaration (ExportSpecifier exportSpecifier) {
+  private AstNode routineDeclaration (AstNode exportSpecifier) {
     var n = new RoutineDeclaration(lookahead);
     match(Token.Kind.DEF);
 //    var scope = Scope(Scope.Kind.LOCAL);
@@ -1130,21 +1123,22 @@ public class Parser {
 
   // VARIABLE DECLARATIONS
 
-  // To do: Local variables don't have access specifiers. Because children can be accessed by name, we need a separate
-  // local variable node type.
+  // To do: Local variables don't have access specifiers. Because children can
+  // be accessed by name, we need a separate local variable node type.
 
   // We put null values into the list of children to ensure a constant node
   // count and node order.
 
-  private AstNode variableDeclaration (ExportSpecifier exportSpecifier) {
-    var n = new VariableDeclaration(lookahead);
-    match(Token.Kind.VAR);
+  private AstNode variableDeclaration (AstNode exportSpecifier) {
+    confirm(lookahead.getKind() == VAL ? VAL : VAR);
+    var n = new VariableDeclaration(mark);
     n.addChild(exportSpecifier);
     n.addChild(variableModifiers());
-    n.addChild(variableName());
-    n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier() : null);
-    n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer() : null);
-    match(SEMICOLON);
+    matchX(Token.Kind.IDENTIFIER, EnumSet.of(COLON, EQUAL));
+    n.addChild(new VariableName(mark));
+    n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier() : EPSILON);
+    n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer() : EPSILON);
+    matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR));
     return n;
   }
 
@@ -1155,6 +1149,9 @@ public class Parser {
     return n;
   }
 
+  // Deprecated - put this terminal directly into the rule instead.
+
+  @Deprecated
   private AstNode variableName () {
     var n = new VariableName(lookahead);
     match(Token.Kind.IDENTIFIER);
