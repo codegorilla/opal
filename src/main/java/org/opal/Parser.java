@@ -969,7 +969,8 @@ public class Parser {
     n.addChild(variableModifiers());
     n.addChild(variableName());
     n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier() : null);
-    n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer() : null);
+    // SHOULD NOT BE NULL - JUST A PLACEHOLDER
+    n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer(null) : null);
     match(SEMICOLON);
     return n;
   }
@@ -1129,6 +1130,10 @@ public class Parser {
   // We put null values into the list of children to ensure a constant node
   // count and node order.
 
+  // To do: variable initializer is being arrived at via a certain path and an
+  // uncertain path. So do we match or do we confirm? I think we need to match,
+  // which is a more fail-safe option.
+
   private AstNode variableDeclaration (AstNode exportSpecifier) {
     confirm(lookahead.getKind() == VAL ? VAL : VAR);
     var n = new VariableDeclaration(mark);
@@ -1136,8 +1141,16 @@ public class Parser {
     n.addChild(variableModifiers());
     matchX(Token.Kind.IDENTIFIER, EnumSet.of(COLON, EQUAL));
     n.addChild(new VariableName(mark));
-    n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier() : EPSILON);
-    n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer() : EPSILON);
+    if (lookahead.getKind() == COLON) {
+      n.addChild(variableTypeSpecifier());
+      if (lookahead.getKind() == EQUAL)
+        n.addChild(variableInitializer(FollowingSet.SEMICOLON));
+      else
+        n.addChild(EPSILON);
+    } else {
+      n.addChild(EPSILON);
+      n.addChild(variableInitializer(FollowingSet.SEMICOLON));
+    }
     matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR));
     return n;
   }
@@ -1165,10 +1178,32 @@ public class Parser {
     return n;
   }
 
-  private AstNode variableInitializer () {
+  private EnumSet fs1 = EnumSet.of (
+    Token.Kind.IDENTIFIER,
+    Token.Kind.INT32_LITERAL,
+    Token.Kind.INT64_LITERAL,
+    Token.Kind.UINT32_LITERAL,
+    Token.Kind.UINT64_LITERAL,
+    Token.Kind.FLOAT32_LITERAL,
+    Token.Kind.FLOAT64_LITERAL,
+    Token.Kind.CHARACTER_LITERAL,
+    Token.Kind.STRING_LITERAL,
+    PLUS,
+    MINUS,
+    TILDE,
+    EXCLAMATION,
+    AMPERSAND,
+    ASTERISK,
+    L_PARENTHESIS,
+    PERIOD
+  );
+
+  private AstNode variableInitializer (EnumSet<Token.Kind> followingSet) {
+    followingSetStack.push(followingSet);
     var n = new VariableInitializer(lookahead);
-    match(Token.Kind.EQUAL);
+    matchX(EQUAL, fs1);
     n.addChild(expression(true));
+    followingSetStack.pop();
     return n;
   }
 
@@ -1178,7 +1213,8 @@ public class Parser {
     n.addChild(variableModifiers());
     n.addChild(variableName());
     n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier() : null);
-    n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer() : null);
+    // SHOULD NOT BE NULL - JUST A PLACEHOLDER FOR NOW
+    n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer(null) : null);
     match(SEMICOLON);
     return n;
   }
@@ -1193,17 +1229,17 @@ public class Parser {
     AstNode n = null;
     Token.Kind kind = lookahead.getKind();
     if (
-      kind == Token.Kind.BREAK     ||
-      kind == Token.Kind.L_BRACE   ||
-      kind == Token.Kind.CONTINUE  ||
-      kind == Token.Kind.DO        ||
-      kind == Token.Kind.FOR       ||
-      kind == Token.Kind.LOOP      ||
+      kind == BREAK     ||
+      kind == L_BRACE   ||
+      kind == CONTINUE  ||
+      kind == DO        ||
+      kind == FOR       ||
+      kind == LOOP      ||
       kind == SEMICOLON ||
-      kind == Token.Kind.IF        ||
-      kind == Token.Kind.RETURN    ||
-      kind == Token.Kind.UNTIL     ||
-      kind == Token.Kind.WHILE
+      kind == IF        ||
+      kind == RETURN    ||
+      kind == UNTIL     ||
+      kind == WHILE
     ) {
       n = standardStatement();
     } else if (
