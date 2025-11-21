@@ -1114,7 +1114,12 @@ public class Lexer {
           } else {
             // Pretend we got a digit for error recovery purposes
             error("invalid number: expected decimal digit, got '" + current + "'");
-            consume();
+            // We don't want to consume the character in case it belongs to the
+            // next token. That can cause the lexical error to cascade into a
+            // hard-to-understand syntax error. Leaving the character alone may
+            // still result in a syntax error, but it will generally be more
+            // sensible.
+            //consume();
             state = State.NUM_400;
           }
           break;
