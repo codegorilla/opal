@@ -217,6 +217,7 @@ public class Parser {
     keywordLookup = keywordTable.getReverseLookupTable();
     buildReverseKeywordLookupTable();
 
+    // Set up logging
     var level = Level.INFO;
     Configurator.setRootLevel(level);
   }

@@ -1,9 +1,22 @@
 package org.opal;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.opal.error.LexicalError;
+
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 public class Lexer {
+
+  private final int SLEEP_TIME = 100;
+
+  private static final Logger LOGGER = LogManager.getLogger();
+
+  private final List<String> sourceLines;
 
   private final char EOF = (char)(-1);
 
@@ -19,12 +32,17 @@ public class Lexer {
 
   private final HashMap<String, Token.Kind> keywordLookup;
 
-  public Lexer (String input) {
+  public Lexer (String input, List<String> sourceLines) {
     this.input = input;
     if (!input.isEmpty())
       current = input.charAt(0);
+    this.sourceLines = sourceLines;
     var keywordTable = new KeywordTable();
     keywordLookup = keywordTable.getForwardLookupTable();
+
+    // Set up logging
+    var level = Level.INFO;
+    Configurator.setRootLevel(level);
   }
 
   private void consume () {
@@ -68,6 +86,13 @@ public class Lexer {
     String lexeme = "";
 
     while (current != EOF) {
+
+      System.out.println("Sleeping for " + SLEEP_TIME + " seconds in declarations...");
+      try {
+        Thread.sleep(SLEEP_TIME);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
 
       if (current == '=') {
         mark();
@@ -980,6 +1005,14 @@ public class Lexer {
     var state = State.NUM_START;
     Token token = null;
     while (token == null) {
+
+      System.out.println("Sleeping for " + SLEEP_TIME + " seconds in declarations...");
+      try {
+        Thread.sleep(SLEEP_TIME);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+
       switch (state) {
         case State.NUM_START:
           // We are guaranteed to get a digit here unless the lexer has a bug in it.
@@ -1081,8 +1114,11 @@ public class Lexer {
             state = State.NUM_400;
           } else {
             // Pretend we got a digit for error recovery purposes
-            error("invalid number: found '" + current + "', expected decimal digit");
+            var message = "invalid number: found '" + current + "', expected decimal digit";
+            var x = new LexicalError(sourceLines, message, current, line.get(), column.get());
+            System.out.println(x.complete());
             consume();
+            state = State.NUM_400;
           }
           break;
         case State.NUM_400:

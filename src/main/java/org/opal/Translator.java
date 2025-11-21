@@ -63,11 +63,11 @@ public class Translator {
     // method instead of lines().
     var sourceLines = Arrays.stream(source.replace("\r\n", "\n").split("\n", -1)).toList();
 
-    var keywordTable = new KeywordTable();
-
-    var lexer = new Lexer(source);
+    var lexer = new Lexer(source, sourceLines);
     var tokens = lexer.process();
     System.out.println(tokens);
+
+    System.exit(1);
 
     var parser = new Parser(tokens, sourceLines);
     var root = parser.process();
