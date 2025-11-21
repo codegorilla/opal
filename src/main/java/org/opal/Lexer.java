@@ -87,12 +87,12 @@ public class Lexer {
 
     while (current != EOF) {
 
-      System.out.println("Sleeping for " + SLEEP_TIME + " seconds in declarations...");
-      try {
-        Thread.sleep(SLEEP_TIME);
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
+//      System.out.println("Sleeping for " + SLEEP_TIME + " seconds in declarations...");
+//      try {
+//        Thread.sleep(SLEEP_TIME);
+//      } catch (InterruptedException e) {
+//        throw new RuntimeException(e);
+//      }
 
       if (current == '=') {
         mark();
@@ -1006,12 +1006,12 @@ public class Lexer {
     Token token = null;
     while (token == null) {
 
-      System.out.println("Sleeping for " + SLEEP_TIME + " seconds in declarations...");
-      try {
-        Thread.sleep(SLEEP_TIME);
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
+//      System.out.println("Sleeping for " + SLEEP_TIME + " seconds in declarations...");
+//      try {
+//        Thread.sleep(SLEEP_TIME);
+//      } catch (InterruptedException e) {
+//        throw new RuntimeException(e);
+//      }
 
       switch (state) {
         case State.NUM_START:
@@ -1114,7 +1114,7 @@ public class Lexer {
             state = State.NUM_400;
           } else {
             // Pretend we got a digit for error recovery purposes
-            var message = "invalid number: found '" + current + "', expected decimal digit";
+            var message = "invalid number: expected decimal digit, got '" + current + "'";
             var x = new LexicalError(sourceLines, message, current, line.get(), column.get());
             System.out.println(x.complete());
             consume();

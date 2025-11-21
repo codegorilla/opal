@@ -67,8 +67,6 @@ public class Translator {
     var tokens = lexer.process();
     System.out.println(tokens);
 
-    System.exit(1);
-
     var parser = new Parser(tokens, sourceLines);
     var root = parser.process();
 
