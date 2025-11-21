@@ -13,9 +13,6 @@ public class SemanticError extends Error {
   private final String message;
   private final Token token;
 
-  private final String ANSI_RESET = "\u001B[0m";
-  private final String ANSI_RED   = "\u001B[31m";
-
   public SemanticError (List<String> lines, String message, Token token) {
     super();
     this.lines = lines;
@@ -53,10 +50,10 @@ public class SemanticError extends Error {
       .append("\n")
       .append("  | ")
       .repeat(' ', token.getColumn() - 1)
-      .append(ANSI_RED)
+      .append(TermColor.ANSI_RED)
       .append('^')
       .repeat('~', token.getLexeme().length() - 1)
-      .append(ANSI_RESET);
+      .append(TermColor.ANSI_RESET);
     return sb.toString();
   }
 

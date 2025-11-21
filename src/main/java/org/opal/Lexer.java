@@ -66,8 +66,7 @@ public class Lexer {
   }
 
   private void error (String message) {
-    var coords = "(" + line + "," + column.get() + ")";
-    System.out.println(coords + ": error:" + message);
+    System.out.println(new LexicalError(sourceLines, message, line.get(), column.get()));
   }
 
   public LinkedList<Token> process () {
@@ -1114,9 +1113,7 @@ public class Lexer {
             state = State.NUM_400;
           } else {
             // Pretend we got a digit for error recovery purposes
-            var message = "invalid number: expected decimal digit, got '" + current + "'";
-            var x = new LexicalError(sourceLines, message, current, line.get(), column.get());
-            System.out.println(x.complete());
+            error("invalid number: expected decimal digit, got '" + current + "'");
             consume();
             state = State.NUM_400;
           }

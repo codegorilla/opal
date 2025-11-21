@@ -9,19 +9,14 @@ public class LexicalError extends Error {
 
   private final List<String> lines;
   private final String message;
-  private final char current;
 
   private final int line;
   private final int column;
 
-  private final String ANSI_RESET = "\u001B[0m";
-  private final String ANSI_RED   = "\u001B[31m";
-
-  public LexicalError (List<String> lines, String message, char current, int line, int column) {
+  public LexicalError (List<String> lines, String message, int line, int column) {
     super();
     this.lines = lines;
     this.message = message;
-    this.current = current;
     this.line = line;
     this.column = column;
   }
@@ -31,12 +26,9 @@ public class LexicalError extends Error {
   // lines show the affected source code line and a marker indicating the
   // specific point where the error occurred.
 
-  public String complete () {
-    var s = new StringBuilder();
-    s.append(summary());
-    s.append('\n');
-    s.append(detail());
-    return s.toString();
+  @Override
+  public String toString () {
+    return summary() + '\n' + detail();
   }
 
   private String summary () {
@@ -50,16 +42,15 @@ public class LexicalError extends Error {
   }
 
   private String detail () {
-    var sb = new StringBuffer();
+    var sb = new StringBuilder();
     sb.append("  | ")
       .append(lines.get(line-1))
       .append("\n")
       .append("  | ")
       .repeat(' ', column - 1)
-      .append(ANSI_RED)
+      .append(TermColor.ANSI_RED)
       .append('^')
-//      .repeat('~', lexeme.length() - 1)
-      .append(ANSI_RESET);
+      .append(TermColor.ANSI_RESET);
     return sb.toString();
   }
 
