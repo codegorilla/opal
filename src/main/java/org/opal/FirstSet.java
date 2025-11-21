@@ -1,5 +1,7 @@
 package org.opal;
 
+import org.opal.ast.expression.*;
+
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -24,5 +26,19 @@ public class FirstSet {
   public static final EnumSet<Token.Kind> ROUTINE_DECLARATION = EnumSet.of (Token.Kind.DEF);
 
   public static final EnumSet<Token.Kind> VARIABLE_DECLARATION = EnumSet.of (Token.Kind.VAL, Token.Kind.VAR);
+
+  public static final EnumSet<Token.Kind> LITERAL = EnumSet.of (
+    Token.Kind.FALSE,
+    Token.Kind.TRUE,
+    Token.Kind.CHARACTER_LITERAL,
+    Token.Kind.FLOAT32_LITERAL,
+    Token.Kind.FLOAT64_LITERAL,
+    Token.Kind.INT32_LITERAL,
+    Token.Kind.INT64_LITERAL,
+    Token.Kind.NULL,
+    Token.Kind.STRING_LITERAL,
+    Token.Kind.UINT32_LITERAL,
+    Token.Kind.UINT64_LITERAL
+  );
 
 }

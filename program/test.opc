@@ -6,4 +6,4 @@ package main;
 //use opal.math.{ Bessel, Gamma };
 //use opal.math.*;
 
-var x = 1;
+var x: int = 1;

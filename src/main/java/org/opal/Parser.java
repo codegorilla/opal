@@ -32,7 +32,7 @@ import org.opal.symbol.PrimitiveTypeSymbol;
 
 public class Parser {
 
-  private final int SLEEP_TIME = 10;
+  private final int SLEEP_TIME = 100;
 
   private final LinkedList<Token> input;
   private final Counter position;
@@ -2032,63 +2032,47 @@ public class Parser {
   }
 
   private AstNode literal () {
-    AstNode n = null;
-    if (lookahead.getKind() == Token.Kind.FALSE || lookahead.getKind() == Token.Kind.TRUE)
-      n = booleanLiteral();
-    else if (lookahead.getKind() == Token.Kind.CHARACTER_LITERAL)
-      n = characterLiteral();
-    else if (lookahead.getKind() == Token.Kind.FLOAT32_LITERAL || lookahead.getKind() == Token.Kind.FLOAT64_LITERAL)
-      n = floatingPointLiteral();
-    else if (lookahead.getKind() == Token.Kind.INT32_LITERAL || lookahead.getKind() == Token.Kind.INT64_LITERAL)
-      n = integerLiteral();
-    else if (lookahead.getKind() == Token.Kind.NULL)
-      n = nullLiteral();
-    else if (lookahead.getKind() == Token.Kind.STRING_LITERAL)
-      n = stringLiteral();
-    else if (lookahead.getKind() == Token.Kind.UINT32_LITERAL || lookahead.getKind() == Token.Kind.UINT64_LITERAL)
-      n = unsignedIntegerLiteral();
-    return n;
-  }
-
-  private AstNode booleanLiteral () {
-    var n = new BooleanLiteral(lookahead);
-    consume();
-    return n;
-  }
-
-  private AstNode characterLiteral () {
-    var n = new CharacterLiteral(lookahead);
-    consume();
-    return n;
-  }
-
-  private AstNode floatingPointLiteral () {
-    var n = new FloatingPointLiteral(lookahead);
-    consume();
-    return n;
-  }
-
-  private AstNode integerLiteral () {
-    var n = new IntegerLiteral(lookahead);
-    consume();
-    return n;
-  }
-
-  private AstNode nullLiteral () {
-    var n = new NullLiteral(lookahead);
-    consume();
-    return n;
-  }
-
-  private AstNode stringLiteral () {
-    var n = new StringLiteral(lookahead);
-    consume();
-    return n;
-  }
-
-  private AstNode unsignedIntegerLiteral () {
-    var n = new UnsignedIntegerLiteral(lookahead);
-    consume();
+    AstNode n;
+    var kind = lookahead.getKind();
+    if (kind == FALSE) {
+      confirm(FALSE);
+      n = new BooleanLiteral(mark);
+    } else if (kind == TRUE) {
+      confirm(TRUE);
+      n = new BooleanLiteral(mark);
+    } else if (kind == Token.Kind.CHARACTER_LITERAL) {
+      confirm(Token.Kind.CHARACTER_LITERAL);
+      n = new CharacterLiteral(mark);
+    } else if (kind == Token.Kind.FLOAT32_LITERAL) {
+      confirm(Token.Kind.FLOAT32_LITERAL);
+      n = new FloatingPointLiteral(mark);
+    } else if (kind == Token.Kind.FLOAT64_LITERAL) {
+      confirm(Token.Kind.FLOAT64_LITERAL);
+      n = new FloatingPointLiteral(mark);
+    } else if (kind == Token.Kind.INT32_LITERAL) {
+      confirm(Token.Kind.INT32_LITERAL);
+      n = new IntegerLiteral(mark);
+    } else if (kind == Token.Kind.INT64_LITERAL) {
+      confirm(Token.Kind.INT64_LITERAL);
+      n = new IntegerLiteral(mark);
+    } else if (kind == Token.Kind.NULL) {
+      confirm(Token.Kind.NULL);
+      n = new NullLiteral(mark);
+    } else if (kind == Token.Kind.STRING_LITERAL) {
+      confirm(Token.Kind.STRING_LITERAL);
+      n = new StringLiteral(mark);
+    } else if (kind == Token.Kind.UINT32_LITERAL) {
+      confirm(Token.Kind.UINT32_LITERAL);
+      n = new UnsignedIntegerLiteral(mark);
+    } else if (kind == Token.Kind.UINT64_LITERAL) {
+      confirm(Token.Kind.UINT64_LITERAL);
+      n = new UnsignedIntegerLiteral(mark);
+    } else {
+      checkError(FirstSet.LITERAL);
+      mark = lookahead;
+      sync();
+      n = new ErrorNode(mark);
+    }
     return n;
   }
 
@@ -2098,7 +2082,7 @@ public class Parser {
 
   private AstNode this_ () {
     var n = new This(lookahead);
-    match(Token.Kind.THIS);
+    match(THIS);
     return n;
   }
 
