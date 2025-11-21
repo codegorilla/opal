@@ -25,12 +25,8 @@ public class SemanticError extends Error {
   // lines show the affected source code line and a marker indicating the
   // specific point where the error occurred.
 
-  public String complete () {
-    var s = new StringBuilder();
-    s.append(summary());
-    s.append('\n');
-    s.append(detail());
-    return s.toString();
+  public String toString () {
+    return summary() + '\n' + detail();
   }
 
   private String summary () {

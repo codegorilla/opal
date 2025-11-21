@@ -12,7 +12,7 @@ public class SyntaxError extends Error {
   private final List<String> lines;
   private final String message;
   private final Token token;
-  
+
   public SyntaxError (List<String> lines, String message, Token token) {
     super();
     this.lines = lines;
@@ -25,12 +25,9 @@ public class SyntaxError extends Error {
   // lines show the affected source code line and a marker indicating the
   // specific point where the error occurred.
 
-  public String complete () {
-    var s = new StringBuilder();
-    s.append(summary());
-    s.append('\n');
-    s.append(detail());
-    return s.toString();
+  @Override
+  public String toString () {
+    return summary() + '\n' + detail();
   }
 
   private String summary () {

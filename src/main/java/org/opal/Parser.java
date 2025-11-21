@@ -290,7 +290,7 @@ public class Parser {
       consume();
       kind = lookahead.getKind();
     }
-    LOGGER.info("Match: synchronization complete");
+    LOGGER.info("Match: synchronization toString");
   }
 
   private void matchX (Token.Kind expectedKind, EnumSet<Token.Kind> followerSet) {
@@ -383,7 +383,7 @@ public class Parser {
     var actualKindString = keywordLookup.getOrDefault(actualKind, friendlyKind(actualKind));
     var message = "expected " + expectedKindString + ", got extraneous " + actualKindString;
     var error = new SyntaxError(sourceLines, message, lookahead);
-    System.out.println(error.complete());
+    System.out.println(error);
   }
 
   private void missingError (Token.Kind expectedKind) {
@@ -392,7 +392,7 @@ public class Parser {
     var actualKindString = keywordLookup.getOrDefault(actualKind, friendlyKind(actualKind));
     var message = "missing " + expectedKindString + ", got unexpected " + actualKindString;
     var error = new SyntaxError(sourceLines, message, lookahead);
-    System.out.println(error.complete());
+    System.out.println(error);
   }
 
   private void generalError (Token.Kind expectedKind) {
@@ -401,7 +401,7 @@ public class Parser {
     var actualKindString = keywordLookup.getOrDefault(actualKind, friendlyKind(actualKind));
     var message = "expected " + expectedKindString + ", got " + actualKindString;
     var error = new SyntaxError(sourceLines, message, lookahead);
-    System.out.println(error.complete());
+    System.out.println(error);
   }
 
   // This probably only pertains when there are a finite set of multiple
@@ -419,7 +419,7 @@ public class Parser {
     var messageOne  = "expected "        + expectedKindsString + ", got " + actualKindString;
     var message = expectedKinds.size() > 1 ? messageSome : messageOne;
     var error = new SyntaxError(sourceLines, message, lookahead);
-    System.out.println(error.complete());
+    System.out.println(error);
   }
 
   // Confirm is similar to match, but it does not perform any error recovery
@@ -454,7 +454,7 @@ public class Parser {
     // it to ensure there is no garbage left over.
     matchX(Token.Kind.EOF);
 
-    LOGGER.info("*** Parsing complete! ***");
+    LOGGER.info("*** Parsing toString! ***");
     // Inspect builtin scope
 //    var s = builtinScope.getSymbolTable().getData;
 //    System.out.println(s);
