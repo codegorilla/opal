@@ -1119,7 +1119,6 @@ public class Lexer {
             // hard-to-understand syntax error. Leaving the character alone may
             // still result in a syntax error, but it will generally be more
             // sensible.
-            //consume();
             state = State.NUM_400;
           }
           break;
