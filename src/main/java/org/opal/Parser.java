@@ -198,6 +198,15 @@ public class Parser {
   private static final Token.Kind TILDE = Token.Kind.TILDE;
   private static final Token.Kind TILDE_EQUAL = Token.Kind.TILDE_EQUAL;
 
+  private static final Token.Kind CHARACTER_LITERAL = Token.Kind.CHARACTER_LITERAL;
+  private static final Token.Kind FLOAT32_LITERAL = Token.Kind.FLOAT32_LITERAL;
+  private static final Token.Kind FLOAT64_LITERAL = Token.Kind.FLOAT64_LITERAL;
+  private static final Token.Kind INT32_LITERAL = Token.Kind.INT32_LITERAL;
+  private static final Token.Kind INT64_LITERAL = Token.Kind.INT64_LITERAL;
+  private static final Token.Kind STRING_LITERAL = Token.Kind.STRING_LITERAL;
+  private static final Token.Kind UINT32_LITERAL = Token.Kind.UINT32_LITERAL;
+  private static final Token.Kind UINT64_LITERAL = Token.Kind.UINT64_LITERAL;
+
   public Parser (LinkedList<Token> input, List<String> sourceLines) {
     this.input = input;
     position = new Counter();
@@ -454,7 +463,7 @@ public class Parser {
     // it to ensure there is no garbage left over.
     matchX(Token.Kind.EOF);
 
-    LOGGER.info("*** Parsing toString! ***");
+    LOGGER.info("*** Parsing complete! ***");
     // Inspect builtin scope
 //    var s = builtinScope.getSymbolTable().getData;
 //    System.out.println(s);
@@ -1638,24 +1647,23 @@ public class Parser {
     var n = logicalOrExpression();
     var kind = lookahead.getKind();
     while (
-      kind == Token.Kind.EQUAL ||
-      kind == Token.Kind.ASTERISK_EQUAL ||
-      kind == Token.Kind.SLASH_EQUAL ||
-      kind == Token.Kind.PERCENT_EQUAL ||
-      kind == Token.Kind.PLUS_EQUAL ||
-      kind == Token.Kind.MINUS_EQUAL ||
-      kind == Token.Kind.LESS_LESS_EQUAL ||
-      kind == Token.Kind.GREATER_GREATER_EQUAL ||
-      kind == Token.Kind.AMPERSAND_EQUAL ||
-      kind == Token.Kind.CARET_EQUAL ||
-      kind == Token.Kind.BAR_EQUAL
+      kind == EQUAL ||
+      kind == ASTERISK_EQUAL ||
+      kind == SLASH_EQUAL ||
+      kind == PERCENT_EQUAL ||
+      kind == PLUS_EQUAL ||
+      kind == MINUS_EQUAL ||
+      kind == LESS_LESS_EQUAL ||
+      kind == GREATER_GREATER_EQUAL ||
+      kind == AMPERSAND_EQUAL ||
+      kind == CARET_EQUAL ||
+      kind == BAR_EQUAL
     ) {
+      confirm(kind);
       var p = n;
-      n = new BinaryExpression(lookahead);
+      n = new BinaryExpression(mark);
       n.addChild(p);
-      match(lookahead.getKind());
-      p = logicalOrExpression();
-      n.addChild(p);
+      n.addChild(logicalOrExpression());
       kind = lookahead.getKind();
     }
     return n;
@@ -1663,11 +1671,11 @@ public class Parser {
 
   private AstNode logicalOrExpression () {
     var n = logicalAndExpression();
-    while (lookahead.getKind() == Token.Kind.OR) {
+    while (lookahead.getKind() == OR) {
+      confirm(OR);
       var p = n;
-      n = new BinaryExpression(lookahead);
+      n = new BinaryExpression(mark);
       n.addChild(p);
-      match(Token.Kind.OR);
       n.addChild(logicalAndExpression());
     }
     return n;
@@ -1675,11 +1683,11 @@ public class Parser {
 
   private AstNode logicalAndExpression () {
     var n = inclusiveOrExpression();
-    while (lookahead.getKind() == Token.Kind.AND) {
+    while (lookahead.getKind() == AND) {
+      confirm(AND);
       var p = n;
-      n = new BinaryExpression(lookahead);
+      n = new BinaryExpression(mark);
       n.addChild(p);
-      match(Token.Kind.AND);
       n.addChild(inclusiveOrExpression());
     }
     return n;
@@ -1687,11 +1695,11 @@ public class Parser {
 
   private AstNode inclusiveOrExpression () {
     var n = exclusiveOrExpression();
-    while (lookahead.getKind() == Token.Kind.BAR) {
+    while (lookahead.getKind() == BAR) {
+      confirm(BAR);
       var p = n;
-      n = new BinaryExpression(lookahead);
+      n = new BinaryExpression(mark);
       n.addChild(p);
-      match(Token.Kind.BAR);
       n.addChild(exclusiveOrExpression());
     }
     return n;
@@ -1699,11 +1707,11 @@ public class Parser {
 
   private AstNode exclusiveOrExpression () {
     var n = andExpression();
-    while (lookahead.getKind() == Token.Kind.CARET) {
+    while (lookahead.getKind() == CARET) {
+      confirm(CARET);
       var p = n;
-      n = new BinaryExpression(lookahead);
+      n = new BinaryExpression(mark);
       n.addChild(p);
-      match(Token.Kind.CARET);
       n.addChild(andExpression());
     }
     return n;
@@ -1711,11 +1719,11 @@ public class Parser {
 
   private AstNode andExpression () {
     var n = equalityExpression();
-    while (lookahead.getKind() == Token.Kind.AMPERSAND) {
+    while (lookahead.getKind() == AMPERSAND) {
+      confirm(AMPERSAND);
       var p = n;
-      n = new BinaryExpression(lookahead);
+      n = new BinaryExpression(mark);
       n.addChild(p);
-      match(Token.Kind.AMPERSAND);
       n.addChild(equalityExpression());
     }
     return n;
@@ -1723,83 +1731,93 @@ public class Parser {
 
   private AstNode equalityExpression () {
     var n = relationalExpression();
-    while (
-      lookahead.getKind() == Token.Kind.EQUAL_EQUAL ||
-      lookahead.getKind() == Token.Kind.EXCLAMATION_EQUAL
-    ) {
+    var kind = lookahead.getKind();
+    while (kind == EQUAL_EQUAL || kind == EXCLAMATION_EQUAL) {
+      confirm(kind);
       var p = n;
-      n = new BinaryExpression(lookahead);
+      n = new BinaryExpression(mark);
       n.addChild(p);
-      match(lookahead.getKind());
       n.addChild(relationalExpression());
+      kind = lookahead.getKind();
     }
     return n;
   }
 
   private AstNode relationalExpression () {
     var n = shiftExpression();
-    while (
-      lookahead.getKind() == Token.Kind.GREATER ||
-      lookahead.getKind() == Token.Kind.LESS ||
-      lookahead.getKind() == Token.Kind.GREATER_EQUAL ||
-      lookahead.getKind() == Token.Kind.LESS_EQUAL
-    ) {
+    var kind = lookahead.getKind();
+    while (kind == GREATER || kind == LESS || kind == GREATER_EQUAL || kind == LESS_EQUAL) {
+      confirm(kind);
       var p = n;
-      n = new BinaryExpression(lookahead);
+      n = new BinaryExpression(mark);
       n.addChild(p);
-      match(lookahead.getKind());
       n.addChild(shiftExpression());
+      kind = lookahead.getKind();
     }
     return n;
   }
 
   private AstNode shiftExpression () {
     var n = additiveExpression();
-    while (
-      lookahead.getKind() == Token.Kind.GREATER_GREATER ||
-      lookahead.getKind() == Token.Kind.LESS_LESS
-    ) {
+    var kind = lookahead.getKind();
+    while (kind == GREATER_GREATER || kind == LESS_LESS) {
+      confirm(kind);
       var p = n;
-      n = new BinaryExpression(lookahead);
+      n = new BinaryExpression(mark);
       n.addChild(p);
-      match(lookahead.getKind());
       n.addChild(additiveExpression());
+      kind = lookahead.getKind();
     }
     return n;
   }
 
+  // All of the things that can follow a binary expression.
+
+  EnumSet<Token.Kind> exprSet = EnumSet.of (
+    Token.Kind.IDENTIFIER,
+    PLUS,
+    MINUS,
+    ASTERISK,
+    FALSE,
+    TRUE,
+    CHARACTER_LITERAL,
+    FLOAT32_LITERAL,
+    FLOAT64_LITERAL,
+    INT32_LITERAL,
+    INT64_LITERAL,
+    NULL,
+    STRING_LITERAL,
+    UINT32_LITERAL,
+    UINT64_LITERAL
+  );
+
   private AstNode additiveExpression () {
     var n = multiplicativeExpression();
-    while (
-      lookahead.getKind() == Token.Kind.PLUS ||
-      lookahead.getKind() == Token.Kind.MINUS
-    ) {
+    var kind = lookahead.getKind();
+    while (kind == PLUS || kind == MINUS) {
+      confirm(kind);
       var p = n;
-      n = new BinaryExpression(lookahead);
+      n = new BinaryExpression(mark);
       n.addChild(p);
-      match(lookahead.getKind());
       n.addChild(multiplicativeExpression());
+      kind = lookahead.getKind();
     }
     return n;
   }
 
   private AstNode multiplicativeExpression () {
     var n = unaryExpression();
-    while (
-      lookahead.getKind() == Token.Kind.ASTERISK ||
-      lookahead.getKind() == Token.Kind.SLASH ||
-      lookahead.getKind() == Token.Kind.PERCENT
-    ) {
+    var kind = lookahead.getKind();
+    while (kind == ASTERISK || kind == SLASH || kind == PERCENT) {
+      confirm(kind);
       var p = n;
-      n = new BinaryExpression(lookahead);
+      n = new BinaryExpression(mark);
       n.addChild(p);
-      match(lookahead.getKind());
       n.addChild(unaryExpression());
+      kind = lookahead.getKind();
     }
     return n;
   }
-
-  // Why recursion here instead of iteration? Does it matter?
 
   // C++ formulation might be slightly different with mutual recursion between
   // unaryExpression and castExpression methods. What effect might that have?
@@ -1808,31 +1826,17 @@ public class Parser {
   private AstNode unaryExpression () {
     AstNode n = null;
     var kind = lookahead.getKind();
-    if (
-      kind == Token.Kind.ASTERISK ||
-      kind == Token.Kind.MINUS ||
-      kind == Token.Kind.PLUS ||
-      kind == Token.Kind.EXCLAMATION ||
-      kind == Token.Kind.TILDE
-    ) {
-      n = new UnaryExpression(lookahead);
-      match(kind);
+    if (kind == ASTERISK || kind == MINUS || kind == PLUS || kind == EXCLAMATION || kind == TILDE) {
+      confirm(kind);
+      n = new UnaryExpression(mark);
       n.addChild(unaryExpression());
-    }
-    else if (
-      kind == Token.Kind.CAST ||
-      kind == Token.Kind.DIVINE ||
-      kind == Token.Kind.TRANSMUTE
-    ) {
+    } else if (kind == CAST || kind == DIVINE || kind == TRANSMUTE) {
       n = castExpression();
-    }
-    else if (kind == Token.Kind.DELETE) {
+    } else if (kind == DELETE) {
       n = deleteExpression();
-    }
-    else if (kind == Token.Kind.NEW) {
+    } else if (kind == NEW) {
       n = newExpression();
-    }
-    else {
+    } else {
       n = postfixExpression();
     }
     return n;
