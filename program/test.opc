@@ -6,4 +6,7 @@ package main;
 //use opal.math.{ Bessel, Gamma };
 //use opal.math.*;
 
-var x: int = 1.2 + 1 * 5;
+var x: int = 1;
+
+class Widget { }
+

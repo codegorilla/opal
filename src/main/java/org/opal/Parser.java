@@ -796,12 +796,16 @@ public class Parser {
   // CLASS DECLARATIONS
 
   private AstNode classDeclaration (AstNode exportSpecifier) {
-    var n = new ClassDeclaration(lookahead);
-    match(Token.Kind.CLASS);
+    confirm(CLASS);
+    var n = new ClassDeclaration(mark);
     n.addChild(exportSpecifier);
     n.addChild(classModifiers());
-    n.addChild(className());
-    n.addChild((lookahead.getKind() == Token.Kind.EXTENDS) ? classExtendsClause() : null);
+    matchX(Token.Kind.IDENTIFIER, EnumSet.of(EXTENDS, L_BRACE));
+    n.addChild(new ClassName(mark));
+    if (lookahead.getKind() == EXTENDS)
+      n.addChild(classExtendsClause());
+    else
+      n.addChild(EPSILON);
     n.addChild(classBody());
     return n;
   }
@@ -813,20 +817,9 @@ public class Parser {
     return n;
   }
 
-  // Todo: Should symbols point to AST node, and/or vice versa? This might come
-  // in handy later on, but wait until its needed before adding the code.
-
-  private AstNode className () {
-    var n = new ClassName(lookahead);
-    match(Token.Kind.IDENTIFIER);
-    //var s = ClassSymbol(n.getToken().lexeme);
-    //currentScope.define(s);
-    return n;
-  }
-
   private AstNode classExtendsClause () {
-    var n = new ClassExtendsClause(lookahead);
-    match(Token.Kind.EXTENDS);
+    confirm(EXTENDS);
+    var n = new ClassExtendsClause(mark);
     n.addChild(baseClasses());
     return n;
   }
@@ -837,19 +830,12 @@ public class Parser {
 
   private AstNode baseClasses () {
     var n = new BaseClasses(lookahead);
-    n.addChild(baseClass());
-    while (lookahead.getKind() == Token.Kind.COMMA) {
-      match(Token.Kind.COMMA);
-      n.addChild(baseClass());
+    matchX(Token.Kind.IDENTIFIER, EnumSet.of(COMMA, L_BRACE));
+    n.addChild(new BaseClass(mark));
+    while (lookahead.getKind() == COMMA) {
+      confirm(COMMA);
+      n.addChild(new BaseClass(mark));
     }
-    return n;
-  }
-
-  // To do: Move this to base class name
-
-  private AstNode baseClass () {
-    var n = new BaseClass(lookahead);
-    match(Token.Kind.IDENTIFIER);
     return n;
   }
 
@@ -973,15 +959,24 @@ public class Parser {
   }
 
   private AstNode memberVariableDeclaration (MemberAccessSpecifier accessSpecifier) {
-    var n = new MemberVariableDeclaration(lookahead);
+    confirm(lookahead.getKind() == VAL ? VAL : VAR);
+    var n = new MemberVariableDeclaration(mark);
     match(Token.Kind.VAR);
     n.addChild(accessSpecifier);
     n.addChild(variableModifiers());
-    n.addChild(variableName());
-    // SHOULD NOT BE NULL - JUST A PLACEHOLDER
-    n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier(null) : EPSILON);
-    n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer() : EPSILON);
-    match(SEMICOLON);
+    matchX(Token.Kind.IDENTIFIER, EnumSet.of(COLON, EQUAL));
+    n.addChild(new VariableName(mark));
+    if (lookahead.getKind() == COLON) {
+      n.addChild(variableTypeSpecifier(FollowingSet.EQUAL));
+      if (lookahead.getKind() == EQUAL)
+        n.addChild(variableInitializer());
+      else
+        n.addChild(EPSILON);
+    } else {
+      n.addChild(EPSILON);
+      n.addChild(variableInitializer());
+    }
+    matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR));
     return n;
   }
 
@@ -1102,13 +1097,10 @@ public class Parser {
     return n;
   }
 
-  // We need to decide if we want to use an arrow or a colon for the result
-  // type. C++, python, ruby, swift, ocaml, haskell, and rust all use an arrow,
-  // while scala, kotlin, typescript, and pascal all use a colon. The proper
-  // choice probably depends on whether or not the language in question already
-  // uses colons and/or arrows for other things (and the amount that the symbol
-  // appears in the program text); and whether it would lead to grammar
-  // ambiguities. For now, we will use an arrow.
+  // Some languages us a colon for the return type, while others use an arrow.
+  // Opal uses an arrow. Apart from the fact that and Opal is a C++ derivative,
+  // (which uses an arrow), the arrow stands out more when there are CV and ref
+  // qualifiers.
 
   // We can either treat this like a type specifier or use it as a passthrough
   // to a type specifier.
@@ -1172,15 +1164,6 @@ public class Parser {
     return n;
   }
 
-  // Deprecated - put this terminal directly into the rule instead.
-
-  @Deprecated
-  private AstNode variableName () {
-    var n = new VariableName(lookahead);
-    match(Token.Kind.IDENTIFIER);
-    return n;
-  }
-
   private final EnumSet<Token.Kind> fsv1 = EnumSet.of (
     Token.Kind.IDENTIFIER,
     Token.Kind.BOOL,
@@ -1221,14 +1204,14 @@ public class Parser {
 
   private final EnumSet<Token.Kind> fsv2 = EnumSet.of (
     Token.Kind.IDENTIFIER,
-    Token.Kind.INT32_LITERAL,
-    Token.Kind.INT64_LITERAL,
-    Token.Kind.UINT32_LITERAL,
-    Token.Kind.UINT64_LITERAL,
-    Token.Kind.FLOAT32_LITERAL,
-    Token.Kind.FLOAT64_LITERAL,
-    Token.Kind.CHARACTER_LITERAL,
-    Token.Kind.STRING_LITERAL,
+    INT32_LITERAL,
+    INT64_LITERAL,
+    UINT32_LITERAL,
+    UINT64_LITERAL,
+    FLOAT32_LITERAL,
+    FLOAT64_LITERAL,
+    CHARACTER_LITERAL,
+    STRING_LITERAL,
     PLUS,
     MINUS,
     TILDE,
@@ -1247,14 +1230,24 @@ public class Parser {
   }
 
   private AstNode localVariableDeclaration () {
-    AstNode n = new LocalVariableDeclaration(lookahead);
-    match(Token.Kind.VAR);
+    confirm(lookahead.getKind() == VAL ? VAL : VAR);
+    var n = new LocalVariableDeclaration(mark);
     n.addChild(variableModifiers());
-    n.addChild(variableName());
-    // SHOULD NOT BE NULL - JUST A PLACEHOLDER FOR NOW
-    n.addChild((lookahead.getKind() == Token.Kind.COLON) ? variableTypeSpecifier(null) : EPSILON);
-    n.addChild((lookahead.getKind() == Token.Kind.EQUAL) ? variableInitializer() : EPSILON);
-    match(SEMICOLON);
+    matchX(Token.Kind.IDENTIFIER, EnumSet.of(COLON, EQUAL));
+    n.addChild(new VariableName(mark));
+    if (lookahead.getKind() == COLON) {
+      n.addChild(variableTypeSpecifier(FollowingSet.EQUAL));
+      if (lookahead.getKind() == EQUAL)
+        n.addChild(variableInitializer());
+      else
+        n.addChild(EPSILON);
+    } else {
+      n.addChild(EPSILON);
+      n.addChild(variableInitializer());
+    }
+    // Local classes and nested routines are not supported
+    // To do: Add expression first set items
+    matchX(SEMICOLON, EnumSet.of(VAL, VAR));
     return n;
   }
 
