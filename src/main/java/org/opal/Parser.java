@@ -1632,9 +1632,9 @@ public class Parser {
   private AstNode expression (boolean root) {
     var n = assignmentExpression();
     if (root) {
-      var p = n;
-      n = new Expression();
-      n.addChild(p);
+      var p = new Expression();
+      p.addChild(n);
+      n = p;
     }
     return n;
   }
@@ -1660,10 +1660,10 @@ public class Parser {
       kind == BAR_EQUAL
     ) {
       confirm(kind);
-      var p = n;
-      n = new BinaryExpression(mark);
-      n.addChild(p);
-      n.addChild(logicalOrExpression());
+      var p = new BinaryExpression(mark);
+      p.addChild(n);
+      p.addChild(logicalOrExpression());
+      n = p;
       kind = lookahead.getKind();
     }
     return n;
@@ -1673,10 +1673,10 @@ public class Parser {
     var n = logicalAndExpression();
     while (lookahead.getKind() == OR) {
       confirm(OR);
-      var p = n;
-      n = new BinaryExpression(mark);
-      n.addChild(p);
-      n.addChild(logicalAndExpression());
+      var p = new BinaryExpression(mark);
+      p.addChild(n);
+      p.addChild(logicalAndExpression());
+      n = p;
     }
     return n;
   }
@@ -1685,10 +1685,10 @@ public class Parser {
     var n = inclusiveOrExpression();
     while (lookahead.getKind() == AND) {
       confirm(AND);
-      var p = n;
-      n = new BinaryExpression(mark);
-      n.addChild(p);
-      n.addChild(inclusiveOrExpression());
+      var p = new BinaryExpression(mark);
+      p.addChild(n);
+      p.addChild(inclusiveOrExpression());
+      n = p;
     }
     return n;
   }
@@ -1697,10 +1697,10 @@ public class Parser {
     var n = exclusiveOrExpression();
     while (lookahead.getKind() == BAR) {
       confirm(BAR);
-      var p = n;
-      n = new BinaryExpression(mark);
-      n.addChild(p);
-      n.addChild(exclusiveOrExpression());
+      var p = new BinaryExpression(mark);
+      p.addChild(n);
+      p.addChild(exclusiveOrExpression());
+      n = p;
     }
     return n;
   }
@@ -1709,10 +1709,10 @@ public class Parser {
     var n = andExpression();
     while (lookahead.getKind() == CARET) {
       confirm(CARET);
-      var p = n;
-      n = new BinaryExpression(mark);
-      n.addChild(p);
-      n.addChild(andExpression());
+      var p = new BinaryExpression(mark);
+      p.addChild(n);
+      p.addChild(andExpression());
+      n = p;
     }
     return n;
   }
@@ -1721,10 +1721,10 @@ public class Parser {
     var n = equalityExpression();
     while (lookahead.getKind() == AMPERSAND) {
       confirm(AMPERSAND);
-      var p = n;
-      n = new BinaryExpression(mark);
-      n.addChild(p);
-      n.addChild(equalityExpression());
+      var p = new BinaryExpression(mark);
+      p.addChild(n);
+      p.addChild(equalityExpression());
+      n = p;
     }
     return n;
   }
@@ -1734,10 +1734,10 @@ public class Parser {
     var kind = lookahead.getKind();
     while (kind == EQUAL_EQUAL || kind == EXCLAMATION_EQUAL) {
       confirm(kind);
-      var p = n;
-      n = new BinaryExpression(mark);
-      n.addChild(p);
-      n.addChild(relationalExpression());
+      var p = new BinaryExpression(mark);
+      p.addChild(n);
+      p.addChild(relationalExpression());
+      n = p;
       kind = lookahead.getKind();
     }
     return n;
@@ -1748,10 +1748,10 @@ public class Parser {
     var kind = lookahead.getKind();
     while (kind == GREATER || kind == LESS || kind == GREATER_EQUAL || kind == LESS_EQUAL) {
       confirm(kind);
-      var p = n;
-      n = new BinaryExpression(mark);
-      n.addChild(p);
-      n.addChild(shiftExpression());
+      var p = new BinaryExpression(mark);
+      p.addChild(n);
+      p.addChild(shiftExpression());
+      n = p;
       kind = lookahead.getKind();
     }
     return n;
@@ -1762,10 +1762,10 @@ public class Parser {
     var kind = lookahead.getKind();
     while (kind == GREATER_GREATER || kind == LESS_LESS) {
       confirm(kind);
-      var p = n;
-      n = new BinaryExpression(mark);
-      n.addChild(p);
-      n.addChild(additiveExpression());
+      var p = new BinaryExpression(mark);
+      p.addChild(n);
+      p.addChild(additiveExpression());
+      n = p;
       kind = lookahead.getKind();
     }
     return n;
@@ -1796,10 +1796,10 @@ public class Parser {
     var kind = lookahead.getKind();
     while (kind == PLUS || kind == MINUS) {
       confirm(kind);
-      var p = n;
-      n = new BinaryExpression(mark);
-      n.addChild(p);
-      n.addChild(multiplicativeExpression());
+      var p = new BinaryExpression(mark);
+      p.addChild(n);
+      p.addChild(multiplicativeExpression());
+      n = p;
       kind = lookahead.getKind();
     }
     return n;
@@ -1810,10 +1810,10 @@ public class Parser {
     var kind = lookahead.getKind();
     while (kind == ASTERISK || kind == SLASH || kind == PERCENT) {
       confirm(kind);
-      var p = n;
-      n = new BinaryExpression(mark);
-      n.addChild(p);
-      n.addChild(unaryExpression());
+      var p = new BinaryExpression(mark);
+      p.addChild(n);
+      p.addChild(unaryExpression());
+      n = p;
       kind = lookahead.getKind();
     }
     return n;
@@ -2007,17 +2007,17 @@ public class Parser {
     AstNode n = null;
     var kind = lookahead.getKind();
     if (
-      kind == Token.Kind.FALSE ||
-      kind == Token.Kind.TRUE ||
-      kind == Token.Kind.CHARACTER_LITERAL ||
-      kind == Token.Kind.FLOAT32_LITERAL ||
-      kind == Token.Kind.FLOAT64_LITERAL ||
-      kind == Token.Kind.INT32_LITERAL ||
-      kind == Token.Kind.INT64_LITERAL ||
-      kind == Token.Kind.NULL ||
-      kind == Token.Kind.STRING_LITERAL ||
-      kind == Token.Kind.UINT32_LITERAL ||
-      kind == Token.Kind.UINT64_LITERAL
+      kind == FALSE ||
+      kind == TRUE ||
+      kind == CHARACTER_LITERAL ||
+      kind == FLOAT32_LITERAL ||
+      kind == FLOAT64_LITERAL ||
+      kind == INT32_LITERAL ||
+      kind == INT64_LITERAL ||
+      kind == NULL ||
+      kind == STRING_LITERAL ||
+      kind == UINT32_LITERAL ||
+      kind == UINT64_LITERAL
     ) {
       n = literal();
     } else if (lookahead.getKind() == Token.Kind.THIS)
@@ -2045,32 +2045,32 @@ public class Parser {
     } else if (kind == TRUE) {
       confirm(TRUE);
       n = new BooleanLiteral(mark);
-    } else if (kind == Token.Kind.CHARACTER_LITERAL) {
-      confirm(Token.Kind.CHARACTER_LITERAL);
+    } else if (kind == CHARACTER_LITERAL) {
+      confirm(CHARACTER_LITERAL);
       n = new CharacterLiteral(mark);
-    } else if (kind == Token.Kind.FLOAT32_LITERAL) {
-      confirm(Token.Kind.FLOAT32_LITERAL);
+    } else if (kind == FLOAT32_LITERAL) {
+      confirm(FLOAT32_LITERAL);
       n = new FloatingPointLiteral(mark);
-    } else if (kind == Token.Kind.FLOAT64_LITERAL) {
-      confirm(Token.Kind.FLOAT64_LITERAL);
+    } else if (kind == FLOAT64_LITERAL) {
+      confirm(FLOAT64_LITERAL);
       n = new FloatingPointLiteral(mark);
-    } else if (kind == Token.Kind.INT32_LITERAL) {
-      confirm(Token.Kind.INT32_LITERAL);
+    } else if (kind == INT32_LITERAL) {
+      confirm(INT32_LITERAL);
       n = new IntegerLiteral(mark);
-    } else if (kind == Token.Kind.INT64_LITERAL) {
-      confirm(Token.Kind.INT64_LITERAL);
+    } else if (kind == INT64_LITERAL) {
+      confirm(INT64_LITERAL);
       n = new IntegerLiteral(mark);
-    } else if (kind == Token.Kind.NULL) {
-      confirm(Token.Kind.NULL);
+    } else if (kind == NULL) {
+      confirm(NULL);
       n = new NullLiteral(mark);
-    } else if (kind == Token.Kind.STRING_LITERAL) {
-      confirm(Token.Kind.STRING_LITERAL);
+    } else if (kind == STRING_LITERAL) {
+      confirm(STRING_LITERAL);
       n = new StringLiteral(mark);
-    } else if (kind == Token.Kind.UINT32_LITERAL) {
-      confirm(Token.Kind.UINT32_LITERAL);
+    } else if (kind == UINT32_LITERAL) {
+      confirm(UINT32_LITERAL);
       n = new UnsignedIntegerLiteral(mark);
-    } else if (kind == Token.Kind.UINT64_LITERAL) {
-      confirm(Token.Kind.UINT64_LITERAL);
+    } else if (kind == UINT64_LITERAL) {
+      confirm(UINT64_LITERAL);
       n = new UnsignedIntegerLiteral(mark);
     } else {
       checkError(FirstSet.LITERAL);
@@ -2092,9 +2092,9 @@ public class Parser {
   }
 
   private AstNode parenthesizedExpression () {
-    match(Token.Kind.L_PARENTHESIS);
+    match(L_PARENTHESIS);
     var n = expression(false);
-    match(Token.Kind.R_PARENTHESIS);
+    match(R_PARENTHESIS);
     return n;
   }
 
