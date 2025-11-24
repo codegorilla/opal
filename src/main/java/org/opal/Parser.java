@@ -934,12 +934,27 @@ public class Parser {
     matchX(Token.Kind.IDENTIFIER, FollowerSet.L_PARENTHESIS);
     n.addChild(new RoutineName(mark));
     n.addChild(routineParameters());
+    // No following set required here because these are completely optional
     n.addChild(cvQualifiers());
-    n.addChild(refQualifiers());
-    n.addChild((lookahead.getKind() == Token.Kind.NOEXCEPT) ? noexceptSpecifier() : null);
+    var kind = lookahead.getKind();
+    if (kind == AMPERSAND) {
+      confirm(AMPERSAND);
+      n.addChild(new RefQualifier(mark));
+    } else if (kind == AMPERSAND_AMPERSAND) {
+      confirm(AMPERSAND_AMPERSAND);
+      n.addChild(new RefQualifier(mark));
+    } else {
+      n.addChild(EPSILON);
+    }
+    if (lookahead.getKind() == NOEXCEPT) {
+      confirm(NOEXCEPT);
+      n.addChild(new NoexceptSpecifier(mark));
+    } else {
+      n.addChild(EPSILON);
+    }
+    // To do: finish error recovery
     n.addChild((lookahead.getKind() == Token.Kind.MINUS_GREATER) ? routineReturnType() : null);
     n.addChild(routineBody());
-//    currentScope = scope.getEnclosingScope();
     return n;
   }
 
@@ -953,32 +968,21 @@ public class Parser {
   private AstNode cvQualifiers () {
     var n = new CVQualifiers();
     var kind = lookahead.getKind();
-    while (kind == Token.Kind.CONST || kind == Token.Kind.VOLATILE) {
-      n.addChild(cvQualifier());
-      kind = lookahead.getKind();
+    if (kind == CONST) {
+      confirm(CONST);
+      n.addChild(new CVQualifier(mark));
+      if (lookahead.getKind() == VOLATILE) {
+        confirm(VOLATILE);
+        n.addChild(new CVQualifier(mark));
+      }
+    } else if (kind == VOLATILE) {
+      confirm(VOLATILE);
+      n.addChild(new CVQualifier(mark));
+      if (lookahead.getKind() == CONST) {
+        confirm(CONST);
+        n.addChild(new CVQualifier(mark));
+      }
     }
-    return n;
-  }
-
-  private AstNode cvQualifier () {
-    var n = new CVQualifier(lookahead);
-    match(lookahead.getKind());
-    return n;
-  }
-
-  private AstNode refQualifiers () {
-    var n = new RefQualifiers();
-    var kind = lookahead.getKind();
-    while (kind == Token.Kind.AMPERSAND || kind == Token.Kind.AMPERSAND_AMPERSAND) {
-      n.addChild(refQualifier());
-      kind = lookahead.getKind();
-    }
-    return n;
-  }
-
-  private AstNode refQualifier () {
-    var n = new RefQualifier(lookahead);
-    match(lookahead.getKind());
     return n;
   }
 
@@ -1006,30 +1010,27 @@ public class Parser {
   // TYPEALIAS DECLARATION
 
   private AstNode typealiasDeclaration (AstNode exportSpecifier) {
-    var n = new TypealiasDeclaration(lookahead);
-    match(Token.Kind.TYPEALIAS);
+    confirm(TYPEALIAS);
+    var n = new TypealiasDeclaration(mark);
     n.addChild(exportSpecifier);
-    n.addChild(typealiasName());
-    match(Token.Kind.EQUAL);
+    matchX(Token.Kind.IDENTIFIER, FollowerSet.EQUAL);
+    n.addChild(new TypealiasName(mark));
+    // To do: Follower set is whatever can start a type
+    matchX(EQUAL, EnumSet.of(ASTERISK, COMMA, Token.Kind.BOOL, Token.Kind.IDENTIFIER));
     n.addChild(type());
-    match(SEMICOLON);
-    return n;
-  }
-
-  @Deprecated
-  private AstNode typealiasName () {
-    var n = new TypealiasName(lookahead);
-    match(Token.Kind.IDENTIFIER);
+    matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR));
     return n;
   }
 
   private AstNode localTypealiasDeclaration () {
+    confirm(TYPEALIAS);
     var n = new LocalTypealiasDeclaration(lookahead);
-    match(Token.Kind.TYPEALIAS);
-    n.addChild(typealiasName());
-    match(Token.Kind.EQUAL);
+    matchX(Token.Kind.IDENTIFIER, FollowerSet.EQUAL);
+    n.addChild(new TypealiasName(mark));
+    // To do: Follower set is whatever can start a type
+    matchX(EQUAL, EnumSet.of(ASTERISK, COMMA, Token.Kind.BOOL, Token.Kind.IDENTIFIER));
     n.addChild(type());
-    match(SEMICOLON);
+    matchX(SEMICOLON, EnumSet.of(VAL, VAR));
     return n;
   }
 
@@ -1104,13 +1105,6 @@ public class Parser {
     matchX(COLON);
     var n = new RoutineParameterTypeSpecifier(mark);
     n.addChild(type());
-    return n;
-  }
-
-  @Deprecated
-  private AstNode noexceptSpecifier () {
-    var n = new NoexceptSpecifier(lookahead);
-    match(Token.Kind.NOEXCEPT);
     return n;
   }
 
