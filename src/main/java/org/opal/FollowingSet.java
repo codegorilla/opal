@@ -13,6 +13,9 @@ import java.util.EnumSet;
 
 public class FollowingSet {
 
+  public static final EnumSet<Token.Kind> COMMA =
+    EnumSet.of(Token.Kind.COMMA);
+
   public static final EnumSet<Token.Kind> EQUAL =
     EnumSet.of(Token.Kind.EQUAL);
 
@@ -20,7 +23,7 @@ public class FollowingSet {
     EnumSet.of(Token.Kind.IMPORT);
 
   public static final EnumSet<Token.Kind> L_BRACE =
-    EnumSet.of(Token.Kind.IMPORT);
+    EnumSet.of(Token.Kind.L_BRACE);
 
   public static final EnumSet<Token.Kind> PERIOD =
     EnumSet.of(Token.Kind.PERIOD);
@@ -29,6 +32,6 @@ public class FollowingSet {
     EnumSet.of(Token.Kind.SEMICOLON);
 
   public static final EnumSet<Token.Kind> USE =
-    EnumSet.of(Token.Kind.PERIOD);
+    EnumSet.of(Token.Kind.USE);
 
 }

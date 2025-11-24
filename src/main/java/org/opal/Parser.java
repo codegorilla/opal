@@ -36,7 +36,9 @@ public class Parser {
 
   private final LinkedList<Token> input;
   private final Counter position;
+
   private Token lookahead;
+  private Token.Kind kind;
 
   // Experimental
   private Token previous;
@@ -211,6 +213,7 @@ public class Parser {
     this.input = input;
     position = new Counter();
     lookahead = input.get(position.get());
+    kind = lookahead.getKind();
     previous = null;
     mark = null;
     this.sourceLines = sourceLines;
@@ -450,8 +453,10 @@ public class Parser {
 
   private void consume () {
     position.increment();
-    if (position.get() < input.size())
+    if (position.get() < input.size()) {
       lookahead = input.get(position.get());
+      kind = lookahead.getKind();
+    }
   }
 
   public AstNode process () {
@@ -555,7 +560,7 @@ public class Parser {
     followingSetStack.push(followingSet);
     var n = new ImportDeclarations();
     n.addChild(importDeclaration(FollowingSet.IMPORT));
-    while (lookahead.getKind() == IMPORT)
+    while (kind == IMPORT)
       n.addChild(importDeclaration(FollowingSet.IMPORT));
     followingSetStack.pop();
     return n;
@@ -574,7 +579,7 @@ public class Parser {
     confirm(IMPORT);
     var n = new ImportDeclaration(mark);
     n.addChild(importQualifiedName(EnumSet.of(SEMICOLON, AS)));
-    n.addChild(lookahead.getKind() == AS ? importAsClause(FollowingSet.SEMICOLON) : EPSILON);
+    n.addChild(kind == AS ? importAsClause(FollowingSet.SEMICOLON) : EPSILON);
     matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE, IMPORT, Token.Kind.EOF));
     followingSetStack.pop();
     return n;
@@ -594,7 +599,7 @@ public class Parser {
     var followerSet = EnumSet.of(AS, PERIOD, SEMICOLON);
     matchX(Token.Kind.IDENTIFIER, followerSet);
     n.addChild(new ImportName(mark));
-    while (lookahead.getKind() == PERIOD) {
+    while (kind == PERIOD) {
       confirm(PERIOD);
       matchX(Token.Kind.IDENTIFIER, followerSet);
       n.addChild(new ImportName(mark));
@@ -616,7 +621,7 @@ public class Parser {
     followingSetStack.push(followingSet);
     var n = new UseDeclarations();
     n.addChild(useDeclaration(FollowingSet.USE));
-    while (lookahead.getKind() == USE)
+    while (kind == USE)
       n.addChild(useDeclaration(FollowingSet.USE));
     followingSetStack.pop();
     return n;
@@ -652,7 +657,6 @@ public class Parser {
 
   private AstNode useQualifiedNameTail () {
     AstNode n;
-    var kind = lookahead.getKind();
     if (kind == ASTERISK) {
       confirm(ASTERISK);
       n = new UseNameWildcard(mark);
@@ -661,7 +665,7 @@ public class Parser {
     } else if (kind == Token.Kind.IDENTIFIER) {
       confirm(Token.Kind.IDENTIFIER);
       n = new UseName(mark);
-      if (lookahead.getKind() == PERIOD) {
+      if (kind == PERIOD) {
         confirm(PERIOD);
         n.addChild(useQualifiedNameTail());
       }
@@ -682,7 +686,7 @@ public class Parser {
     var n = new UseNameGroup(mark);
     matchX(Token.Kind.IDENTIFIER, EnumSet.of(COMMA, R_BRACE));
     n.addChild(new UseName(mark));
-    while (lookahead.getKind() == COMMA) {
+    while (kind == COMMA) {
       confirm(COMMA);
       matchX(Token.Kind.IDENTIFIER, EnumSet.of(COMMA, R_BRACE));
       n.addChild(new UseName(mark));
@@ -702,7 +706,6 @@ public class Parser {
 
   private AstNode otherDeclarations () {
     var n = new OtherDeclarations();
-    var kind = lookahead.getKind();
     var fso = EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR);
     while (
       kind == PRIVATE ||
@@ -712,7 +715,6 @@ public class Parser {
       kind == VAR
     ) {
       n.addChild(otherDeclaration(fso));
-      kind = lookahead.getKind();
     }
     return n;
   }
@@ -723,18 +725,17 @@ public class Parser {
   private AstNode otherDeclaration (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
     AstNode p;
-    if (lookahead.getKind() == PRIVATE) {
+    if (kind == PRIVATE) {
       confirm(PRIVATE);
       p = new ExportSpecifier(mark);
     } else {
       p = EPSILON;
     }
     AstNode n = null;
-    if (lookahead.getKind() == TEMPLATE) {
+    if (kind == TEMPLATE) {
 //      n = templateDeclaration();
     } else {
       modifiers();
-      var kind = lookahead.getKind();
       if (kind == CLASS)
         n = classDeclaration(p);
       else if (kind == TYPEALIAS)
@@ -781,7 +782,6 @@ public class Parser {
   // taste.
 
   private void modifiers () {
-    var kind = lookahead.getKind();
     while (
       kind == ABSTRACT  ||
       kind == CONST     ||
@@ -791,7 +791,6 @@ public class Parser {
     ) {
       confirm(kind);
       modifierStack.push(new Modifier(mark));
-      kind = lookahead.getKind();
     }
   }
 
@@ -804,7 +803,7 @@ public class Parser {
     n.addChild(classModifiers());
     matchX(Token.Kind.IDENTIFIER, EnumSet.of(EXTENDS, L_BRACE));
     n.addChild(new ClassName(mark));
-    if (lookahead.getKind() == EXTENDS)
+    if (kind == EXTENDS)
       n.addChild(baseClasses(FollowingSet.L_BRACE));
     else
       n.addChild(EPSILON);
@@ -829,7 +828,7 @@ public class Parser {
     var n = new BaseClasses();
     matchX(Token.Kind.IDENTIFIER, EnumSet.of(COMMA, L_BRACE));
     n.addChild(new BaseClass(mark));
-    while (lookahead.getKind() == COMMA) {
+    while (kind == COMMA) {
       confirm(COMMA);
       matchX(Token.Kind.IDENTIFIER, EnumSet.of(COMMA, L_BRACE));
       n.addChild(new BaseClass(mark));
@@ -843,7 +842,6 @@ public class Parser {
   private AstNode classBody () {
     matchX(L_BRACE, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, R_BRACE));
     var n = new ClassBody();
-    var kind = lookahead.getKind();
     while (
       kind == PRIVATE ||
       kind == CLASS   ||
@@ -852,7 +850,6 @@ public class Parser {
       kind == VAR
     ) {
       n.addChild(memberDeclaration(EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, R_BRACE)));
-      kind = lookahead.getKind();
     }
     matchX(R_BRACE, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR));
     return n;
@@ -863,7 +860,6 @@ public class Parser {
   private AstNode memberDeclaration (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
     AstNode accessSpecifier;
-    var kind = lookahead.getKind();
     if (kind == PRIVATE) {
       confirm(PRIVATE);
       accessSpecifier = new MemberAccessSpecifier(mark);
@@ -875,7 +871,6 @@ public class Parser {
     }
     memberModifiers();
     AstNode n;
-    kind = lookahead.getKind();
     if (kind == TYPEALIAS) {
       n = memberTypealiasDeclaration(accessSpecifier);
     } else if (kind == DEF) {
@@ -891,20 +886,18 @@ public class Parser {
   }
 
   private void memberModifiers () {
-    var kind = lookahead.getKind();
     while (
-      kind == Token.Kind.ABSTRACT  ||
-      kind == Token.Kind.CONST     ||
-      kind == Token.Kind.CONSTEXPR ||
-      kind == Token.Kind.FINAL     ||
-      kind == Token.Kind.OVERRIDE  ||
-      kind == Token.Kind.STATIC    ||
-      kind == Token.Kind.VIRTUAL   ||
-      kind == Token.Kind.VOLATILE
+      kind == ABSTRACT  ||
+      kind == CONST     ||
+      kind == CONSTEXPR ||
+      kind == FINAL     ||
+      kind == OVERRIDE  ||
+      kind == STATIC    ||
+      kind == VIRTUAL   ||
+      kind == VOLATILE
     ) {
       confirm(kind);
       modifierStack.push(new Modifier(mark));
-      kind = lookahead.getKind();
     }
   }
 
@@ -936,7 +929,6 @@ public class Parser {
     n.addChild(routineParameters());
     // No following set required here because these are completely optional
     n.addChild(cvQualifiers());
-    var kind = lookahead.getKind();
     if (kind == AMPERSAND) {
       confirm(AMPERSAND);
       n.addChild(new RefQualifier(mark));
@@ -946,14 +938,17 @@ public class Parser {
     } else {
       n.addChild(EPSILON);
     }
-    if (lookahead.getKind() == NOEXCEPT) {
+    if (kind == NOEXCEPT) {
       confirm(NOEXCEPT);
       n.addChild(new NoexceptSpecifier(mark));
     } else {
       n.addChild(EPSILON);
     }
-    // To do: finish error recovery
-    n.addChild((lookahead.getKind() == Token.Kind.MINUS_GREATER) ? routineReturnType() : null);
+    if (kind == MINUS_GREATER) {
+      n.addChild(routineReturnType());
+    } else {
+      n.addChild(EPSILON);
+    }
     n.addChild(routineBody());
     return n;
   }
@@ -967,18 +962,17 @@ public class Parser {
 
   private AstNode cvQualifiers () {
     var n = new CVQualifiers();
-    var kind = lookahead.getKind();
     if (kind == CONST) {
       confirm(CONST);
       n.addChild(new CVQualifier(mark));
-      if (lookahead.getKind() == VOLATILE) {
+      if (kind == VOLATILE) {
         confirm(VOLATILE);
         n.addChild(new CVQualifier(mark));
       }
     } else if (kind == VOLATILE) {
       confirm(VOLATILE);
       n.addChild(new CVQualifier(mark));
-      if (lookahead.getKind() == CONST) {
+      if (kind == CONST) {
         confirm(CONST);
         n.addChild(new CVQualifier(mark));
       }
@@ -987,15 +981,15 @@ public class Parser {
   }
 
   private AstNode memberVariableDeclaration (AstNode accessSpecifier) {
-    confirm(lookahead.getKind() == VAL ? VAL : VAR);
+    confirm(kind == VAL ? VAL : VAR);
     var n = new MemberVariableDeclaration(mark);
     n.addChild(accessSpecifier);
     n.addChild(variableModifiers());
     matchX(Token.Kind.IDENTIFIER, EnumSet.of(COLON, EQUAL));
     n.addChild(new VariableName(mark));
-    if (lookahead.getKind() == COLON) {
+    if (kind == COLON) {
       n.addChild(variableTypeSpecifier(FollowingSet.EQUAL));
-      if (lookahead.getKind() == EQUAL)
+      if (kind == EQUAL)
         n.addChild(variableInitializer());
       else
         n.addChild(EPSILON);
@@ -1053,17 +1047,22 @@ public class Parser {
     matchX(Token.Kind.IDENTIFIER, FollowerSet.L_PARENTHESIS);
     n.addChild(new RoutineName(mark));
     n.addChild(routineParameters());
-    if (lookahead.getKind() == NOEXCEPT) {
+    if (kind == NOEXCEPT) {
       confirm(NOEXCEPT);
       n.addChild(new NoexceptSpecifier(mark));
     } else {
       n.addChild(EPSILON);
     }
-    n.addChild((lookahead.getKind() == Token.Kind.MINUS_GREATER) ? routineReturnType() : null);
+    if (kind == MINUS_GREATER) {
+      n.addChild(routineReturnType());
+    } else {
+      n.addChild(EPSILON);
+    }
     n.addChild(routineBody());
-//    currentScope = scope.getEnclosingScope();
     return n;
   }
+
+  // Is this really deprecated?
 
   @Deprecated
   private AstNode routineModifiers () {
@@ -1077,14 +1076,13 @@ public class Parser {
     // To do: Add in parameter modifiers as required
     matchX(L_PARENTHESIS, EnumSet.of(Token.Kind.IDENTIFIER, R_PARENTHESIS));
     var n = new RoutineParameters();
-    if (lookahead.getKind() == Token.Kind.IDENTIFIER)
-      n.addChild(routineParameter(EnumSet.of(R_PARENTHESIS)));
-    while (lookahead.getKind() == COMMA) {
-      match(COMMA);
-      n.addChild(routineParameter(EnumSet.of(R_PARENTHESIS)));
+    if (kind == Token.Kind.IDENTIFIER)
+      n.addChild(routineParameter(EnumSet.of(COMMA, R_PARENTHESIS)));
+    while (kind == COMMA) {
+      confirm(COMMA);
+      n.addChild(routineParameter(EnumSet.of(COMMA, R_PARENTHESIS)));
     }
-    // FS = left brace, arrow, noexcept, etc.
-    matchX(Token.Kind.R_PARENTHESIS);
+    matchX(R_PARENTHESIS, EnumSet.of(L_BRACE, MINUS_GREATER, NOEXCEPT));
     return n;
   }
 
@@ -1095,16 +1093,17 @@ public class Parser {
     var n = new RoutineParameter();
     matchX(Token.Kind.IDENTIFIER, FollowerSet.COLON);
     n.addChild(new RoutineParameterName(mark));
-    n.addChild(routineParameterTypeSpecifier());
+    n.addChild(routineParameterTypeSpecifier(FollowingSet.COMMA));
     followingSetStack.pop();
     return n;
   }
 
-  private AstNode routineParameterTypeSpecifier () {
-    // To do: Add type follower set
+  private AstNode routineParameterTypeSpecifier (EnumSet<Token.Kind> followingSet) {
+    followingSetStack.push(followingSet);
     matchX(COLON);
     var n = new RoutineParameterTypeSpecifier(mark);
     n.addChild(type());
+    followingSetStack.pop();
     return n;
   }
 
@@ -1117,11 +1116,11 @@ public class Parser {
   // to a type specifier.
 
   private AstNode routineReturnType () {
+    followingSetStack.push(FollowingSet.L_BRACE);
+    confirm(MINUS_GREATER);
     var n = new RoutineReturnType();
-    if (lookahead.getKind() == Token.Kind.MINUS_GREATER) {
-      match(Token.Kind.MINUS_GREATER);
-      n.addChild(type());
-    }
+    n.addChild(type());
+    followingSetStack.pop();
     return n;
   }
 
@@ -1148,15 +1147,15 @@ public class Parser {
   // which is a more fail-safe option.
 
   private AstNode variableDeclaration (AstNode exportSpecifier) {
-    confirm(lookahead.getKind() == VAL ? VAL : VAR);
+    confirm(kind == VAL ? VAL : VAR);
     var n = new VariableDeclaration(mark);
     n.addChild(exportSpecifier);
     n.addChild(variableModifiers());
     matchX(Token.Kind.IDENTIFIER, EnumSet.of(COLON, EQUAL));
     n.addChild(new VariableName(mark));
-    if (lookahead.getKind() == COLON) {
+    if (kind == COLON) {
       n.addChild(variableTypeSpecifier(FollowingSet.EQUAL));
-      if (lookahead.getKind() == EQUAL)
+      if (kind == EQUAL)
         n.addChild(variableInitializer());
       else
         n.addChild(EPSILON);
@@ -1241,14 +1240,14 @@ public class Parser {
   }
 
   private AstNode localVariableDeclaration () {
-    confirm(lookahead.getKind() == VAL ? VAL : VAR);
+    confirm(kind == VAL ? VAL : VAR);
     var n = new LocalVariableDeclaration(mark);
     n.addChild(variableModifiers());
     matchX(Token.Kind.IDENTIFIER, EnumSet.of(COLON, EQUAL));
     n.addChild(new VariableName(mark));
-    if (lookahead.getKind() == COLON) {
+    if (kind == COLON) {
       n.addChild(variableTypeSpecifier(FollowingSet.EQUAL));
-      if (lookahead.getKind() == EQUAL)
+      if (kind == EQUAL)
         n.addChild(variableInitializer());
       else
         n.addChild(EPSILON);
@@ -1494,7 +1493,7 @@ public class Parser {
     match(Token.Kind.IF);
     n.addChild(statementCondition());
     n.addChild(statementBody());
-    if (lookahead.getKind() == Token.Kind.ELSE)
+    if (kind == Token.Kind.ELSE)
       n.addChild(elseClause());
     return n;
   }
@@ -1502,7 +1501,7 @@ public class Parser {
   private AstNode elseClause () {
     var n = new ElseClause(lookahead);
     match(Token.Kind.ELSE);
-    if (lookahead.getKind() == Token.Kind.IF)
+    if (kind == Token.Kind.IF)
       n.addChild(ifStatement());
     else
       n.addChild(statementBody());
@@ -1512,7 +1511,7 @@ public class Parser {
   private AstNode loopStatement () {
     var n = new LoopStatement(lookahead);
     match(Token.Kind.LOOP);
-    if (lookahead.getKind() == Token.Kind.L_PARENTHESIS)
+    if (kind == Token.Kind.L_PARENTHESIS)
       n.addChild(loopControl());
     else
       n.addChild(null);
@@ -1555,7 +1554,7 @@ public class Parser {
   }
 
   private AstNode loopBody () {
-    if (lookahead.getKind() == Token.Kind.L_BRACE)
+    if (kind == Token.Kind.L_BRACE)
       return compoundStatement();
     else {
       // Insert fabricated compound statement
@@ -1615,7 +1614,7 @@ public class Parser {
   // source of bugs, so we need to be careful.
 
   private AstNode statementBody () {
-    if (lookahead.getKind() == Token.Kind.L_BRACE)
+    if (kind == Token.Kind.L_BRACE)
       return statement();
     else {
       // Insert fabricated compound statement
@@ -1675,7 +1674,7 @@ public class Parser {
 
   private AstNode logicalOrExpression () {
     var n = logicalAndExpression();
-    while (lookahead.getKind() == OR) {
+    while (kind == OR) {
       confirm(OR);
       var p = new BinaryExpression(mark);
       p.addChild(n);
@@ -1687,7 +1686,7 @@ public class Parser {
 
   private AstNode logicalAndExpression () {
     var n = inclusiveOrExpression();
-    while (lookahead.getKind() == AND) {
+    while (kind == AND) {
       confirm(AND);
       var p = new BinaryExpression(mark);
       p.addChild(n);
@@ -1699,7 +1698,7 @@ public class Parser {
 
   private AstNode inclusiveOrExpression () {
     var n = exclusiveOrExpression();
-    while (lookahead.getKind() == BAR) {
+    while (kind == BAR) {
       confirm(BAR);
       var p = new BinaryExpression(mark);
       p.addChild(n);
@@ -1711,7 +1710,7 @@ public class Parser {
 
   private AstNode exclusiveOrExpression () {
     var n = andExpression();
-    while (lookahead.getKind() == CARET) {
+    while (kind == CARET) {
       confirm(CARET);
       var p = new BinaryExpression(mark);
       p.addChild(n);
@@ -1723,7 +1722,7 @@ public class Parser {
 
   private AstNode andExpression () {
     var n = equalityExpression();
-    while (lookahead.getKind() == AMPERSAND) {
+    while (kind == AMPERSAND) {
       confirm(AMPERSAND);
       var p = new BinaryExpression(mark);
       p.addChild(n);
@@ -1868,7 +1867,7 @@ public class Parser {
   private AstNode deleteExpression () {
     var n = new DeleteExpression(lookahead);
     match(Token.Kind.DELETE);
-    if (lookahead.getKind() == Token.Kind.L_BRACKET) {
+    if (kind == Token.Kind.L_BRACKET) {
       n.setArrayFlag();
       match(Token.Kind.L_BRACKET);
       match(Token.Kind.R_BRACKET);
@@ -1880,9 +1879,9 @@ public class Parser {
   private AstNode newExpression () {
     var n = new NewExpression(lookahead);
     match(Token.Kind.NEW);
-    n.addChild(lookahead.getKind() == Token.Kind.L_BRACKET ? newPlacement() : null);
+    n.addChild(kind == Token.Kind.L_BRACKET ? newPlacement() : null);
     n.addChild(type());
-    n.addChild(lookahead.getKind() == Token.Kind.L_PARENTHESIS ? newInitializer() : null);
+    n.addChild(kind == Token.Kind.L_PARENTHESIS ? newInitializer() : null);
     return n;
   }
 
@@ -1897,7 +1896,7 @@ public class Parser {
     var n = new NewInitializer(lookahead);
     match(Token.Kind.L_PARENTHESIS);
     n.addChild(expression(true));
-    while (lookahead.getKind() == Token.Kind.COMMA) {
+    while (kind == Token.Kind.COMMA) {
       match(Token.Kind.COMMA);
       n.addChild(expression(true));
     }
@@ -1917,10 +1916,10 @@ public class Parser {
   private AstNode postfixExpression () {
     var node = primaryExpression();
     while (
-      lookahead.getKind() == Token.Kind.L_BRACKET ||
-      lookahead.getKind() == Token.Kind.MINUS_GREATER ||
-      lookahead.getKind() == Token.Kind.PERIOD ||
-      lookahead.getKind() == Token.Kind.L_PARENTHESIS
+      kind == Token.Kind.L_BRACKET ||
+      kind == Token.Kind.MINUS_GREATER ||
+      kind == Token.Kind.PERIOD ||
+      kind == Token.Kind.L_PARENTHESIS
     ) {
       switch (lookahead.getKind()) {
         case Token.Kind.L_BRACKET ->
@@ -1984,7 +1983,7 @@ public class Parser {
     match(Token.Kind.L_PARENTHESIS);
     if (lookahead.getKind() != Token.Kind.R_PARENTHESIS) {
       node.addChild(routineArgument());
-      while (lookahead.getKind() == Token.Kind.COMMA) {
+      while (kind == Token.Kind.COMMA) {
         match(Token.Kind.COMMA);
         node.addChild(routineArgument());
       }
@@ -2024,16 +2023,16 @@ public class Parser {
       kind == UINT64_LITERAL
     ) {
       n = literal();
-    } else if (lookahead.getKind() == Token.Kind.THIS)
+    } else if (kind == Token.Kind.THIS)
       n = this_();
-    else if (lookahead.getKind() == Token.Kind.IDENTIFIER) {
+    else if (kind == Token.Kind.IDENTIFIER) {
       // Test this -- is this not working?
       n = name();
     }
     // Defer implementing if expressions
-//    else if (lookahead.getKind() == Token.Kind.IF)
+//    else if (kind == Token.Kind.IF)
 //      n = ifExpression();
-    else if (lookahead.getKind() == Token.Kind.L_PARENTHESIS)
+    else if (kind == Token.Kind.L_PARENTHESIS)
       n = parenthesizedExpression();
     else
       System.out.println("ERROR - INVALID PRIMARY EXPRESSION");
@@ -2155,14 +2154,14 @@ public class Parser {
 
   private LinkedList<Type> leftFragment () {
     var fragment = new LinkedList<Type>();
-    while (lookahead.getKind() == Token.Kind.ASTERISK)
+    while (kind == Token.Kind.ASTERISK)
       fragment.push(pointerType());
     return fragment;
   }
 
   private LinkedList<Type> rightFragment () {
     var fragment = new LinkedList<Type>();
-    while (lookahead.getKind() == Token.Kind.L_BRACKET)
+    while (kind == Token.Kind.L_BRACKET)
       fragment.offer(arrayType());
     return fragment;
   }
@@ -2193,7 +2192,7 @@ public class Parser {
     ) {
       fragment = primitiveType();
     }
-    else if (lookahead.getKind() == Token.Kind.IDENTIFIER) {
+    else if (kind == Token.Kind.IDENTIFIER) {
       // Update: If using angle brackets (e.g. "<>") then I don't know if we still need to consult the symbol table.
 
       // Need to look up name in symbol table to tell what kind it is (e.g. class, template). If it is defined as a
@@ -2217,7 +2216,7 @@ public class Parser {
       //     fragment = nominalType()
       fragment = nominalType();
     }
-    else if (lookahead.getKind() == Token.Kind.L_PARENTHESIS) {
+    else if (kind == Token.Kind.L_PARENTHESIS) {
       match(Token.Kind.L_PARENTHESIS);
       directType();
       fragment = stack.pop();
@@ -2239,7 +2238,7 @@ public class Parser {
   private Type nominalType () {
     Type n = new NominalType(lookahead);
     match(Token.Kind.IDENTIFIER);
-    if (lookahead.getKind() == Token.Kind.LESS)
+    if (kind == Token.Kind.LESS)
       n = templateInstantiation(n);
     return n;
   }
@@ -2249,7 +2248,7 @@ public class Parser {
     match(Token.Kind.CARET);
     match(Token.Kind.L_PARENTHESIS);
     n.addChild(type());
-    while (lookahead.getKind() == Token.Kind.COMMA) {
+    while (kind == Token.Kind.COMMA) {
       match(Token.Kind.COMMA);
       n.addChild(type());
     }
@@ -2273,7 +2272,7 @@ public class Parser {
     var n = new TemplateArguments(lookahead);
     match(Token.Kind.LESS);
     n.addChild(templateArgument());
-    while (lookahead.getKind() == Token.Kind.COMMA) {
+    while (kind == Token.Kind.COMMA) {
       match(Token.Kind.COMMA);
       n.addChild(templateArgument());
     }

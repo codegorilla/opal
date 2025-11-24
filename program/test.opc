@@ -1,16 +1,20 @@
 package main;
 
-//import opal;
+/*
+import opal;
+import opal.lang;
 
-//use opal.math.cos;
-//use opal.math.{ Bessel, Gamma };
-//use opal.math.*;
+use opal.math.cos;
+use opal.math.{ Bessel, Gamma };
+use opal.math.*;
 
 var x: int = 1;
 
 class Widget extends Object {
 
   private var x: int = 1;
-  
-}
 
+}
+*/
+
+def cos (x: int) -> int {}
