@@ -11,5 +11,6 @@ var x: int = 1;
 class Widget extends Object {
 
   private var x: int = 1;
+  
 }
 

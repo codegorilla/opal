@@ -910,6 +910,9 @@ public class Parser {
 
   // To do: Finish follower set
 
+  // What if there are modifiers on typealias? Is that a syntax error or
+  // semantic error?
+
   private AstNode memberTypealiasDeclaration (AstNode accessSpecifier) {
     confirm(TYPEALIAS);
     var n = new MemberTypealiasDeclaration(mark);
@@ -924,11 +927,12 @@ public class Parser {
   }
 
   private AstNode memberRoutineDeclaration (AstNode accessSpecifier) {
-    var n = new MemberRoutineDeclaration(lookahead);
-    match(Token.Kind.DEF);
+    confirm(DEF);
+    var n = new MemberRoutineDeclaration(mark);
     n.addChild(accessSpecifier);
     n.addChild(memberRoutineModifiers());
-    n.addChild(routineName());
+    matchX(Token.Kind.IDENTIFIER, FollowerSet.L_PARENTHESIS);
+    n.addChild(new RoutineName(mark));
     n.addChild(routineParameters());
     n.addChild(cvQualifiers());
     n.addChild(refQualifiers());
@@ -981,7 +985,6 @@ public class Parser {
   private AstNode memberVariableDeclaration (AstNode accessSpecifier) {
     confirm(lookahead.getKind() == VAL ? VAL : VAR);
     var n = new MemberVariableDeclaration(mark);
-    match(Token.Kind.VAR);
     n.addChild(accessSpecifier);
     n.addChild(variableModifiers());
     matchX(Token.Kind.IDENTIFIER, EnumSet.of(COLON, EQUAL));
@@ -1039,24 +1042,29 @@ public class Parser {
   // For now, there are no local routines, so no need to distinguish between
   // global and local routines.
 
+  // To do: Finish error recovery
+
   private AstNode routineDeclaration (AstNode exportSpecifier) {
-    var n = new RoutineDeclaration(lookahead);
-    match(Token.Kind.DEF);
-//    var scope = Scope(Scope.Kind.LOCAL);
-//    scope.setEnclosingScope(currentScope);
-//    currentScope = scope;
-//    n.setScope(currentScope);
+    confirm(DEF);
+    var n = new RoutineDeclaration(mark);
     n.addChild(exportSpecifier);
     n.addChild(routineModifiers());
-    n.addChild(routineName());
+    matchX(Token.Kind.IDENTIFIER, FollowerSet.L_PARENTHESIS);
+    n.addChild(new RoutineName(mark));
     n.addChild(routineParameters());
-    n.addChild((lookahead.getKind() == Token.Kind.NOEXCEPT) ? noexceptSpecifier() : null);
+    if (lookahead.getKind() == NOEXCEPT) {
+      confirm(NOEXCEPT);
+      n.addChild(new NoexceptSpecifier(mark));
+    } else {
+      n.addChild(EPSILON);
+    }
     n.addChild((lookahead.getKind() == Token.Kind.MINUS_GREATER) ? routineReturnType() : null);
     n.addChild(routineBody());
 //    currentScope = scope.getEnclosingScope();
     return n;
   }
 
+  @Deprecated
   private AstNode routineModifiers () {
     var n = new RoutineModifiers();
     while (!modifierStack.isEmpty())
@@ -1064,54 +1072,42 @@ public class Parser {
     return n;
   }
 
-  // Todo: Should symbols point to AST node, and/or vice versa? This might come
-  // in handy later on, but wait until its needed before adding the code.
-
-  private AstNode routineName () {
-    var n = new RoutineName(lookahead);
-    match(Token.Kind.IDENTIFIER);
-    //var s = RoutineSymbol(n.getToken().lexeme);
-    //currentScope.define(s);
-    return n;
-  }
-
   private AstNode routineParameters () {
+    // To do: Add in parameter modifiers as required
+    matchX(L_PARENTHESIS, EnumSet.of(Token.Kind.IDENTIFIER, R_PARENTHESIS));
     var n = new RoutineParameters();
-    match(Token.Kind.L_PARENTHESIS);
     if (lookahead.getKind() == Token.Kind.IDENTIFIER)
-      n.addChild(routineParameter());
-    while (lookahead.getKind() == Token.Kind.COMMA) {
-      match(Token.Kind.COMMA);
-      n.addChild(routineParameter());
+      n.addChild(routineParameter(EnumSet.of(R_PARENTHESIS)));
+    while (lookahead.getKind() == COMMA) {
+      match(COMMA);
+      n.addChild(routineParameter(EnumSet.of(R_PARENTHESIS)));
     }
-    match(Token.Kind.R_PARENTHESIS);
+    // FS = left brace, arrow, noexcept, etc.
+    matchX(Token.Kind.R_PARENTHESIS);
     return n;
   }
 
   // Routine parameters are for all intents and purposes local variables
 
-  private AstNode routineParameter () {
+  private AstNode routineParameter (EnumSet<Token.Kind> followingSet) {
+    followingSetStack.push(followingSet);
     var n = new RoutineParameter();
-    n.addChild(routineParameterName());
+    matchX(Token.Kind.IDENTIFIER, FollowerSet.COLON);
+    n.addChild(new RoutineParameterName(mark));
     n.addChild(routineParameterTypeSpecifier());
-    return n;
-  }
-
-  private AstNode routineParameterName () {
-    var n = new RoutineParameterName(lookahead);
-    match(Token.Kind.IDENTIFIER);
-    //var s = RoutineParameterSymbol(n.getToken().lexeme);
-    //currentScope.define(s);
+    followingSetStack.pop();
     return n;
   }
 
   private AstNode routineParameterTypeSpecifier () {
-    var n = new RoutineParameterTypeSpecifier(lookahead);
-    match(Token.Kind.COLON);
+    // To do: Add type follower set
+    matchX(COLON);
+    var n = new RoutineParameterTypeSpecifier(mark);
     n.addChild(type());
     return n;
   }
 
+  @Deprecated
   private AstNode noexceptSpecifier () {
     var n = new NoexceptSpecifier(lookahead);
     match(Token.Kind.NOEXCEPT);

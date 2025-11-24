@@ -13,11 +13,37 @@ import java.util.EnumSet;
 
 public class FollowerSet {
 
+  public static final EnumSet<Token.Kind> COLON =
+    EnumSet.of(Token.Kind.EQUAL);
+
   public static final EnumSet<Token.Kind> EQUAL =
     EnumSet.of(Token.Kind.EQUAL);
 
+  public static final EnumSet<Token.Kind> EXPRESSION =
+    EnumSet.of(
+      Token.Kind.FALSE,
+      Token.Kind.TRUE,
+      Token.Kind.CHARACTER_LITERAL,
+      Token.Kind.STRING_LITERAL,
+      Token.Kind.FLOAT32_LITERAL,
+      Token.Kind.FLOAT64_LITERAL,
+      Token.Kind.INT32_LITERAL,
+      Token.Kind.INT64_LITERAL,
+      Token.Kind.UINT32_LITERAL,
+      Token.Kind.UINT64_LITERAL,
+      Token.Kind.AMPERSAND,
+      Token.Kind.ASTERISK,
+      Token.Kind.L_PARENTHESIS,
+      Token.Kind.MINUS,
+      Token.Kind.PLUS,
+      Token.Kind.TILDE
+    );
+
   public static final EnumSet<Token.Kind> IDENTIFIER =
     EnumSet.of(Token.Kind.IDENTIFIER);
+
+  public static final EnumSet<Token.Kind> L_PARENTHESIS =
+    EnumSet.of(Token.Kind.L_PARENTHESIS);
 
   public static final EnumSet<Token.Kind> PERIOD =
     EnumSet.of(Token.Kind.PERIOD);
