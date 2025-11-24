@@ -251,11 +251,12 @@ public class Generator2 extends BaseResultVisitor<ST> {
     return new ST(node.getToken().getLexeme());
   }
 
-  public ST visit (ClassExtendsClause node) {
-    var st = group.getInstanceOf("common/declaration/classExtendsClause");
-    st.add("baseClasses", visit(node.baseClasses()));
-    return st;
-  }
+//  @Deprecated
+//  public ST visit (ClassExtendsClause node) {
+//    var st = group.getInstanceOf("common/declaration/classExtendsClause");
+//    st.add("baseClasses", visit(node.baseClasses()));
+//    return st;
+//  }
 
   public ST visit (BaseClasses node) {
     var st = group.getInstanceOf("common/declaration/baseClasses");

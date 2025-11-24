@@ -58,7 +58,6 @@ public class BaseResultVisitor<T> implements ResultVisitor <T> {
   public T visit (ClassModifiers node) { return null; }
   public T visit (ClassName node) { return null; }
   public T visit (ClassBody node) { return null; }
-  public T visit (ClassExtendsClause node) { return null; }
   public T visit (BaseClasses node) { return null; }
   public T visit (BaseClass node) { return null; }
 

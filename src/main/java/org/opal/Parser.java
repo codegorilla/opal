@@ -299,7 +299,7 @@ public class Parser {
       consume();
       kind = lookahead.getKind();
     }
-    LOGGER.info("Match: synchronization toString");
+    LOGGER.info("Match: synchronization complete");
   }
 
   private void matchX (Token.Kind expectedKind, EnumSet<Token.Kind> followerSet) {
@@ -475,6 +475,8 @@ public class Parser {
     // necessarily a reverse keyword lookup
     keywordLookup.put(Token.Kind.MINUS, "'-'");
     keywordLookup.put(Token.Kind.PLUS, "'+'");
+    keywordLookup.put(Token.Kind.L_BRACE, "'{'");
+    keywordLookup.put(Token.Kind.R_BRACE, "'}'");
   }
 
   private void definePrimitiveTypes () {
@@ -803,7 +805,7 @@ public class Parser {
     matchX(Token.Kind.IDENTIFIER, EnumSet.of(EXTENDS, L_BRACE));
     n.addChild(new ClassName(mark));
     if (lookahead.getKind() == EXTENDS)
-      n.addChild(classExtendsClause());
+      n.addChild(baseClasses(FollowingSet.L_BRACE));
     else
       n.addChild(EPSILON);
     n.addChild(classBody());
@@ -817,60 +819,74 @@ public class Parser {
     return n;
   }
 
-  private AstNode classExtendsClause () {
-    confirm(EXTENDS);
-    var n = new ClassExtendsClause(mark);
-    n.addChild(baseClasses());
-    return n;
-  }
-
   // For now, we only support public (i.e. "is-a") inheritance. Private (i.e.
   // "is-implemented-in-terms-of") inheritance is NOT supported. Most use cases
   // of private inheritance are better met by composition instead.
 
-  private AstNode baseClasses () {
-    var n = new BaseClasses(lookahead);
+  private AstNode baseClasses (EnumSet<Token.Kind> followingSet) {
+    followingSetStack.push(followingSet);
+    confirm(EXTENDS);
+    var n = new BaseClasses();
     matchX(Token.Kind.IDENTIFIER, EnumSet.of(COMMA, L_BRACE));
     n.addChild(new BaseClass(mark));
     while (lookahead.getKind() == COMMA) {
       confirm(COMMA);
+      matchX(Token.Kind.IDENTIFIER, EnumSet.of(COMMA, L_BRACE));
       n.addChild(new BaseClass(mark));
     }
+    followingSetStack.pop();
     return n;
   }
 
-  // The token here is simply the curly brace '{'. Do we need to track this?
-  // It will depend on whether or not this sort of thing helps with error
-  // reporting and debugging.
+  // ClassBody is essentially equivalent to memberDeclarations
 
   private AstNode classBody () {
-    var n = new ClassBody(lookahead);
-    match(Token.Kind.L_BRACE);
-    while (lookahead.getKind() != Token.Kind.R_BRACE)
-      n.addChild(memberDeclaration());
-    match(Token.Kind.R_BRACE);
+    matchX(L_BRACE, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, R_BRACE));
+    var n = new ClassBody();
+    var kind = lookahead.getKind();
+    while (
+      kind == PRIVATE ||
+      kind == CLASS   ||
+      kind == DEF     ||
+      kind == VAL     ||
+      kind == VAR
+    ) {
+      n.addChild(memberDeclaration(EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, R_BRACE)));
+      kind = lookahead.getKind();
+    }
+    matchX(R_BRACE, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR));
     return n;
   }
 
   // MEMBER DECLARATIONS
 
-  private AstNode memberDeclaration () {
-    AstNode n;
+  private AstNode memberDeclaration (EnumSet<Token.Kind> followingSet) {
+    followingSetStack.push(followingSet);
+    AstNode accessSpecifier;
     var kind = lookahead.getKind();
-    var spec = (kind == Token.Kind.PRIVATE || kind == Token.Kind.PROTECTED) ? memberAccessSpecifier() : null;
+    if (kind == PRIVATE) {
+      confirm(PRIVATE);
+      accessSpecifier = new MemberAccessSpecifier(mark);
+    } else if (kind == PROTECTED) {
+      confirm(PROTECTED);
+      accessSpecifier = new MemberAccessSpecifier(mark);
+    } else {
+      accessSpecifier = EPSILON;
+    }
     memberModifiers();
-    n = switch (lookahead.getKind()) {
-      case Token.Kind.TYPEALIAS -> memberTypealiasDeclaration(spec);
-      case Token.Kind.DEF -> memberRoutineDeclaration(spec);
-      case Token.Kind.VAL, Token.Kind.VAR -> memberVariableDeclaration(spec);
-      default -> null;
-    };
-    return n;
-  }
-
-  private MemberAccessSpecifier memberAccessSpecifier () {
-    var n = new MemberAccessSpecifier(lookahead);
-    match(lookahead.getKind());
+    AstNode n;
+    kind = lookahead.getKind();
+    if (kind == TYPEALIAS) {
+      n = memberTypealiasDeclaration(accessSpecifier);
+    } else if (kind == DEF) {
+      n = memberRoutineDeclaration(accessSpecifier);
+    } else if (kind == VAL || kind == VAR) {
+      n = memberVariableDeclaration(accessSpecifier);
+    } else {
+      // Error - need to sync?
+      n = null;
+    }
+    followingSetStack.pop();
     return n;
   }
 
@@ -892,18 +908,22 @@ public class Parser {
     }
   }
 
+  // To do: Finish follower set
+
   private AstNode memberTypealiasDeclaration (AstNode accessSpecifier) {
-    var n = new MemberTypealiasDeclaration(lookahead);
-    match(Token.Kind.TYPEALIAS);
+    confirm(TYPEALIAS);
+    var n = new MemberTypealiasDeclaration(mark);
     n.addChild(accessSpecifier);
-    n.addChild(typealiasName());
-    match(Token.Kind.EQUAL);
+    matchX(Token.Kind.IDENTIFIER, FollowerSet.EQUAL);
+    n.addChild(new TypealiasName(mark));
+    // Follower set is whatever can start a type
+    matchX(EQUAL, EnumSet.of(ASTERISK, COMMA, Token.Kind.BOOL, Token.Kind.IDENTIFIER));
     n.addChild(type());
-    match(SEMICOLON);
+    matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR));
     return n;
   }
 
-  private AstNode memberRoutineDeclaration (MemberAccessSpecifier accessSpecifier) {
+  private AstNode memberRoutineDeclaration (AstNode accessSpecifier) {
     var n = new MemberRoutineDeclaration(lookahead);
     match(Token.Kind.DEF);
     n.addChild(accessSpecifier);
@@ -958,7 +978,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode memberVariableDeclaration (MemberAccessSpecifier accessSpecifier) {
+  private AstNode memberVariableDeclaration (AstNode accessSpecifier) {
     confirm(lookahead.getKind() == VAL ? VAL : VAR);
     var n = new MemberVariableDeclaration(mark);
     match(Token.Kind.VAR);
@@ -993,6 +1013,7 @@ public class Parser {
     return n;
   }
 
+  @Deprecated
   private AstNode typealiasName () {
     var n = new TypealiasName(lookahead);
     match(Token.Kind.IDENTIFIER);

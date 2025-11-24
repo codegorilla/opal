@@ -58,7 +58,6 @@ public class BaseVisitor implements Visitor {
   public void visit (ClassModifiers node) {}
   public void visit (ClassName node) {}
   public void visit (ClassBody node) {}
-  public void visit (ClassExtendsClause node) {}
   public void visit (BaseClasses node) {}
   public void visit (BaseClass node) {}
 
