@@ -1,14 +1,13 @@
 package org.opal.ast.declaration;
 
 import org.opal.ResultVisitor;
-import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
 public class BaseClasses extends AstNode {
 
-  public BaseClasses (Token token) {
-    super(token);
+  public BaseClasses () {
+    super();
   }
 
   @Override

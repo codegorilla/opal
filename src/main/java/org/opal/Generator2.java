@@ -184,7 +184,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
     return st;
   }
 
-  public ST visit (UseSomeNames node) {
+  public ST visit (UseNameGroup node) {
     var st = group.getInstanceOf("interface/declaration/usingDeclarationSomeNames");
     for (var someName : node.getChildren())
       st.add("usingDeclarationSomeName", visit(someName));
@@ -199,7 +199,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
     return st;
   }
 
-  public ST visit (UseAllNames node) {
+  public ST visit (UseNameWildcard node) {
     var st = group.getInstanceOf("interface/declaration/usingDeclarationAllNames");
     st.add("usingQualifiedName", genStack.pop());
     return st;
@@ -251,11 +251,12 @@ public class Generator2 extends BaseResultVisitor<ST> {
     return new ST(node.getToken().getLexeme());
   }
 
-  public ST visit (ClassExtendsClause node) {
-    var st = group.getInstanceOf("common/declaration/classExtendsClause");
-    st.add("baseClasses", visit(node.baseClasses()));
-    return st;
-  }
+//  @Deprecated
+//  public ST visit (ClassExtendsClause node) {
+//    var st = group.getInstanceOf("common/declaration/classExtendsClause");
+//    st.add("baseClasses", visit(node.baseClasses()));
+//    return st;
+//  }
 
   public ST visit (BaseClasses node) {
     var st = group.getInstanceOf("common/declaration/baseClasses");

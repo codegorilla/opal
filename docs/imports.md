@@ -40,3 +40,26 @@ import opal.lang.math as m;
 var x: double = math.cos(30);
 var y: double = m.cos(30);
 ```
+
+The grammar for import declarations is as follows:
+
+```
+importDeclarations
+  : importDeclaration+
+  ;
+
+importDeclaration
+  : "import" importQualifiedName importAsClause? ";"
+  ;
+
+importAsClause
+  : "as" importName
+  ;
+
+importQualifiedName
+  : importName ("." importName)*
+  ;
+
+importName
+  : IDENTIFIER
+  ;

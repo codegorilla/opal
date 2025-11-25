@@ -1,9 +1,22 @@
 package org.opal;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.opal.error.LexicalError;
+
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 public class Lexer {
+
+  private final int SLEEP_TIME = 100;
+
+  private static final Logger LOGGER = LogManager.getLogger();
+
+  private final List<String> sourceLines;
 
   private final char EOF = (char)(-1);
 
@@ -17,13 +30,19 @@ public class Lexer {
   private final Marker markPosition = new Marker();
   private final Marker markColumn   = new Marker();
 
-  private final HashMap<String, Token.Kind> keywordLookup = new HashMap<>();
+  private final HashMap<String, Token.Kind> keywordLookup;
 
-  public Lexer (String input) {
+  public Lexer (String input, List<String> sourceLines) {
     this.input = input;
     if (!input.isEmpty())
       current = input.charAt(0);
-    buildKeywordLookupTable();
+    this.sourceLines = sourceLines;
+    var keywordTable = new KeywordTable();
+    keywordLookup = keywordTable.getForwardLookupTable();
+
+    // Set up logging
+    var level = Level.INFO;
+    Configurator.setRootLevel(level);
   }
 
   private void consume () {
@@ -47,90 +66,7 @@ public class Lexer {
   }
 
   private void error (String message) {
-    var coords = "(" + line + "," + column.get() + ")";
-    System.out.println(coords + ": error:" + message);
-  }
-
-  private void buildKeywordLookupTable () {
-    // Populate keyword lookup table
-    keywordLookup.put("abstract", Token.Kind.ABSTRACT);
-    keywordLookup.put("and", Token.Kind.AND);
-    keywordLookup.put("as", Token.Kind.AS);
-    keywordLookup.put("break", Token.Kind.BREAK);
-    keywordLookup.put("case", Token.Kind.CASE);
-    keywordLookup.put("cast", Token.Kind.CAST);
-    keywordLookup.put("catch", Token.Kind.CATCH);
-    keywordLookup.put("class", Token.Kind.CLASS);
-    keywordLookup.put("const", Token.Kind.CONST);
-    keywordLookup.put("consteval", Token.Kind.CONSTEVAL);
-    keywordLookup.put("constexpr", Token.Kind.CONSTEXPR);
-    keywordLookup.put("continue", Token.Kind.CONTINUE);
-    keywordLookup.put("def", Token.Kind.DEF);
-    keywordLookup.put("default", Token.Kind.DEFAULT);
-    keywordLookup.put("delete", Token.Kind.DELETE);
-    keywordLookup.put("divine", Token.Kind.DIVINE);
-    keywordLookup.put("do", Token.Kind.DO);
-    keywordLookup.put("else", Token.Kind.ELSE);
-    keywordLookup.put("enum", Token.Kind.ENUM);
-    keywordLookup.put("extends", Token.Kind.EXTENDS);
-    keywordLookup.put("false", Token.Kind.FALSE);
-    keywordLookup.put("final", Token.Kind.FINAL);
-    keywordLookup.put("for", Token.Kind.FOR);
-    keywordLookup.put("fn", Token.Kind.FN);
-    keywordLookup.put("fun", Token.Kind.FUN);
-    keywordLookup.put("goto", Token.Kind.GOTO);
-    keywordLookup.put("if", Token.Kind.IF);
-    keywordLookup.put("import", Token.Kind.IMPORT);
-    keywordLookup.put("in", Token.Kind.IN);
-    keywordLookup.put("include", Token.Kind.INCLUDE);
-    keywordLookup.put("loop", Token.Kind.LOOP);
-    keywordLookup.put("new", Token.Kind.NEW);
-    keywordLookup.put("nil", Token.Kind.NIL);
-    keywordLookup.put("noexcept", Token.Kind.NOEXCEPT);
-    keywordLookup.put("null", Token.Kind.NULL);
-    keywordLookup.put("or", Token.Kind.OR);
-    keywordLookup.put("override", Token.Kind.OVERRIDE);
-    keywordLookup.put("package", Token.Kind.PACKAGE);
-    keywordLookup.put("private", Token.Kind.PRIVATE);
-    keywordLookup.put("protected", Token.Kind.PROTECTED);
-    keywordLookup.put("return", Token.Kind.RETURN);
-    keywordLookup.put("static", Token.Kind.STATIC);
-    keywordLookup.put("struct", Token.Kind.STRUCT);
-    keywordLookup.put("switch", Token.Kind.SWITCH);
-    keywordLookup.put("template", Token.Kind.TEMPLATE);
-    keywordLookup.put("this", Token.Kind.THIS);
-    keywordLookup.put("trait", Token.Kind.TRAIT);
-    keywordLookup.put("transmute", Token.Kind.TRANSMUTE);
-    keywordLookup.put("true", Token.Kind.TRUE);
-    keywordLookup.put("try", Token.Kind.TRY);
-    keywordLookup.put("typealias", Token.Kind.TYPEALIAS);
-    keywordLookup.put("union", Token.Kind.UNION);
-    keywordLookup.put("until", Token.Kind.UNTIL);
-    keywordLookup.put("use", Token.Kind.USE);
-    keywordLookup.put("val", Token.Kind.VAL);
-    keywordLookup.put("var", Token.Kind.VAR);
-    keywordLookup.put("virtual", Token.Kind.VIRTUAL);
-    keywordLookup.put("volatile", Token.Kind.VOLATILE);
-    keywordLookup.put("when", Token.Kind.WHEN);
-    keywordLookup.put("while", Token.Kind.WHILE);
-    keywordLookup.put("with", Token.Kind.WITH);
-    keywordLookup.put("short", Token.Kind.SHORT);
-    keywordLookup.put("int", Token.Kind.INT);
-    keywordLookup.put("long", Token.Kind.LONG);
-    keywordLookup.put("int8", Token.Kind.INT8);
-    keywordLookup.put("int16", Token.Kind.INT16);
-    keywordLookup.put("int32", Token.Kind.INT32);
-    keywordLookup.put("int64", Token.Kind.INT64);
-    keywordLookup.put("uint", Token.Kind.UINT);
-    keywordLookup.put("uint8", Token.Kind.UINT8);
-    keywordLookup.put("uint16", Token.Kind.UINT16);
-    keywordLookup.put("uint32", Token.Kind.UINT32);
-    keywordLookup.put("uint64", Token.Kind.UINT64);
-    keywordLookup.put("float", Token.Kind.FLOAT);
-    keywordLookup.put("double", Token.Kind.DOUBLE);
-    keywordLookup.put("float32", Token.Kind.FLOAT32);
-    keywordLookup.put("float64", Token.Kind.FLOAT64);
-    keywordLookup.put("void", Token.Kind.VOID);
+    System.out.println(new LexicalError(sourceLines, message, line.get(), column.get()));
   }
 
   public LinkedList<Token> process () {
@@ -149,6 +85,13 @@ public class Lexer {
     String lexeme = "";
 
     while (current != EOF) {
+
+//      System.out.println("Sleeping for " + SLEEP_TIME + " seconds in declarations...");
+//      try {
+//        Thread.sleep(SLEEP_TIME);
+//      } catch (InterruptedException e) {
+//        throw new RuntimeException(e);
+//      }
 
       if (current == '=') {
         mark();
@@ -587,7 +530,7 @@ public class Lexer {
     }
 
     // Placeholder to avoid error
-    return new Token(Token.Kind.EOF, "$", position.get(), line.get(), column.get());
+    return new Token(Token.Kind.EOF, "<EOF>", position.get(), line.get(), column.get());
   }
 
   private boolean isBinaryDigit (char ch) {
@@ -1061,6 +1004,14 @@ public class Lexer {
     var state = State.NUM_START;
     Token token = null;
     while (token == null) {
+
+//      System.out.println("Sleeping for " + SLEEP_TIME + " seconds in declarations...");
+//      try {
+//        Thread.sleep(SLEEP_TIME);
+//      } catch (InterruptedException e) {
+//        throw new RuntimeException(e);
+//      }
+
       switch (state) {
         case State.NUM_START:
           // We are guaranteed to get a digit here unless the lexer has a bug in it.
@@ -1162,8 +1113,13 @@ public class Lexer {
             state = State.NUM_400;
           } else {
             // Pretend we got a digit for error recovery purposes
-            error("invalid number: found '" + current + "', expected decimal digit");
-            consume();
+            error("invalid number: expected decimal digit, got '" + current + "'");
+            // We don't want to consume the character in case it belongs to the
+            // next token. That can cause the lexical error to cascade into a
+            // hard-to-understand syntax error. Leaving the character alone may
+            // still result in a syntax error, but it will generally be more
+            // sensible.
+            state = State.NUM_400;
           }
           break;
         case State.NUM_400:

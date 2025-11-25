@@ -8,6 +8,8 @@ import org.stringtemplate.v4.ST;
 
 import java.util.LinkedList;
 
+// DEPRECATED
+
 public class Declarations extends AstNode {
 
   // Leave public for now while experimenting

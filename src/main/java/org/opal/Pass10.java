@@ -73,7 +73,7 @@ public class Pass10 extends BaseVisitor {
       var machine = entry.getValue();
       if (machine.getErrorBit()) {
         var error = new SemanticError(sourceLines, "duplicate import alias", machine.getNode().asName().getToken());
-        System.out.println(error.complete());
+        System.out.println(error);
       } else {
         if (machine.getNode() != null) {
           // If node exists, then we need to mark that node with its alias. The

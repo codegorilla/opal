@@ -5,9 +5,9 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class UseSomeNames extends AstNode {
+public class UseNameGroup extends AstNode {
 
-  public UseSomeNames (Token token) {
+  public UseNameGroup (Token token) {
     super(token);
   }
 

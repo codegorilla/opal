@@ -43,9 +43,9 @@ public class BaseResultVisitor<T> implements ResultVisitor <T> {
   public T visit (UseQualifiedName node) { return null; }
   public T visit (UseName node) { return null; }
   public T visit (UseOneName node) { return null; }
-  public T visit (UseSomeNames node) { return null; }
+  public T visit (UseNameGroup node) { return null; }
   public T visit (UseSomeName node) { return null; }
-  public T visit (UseAllNames node) { return null; }
+  public T visit (UseNameWildcard node) { return null; }
 
   // Other declarations
   public T visit (OtherDeclarations node) { return null; }
@@ -58,7 +58,6 @@ public class BaseResultVisitor<T> implements ResultVisitor <T> {
   public T visit (ClassModifiers node) { return null; }
   public T visit (ClassName node) { return null; }
   public T visit (ClassBody node) { return null; }
-  public T visit (ClassExtendsClause node) { return null; }
   public T visit (BaseClasses node) { return null; }
   public T visit (BaseClass node) { return null; }
 

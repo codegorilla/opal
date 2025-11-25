@@ -7,6 +7,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -57,26 +59,25 @@ public class Translator {
     // Note: A line with no content is not counted by lines(). This means that
     // the EOF token may appear on a line that doesn't exist in sourceLines.
     // Thus, if we ever try to print an error message with EOF, then it might
-    // cause an out of bound exception. I don't know if this can ever occur in
-    // a proper parser with no bugs, but it can if there are bugs. For example,
-    // not having EOF in the FOLLOW set of the start symbol caused this
-    // problem.
+    // cause an out of bound exception. The solution is to use the split()
+    // method instead of lines().
+    var sourceLines = Arrays.stream(source.replace("\r\n", "\n").split("\n", -1)).toList();
 
-    var sourceLines = source.lines().toList();
-
-    var lexer = new Lexer(source);
+    var lexer = new Lexer(source, sourceLines);
     var tokens = lexer.process();
     System.out.println(tokens);
+    
     var parser = new Parser(tokens, sourceLines);
     var root = parser.process();
 
     System.out.println("*** DONE PARSING ***");
 
-    // Temporary exit
-    System.exit(0);
 
     var pass1 = new Pass1(root);
     pass1.process();
+
+    // Temporary exit
+    System.exit(0);
 
     // Determine import aliases
     var pass10 = new Pass10(root, sourceLines);

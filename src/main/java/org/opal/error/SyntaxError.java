@@ -13,9 +13,6 @@ public class SyntaxError extends Error {
   private final String message;
   private final Token token;
 
-  private final String ANSI_RESET = "\u001B[0m";
-  private final String ANSI_RED   = "\u001B[31m";
-
   public SyntaxError (List<String> lines, String message, Token token) {
     super();
     this.lines = lines;
@@ -28,12 +25,9 @@ public class SyntaxError extends Error {
   // lines show the affected source code line and a marker indicating the
   // specific point where the error occurred.
 
-  public String complete () {
-    var s = new StringBuilder();
-    s.append(summary());
-    s.append('\n');
-    s.append(detail());
-    return s.toString();
+  @Override
+  public String toString () {
+    return summary() + '\n' + detail();
   }
 
   private String summary () {
@@ -53,10 +47,10 @@ public class SyntaxError extends Error {
       .append("\n")
       .append("  | ")
       .repeat(' ', token.getColumn() - 1)
-      .append(ANSI_RED)
+      .append(TermColor.ANSI_RED)
       .append('^')
       .repeat('~', token.getLexeme().length() - 1)
-      .append(ANSI_RESET);
+      .append(TermColor.ANSI_RESET);
     return sb.toString();
   }
 
