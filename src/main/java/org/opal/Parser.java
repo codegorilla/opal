@@ -468,7 +468,7 @@ public class Parser {
     buildReverseKeywordLookupTable();
     definePrimitiveTypes();
     LOGGER.info("*** Parsing started... ***");
-    var node = translationUnit(EnumSet.of(Token.Kind.EOF));
+    var node = translationUnit();
     // EOF is the only token in the follow set of translationUnit. Must match
     // it to ensure there is no garbage left over.
     matchX(Token.Kind.EOF);
@@ -507,13 +507,18 @@ public class Parser {
   // In parsing theory lingo, the top-most production is known as the "start
   // symbol". Thus, the translation unit is our start symbol.
 
-  private AstNode translationUnit (EnumSet<Token.Kind> followingSet) {
-    followingSetStack.push(followingSet);
+  private AstNode translationUnit () {
+    followingSetStack.push(EnumSet.of(Token.Kind.EOF));
     var n = new TranslationUnit();
-    var fsu = EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR);
     n.addChild(packageDeclaration());
-    n.addChild(lookahead.getKind() == IMPORT ? importDeclarations() : EPSILON);
-    n.addChild(lookahead.getKind() == USE ? useDeclarations(fsu) : EPSILON);
+    if (kind == IMPORT)
+      n.addChild(importDeclarations());
+    else
+      n.addChild(EPSILON);
+    if (kind == USE)
+      n.addChild(useDeclarations());
+    else
+      n.addChild(EPSILON);
     var kind = lookahead.getKind();
     if (
       kind == PRIVATE ||
@@ -586,7 +591,10 @@ public class Parser {
     confirm(IMPORT);
     var n = new ImportDeclaration(mark);
     n.addChild(importQualifiedName());
-    n.addChild(kind == AS ? importAsClause() : EPSILON);
+    if (kind == AS)
+      n.addChild(importAsClause());
+    else
+      n.addChild(EPSILON);
     matchX(SEMICOLON, FollowSet.IMPORT_DECLARATION);
     followingSetStack.pop();
     return n;
@@ -623,8 +631,8 @@ public class Parser {
     return n;
   }
 
-  private AstNode useDeclarations (EnumSet<Token.Kind> followingSet) {
-    followingSetStack.push(followingSet);
+  private AstNode useDeclarations () {
+    followingSetStack.push(FollowingSet.USE_DECLARATIONS);
     var n = new UseDeclarations();
     n.addChild(useDeclaration());
     while (kind == USE)
@@ -634,11 +642,11 @@ public class Parser {
   }
 
   private AstNode useDeclaration () {
-    followingSetStack.push(FollowingSet.USE);
+    followingSetStack.push(EnumSet.of(USE));
     confirm(USE);
     var n = new UseDeclaration(mark);
     n.addChild(useQualifiedName());
-    matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE, Token.Kind.EOF));
+    matchX(SEMICOLON, FollowSet.USE_DECLARATION);
     followingSetStack.pop();
     return n;
   }
@@ -650,12 +658,12 @@ public class Parser {
   // non-terminal production method.
 
   private AstNode useQualifiedName () {
-    followingSetStack.push(FollowingSet.SEMICOLON);
+    followingSetStack.push(EnumSet.of(SEMICOLON));
     AstNode n = new UseQualifiedName();
-    matchX(Token.Kind.IDENTIFIER, FollowerSet.PERIOD);
+    matchX(Token.Kind.IDENTIFIER, PERIOD);
     var p = new UseName(mark);
     n.addChild(p);
-    matchX(PERIOD, FollowerSet.IDENTIFIER);
+    matchX(PERIOD, Token.Kind.IDENTIFIER);
     p.addChild(useQualifiedNameTail());
     followingSetStack.pop();
     return n;
@@ -697,7 +705,7 @@ public class Parser {
       matchX(Token.Kind.IDENTIFIER, EnumSet.of(COMMA, R_BRACE));
       n.addChild(new UseName(mark));
     }
-    matchX(R_BRACE, FollowerSet.SEMICOLON);
+    matchX(R_BRACE, EnumSet.of(SEMICOLON));
     return n;
   }
 
@@ -712,15 +720,8 @@ public class Parser {
 
   private AstNode otherDeclarations () {
     var n = new OtherDeclarations();
-    var fso = EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR);
-    while (
-      kind == PRIVATE ||
-      kind == CLASS   ||
-      kind == DEF     ||
-      kind == VAL     ||
-      kind == VAR
-    ) {
-      n.addChild(otherDeclaration(fso));
+    while (FirstSet.OTHER_DECLARATION.contains(kind)) {
+      n.addChild(otherDeclaration());
     }
     return n;
   }
@@ -728,8 +729,8 @@ public class Parser {
   // Entities may be declared as private, indicating that they are not
   // exported. Otherwise, they are considered public, i.e. exported.
 
-  private AstNode otherDeclaration (EnumSet<Token.Kind> followingSet) {
-    followingSetStack.push(followingSet);
+  private AstNode otherDeclaration () {
+    followingSetStack.push(FirstSet.OTHER_DECLARATION);
     AstNode p;
     if (kind == PRIVATE) {
       confirm(PRIVATE);
