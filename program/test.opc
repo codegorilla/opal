@@ -1,8 +1,12 @@
-package main
+package main;
 
-var x: *int32[2];
+var s: float = 1
 
-var t: float = 1;
+var t: float = 2;
+
+
+//var x: *int32[2];
+
 
 /*
 import opal;
@@ -13,4 +17,4 @@ use opal.math.{ Bessel, Gamma };
 use opal.math.*;
 */
 
-
+//follow(varDecl) is first(otherDecl)

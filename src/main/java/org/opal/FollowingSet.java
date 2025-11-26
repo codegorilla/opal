@@ -13,24 +13,26 @@ import java.util.EnumSet;
 
 public class FollowingSet {
 
-  public static final EnumSet<Token.Kind> COMMA =
-    EnumSet.of(Token.Kind.COMMA);
 
-  public static final EnumSet<Token.Kind> EQUAL =
-    EnumSet.of(Token.Kind.EQUAL);
+//  public static final EnumSet<Token.Kind> COMMA =
+//    EnumSet.of(Token.Kind.COMMA);
+//
+//  public static final EnumSet<Token.Kind> EQUAL =
+//    EnumSet.of(Token.Kind.EQUAL);
 
   public static final EnumSet<Token.Kind> GREATER =
     EnumSet.of(Token.Kind.GREATER);
 
-  public static final EnumSet<Token.Kind> IMPORT =
-    EnumSet.of(Token.Kind.IMPORT);
+//  public static final EnumSet<Token.Kind> IMPORT =
+//    EnumSet.of(Token.Kind.IMPORT);
 
   public static final EnumSet<Token.Kind> L_BRACE =
     EnumSet.of(Token.Kind.L_BRACE);
 
 
-  public static final EnumSet<Token.Kind> PACKAGE_DECLARATION =
-    union(FirstSet.IMPORT_DECLARATIONS, FirstSet.USE_DECLARATIONS, FirstSet.OTHER_DECLARATIONS);
+  public static final EnumSet<Token.Kind> PACKAGE_DECLARATION = EnumSet.of(Token.Kind.PACKAGE);
+
+  //    union(FirstSet.IMPORT_DECLARATIONS, FirstSet.USE_DECLARATIONS, FirstSet.OTHER_DECLARATIONS);
 
   public static final EnumSet<Token.Kind> IMPORT_DECLARATIONS =
     union(FirstSet.USE_DECLARATIONS, FirstSet.OTHER_DECLARATIONS);
@@ -45,6 +47,7 @@ public class FollowingSet {
 
 
 
+  /*
   public static final EnumSet<Token.Kind> PERIOD =
     EnumSet.of(Token.Kind.PERIOD);
 
@@ -53,7 +56,7 @@ public class FollowingSet {
 
   public static final EnumSet<Token.Kind> USE =
     EnumSet.of(Token.Kind.USE);
-
+*/
 
   private static EnumSet<Token.Kind> union (EnumSet<Token.Kind> a, Token.Kind b, Token.Kind c) {
     var combined = EnumSet.copyOf(a);

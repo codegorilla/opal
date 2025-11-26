@@ -25,7 +25,12 @@ public class FollowSet {
     FollowSet.TRANSLATION_UNIT;
 
   public static final EnumSet<Token.Kind> OTHER_DECLARATION =
-    FollowSet.OTHER_DECLARATIONS;
+    union(FirstSet.OTHER_DECLARATION, FollowSet.OTHER_DECLARATIONS);
+
+  public static final EnumSet<Token.Kind> VARIABLE_DECLARATION =
+    FollowSet.OTHER_DECLARATION;
+
+
 
 
 

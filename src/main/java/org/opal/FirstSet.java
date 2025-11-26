@@ -2,28 +2,50 @@ package org.opal;
 
 import java.util.EnumSet;
 
+// Warning: Order of declaration matters!
+
+// To do: We might want to write these from bottom to top then
+
 public class FirstSet {
 
   public static final EnumSet<Token.Kind> PACKAGE_DECLARATION =
     EnumSet.of(Token.Kind.PACKAGE);
 
-  public static final EnumSet<Token.Kind> IMPORT_DECLARATIONS =
+  public static final EnumSet<Token.Kind> IMPORT_DECLARATION =
     EnumSet.of(Token.Kind.IMPORT);
 
-  public static final EnumSet<Token.Kind> IMPORT_DECLARATION =
-    FirstSet.IMPORT_DECLARATIONS;
-
-  public static final EnumSet<Token.Kind> USE_DECLARATIONS =
-    EnumSet.of(Token.Kind.USE);
+  public static final EnumSet<Token.Kind> IMPORT_DECLARATIONS =
+    FirstSet.IMPORT_DECLARATION;
 
   public static final EnumSet<Token.Kind> USE_DECLARATION =
-    FirstSet.USE_DECLARATIONS;
+    EnumSet.of(Token.Kind.USE);
 
-  public static final EnumSet<Token.Kind> OTHER_DECLARATIONS =
-    EnumSet.of(Token.Kind.PRIVATE, Token.Kind.VAL, Token.Kind.VAR, Token.Kind.DEF, Token.Kind.CLASS);
+  public static final EnumSet<Token.Kind> USE_DECLARATIONS =
+    FirstSet.USE_DECLARATION;
 
   public static final EnumSet<Token.Kind> OTHER_DECLARATION =
-    FirstSet.OTHER_DECLARATIONS;
+    EnumSet.of(Token.Kind.PRIVATE, Token.Kind.CLASS, Token.Kind.DEF, Token.Kind.VAL, Token.Kind.VAR);
+
+  public static final EnumSet<Token.Kind> OTHER_DECLARATIONS =
+    FirstSet.OTHER_DECLARATION;
+
+  // Reminder: Order of declaration matters!
+
+  // Might not use directly
+  public static final EnumSet<Token.Kind> CLASS_DECLARATION =
+    EnumSet.of(Token.Kind.CLASS);
+
+  // Might not use directly
+  public static final EnumSet<Token.Kind> ROUTINE_DECLARATION =
+    EnumSet.of(Token.Kind.DEF);
+
+  // Might not use directly
+  public static final EnumSet<Token.Kind> VARIABLE_DECLARATION =
+    EnumSet.of(Token.Kind.VAL, Token.Kind.VAR);
+
+
+
+
 
 
   public static final EnumSet<Token.Kind> ARRAY_DECLARATOR =
@@ -32,13 +54,6 @@ public class FirstSet {
 
 
   public static final EnumSet<Token.Kind> IMPORT_QUALIFIED_NAME  = EnumSet.of (Token.Kind.IDENTIFIER);
-
-
-  public static final EnumSet<Token.Kind> CLASS_DECLARATION = EnumSet.of (Token.Kind.CLASS);
-
-  public static final EnumSet<Token.Kind> ROUTINE_DECLARATION = EnumSet.of (Token.Kind.DEF);
-
-  public static final EnumSet<Token.Kind> VARIABLE_DECLARATION = EnumSet.of (Token.Kind.VAL, Token.Kind.VAR);
 
   public static final EnumSet<Token.Kind> STANDARD_STATEMENT = EnumSet.of (
     Token.Kind.BREAK,

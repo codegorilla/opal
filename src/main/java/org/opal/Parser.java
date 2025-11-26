@@ -403,6 +403,10 @@ public class Parser {
     System.out.println(error);
   }
 
+  // To do: We want special handling for semicolons since they are line
+  // terminators. We also might want to handle closing parens and brackets the
+  // same way.
+
   private void missingError (Token.Kind expectedKind) {
     var expectedKindString = keywordLookup.getOrDefault(expectedKind, friendlyKind(expectedKind));
     var actualKind = lookahead.getKind();
@@ -811,7 +815,7 @@ public class Parser {
     matchX(Token.Kind.IDENTIFIER, EnumSet.of(EXTENDS, L_BRACE));
     n.addChild(new ClassName(mark));
     if (kind == EXTENDS)
-      n.addChild(baseClasses(FollowingSet.L_BRACE));
+      n.addChild(baseClasses(EnumSet.of(L_BRACE)));
     else
       n.addChild(EPSILON);
     n.addChild(classBody());
@@ -995,7 +999,7 @@ public class Parser {
     matchX(Token.Kind.IDENTIFIER, EnumSet.of(COLON, EQUAL));
     n.addChild(new VariableName(mark));
     if (kind == COLON) {
-      n.addChild(variableTypeSpecifier(FollowingSet.EQUAL));
+      n.addChild(variableTypeSpecifier());
       if (kind == EQUAL)
         n.addChild(variableInitializer());
       else
@@ -1123,7 +1127,7 @@ public class Parser {
   // to a type specifier.
 
   private AstNode routineReturnTypeSpecifier () {
-    followingSetStack.push(FollowingSet.L_BRACE);
+    followingSetStack.push(EnumSet.of(L_BRACE));
     confirm(MINUS_GREATER);
     var n = new RoutineReturnTypeSpecifier();
     n.addChild(declarator(null));
@@ -1161,7 +1165,7 @@ public class Parser {
     matchX(Token.Kind.IDENTIFIER, EnumSet.of(COLON, EQUAL));
     n.addChild(new VariableName(mark));
     if (kind == COLON) {
-      n.addChild(variableTypeSpecifier(FollowingSet.EQUAL));
+      n.addChild(variableTypeSpecifier());
       if (kind == EQUAL)
         n.addChild(variableInitializer());
       else
@@ -1170,7 +1174,7 @@ public class Parser {
       n.addChild(EPSILON);
       n.addChild(variableInitializer());
     }
-    matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR));
+    matchX(SEMICOLON, FollowSet.VARIABLE_DECLARATION);
     return n;
   }
 
@@ -1210,8 +1214,8 @@ public class Parser {
   // Is this only ever arrived at on a sure path? If so, we can replace the
   // match method with confirm.
 
-  private AstNode variableTypeSpecifier (EnumSet<Token.Kind> followingSet) {
-    followingSetStack.push(followingSet);
+  private AstNode variableTypeSpecifier () {
+    followingSetStack.push(EnumSet.of(EQUAL));
     matchX(Token.Kind.COLON, fsv1);
     var n = new VariableTypeSpecifier(mark);
     n.addChild(declarator(null));
@@ -1253,7 +1257,7 @@ public class Parser {
     matchX(Token.Kind.IDENTIFIER, EnumSet.of(COLON, EQUAL));
     n.addChild(new VariableName(mark));
     if (kind == COLON) {
-      n.addChild(variableTypeSpecifier(FollowingSet.EQUAL));
+      n.addChild(variableTypeSpecifier());
       if (kind == EQUAL)
         n.addChild(variableInitializer());
       else
@@ -1835,7 +1839,7 @@ public class Parser {
     var n = new CastExpression(lookahead);
     match(lookahead.getKind());
     match(Token.Kind.LESS);
-    n.addChild(declarator(FollowingSet.GREATER));
+    n.addChild(declarator(EnumSet.of(GREATER)));
     match(Token.Kind.GREATER);
     match(Token.Kind.L_PARENTHESIS);
     n.addChild(expression(true));

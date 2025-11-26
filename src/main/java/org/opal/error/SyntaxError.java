@@ -25,6 +25,8 @@ public class SyntaxError extends Error {
   // lines show the affected source code line and a marker indicating the
   // specific point where the error occurred.
 
+  // To do: We need special handling for semicolons since they are line terminators
+
   @Override
   public String toString () {
     return summary() + '\n' + detail();
