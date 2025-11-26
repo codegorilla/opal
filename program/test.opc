@@ -1,4 +1,10 @@
-package main;
+package main
+
+var x: *int32[2];
+
+var t: float = 1;
+
+ //= 1;
 
 /*
 import opal;
@@ -7,14 +13,5 @@ import opal.lang;
 use opal.math.cos;
 use opal.math.{ Bessel, Gamma };
 use opal.math.*;
-
-var x: int = 1;
-
-class Widget extends Object {
-
-  private var x: int = 1;
-
-}
 */
 
-def cos (x: int) -> int {}

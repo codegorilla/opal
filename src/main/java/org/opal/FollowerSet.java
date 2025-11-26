@@ -11,6 +11,9 @@ import java.util.EnumSet;
 // easy to automatically determine which elements of the sync set belong to the
 // follower set.
 
+// NEW: I think this might be best suited to hold singleton sets that follow
+// tokens in a match method call.
+
 public class FollowerSet {
 
   public static final EnumSet<Token.Kind> COLON =
@@ -53,4 +56,13 @@ public class FollowerSet {
 
   public static final EnumSet<Token.Kind> OTHER_DECLARATION_USE =
     EnumSet.of(Token.Kind.PRIVATE, Token.Kind.VAL, Token.Kind.VAR, Token.Kind.DEF, Token.Kind.CLASS, Token.Kind.USE);
+
+  public static final EnumSet<Token.Kind> ARRAY_DECLARATOR = EnumSet.of (
+    Token.Kind.L_BRACKET,
+    Token.Kind.R_PARENTHESIS,
+    Token.Kind.SEMICOLON
+  );
+
+
+
 }

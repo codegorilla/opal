@@ -95,7 +95,7 @@ public class BaseVisitor implements Visitor {
   public void visit (RoutineParameter node) {}
   public void visit (RoutineParameterName node) {}
   public void visit (RoutineParameterTypeSpecifier node) {}
-  public void visit (RoutineReturnType node) {}
+  public void visit (RoutineReturnTypeSpecifier node) {}
   public void visit (RoutineBody node) {}
 
   // Variable declarations
@@ -157,14 +157,20 @@ public class BaseVisitor implements Visitor {
   public void visit (This node) {}
   public void visit (ErrorNode node) {}
 
+  // NEW TYPES
+
+  public void visit (Declarator node) {}
+  public void visit (ArrayDeclarators node) {}
+  public void visit (ArrayDeclarator node) {}
+  public void visit (PointerDeclarators node) {}
+  public void visit (PointerDeclarator node) {}
+
   // TYPES
 
-  public void visit (Type node) {}
-  public void visit (ArrayType node) {}
+//  public void visit (Type node) {}
   public void visit (NominalType node) {}
-  public void visit (PointerType node) {}
   public void visit (PrimitiveType node) {}
-  public void visit (RoutinePointerType node) {}
+  public void visit (RoutinePointerDeclarator node) {}
 
   public void visit (TemplateInstantiation node) {}
   public void visit (TemplateArguments node) {}

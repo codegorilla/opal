@@ -72,13 +72,13 @@ public class Translator {
 
     System.out.println("*** DONE PARSING ***");
 
-
     var pass1 = new Pass1(root);
     pass1.process();
 
     // Temporary exit
     System.exit(0);
 
+/*
     // Determine import aliases
     var pass10 = new Pass10(root, sourceLines);
     pass10.process();
@@ -93,6 +93,7 @@ public class Translator {
     generator2.process();
     var generator3 = new Generator3(root);
     generator3.process();
+  */
   }
 
 }

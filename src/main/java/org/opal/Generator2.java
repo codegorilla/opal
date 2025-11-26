@@ -477,7 +477,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
     return new ST(node.getToken().getLexeme());
   }
 
-  public ST visit (RoutineReturnType node) {
+  public ST visit (RoutineReturnTypeSpecifier node) {
     var st = group.getInstanceOf("common/declaration/functionReturnType");
     stack.push(emptyDeclarator());
     st.add("type", visit(node.type()));
@@ -589,6 +589,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
 
   // TYPES **************************************************
 
+  /*
   public ST visit (ArrayType node) {
     var st = group.getInstanceOf("common/declarator/arrayDeclarator");
     st.add("cop", nodePath.get(1) instanceof PointerType);
@@ -598,6 +599,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
     stack.push(st);
     return visit(node.baseType());
   }
+*/
 
   public ST visit (NominalType node) {
     var st = group.getInstanceOf("common/type/nominalType");
@@ -634,12 +636,14 @@ public class Generator2 extends BaseResultVisitor<ST> {
   // to parse it as an expression. This determination can be made via symbol
   // table lookup, but for now just assume it is a type argument.
 
+  /*
   public ST visit (PointerType node) {
     var st = group.getInstanceOf("common/declarator/pointerDeclarator");
     st.add("directDeclarator", stack.pop());
     stack.push(st);
     return visit(node.baseType());
   }
+*/
 
   public ST visit (PrimitiveType node) {
     var st = group.getInstanceOf("common/type/primitiveType");
@@ -647,7 +651,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
     return st;
   }
 
-  public ST visit (RoutinePointerType node) {
+  public ST visit (RoutinePointerDeclarator node) {
     var st = group.getInstanceOf("common/declarator/routinePointerDeclarator");
     st.add("directDeclarator", stack.pop());
     for (int i=0; i<node.getChildCount()-1; i++) {

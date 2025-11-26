@@ -95,7 +95,7 @@ public class BaseResultVisitor<T> implements ResultVisitor <T> {
   public T visit (RoutineParameter node) { return null; }
   public T visit (RoutineParameterName node) { return null; }
   public T visit (RoutineParameterTypeSpecifier node) { return null; }
-  public T visit (RoutineReturnType node) { return null; }
+  public T visit (RoutineReturnTypeSpecifier node) { return null; }
   public T visit (RoutineBody node) { return null; }
 
   // Variable declarations
@@ -157,14 +157,20 @@ public class BaseResultVisitor<T> implements ResultVisitor <T> {
   public T visit (This node) { return null; }
   public T visit (ErrorNode node) { return null; }
 
+  // NEW TYPES
+
+  public T visit (Declarator node) { return null; }
+  public T visit (ArrayDeclarators node) { return null; }
+  public T visit (ArrayDeclarator node) { return null; }
+  public T visit (PointerDeclarators node) { return null; }
+  public T visit (PointerDeclarator node) { return null; }
+
   // TYPES
 
-  public T visit (Type node) { return null; }
-  public T visit (ArrayType node) { return null; }
+//  public T visit (Type node) { return null; }
   public T visit (NominalType node) { return null; }
-  public T visit (PointerType node) { return null; }
   public T visit (PrimitiveType node) { return null; }
-  public T visit (RoutinePointerType node) { return null; }
+  public T visit (RoutinePointerDeclarator node) { return null; }
 
   public T visit (TemplateInstantiation node) { return null; }
   public T visit (TemplateArguments node) { return null; }

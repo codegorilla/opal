@@ -5,9 +5,9 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class PrimitiveType extends AstNode {
+public class ArrayDeclarator extends AstNode {
 
-  public PrimitiveType (Token token) {
+  public ArrayDeclarator (Token token) {
     super(token);
   }
 

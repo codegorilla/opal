@@ -5,7 +5,7 @@ import org.opal.ast.AstNode;
 import org.opal.ResultVisitor;
 import org.opal.Visitor;
 
-public class TemplateInstantiation extends Type {
+public class TemplateInstantiation extends AstNode {
 
   public TemplateInstantiation (Token token) {
     super(token);

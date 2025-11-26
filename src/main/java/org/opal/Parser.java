@@ -15,6 +15,7 @@ import org.opal.ast.expression.*;
 import org.opal.ast.statement.*;
 import org.opal.ast.type.*;
 
+import org.opal.ast.type.ArrayDeclarators;
 import org.opal.error.SyntaxError;
 import org.opal.symbol.Scope;
 import org.opal.symbol.PrimitiveTypeSymbol;
@@ -47,7 +48,7 @@ public class Parser {
   private final List<String> sourceLines;
 
   // Used to pass type nodes up and down during tree traversal
-  private final LinkedList<Type> stack;
+  //private final LinkedList<DirectDeclarator> stack;
 
   // Used to pass nodes up and down during tree traversal
   private final LinkedList<AstNode> nodeStack;
@@ -217,7 +218,7 @@ public class Parser {
     previous = null;
     mark = null;
     this.sourceLines = sourceLines;
-    stack = new LinkedList<>();
+    //stack = new LinkedList<>();
     nodeStack = new LinkedList<>();
     modifierStack = new LinkedList<>();
     builtinScope = new Scope(Scope.Kind.BUILT_IN);
@@ -354,8 +355,12 @@ public class Parser {
     }
   }
 
+  private void matchX (Token.Kind expectedKind, Token.Kind followerKind) {
+    matchX(expectedKind, EnumSet.of(followerKind));
+  }
+
   private void matchX (Token.Kind expectedKind) {
-    matchX(expectedKind, null);
+    matchX(expectedKind, (EnumSet<Token.Kind>)null);
   }
 
   // DEPRECATED
@@ -505,11 +510,9 @@ public class Parser {
   private AstNode translationUnit (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
     var n = new TranslationUnit();
-    var fsp = EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE, IMPORT);
-    var fsi = EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE);
     var fsu = EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR);
-    n.addChild(packageDeclaration(fsp));
-    n.addChild(lookahead.getKind() == IMPORT ? importDeclarations(fsi) : EPSILON);
+    n.addChild(packageDeclaration());
+    n.addChild(lookahead.getKind() == IMPORT ? importDeclarations() : EPSILON);
     n.addChild(lookahead.getKind() == USE ? useDeclarations(fsu) : EPSILON);
     var kind = lookahead.getKind();
     if (
@@ -545,23 +548,27 @@ public class Parser {
 
   // To do: Support qualified names for packages
 
-  private AstNode packageDeclaration (EnumSet<Token.Kind> followingSet) {
-    followingSetStack.push(followingSet);
-    matchX(PACKAGE, FollowerSet.IDENTIFIER);
+  // FOLLOW set is statically determined, whereas FOLLOWING set is sometimes
+  // not known at compile time. There can be multiple versions of the FOLLOWING
+  // set for a given production.
+
+  private AstNode packageDeclaration () {
+    followingSetStack.push(FollowingSet.PACKAGE_DECLARATION);
+    matchX(PACKAGE, Token.Kind.IDENTIFIER);
     var n = new PackageDeclaration(mark);
-    matchX(Token.Kind.IDENTIFIER, FollowerSet.SEMICOLON);
+    matchX(Token.Kind.IDENTIFIER, SEMICOLON);
     n.addChild(new PackageName(mark));
-    matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE, IMPORT, Token.Kind.EOF));
+    matchX(SEMICOLON, FollowSet.PACKAGE_DECLARATION);
     followingSetStack.pop();
     return n;
   }
 
-  private AstNode importDeclarations (EnumSet<Token.Kind> followingSet) {
-    followingSetStack.push(followingSet);
+  private AstNode importDeclarations () {
+    followingSetStack.push(FollowingSet.IMPORT_DECLARATIONS);
     var n = new ImportDeclarations();
-    n.addChild(importDeclaration(FollowingSet.IMPORT));
+    n.addChild(importDeclaration());
     while (kind == IMPORT)
-      n.addChild(importDeclaration(FollowingSet.IMPORT));
+      n.addChild(importDeclaration());
     followingSetStack.pop();
     return n;
   }
@@ -574,13 +581,13 @@ public class Parser {
   // easiest implementation and the others hold no advantages for our
   // particular use case.
 
-  private AstNode importDeclaration (EnumSet<Token.Kind> followingSet) {
-    followingSetStack.push(followingSet);
+  private AstNode importDeclaration () {
+    followingSetStack.push(EnumSet.of(IMPORT));
     confirm(IMPORT);
     var n = new ImportDeclaration(mark);
-    n.addChild(importQualifiedName(EnumSet.of(SEMICOLON, AS)));
-    n.addChild(kind == AS ? importAsClause(FollowingSet.SEMICOLON) : EPSILON);
-    matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE, IMPORT, Token.Kind.EOF));
+    n.addChild(importQualifiedName());
+    n.addChild(kind == AS ? importAsClause() : EPSILON);
+    matchX(SEMICOLON, FollowSet.IMPORT_DECLARATION);
     followingSetStack.pop();
     return n;
   }
@@ -593,25 +600,24 @@ public class Parser {
   // is not a great one (due to epsilon production). It shows that there might
   // be room for improvement.
 
-  private AstNode importQualifiedName (EnumSet<Token.Kind> followingSet) {
-    followingSetStack.push(followingSet);
+  private AstNode importQualifiedName () {
+    followingSetStack.push(EnumSet.of(AS, SEMICOLON));
     var n = new ImportQualifiedName();
-    var followerSet = EnumSet.of(AS, PERIOD, SEMICOLON);
-    matchX(Token.Kind.IDENTIFIER, followerSet);
+    matchX(Token.Kind.IDENTIFIER, EnumSet.of(AS, PERIOD, SEMICOLON));
     n.addChild(new ImportName(mark));
     while (kind == PERIOD) {
       confirm(PERIOD);
-      matchX(Token.Kind.IDENTIFIER, followerSet);
+      matchX(Token.Kind.IDENTIFIER, EnumSet.of(AS, PERIOD, SEMICOLON));
       n.addChild(new ImportName(mark));
     }
     followingSetStack.pop();
     return n;
   }
 
-  private AstNode importAsClause (EnumSet<Token.Kind> followingSet) {
-    followingSetStack.push(followingSet);
+  private AstNode importAsClause () {
+    followingSetStack.push(EnumSet.of(SEMICOLON));
     confirm(AS);
-    matchX(Token.Kind.IDENTIFIER, FollowerSet.SEMICOLON);
+    matchX(Token.Kind.IDENTIFIER, SEMICOLON);
     var n = new ImportName(mark);
     followingSetStack.pop();
     return n;
@@ -620,18 +626,18 @@ public class Parser {
   private AstNode useDeclarations (EnumSet<Token.Kind> followingSet) {
     followingSetStack.push(followingSet);
     var n = new UseDeclarations();
-    n.addChild(useDeclaration(FollowingSet.USE));
+    n.addChild(useDeclaration());
     while (kind == USE)
-      n.addChild(useDeclaration(FollowingSet.USE));
+      n.addChild(useDeclaration());
     followingSetStack.pop();
     return n;
   }
 
-  private AstNode useDeclaration (EnumSet<Token.Kind> followingSet) {
-    followingSetStack.push(followingSet);
+  private AstNode useDeclaration () {
+    followingSetStack.push(FollowingSet.USE);
     confirm(USE);
     var n = new UseDeclaration(mark);
-    n.addChild(useQualifiedName(FollowingSet.SEMICOLON));
+    n.addChild(useQualifiedName());
     matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR, USE, Token.Kind.EOF));
     followingSetStack.pop();
     return n;
@@ -643,13 +649,13 @@ public class Parser {
   // call. Otherwise, it is used directly in a match method call within the
   // non-terminal production method.
 
-  private AstNode useQualifiedName (EnumSet<Token.Kind> followingSet) {
-    followingSetStack.push(followingSet);
+  private AstNode useQualifiedName () {
+    followingSetStack.push(FollowingSet.SEMICOLON);
     AstNode n = new UseQualifiedName();
     matchX(Token.Kind.IDENTIFIER, FollowerSet.PERIOD);
     var p = new UseName(mark);
     n.addChild(p);
-    match(PERIOD, FollowerSet.IDENTIFIER);
+    matchX(PERIOD, FollowerSet.IDENTIFIER);
     p.addChild(useQualifiedNameTail());
     followingSetStack.pop();
     return n;
@@ -914,7 +920,7 @@ public class Parser {
     n.addChild(new TypealiasName(mark));
     // Follower set is whatever can start a type
     matchX(EQUAL, EnumSet.of(ASTERISK, COMMA, Token.Kind.BOOL, Token.Kind.IDENTIFIER));
-    n.addChild(type());
+    n.addChild(declarator(null));
     matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR));
     return n;
   }
@@ -945,7 +951,7 @@ public class Parser {
       n.addChild(EPSILON);
     }
     if (kind == MINUS_GREATER) {
-      n.addChild(routineReturnType());
+      n.addChild(routineReturnTypeSpecifier());
     } else {
       n.addChild(EPSILON);
     }
@@ -1011,7 +1017,7 @@ public class Parser {
     n.addChild(new TypealiasName(mark));
     // To do: Follower set is whatever can start a type
     matchX(EQUAL, EnumSet.of(ASTERISK, COMMA, Token.Kind.BOOL, Token.Kind.IDENTIFIER));
-    n.addChild(type());
+    n.addChild(declarator(null));
     matchX(SEMICOLON, EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR));
     return n;
   }
@@ -1023,7 +1029,7 @@ public class Parser {
     n.addChild(new TypealiasName(mark));
     // To do: Follower set is whatever can start a type
     matchX(EQUAL, EnumSet.of(ASTERISK, COMMA, Token.Kind.BOOL, Token.Kind.IDENTIFIER));
-    n.addChild(type());
+    n.addChild(declarator(null));
     matchX(SEMICOLON, EnumSet.of(VAL, VAR));
     return n;
   }
@@ -1054,7 +1060,7 @@ public class Parser {
       n.addChild(EPSILON);
     }
     if (kind == MINUS_GREATER) {
-      n.addChild(routineReturnType());
+      n.addChild(routineReturnTypeSpecifier());
     } else {
       n.addChild(EPSILON);
     }
@@ -1093,7 +1099,7 @@ public class Parser {
     var n = new RoutineParameter();
     matchX(Token.Kind.IDENTIFIER, FollowerSet.COLON);
     n.addChild(new RoutineParameterName(mark));
-    n.addChild(routineParameterTypeSpecifier(FollowingSet.COMMA));
+    n.addChild(routineParameterTypeSpecifier(EnumSet.of(COMMA, R_PARENTHESIS)));
     followingSetStack.pop();
     return n;
   }
@@ -1102,7 +1108,7 @@ public class Parser {
     followingSetStack.push(followingSet);
     matchX(COLON);
     var n = new RoutineParameterTypeSpecifier(mark);
-    n.addChild(type());
+    n.addChild(declarator(null));
     followingSetStack.pop();
     return n;
   }
@@ -1115,11 +1121,11 @@ public class Parser {
   // We can either treat this like a type specifier or use it as a passthrough
   // to a type specifier.
 
-  private AstNode routineReturnType () {
+  private AstNode routineReturnTypeSpecifier () {
     followingSetStack.push(FollowingSet.L_BRACE);
     confirm(MINUS_GREATER);
-    var n = new RoutineReturnType();
-    n.addChild(type());
+    var n = new RoutineReturnTypeSpecifier();
+    n.addChild(declarator(null));
     followingSetStack.pop();
     return n;
   }
@@ -1207,7 +1213,7 @@ public class Parser {
     followingSetStack.push(followingSet);
     matchX(Token.Kind.COLON, fsv1);
     var n = new VariableTypeSpecifier(mark);
-    n.addChild(type());
+    n.addChild(declarator(null));
     followingSetStack.pop();
     return n;
   }
@@ -1285,7 +1291,6 @@ public class Parser {
     ) {
       n = standardStatement();
     } else if (
-      kind == Token.Kind.CLASS     ||
       kind == Token.Kind.TYPEALIAS ||
       kind == Token.Kind.VAL       ||
       kind == Token.Kind.VAR
@@ -1347,8 +1352,8 @@ public class Parser {
   }
 
   private AstNode breakStatement () {
-    var n = new BreakStatement(lookahead);
-    match(Token.Kind.BREAK);
+    confirm(BREAK);
+    var n = new BreakStatement(mark);
     match(SEMICOLON);
     return n;
   }
@@ -1774,26 +1779,6 @@ public class Parser {
     return n;
   }
 
-  // All of the things that can follow a binary expression.
-
-  EnumSet<Token.Kind> exprSet = EnumSet.of (
-    Token.Kind.IDENTIFIER,
-    PLUS,
-    MINUS,
-    ASTERISK,
-    FALSE,
-    TRUE,
-    CHARACTER_LITERAL,
-    FLOAT32_LITERAL,
-    FLOAT64_LITERAL,
-    INT32_LITERAL,
-    INT64_LITERAL,
-    NULL,
-    STRING_LITERAL,
-    UINT32_LITERAL,
-    UINT64_LITERAL
-  );
-
   private AstNode additiveExpression () {
     var n = multiplicativeExpression();
     var kind = lookahead.getKind();
@@ -1849,7 +1834,7 @@ public class Parser {
     var n = new CastExpression(lookahead);
     match(lookahead.getKind());
     match(Token.Kind.LESS);
-    n.addChild(type());
+    n.addChild(declarator(FollowingSet.GREATER));
     match(Token.Kind.GREATER);
     match(Token.Kind.L_PARENTHESIS);
     n.addChild(expression(true));
@@ -1880,7 +1865,7 @@ public class Parser {
     var n = new NewExpression(lookahead);
     match(Token.Kind.NEW);
     n.addChild(kind == Token.Kind.L_BRACKET ? newPlacement() : null);
-    n.addChild(type());
+    n.addChild(declarator(null));
     n.addChild(kind == Token.Kind.L_PARENTHESIS ? newInitializer() : null);
     return n;
   }
@@ -2110,69 +2095,29 @@ public class Parser {
   // TYPES **************************************************
 
   // Type processing is interesting because Opal uses a form of the
-  // C-declaration style, so parsing types requires following the "spiral rule".
-  // To make this easier, we make use of stack and queue types provided by the
-  // language rather than complicating AST node class definition with parent
-  // links. We can re-think this in the future if we wish.
+  // C-declaration style, so parsing types directly is challenging due to the
+  // order in which tokens appear and the way they are nested. Instead of
+  // try to parse them into types immediately, we just create an AST that
+  // resembles the input. Then, during semantic analysis, the actual types are
+  // built by walking this tree in the appropriate order.
 
-  // Will we ever use this type() function?
-
-  private Type type () {
-    return type(false);
-  }
-
-  private Type type (boolean root) {
-    directType();
-    // Need to remove items from parsing stack and construct final type. With
-    // just arrays and pointers it should be easy. Once other types are added,
-    // it will require slightly more processing.
-    // Stack must have at least one element, e.g. primitive type
-    var n = stack.pop();
-    while (!stack.isEmpty()) {
-      var p = n;
-      n = stack.pop();
-      n.addChild(p);
-    }
-    // If program crashes, check here, this is just for testing.
-//    System.out.println("***");
-//    System.out.println(n);
-//    System.out.println("***");
+  private AstNode declarator (EnumSet<Token.Kind> followingSet) {
+    if (followingSet != null)
+      followingSetStack.push(followingSet);
+    var n = new Declarator();
+    if (kind == ASTERISK)
+      n.addChild(pointerDeclarators());
+    n.addChild(directDeclarator());
+    if (kind == L_BRACKET)
+      n.addChild(arrayDeclarators());
+    if (followingSet != null)
+      followingSetStack.pop();
     return n;
   }
 
-  private void directType () {
-    var left   = leftFragment();
-    var center = centerFragment();
-    var right  = rightFragment();
-    // Move type fragments to parsing stack in "spiral rule" order
-    while (!right.isEmpty())
-      stack.push(right.poll());
-    while (!left.isEmpty())
-      stack.push(left.pop());
-    stack.push(center);
-  }
-
-  private LinkedList<Type> leftFragment () {
-    var fragment = new LinkedList<Type>();
-    while (kind == Token.Kind.ASTERISK)
-      fragment.push(pointerType());
-    return fragment;
-  }
-
-  private LinkedList<Type> rightFragment () {
-    var fragment = new LinkedList<Type>();
-    while (kind == Token.Kind.L_BRACKET)
-      fragment.offer(arrayType());
-    return fragment;
-  }
-
-  private Type centerFragment () {
-    Type fragment = null;
-    var kind = lookahead.getKind();
-    if (kind == Token.Kind.CARET) {
-      fragment = routinePointerType();
-    }
-    else if (
+  private AstNode directDeclarator () {
+    AstNode n;
+    if (
       kind == Token.Kind.BOOL    ||
       kind == Token.Kind.INT     ||
       kind == Token.Kind.INT8    ||
@@ -2190,74 +2135,100 @@ public class Parser {
       kind == Token.Kind.FLOAT64 ||
       kind == Token.Kind.VOID
     ) {
-      fragment = primitiveType();
+      confirm(kind);
+      // Should be simple declarator
+      n = new PrimitiveType(mark);
+    } else if (kind == Token.Kind.IDENTIFIER) {
+      confirm(Token.Kind.IDENTIFIER);
+      n = new NominalType(mark);
+    } else if (kind == CARET) {
+      n = routinePointerDeclarator();
+    } else if (kind == L_PARENTHESIS) {
+      confirm(L_PARENTHESIS);
+      n = declarator(null);
+      matchX(R_PARENTHESIS);
+    } else {
+      // Error - Needs sync
+      n = null;
     }
-    else if (kind == Token.Kind.IDENTIFIER) {
-      // Update: If using angle brackets (e.g. "<>") then I don't know if we still need to consult the symbol table.
-
-      // Need to look up name in symbol table to tell what kind it is (e.g. class, template). If it is defined as a
-      // class, then a left bracket following indicates an array of that class type. If it is not defined at all, then
-      // assume it is a class and treat it as such. If it is defined as a class template, then a left bracket following
-      // denotes class template parameters.
-
-      // Todo: Hard-coded "Token here". This needs to be fixed.
-      // COMMENTED WHEN DOING SCOPES - NEEDS FIX
-      // currentScope.define(Symbol(Symbol.Kind.CLASS_TEMPLATE, "Token"))
-      var symbol = currentScope.resolve(lookahead.getLexeme(), true);
-      // COMMENTED WHEN DOING SCOPES - NEEDS FIX
-      // if symbol == null then
-      //   // Nominal types include classes and enums. They do NOT include
-      //   // primitive types or template types.
-      //   fragment = nominalType()
-      // else
-      //   if symbol.getKind() == Symbol.Kind.CLASS_TEMPLATE then
-      //     fragment = templateType()
-      //   else
-      //     fragment = nominalType()
-      fragment = nominalType();
-    }
-    else if (kind == Token.Kind.L_PARENTHESIS) {
-      match(Token.Kind.L_PARENTHESIS);
-      directType();
-      fragment = stack.pop();
-      match(Token.Kind.R_PARENTHESIS);
-    }
-    return fragment;
+    return n;
   }
 
-  private Type arrayType () {
-    var n = new ArrayType(lookahead);
-    match(Token.Kind.L_BRACKET);
-    if (lookahead.getKind() != Token.Kind.R_BRACKET) {
+  // For now, assume all routine pointers must have a return type specified,
+  // in which case, the last child of the AST node is the return type.
+
+  private AstNode routinePointerDeclarator () {
+    confirm(CARET);
+    var n = new RoutinePointerDeclarator(mark);
+    matchX(L_PARENTHESIS, FirstSet.TYPE);
+    if (FirstSet.TYPE.contains(kind)) {
+      n.addChild(declarator(EnumSet.of(COMMA, R_PARENTHESIS)));
+    }
+    while (kind == COMMA) {
+      confirm(COMMA);
+      n.addChild(declarator(EnumSet.of(COMMA, R_PARENTHESIS)));
+    }
+    matchX(R_PARENTHESIS, EnumSet.of(MINUS_GREATER));
+    matchX(MINUS_GREATER, FirstSet.TYPE);
+    n.addChild(declarator(EnumSet.of(COMMA, R_PARENTHESIS)));
+    return n;
+  }
+
+  private AstNode pointerDeclarators () {
+    var n = new PointerDeclarators();
+    while (kind == ASTERISK) {
+      confirm(ASTERISK);
+      n.addChild(new PointerDeclarator(mark));
+    }
+    return n;
+  }
+
+  private AstNode arrayDeclarators () {
+    var n = new ArrayDeclarators();
+    while (kind == L_BRACKET) {
+      n.addChild(arrayDeclarator());
+    }
+    return n;
+  }
+
+  // Check that expression is const during semantic analysis
+
+  private AstNode arrayDeclarator () {
+    confirm(L_BRACKET);
+    var n = new ArrayDeclarator(mark);
+    if (FirstSet.EXPRESSION.contains(kind))
       n.addChild(expression(true));
-    }
-    match(Token.Kind.R_BRACKET);
+    matchX(R_BRACKET, union(FirstSet.ARRAY_DECLARATOR, FollowSet.ARRAY_DECLARATOR));
     return n;
   }
 
-  private Type nominalType () {
-    Type n = new NominalType(lookahead);
-    match(Token.Kind.IDENTIFIER);
-    if (kind == Token.Kind.LESS)
-      n = templateInstantiation(n);
-    return n;
+  private static EnumSet<Token.Kind> union (EnumSet<Token.Kind> a, Token.Kind b) {
+    var combined = EnumSet.copyOf(a);
+    combined.add(b);
+    return combined;
   }
 
-  private Type routinePointerType () {
-    var n = new RoutinePointerType(lookahead);
-    match(Token.Kind.CARET);
-    match(Token.Kind.L_PARENTHESIS);
-    n.addChild(type());
-    while (kind == Token.Kind.COMMA) {
-      match(Token.Kind.COMMA);
-      n.addChild(type());
-    }
-    match(Token.Kind.R_PARENTHESIS);
-    match(Token.Kind.MINUS_GREATER);
-    n.addChild(type());
-    return n;
+  private static EnumSet<Token.Kind> union (EnumSet<Token.Kind> a, Token.Kind b, Token.Kind c) {
+    var combined = EnumSet.copyOf(a);
+    combined.add(b);
+    combined.add(c);
+    return combined;
   }
 
+  private static EnumSet<Token.Kind> union (EnumSet<Token.Kind> a, EnumSet<Token.Kind> b) {
+    var combined = EnumSet.copyOf(a);
+    combined.addAll(b);
+    return combined;
+  }
+
+  private static EnumSet<Token.Kind> union (EnumSet<Token.Kind> a, EnumSet<Token.Kind> b, EnumSet<Token.Kind> c) {
+    var combined = EnumSet.copyOf(a);
+    combined.addAll(b);
+    combined.addAll(c);
+    return combined;
+  }
+
+  /*
   // Should the template instantiation token be the opening angle bracket? That will also be used by the template
   // arguments node.
 
@@ -2299,17 +2270,6 @@ public class Parser {
     n.addChild(type());
     return n;
   }
-
-  private Type pointerType () {
-    var n = new PointerType(lookahead);
-    match(Token.Kind.ASTERISK);
-    return n;
-  }
-
-  private Type primitiveType () {
-    var n = new PrimitiveType(lookahead);
-    match(lookahead.getKind());
-    return n;
-  }
+  */
 
 }
