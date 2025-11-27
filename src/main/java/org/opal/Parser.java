@@ -350,7 +350,7 @@ public class Parser {
           }
         }
         // Should be true, but can set to false for development
-        errorRecoveryMode = false;
+        errorRecoveryMode = true;
       }
     }
   }
@@ -1157,13 +1157,30 @@ public class Parser {
   // uncertain path. So do we match or do we confirm? I think we need to match,
   // which is a more fail-safe option.
 
+  // To do: Why doesn't sync stop at semicolon? Is there an issue with the
+  // following set? Here, we will experiment with putting semicolons into the
+  // following set. This is not a pure approach, as we previously assumed that
+  // all members of the following set had to at least be in the FOLLOW set.
+
   private AstNode variableDeclaration (AstNode exportSpecifier) {
+    followingSetStack.push(EnumSet.of(SEMICOLON));
     confirm(kind == VAL ? VAL : VAR);
     var n = new VariableDeclaration(mark);
     n.addChild(exportSpecifier);
     n.addChild(variableModifiers());
     matchX(Token.Kind.IDENTIFIER, EnumSet.of(COLON, EQUAL));
     n.addChild(new VariableName(mark));
+    // Need a manual single-token deletion check here
+//    if (kind != COLON && kind != EQUAL) {
+//      var peek = input.get(position.get() + 1);
+//      var peekKind = peek.getKind();
+//      if (peekKind == COLON || peekKind == EQUAL) {
+//        if (!errorRecoveryMode)
+//          extraneousError(peekKind);
+//        LOGGER.info("Match: deleted " + lookahead);
+//        consume();
+//      }
+//    }
     if (kind == COLON) {
       n.addChild(variableTypeSpecifier());
       if (kind == EQUAL)
@@ -1171,10 +1188,19 @@ public class Parser {
       else
         n.addChild(EPSILON);
     } else {
-      n.addChild(EPSILON);
-      n.addChild(variableInitializer());
+      // Don't just assume epsilon!
+      if (kind == EQUAL) {
+        // Definitely epsilon
+        n.addChild(EPSILON);
+        n.addChild(variableInitializer());
+      } else {
+        // Possibly epsilon
+        checkError(EnumSet.of(COLON, EQUAL));
+        sync();
+      }
     }
     matchX(SEMICOLON, FollowSet.VARIABLE_DECLARATION);
+    followingSetStack.pop();
     return n;
   }
 
@@ -1185,38 +1211,13 @@ public class Parser {
     return n;
   }
 
-  private final EnumSet<Token.Kind> fsv1 = EnumSet.of (
-    Token.Kind.IDENTIFIER,
-    Token.Kind.BOOL,
-    Token.Kind.DOUBLE,
-    Token.Kind.FLOAT,
-    Token.Kind.FLOAT32,
-    Token.Kind.FLOAT64,
-    Token.Kind.INT,
-    Token.Kind.INT8,
-    Token.Kind.INT16,
-    Token.Kind.INT32,
-    Token.Kind.INT64,
-    Token.Kind.LONG,
-    Token.Kind.NULL_T,
-    Token.Kind.SHORT,
-    Token.Kind.UINT,
-    Token.Kind.UINT8,
-    Token.Kind.UINT16,
-    Token.Kind.UINT32,
-    Token.Kind.UINT64,
-    Token.Kind.VOID,
-    ASTERISK,
-    CARET,
-    L_PARENTHESIS
-  );
-
   // Is this only ever arrived at on a sure path? If so, we can replace the
   // match method with confirm.
 
   private AstNode variableTypeSpecifier () {
     followingSetStack.push(EnumSet.of(EQUAL));
-    matchX(Token.Kind.COLON, fsv1);
+    var followerSet = FirstSet.DECLARATOR;
+    matchX(Token.Kind.COLON, followerSet);
     var n = new VariableTypeSpecifier(mark);
     n.addChild(declarator(null));
     followingSetStack.pop();
@@ -1244,9 +1245,11 @@ public class Parser {
   );
 
   private AstNode variableInitializer () {
+    followingSetStack.push(EnumSet.of(SEMICOLON));
     matchX(EQUAL, fsv2);
     var n = new VariableInitializer(mark);
     n.addChild(expression(true));
+    followingSetStack.pop();
     return n;
   }
 
@@ -1830,6 +1833,7 @@ public class Parser {
     } else if (kind == NEW) {
       n = newExpression();
     } else {
+      // I think I need to check first set above
       n = postfixExpression();
     }
     return n;
@@ -2022,10 +2026,11 @@ public class Parser {
     // Defer implementing if expressions
 //    else if (kind == Token.Kind.IF)
 //      n = ifExpression();
-    else if (kind == Token.Kind.L_PARENTHESIS)
+    else if (kind == Token.Kind.L_PARENTHESIS) {
       n = parenthesizedExpression();
-    else
+    } else {
       System.out.println("ERROR - INVALID PRIMARY EXPRESSION");
+    }
     return n;
   }
 

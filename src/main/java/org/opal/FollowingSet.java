@@ -30,9 +30,8 @@ public class FollowingSet {
     EnumSet.of(Token.Kind.L_BRACE);
 
 
-  public static final EnumSet<Token.Kind> PACKAGE_DECLARATION = EnumSet.of(Token.Kind.PACKAGE);
-
-  //    union(FirstSet.IMPORT_DECLARATIONS, FirstSet.USE_DECLARATIONS, FirstSet.OTHER_DECLARATIONS);
+  public static final EnumSet<Token.Kind> PACKAGE_DECLARATION =
+    union(FirstSet.IMPORT_DECLARATIONS, FirstSet.USE_DECLARATIONS, FirstSet.OTHER_DECLARATIONS);
 
   public static final EnumSet<Token.Kind> IMPORT_DECLARATIONS =
     union(FirstSet.USE_DECLARATIONS, FirstSet.OTHER_DECLARATIONS);

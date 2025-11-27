@@ -522,11 +522,15 @@ public class Lexer {
         return new Token(kind, lexeme, markPosition.get(), line.get(), markColumn.get());
       }
 
-      else if (Character.isDigit(current))
+      else if (Character.isDigit(current)) {
         return number();
+      }
 
-      else
-        System.out.println("ERROR!");
+      else {
+        // Should we just skip this or create an error token out of it and pass it to the parser?
+        error("invalid character: found '" + current + "', expected character in source character set");
+        consume();
+      }
     }
 
     // Placeholder to avoid error

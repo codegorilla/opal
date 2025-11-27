@@ -1,8 +1,10 @@
 package main;
 
-var s: float = 1
+//var s: float = 1;
 
-var t: float = 2;
+var s int = 2;
+
+var t: float = 5;
 
 
 //var x: *int32[2];
