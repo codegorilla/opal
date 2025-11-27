@@ -1,10 +1,9 @@
-package main;
+package + + main;
+
+var t: float = 5;
 
 //var s: float = 1;
 
-var s int = 2;
-
-var t: float = 5;
 
 
 //var x: *int32[2];
@@ -18,5 +17,3 @@ use opal.math.cos;
 use opal.math.{ Bessel, Gamma };
 use opal.math.*;
 */
-
-//follow(varDecl) is first(otherDecl)

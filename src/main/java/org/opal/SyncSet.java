@@ -11,7 +11,7 @@ import java.util.EnumSet;
 // According to online sources, EOF should be in the FOLLOW set of the start
 // symbol. It may be in the follow sets of other non-terminals.
 
-public class FollowingSet {
+public class SyncSet {
 
 
 //  public static final EnumSet<Token.Kind> COMMA =
@@ -31,7 +31,7 @@ public class FollowingSet {
 
 
   public static final EnumSet<Token.Kind> PACKAGE_DECLARATION =
-    union(FirstSet.IMPORT_DECLARATIONS, FirstSet.USE_DECLARATIONS, FirstSet.OTHER_DECLARATIONS);
+    union(FirstSet.IMPORT_DECLARATIONS, FirstSet.USE_DECLARATIONS, FirstSet.OTHER_DECLARATIONS, Token.Kind.SEMICOLON);
 
   public static final EnumSet<Token.Kind> IMPORT_DECLARATIONS =
     union(FirstSet.USE_DECLARATIONS, FirstSet.OTHER_DECLARATIONS);
