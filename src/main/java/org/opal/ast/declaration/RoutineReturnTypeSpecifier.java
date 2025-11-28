@@ -4,9 +4,9 @@ import org.opal.ResultVisitor;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class RoutineReturnType extends AstNode {
+public class RoutineReturnTypeSpecifier extends AstNode {
 
-  public RoutineReturnType() {
+  public RoutineReturnTypeSpecifier () {
     super();
   }
 

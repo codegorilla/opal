@@ -87,7 +87,7 @@ public interface ResultVisitor <T> {
   public T visit (RoutineParameter node);
   public T visit (RoutineParameterName node);
   public T visit (RoutineParameterTypeSpecifier node);
-  public T visit (RoutineReturnType node);
+  public T visit (RoutineReturnTypeSpecifier node);
   public T visit (RoutineBody node);
 
   // Variable declarations
@@ -149,14 +149,20 @@ public interface ResultVisitor <T> {
   public T visit (This node);
   public T visit (ErrorNode node);
 
+  // NEW TYPES
+
+  public T visit (Declarator node);
+  public T visit (ArrayDeclarators node);
+  public T visit (ArrayDeclarator node);
+  public T visit (PointerDeclarators node);
+  public T visit (PointerDeclarator node);
+
   // TYPES
 
-  public T visit (Type node);
-  public T visit (ArrayType node);
+//  public T visit (Type node);
   public T visit (NominalType node);
-  public T visit (PointerType node);
   public T visit (PrimitiveType node);
-  public T visit (RoutinePointerType node);
+  public T visit (RoutinePointerDeclarator node);
 
   public T visit (TemplateInstantiation node);
   public T visit (TemplateArguments node);

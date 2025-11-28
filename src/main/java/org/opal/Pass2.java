@@ -10,9 +10,7 @@ import org.opal.ast.expression.BinaryExpression;
 import org.opal.ast.expression.Expression;
 import org.opal.ast.expression.FloatingPointLiteral;
 import org.opal.ast.expression.IntegerLiteral;
-import org.opal.ast.type.ArrayType;
 import org.opal.ast.type.NominalType;
-import org.opal.ast.type.PointerType;
 import org.opal.ast.type.PrimitiveType;
 
 public class Pass2 extends BaseVisitor {
@@ -145,17 +143,21 @@ public class Pass2 extends BaseVisitor {
 
   // Types
 
+  /*
   public void visit (ArrayType node) {
     System.out.println("ArrayType");
   }
+  */
 
   public void visit (NominalType node) {
     System.out.println("NominalType");
   }
 
+  /*
   public void visit (PointerType node) {
     System.out.println("PointerType");
   }
+*/
 
   public void visit (PrimitiveType node) {
     System.out.println("PrimitiveType");

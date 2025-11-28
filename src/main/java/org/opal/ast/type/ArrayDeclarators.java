@@ -1,14 +1,13 @@
 package org.opal.ast.type;
 
-import org.opal.Token;
-import org.opal.ast.AstNode;
 import org.opal.ResultVisitor;
 import org.opal.Visitor;
+import org.opal.ast.AstNode;
 
-public class PointerType extends Type {
+public class ArrayDeclarators extends AstNode {
 
-  public PointerType (Token token) {
-    super(token);
+  public ArrayDeclarators () {
+    super();
   }
 
   @Override
@@ -19,10 +18,6 @@ public class PointerType extends Type {
   @Override
   public <T> T accept (ResultVisitor<T> v) {
     return v.visit(this);
-  }
-
-  public AstNode baseType () {
-    return getChild(0);
   }
 
 }
