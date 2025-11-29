@@ -1,4 +1,4 @@
-package + + main;
+packager packages main;
 
 var t: float = 5;
 
