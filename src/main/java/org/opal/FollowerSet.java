@@ -16,36 +16,26 @@ import java.util.EnumSet;
 
 public class FollowerSet {
 
-
-//  public static final EnumSet<Token.Kind> COMMA =
-//    EnumSet.of(Token.Kind.COMMA);
-//
-//  public static final EnumSet<Token.Kind> EQUAL =
-//    EnumSet.of(Token.Kind.EQUAL);
-
-  public static final EnumSet<Token.Kind> GREATER =
-    EnumSet.of(Token.Kind.GREATER);
-
-//  public static final EnumSet<Token.Kind> IMPORT =
-//    EnumSet.of(Token.Kind.IMPORT);
-
-  public static final EnumSet<Token.Kind> L_BRACE =
-    EnumSet.of(Token.Kind.L_BRACE);
-
+  public static final EnumSet<Token.Kind> SEMICOLON =
+    EnumSet.of(Token.Kind.SEMICOLON);
 
   public static final EnumSet<Token.Kind> PACKAGE_DECLARATION =
-    union(FirstSet.IMPORT_DECLARATIONS, FirstSet.USE_DECLARATIONS, FirstSet.OTHER_DECLARATIONS, Token.Kind.SEMICOLON);
+    union(FirstSet.IMPORT_DECLARATIONS, FirstSet.USE_DECLARATIONS, FirstSet.OTHER_DECLARATIONS);
 
   public static final EnumSet<Token.Kind> IMPORT_DECLARATIONS =
     union(FirstSet.USE_DECLARATIONS, FirstSet.OTHER_DECLARATIONS);
+
+  public static final EnumSet<Token.Kind> IMPORT_DECLARATION =
+    union(FirstSet.IMPORT_DECLARATION, Token.Kind.SEMICOLON);
+
 
   public static final EnumSet<Token.Kind> USE_DECLARATIONS =
     FirstSet.OTHER_DECLARATIONS;
 
   // No need for a following set for other declarations
 
-  public static final EnumSet<Token.Kind> OTHER_DECLARATION =
-    FirstSet.OTHER_DECLARATION;
+  public static final EnumSet<Token.Kind> OTHER_DECLARATIONS =
+    EnumSet.of(Token.Kind.EOF);
 
 
 

@@ -1,6 +1,10 @@
-packager packages main;
+package main;
 
-var t: float = 5;
+import opal.lang;
+
+improt import opal.lang;
+
+//var t: float = 5;
 
 //var s: float = 1;
 

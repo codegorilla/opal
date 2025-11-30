@@ -434,10 +434,14 @@ public class Parser {
   // In parsing theory lingo, the top-most production is known as the "start
   // symbol". Thus, the translation unit is our start symbol.
 
+  // Maybe we need a check-in here
+
   private AstNode translationUnit () {
     followerSetStack.push(EnumSet.of(Token.Kind.EOF));
     var n = new TranslationUnit();
     n.addChild(packageDeclaration());
+
+    // Check-out from package declaration should bring us to import, use, an "other" declaration, or EOF
     if (kind == IMPORT)
       n.addChild(importDeclarations());
     else
@@ -446,15 +450,28 @@ public class Parser {
       n.addChild(useDeclarations());
     else
       n.addChild(EPSILON);
-    if (
-      kind == PRIVATE ||
-      kind == CLASS   ||
-      kind == DEF     ||
-      kind == VAL     ||
-      kind == VAR
-    ) {
+
+    if (kind != Token.Kind.EOF) {
+      // Assume no epsilon production
       n.addChild(otherDeclarations());
     }
+
+//    (
+//      kind == PRIVATE ||
+//      kind == CLASS   ||
+//      kind == DEF     ||
+//      kind == VAL     ||
+//      kind == VAR
+//    ) {
+//      n.addChild(otherDeclarations());
+//    } else if (kind == Token.Kind.EOF) {
+//    } else {
+//      // Assume error and that we don't want epsilon production
+//      n.addChild(otherDeclarations());
+//      //checkError(EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR));
+//      //syncX(EnumSet.of(Token.Kind.EOF)); // Why doesn't this sync to EOF?
+//    }
+
     //var scope = new Scope(Scope.Kind.GLOBAL);
     //scope.setEnclosingScope(currentScope);
     //currentScope = scope;
@@ -483,6 +500,18 @@ public class Parser {
   // not known at compile time. There can be multiple versions of the FOLLOWING
   // set for a given production.
 
+  private EnumSet<Token.Kind> combine () {
+    var combined = EnumSet.noneOf(Token.Kind.class);
+    for (var followerSet : followerSetStack)
+      combined.addAll(followerSet);
+    return combined;
+  }
+
+  private void recover () {
+    var combined = combine();
+    syncX(combined);
+  }
+
   private void syncX (EnumSet<Token.Kind> syncSet) {
     mark = new Token(Token.Kind.ERROR, lookahead.getLexeme(), lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
     LOGGER.info("Match: created " + mark);
@@ -497,8 +526,9 @@ public class Parser {
   }
 
   private void checkIn (EnumSet<Token.Kind> firstSet) {
+    // Might need to set mark in process() not here
+    mark = lookahead;
     if (!firstSet.contains(kind)) {
-      System.out.println("ERROR: Token mismatch!");
       checkError(firstSet);
       // Combine first set and all follower sets
       var combined = EnumSet.copyOf(firstSet);
@@ -508,24 +538,50 @@ public class Parser {
     }
   }
 
+  // Not sure if we need checkout. Maybe we only need it in some circumstances.
+
+  private void checkOut () {
+//    if (!firstSet.contains(kind)) {
+//      checkError(firstSet);
+      // Combine first set and all follower sets
+      var combined = EnumSet.noneOf(Token.Kind.class);
+      for (var followerSet : followerSetStack)
+        combined.addAll(followerSet);
+      if (!combined.contains(kind)) {
+        checkError(combined);
+        syncX(combined);
+      }
+//    }
+  }
+
+  // FS_SEMICOLON is a special add-on to the FOLLOWER set stack. It allows
+  // synchronization to halt at semicolons that are part of the current
+  // production.
+  private final EnumSet<Token.Kind> FS_SEMICOLON = EnumSet.of(SEMICOLON);
+
   private AstNode packageDeclaration () {
     followerSetStack.push(FollowerSet.PACKAGE_DECLARATION);
+    followerSetStack.push(FS_SEMICOLON);
     checkIn(FirstSet.PACKAGE_DECLARATION);
+    var n = new PackageDeclaration(mark);
     if (kind == PACKAGE) {
       confirm(PACKAGE);
-      var n = new PackageDeclaration(mark);
       matchX(Token.Kind.IDENTIFIER);
       n.addChild(new PackageName(mark));
-      matchX(SEMICOLON);
-      followerSetStack.pop();
-      return n;
-    } else {
-      var t =  new Token(Token.Kind.ERROR, lookahead.getLexeme(), lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
-      consume();
-      var n = new PackageDeclaration(t);
-      return n;
     }
+    followerSetStack.pop();
+    matchX(SEMICOLON);
+    checkOut();
+    followerSetStack.pop();
+    return n;
   }
+
+  // No check-in is required because we only arrive at this production through
+  // an explicit check for 'import' keyword. Thus, we can only get here if the
+  // current lookahead token is 'import'.
+
+  // To do: I do think we need a check-out, but that might be handled in the
+  // importDeclaration production.
 
   private AstNode importDeclarations () {
     followerSetStack.push(FollowerSet.IMPORT_DECLARATIONS);
@@ -533,7 +589,10 @@ public class Parser {
     n.addChild(importDeclaration());
     while (kind == IMPORT)
       n.addChild(importDeclaration());
+    //checkOut();
     followerSetStack.pop();
+    //System.out.println("HERE1");
+    // Need a check-out here
     return n;
   }
 
@@ -546,15 +605,23 @@ public class Parser {
   // particular use case.
 
   private AstNode importDeclaration () {
-    followerSetStack.push(EnumSet.of(IMPORT));
+    followerSetStack.push(FollowerSet.IMPORT_DECLARATION);
+    followerSetStack.push(FS_SEMICOLON);
     confirm(IMPORT);
     var n = new ImportDeclaration(mark);
     n.addChild(importQualifiedName());
     if (kind == AS)
       n.addChild(importAsClause());
-    else
+    else if (kind == SEMICOLON)
       n.addChild(EPSILON);
+    else {
+      var err = new SyntaxError(sourceLines, "Expected 'as' or ';', got " + keywordLookup.get(kind), lookahead);
+      System.out.println(err);
+      recover();
+    }
+    followerSetStack.pop();
     matchX(SEMICOLON);
+    checkOut();
     followerSetStack.pop();
     return n;
   }
@@ -568,7 +635,6 @@ public class Parser {
   // be room for improvement.
 
   private AstNode importQualifiedName () {
-    followerSetStack.push(EnumSet.of(AS, SEMICOLON));
     var n = new ImportQualifiedName();
     matchX(Token.Kind.IDENTIFIER);
     n.addChild(new ImportName(mark));
@@ -577,16 +643,13 @@ public class Parser {
       matchX(Token.Kind.IDENTIFIER);
       n.addChild(new ImportName(mark));
     }
-    followerSetStack.pop();
     return n;
   }
 
   private AstNode importAsClause () {
-    followerSetStack.push(EnumSet.of(SEMICOLON));
     confirm(AS);
     matchX(Token.Kind.IDENTIFIER);
     var n = new ImportName(mark);
-    followerSetStack.pop();
     return n;
   }
 
@@ -678,6 +741,8 @@ public class Parser {
 //      }
 
   private AstNode otherDeclarations () {
+    followerSetStack.push(FollowerSet.OTHER_DECLARATIONS);
+    checkIn(FirstSet.OTHER_DECLARATIONS);
     var n = new OtherDeclarations();
     while (FirstSet.OTHER_DECLARATION.contains(kind)) {
       n.addChild(otherDeclaration());

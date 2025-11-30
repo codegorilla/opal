@@ -8,6 +8,9 @@ import java.util.EnumSet;
 
 public class FirstSet {
 
+//  public static final EnumSet<Token.Kind> TRANSLATION_UNIT =
+//    FirstSet.PACKAGE_DECLARATION;
+
   public static final EnumSet<Token.Kind> PACKAGE_DECLARATION =
     EnumSet.of(Token.Kind.PACKAGE);
 
