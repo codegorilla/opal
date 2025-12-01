@@ -26,6 +26,10 @@ public class FirstSet {
   public static final EnumSet<Token.Kind> USE_DECLARATIONS =
     FirstSet.USE_DECLARATION;
 
+  public static final EnumSet<Token.Kind> USE_QUALIFIED_NAME_TAIL =
+    EnumSet.of(Token.Kind.ASTERISK, Token.Kind.L_BRACE, Token.Kind.IDENTIFIER);
+
+
   public static final EnumSet<Token.Kind> OTHER_DECLARATION =
     EnumSet.of(Token.Kind.PRIVATE, Token.Kind.CLASS, Token.Kind.DEF, Token.Kind.VAL, Token.Kind.VAR);
 

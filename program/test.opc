@@ -2,7 +2,13 @@ package main;
 
 import opal.lang;
 
-improt import opal.lang;
+//improt import opal.lang;
+
+use opal.math.bee + + + ;
+
+//use opal.math. + + { + + bee };
+
+use opal.lang;
 
 //var t: float = 5;
 

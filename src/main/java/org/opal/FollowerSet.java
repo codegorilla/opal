@@ -16,8 +16,8 @@ import java.util.EnumSet;
 
 public class FollowerSet {
 
-  public static final EnumSet<Token.Kind> SEMICOLON =
-    EnumSet.of(Token.Kind.SEMICOLON);
+//  public static final EnumSet<Token.Kind> SEMICOLON =
+//    EnumSet.of(Token.Kind.SEMICOLON);
 
   public static final EnumSet<Token.Kind> PACKAGE_DECLARATION =
     union(FirstSet.IMPORT_DECLARATIONS, FirstSet.USE_DECLARATIONS, FirstSet.OTHER_DECLARATIONS);
@@ -26,11 +26,13 @@ public class FollowerSet {
     union(FirstSet.USE_DECLARATIONS, FirstSet.OTHER_DECLARATIONS);
 
   public static final EnumSet<Token.Kind> IMPORT_DECLARATION =
-    union(FirstSet.IMPORT_DECLARATION, Token.Kind.SEMICOLON);
-
+    FirstSet.IMPORT_DECLARATION;
 
   public static final EnumSet<Token.Kind> USE_DECLARATIONS =
     FirstSet.OTHER_DECLARATIONS;
+
+  public static final EnumSet<Token.Kind> USE_DECLARATION =
+    FirstSet.USE_DECLARATION;
 
   // No need for a following set for other declarations
 
