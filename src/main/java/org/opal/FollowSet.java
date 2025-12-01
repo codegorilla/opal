@@ -15,6 +15,9 @@ public class FollowSet {
   public static final EnumSet<Token.Kind> IMPORT_DECLARATION =
     union(FirstSet.IMPORT_DECLARATION, FollowSet.IMPORT_DECLARATIONS);
 
+  public static final EnumSet<Token.Kind> IMPORT_QUALIFIED_NAME =
+    EnumSet.of(Token.Kind.AS, Token.Kind.SEMICOLON);
+
   public static final EnumSet<Token.Kind> USE_DECLARATIONS =
     union(FirstSet.OTHER_DECLARATIONS, FollowSet.TRANSLATION_UNIT);
 

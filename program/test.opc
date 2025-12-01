@@ -1,14 +1,20 @@
-package main;
+package + main
 
-import opal.lang;
+import + opal.lang % ^ !
+
+//using opal.lang;
+
+//import opal.lang;
+
+//import ash.bee;
 
 //improt import opal.lang;
 
-use opal.math.bee + + + ;
+//use opal.math.bee + + + ;
 
 //use opal.math. + + { + + bee };
 
-use opal.lang;
+//use opal.lang;
 
 //var t: float = 5;
 

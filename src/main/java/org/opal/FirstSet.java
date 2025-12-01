@@ -14,6 +14,9 @@ public class FirstSet {
   public static final EnumSet<Token.Kind> PACKAGE_DECLARATION =
     EnumSet.of(Token.Kind.PACKAGE);
 
+  public static final EnumSet<Token.Kind> IMPORT_QUALIFIED_NAME =
+    EnumSet.of (Token.Kind.IDENTIFIER);
+
   public static final EnumSet<Token.Kind> IMPORT_DECLARATION =
     EnumSet.of(Token.Kind.IMPORT);
 
@@ -96,7 +99,6 @@ public class FirstSet {
 
 
 
-  public static final EnumSet<Token.Kind> IMPORT_QUALIFIED_NAME  = EnumSet.of (Token.Kind.IDENTIFIER);
 
   public static final EnumSet<Token.Kind> STANDARD_STATEMENT = EnumSet.of (
     Token.Kind.BREAK,

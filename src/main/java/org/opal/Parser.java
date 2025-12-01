@@ -267,11 +267,13 @@ public class Parser {
     } else {
       // Sad path :(
       LOGGER.info("Match: entering sad path");
+      mark = lookahead;
       if (!errorRecoveryMode)
         generalError(expectedKind);
-      var combined = combine();
-      sync(combined);
-      //errorRecoveryMode = true;
+      // Should we at least advance the input stream? If we do, then we
+      // effectively delete the bad token. Different sources say yes or no,
+      // but several seem to indicate that we should NOT consume.
+      errorRecoveryMode = true;
       return false;
     }
   }
@@ -296,9 +298,25 @@ public class Parser {
       .collect(Collectors.joining(", "));
     var actualKind = kind;
     var actualKindString = keywordLookup.getOrDefault(actualKind, friendlyKind(actualKind));
-    var messageSome = "expected one of " + expectedKindsString + "; got " + actualKindString;
-    var messageOne  = "expected "        + expectedKindsString + ", got " + actualKindString;
+    var messageSome = "expected one of " + expectedKindsString + "; found " + actualKindString;
+    var messageOne  = "expected "        + expectedKindsString + ", found " + actualKindString;
     var message = expectedKinds.size() > 1 ? messageSome : messageOne;
+    var error = new SyntaxError(sourceLines, message, lookahead);
+    System.out.println(error);
+  }
+
+  // Experiment with only two items
+
+  private void checkError2 (EnumSet<Token.Kind> expectedKinds) {
+    var expectedKindsString = expectedKinds.stream()
+      .map(kind -> keywordLookup.getOrDefault(kind, friendlyKind(kind)))
+      .sorted()
+      .toList();
+    var actualKind = kind;
+    var actualKindString = keywordLookup.getOrDefault(actualKind, friendlyKind(actualKind));
+    var message = "expected " + expectedKindsString.get(0) +
+                  " or "      + expectedKindsString.get(1) +
+                  ", found " + actualKindString;
     var error = new SyntaxError(sourceLines, message, lookahead);
     System.out.println(error);
   }
@@ -355,6 +373,7 @@ public class Parser {
     keywordLookup.put(Token.Kind.ASTERISK, "'*'");
     keywordLookup.put(Token.Kind.L_BRACE, "'{'");
     keywordLookup.put(Token.Kind.R_BRACE, "'}'");
+    keywordLookup.put(Token.Kind.AS, "'as'");
   }
 
   private void definePrimitiveTypes () {
@@ -382,30 +401,40 @@ public class Parser {
     var n = new TranslationUnit();
     n.addChild(packageDeclaration());
 
-    // Check-out from package declaration should bring us to import, use, an "other" declaration, or EOF
-    if (kind == IMPORT)
+    // We might need a test that allows us to say that we expect one of
+    // several keywords, not just import. Basically, if we don't see EOF, then
+    // then we expect either import, use, or other declarations.
+    // Do we need a check-in to these?
+
+    if (!FollowSet.PACKAGE_DECLARATION.contains(kind))
+      checkError(FollowSet.PACKAGE_DECLARATION);
+
+    // import => first set => import
+    // !first-use, !first-other, !eof => import
+    // otherwise, epsilon
+    if (kind == IMPORT) {
       n.addChild(importDeclarations());
-    else
+    }
+    else {
       n.addChild(EPSILON);
+    }
+
     if (kind == USE)
       n.addChild(useDeclarations());
     else
       n.addChild(EPSILON);
 
-    if (kind != Token.Kind.EOF) {
-      // Assume no epsilon production
+    if (
+      kind == PRIVATE ||
+      kind == CLASS   ||
+      kind == DEF     ||
+      kind == VAL     ||
+      kind == VAR
+    ) {
       n.addChild(otherDeclarations());
     }
 
-//    (
-//      kind == PRIVATE ||
-//      kind == CLASS   ||
-//      kind == DEF     ||
-//      kind == VAL     ||
-//      kind == VAR
-//    ) {
-//      n.addChild(otherDeclarations());
-//    } else if (kind == Token.Kind.EOF) {
+//    else if (kind == Token.Kind.EOF) {
 //    } else {
 //      // Assume error and that we don't want epsilon production
 //      n.addChild(otherDeclarations());
@@ -467,15 +496,38 @@ public class Parser {
     }
   }
 
-  // Not sure if we need checkout. Maybe we only need it in some circumstances.
-
-  private void checkOut () {
+  private void checkOut (EnumSet<Token.Kind> followSet) {
       // Combine all follower sets
       var combined = combine();
       if (!combined.contains(kind)) {
-        checkError(combined);
+        if (!errorRecoveryMode)
+          checkError(followSet);
         sync(combined);
       }
+  }
+
+  private void checkOut2 (EnumSet<Token.Kind> followSet) {
+      // Combine all follower sets
+      var combined = combine();
+      if (!combined.contains(kind)) {
+        if (!errorRecoveryMode)
+          checkError2(followSet);
+        sync(combined);
+      }
+  }
+
+  private void checkOut () {
+    if (errorRecoveryMode) {
+      System.out.println("IN ERM");
+      // Combine all follower sets
+      var combined = combine();
+      if (!combined.contains(kind)) {
+        sync(combined);
+      }
+      // Not sure if we need to reset this here or if we can wait until next
+      // match. Should be equivalent since check-out takes you to next match.
+      //errorRecoveryMode = false;
+    }
   }
 
   // SET_SEMICOLON is a special add-on to the FOLLOWER set stack. It allows
@@ -486,20 +538,24 @@ public class Parser {
 
   private AstNode packageDeclaration () {
     followerSetStack.push(FollowerSet.PACKAGE_DECLARATION);
-    followerSetStack.push(SET_SEMICOLON);
     // Hypothesis: Check-ins occur when the parser must choose one of several
     // paths, and the epsilon production is not one of the options. This will
-    // force the parser to sync up to any item in the first set or follow set.
+    // force the parser to sync up to any item in the FIRST or FOLLOWER sets.
     checkIn(FirstSet.PACKAGE_DECLARATION);
     var n = new PackageDeclaration(mark);
     if (kind == PACKAGE) {
       confirm(PACKAGE);
       match(Token.Kind.IDENTIFIER);
       n.addChild(new PackageName(mark));
+      match(SEMICOLON);
     }
-    followerSetStack.pop();
-    match(SEMICOLON);
     checkOut();
+    // Need to fix this semicolon check so it only occurs if in ERM and the
+    // semi match above did not occur.
+    if (kind == SEMICOLON)
+      confirm(SEMICOLON);
+    else
+      System.out.println("syntax error (1, 10): Missing ';'");
     followerSetStack.pop();
     return n;
   }
@@ -526,22 +582,20 @@ public class Parser {
   // easiest implementation and the others hold no advantages for our
   // particular use case.
 
+  // No check-in required -- see above.
+
   private AstNode importDeclaration () {
     followerSetStack.push(FollowerSet.IMPORT_DECLARATION);
-    followerSetStack.push(SET_SEMICOLON);
-    confirm(IMPORT);
+    checkIn(FirstSet.IMPORT_DECLARATIONS);
+    match(IMPORT);
     var n = new ImportDeclaration(mark);
     n.addChild(importQualifiedName());
     if (kind == AS)
       n.addChild(importAsClause());
-    else if (kind == SEMICOLON)
+    else if (kind == SEMICOLON) {
+      System.out.println("GOT HERE!");
       n.addChild(EPSILON);
-    else {
-      var err = new SyntaxError(sourceLines, "Expected 'as' or ';', got " + keywordLookup.get(kind), lookahead);
-      System.out.println(err);
-      recover();
     }
-    followerSetStack.pop();
     match(SEMICOLON);
     checkOut();
     followerSetStack.pop();
@@ -557,6 +611,8 @@ public class Parser {
   // be room for improvement.
 
   private AstNode importQualifiedName () {
+    followerSetStack.push(FollowerSet.IMPORT_QUALIFIED_NAME);
+    checkIn(FirstSet.IMPORT_QUALIFIED_NAME);
     var n = new ImportQualifiedName();
     match(Token.Kind.IDENTIFIER);
     n.addChild(new ImportName(mark));
@@ -565,6 +621,8 @@ public class Parser {
       match(Token.Kind.IDENTIFIER);
       n.addChild(new ImportName(mark));
     }
+    checkOut2(FollowSet.IMPORT_QUALIFIED_NAME);
+    followerSetStack.pop();
     return n;
   }
 

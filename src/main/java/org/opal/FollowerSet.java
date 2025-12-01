@@ -20,13 +20,17 @@ public class FollowerSet {
 //    EnumSet.of(Token.Kind.SEMICOLON);
 
   public static final EnumSet<Token.Kind> PACKAGE_DECLARATION =
-    union(FirstSet.IMPORT_DECLARATIONS, FirstSet.USE_DECLARATIONS, FirstSet.OTHER_DECLARATIONS);
+    union(FirstSet.IMPORT_DECLARATIONS, FirstSet.USE_DECLARATIONS, FirstSet.OTHER_DECLARATIONS, Token.Kind.SEMICOLON);
 
   public static final EnumSet<Token.Kind> IMPORT_DECLARATIONS =
     union(FirstSet.USE_DECLARATIONS, FirstSet.OTHER_DECLARATIONS);
 
   public static final EnumSet<Token.Kind> IMPORT_DECLARATION =
-    FirstSet.IMPORT_DECLARATION;
+    union(FirstSet.IMPORT_DECLARATION, Token.Kind.SEMICOLON);
+
+  public static final EnumSet<Token.Kind> IMPORT_QUALIFIED_NAME =
+    EnumSet.of(Token.Kind.AS);
+
 
   public static final EnumSet<Token.Kind> USE_DECLARATIONS =
     FirstSet.OTHER_DECLARATIONS;
