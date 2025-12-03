@@ -90,8 +90,12 @@ public class Parser {
   // Following sets are like FOLLOW sets, but are context aware, so they are
   // generally subsets of FOLLOW sets.
 
-  // Stack for following sets
-  private final LinkedList<Set<Token.Kind>> followerSetStack;
+  // Stack for follower sets
+  private final LinkedList<EnumSet<Token.Kind>> followerSetStack;
+
+  // Deprecated
+  // Stack for sync sets
+  //private final LinkedList<EnumSet<Token.Kind>> syncSetStack;
 
   // Convenience aliases
   private static final Token.Kind ABSTRACT = Token.Kind.ABSTRACT;
@@ -225,6 +229,9 @@ public class Parser {
     currentScope = builtinScope;
 
     followerSetStack = new LinkedList<>();
+    // Deprecated
+//    syncSetStack = new LinkedList<>();
+//    syncSetStack.push(EnumSet.noneOf(Token.Kind.class));
 
     var keywordTable = new KeywordTable();
     keywordLookup = keywordTable.getReverseLookupTable();
@@ -244,16 +251,16 @@ public class Parser {
   // is and then annotate the token with an error flag.
 
   private void sync (EnumSet<Token.Kind> syncSet) {
-    mark = new Token(Token.Kind.ERROR, lookahead.getLexeme(), lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
-    LOGGER.info("Match: created " + mark);
-    LOGGER.info("Match: synchronization started");
+//    mark = new Token(Token.Kind.ERROR, lookahead.getLexeme(), lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
+//    LOGGER.info("Sync: created " + mark);
+    LOGGER.info("Sync: synchronization started");
     // Combine all sync sets
     // Scan forward until we hit something in the sync set
     while (!syncSet.contains(kind)) {
-      LOGGER.info("Match: skipped {}", lookahead);
+      LOGGER.info("Sync: skipped {}", lookahead);
       consume();
     }
-    LOGGER.info("Match: synchronization complete");
+    LOGGER.info("Sync: synchronization complete");
   }
 
   private boolean match (Token.Kind expectedKind) {
@@ -282,7 +289,7 @@ public class Parser {
     var expectedKindString = keywordLookup.getOrDefault(expectedKind, friendlyKind(expectedKind));
     var actualKind = lookahead.getKind();
     var actualKindString = keywordLookup.getOrDefault(actualKind, friendlyKind(actualKind));
-    var message = "expected " + expectedKindString + ", got " + actualKindString;
+    var message = "expected " + expectedKindString + ", found " + actualKindString;
     var error = new SyntaxError(sourceLines, message, lookahead);
     System.out.println(error);
   }
@@ -333,7 +340,7 @@ public class Parser {
     } else {
       var expectedKindFriendly = friendlyKind(expectedKind);
       var actualKindFriendly = friendlyKind(lookahead.getKind());
-      var message = "expected " + expectedKindFriendly + ", got " + actualKindFriendly;
+      var message = "expected " + expectedKindFriendly + ", found " + actualKindFriendly;
       throw new IllegalArgumentException("internal error: " + message);
     }
   }
@@ -482,20 +489,24 @@ public class Parser {
     sync(combined);
   }
 
-
   private void checkIn (EnumSet<Token.Kind> firstSet) {
+    LOGGER.info("Check-in: check-in started");
     // Might need to set mark in process() not here
     mark = lookahead;
     if (!firstSet.contains(kind)) {
       checkError(firstSet);
+      mark = new Token(Token.Kind.ERROR, lookahead.getLexeme(), lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
+      LOGGER.info("Check-in: created " + mark);
       // Combine first set and all follower sets
       var combined = EnumSet.copyOf(firstSet);
       for (var followerSet : followerSetStack)
         combined.addAll(followerSet);
       sync(combined);
     }
+    LOGGER.info("Check-in: check-in complete");
   }
 
+  /*
   private void checkOut (EnumSet<Token.Kind> followSet) {
       // Combine all follower sets
       var combined = combine();
@@ -505,6 +516,7 @@ public class Parser {
         sync(combined);
       }
   }
+  */
 
   private void checkOut2 (EnumSet<Token.Kind> followSet) {
       // Combine all follower sets
@@ -517,6 +529,7 @@ public class Parser {
   }
 
   private void checkOut () {
+    LOGGER.info("Check-out: check-out started");
     if (errorRecoveryMode) {
       System.out.println("IN ERM");
       // Combine all follower sets
@@ -528,6 +541,7 @@ public class Parser {
       // match. Should be equivalent since check-out takes you to next match.
       //errorRecoveryMode = false;
     }
+    LOGGER.info("Check-out: check-out complete");
   }
 
   // SET_SEMICOLON is a special add-on to the FOLLOWER set stack. It allows
@@ -550,12 +564,8 @@ public class Parser {
       match(SEMICOLON);
     }
     checkOut();
-    // Need to fix this semicolon check so it only occurs if in ERM and the
-    // semi match above did not occur.
     if (kind == SEMICOLON)
       confirm(SEMICOLON);
-    else
-      System.out.println("syntax error (1, 10): Missing ';'");
     followerSetStack.pop();
     return n;
   }
