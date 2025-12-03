@@ -1,6 +1,6 @@
-package + main + ;
+package main ;
 
-import + opal.lang % ^ !
+import opal.& + as t ;
 
 //using opal.lang;
 

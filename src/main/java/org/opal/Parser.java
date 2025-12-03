@@ -3,6 +3,7 @@ package org.opal;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.sun.source.tree.ForLoopTree;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
@@ -337,6 +338,7 @@ public class Parser {
       LOGGER.info("Confirm: confirmed " + lookahead);
       mark = lookahead;
       consume();
+      errorRecoveryMode = false;
     } else {
       var expectedKindFriendly = friendlyKind(expectedKind);
       var actualKindFriendly = friendlyKind(lookahead.getKind());
@@ -413,8 +415,9 @@ public class Parser {
     // then we expect either import, use, or other declarations.
     // Do we need a check-in to these?
 
-    if (!FollowSet.PACKAGE_DECLARATION.contains(kind))
+    if (!FollowSet.PACKAGE_DECLARATION.contains(kind)) {
       checkError(FollowSet.PACKAGE_DECLARATION);
+    }
 
     // import => first set => import
     // !first-use, !first-other, !eof => import
@@ -518,15 +521,22 @@ public class Parser {
   }
   */
 
+  // What is the difference between checkOut and checkOut2?
+  // Checkout2 seems to be able to print ';' or 'as'.
+
+  /*
   private void checkOut2 (EnumSet<Token.Kind> followSet) {
-      // Combine all follower sets
-      var combined = combine();
-      if (!combined.contains(kind)) {
-        if (!errorRecoveryMode)
-          checkError2(followSet);
-        sync(combined);
-      }
+    LOGGER.info("Check-out: check-out started");
+    // Combine all follower sets
+    var combined = combine();
+    if (!combined.contains(kind)) {
+      if (!errorRecoveryMode)
+        checkError2(followSet);
+      sync(combined);
+    }
+    LOGGER.info("Check-out: check-out complete");
   }
+  */
 
   private void checkOut () {
     LOGGER.info("Check-out: check-out started");
@@ -538,7 +548,8 @@ public class Parser {
         sync(combined);
       }
       // Not sure if we need to reset this here or if we can wait until next
-      // match. Should be equivalent since check-out takes you to next match.
+      // match. Should be equivalent since check-out takes you to next match
+      // or confirm.
       //errorRecoveryMode = false;
     }
     LOGGER.info("Check-out: check-out complete");
@@ -564,7 +575,7 @@ public class Parser {
       match(SEMICOLON);
     }
     checkOut();
-    if (kind == SEMICOLON)
+    if (errorRecoveryMode && kind == SEMICOLON)
       confirm(SEMICOLON);
     followerSetStack.pop();
     return n;
@@ -572,7 +583,7 @@ public class Parser {
 
   // No check-in is required because we only arrive at this production through
   // an explicit check for 'import' keyword. Thus, we can only get here if the
-  // current lookahead token is 'import'.
+  // current lookahead token is known for sure to be 'import'.
 
   private AstNode importDeclarations () {
     followerSetStack.push(FollowerSet.IMPORT_DECLARATIONS);
@@ -592,17 +603,19 @@ public class Parser {
   // easiest implementation and the others hold no advantages for our
   // particular use case.
 
-  // No check-in required -- see above.
+  // No check-in required (see above)
 
   private AstNode importDeclaration () {
     followerSetStack.push(FollowerSet.IMPORT_DECLARATION);
-    checkIn(FirstSet.IMPORT_DECLARATIONS);
-    match(IMPORT);
+    confirm(IMPORT);
     var n = new ImportDeclaration(mark);
     n.addChild(importQualifiedName());
+    // I think I need some kind of check-in here.
+    // Maybe this needs to be in import declaration tail? Left off here
     if (kind == AS)
       n.addChild(importAsClause());
     else if (kind == SEMICOLON) {
+      // Might not need epsilon because nothing comes after this
       System.out.println("GOT HERE!");
       n.addChild(EPSILON);
     }
@@ -631,7 +644,13 @@ public class Parser {
       match(Token.Kind.IDENTIFIER);
       n.addChild(new ImportName(mark));
     }
-    checkOut2(FollowSet.IMPORT_QUALIFIED_NAME);
+    // This should sync us to the follower set *** left off here
+    // CheckOut2 should NOT be necessary! Check-out only job is to sync if
+    // there is an error, otherwise do nothing. It should NOT print anything.
+//    checkOut2(FollowSet.IMPORT_QUALIFIED_NAME);
+    // Why does checkout not sync to ';'?
+    // Its because it is not in ERM - no errors occurred so far
+    checkOut();
     followerSetStack.pop();
     return n;
   }
