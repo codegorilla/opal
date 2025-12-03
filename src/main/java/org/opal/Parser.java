@@ -429,6 +429,12 @@ public class Parser {
       n.addChild(EPSILON);
     }
 
+    // Should this be a check-in?
+    if (!FollowSet.IMPORT_DECLARATIONS.contains(kind)) {
+      checkError(FollowSet.IMPORT_DECLARATIONS);
+      sync(EnumSet.of(Token.Kind.EOF));
+    }
+
     if (kind == USE)
       n.addChild(useDeclarations());
     else
@@ -443,6 +449,8 @@ public class Parser {
     ) {
       n.addChild(otherDeclarations());
     }
+
+    System.out.println("HERE");
 
 //    else if (kind == Token.Kind.EOF) {
 //    } else {
@@ -509,39 +517,9 @@ public class Parser {
     LOGGER.info("Check-in: check-in complete");
   }
 
-  /*
-  private void checkOut (EnumSet<Token.Kind> followSet) {
-      // Combine all follower sets
-      var combined = combine();
-      if (!combined.contains(kind)) {
-        if (!errorRecoveryMode)
-          checkError(followSet);
-        sync(combined);
-      }
-  }
-  */
-
-  // What is the difference between checkOut and checkOut2?
-  // Checkout2 seems to be able to print ';' or 'as'.
-
-  /*
-  private void checkOut2 (EnumSet<Token.Kind> followSet) {
-    LOGGER.info("Check-out: check-out started");
-    // Combine all follower sets
-    var combined = combine();
-    if (!combined.contains(kind)) {
-      if (!errorRecoveryMode)
-        checkError2(followSet);
-      sync(combined);
-    }
-    LOGGER.info("Check-out: check-out complete");
-  }
-  */
-
   private void checkOut () {
     LOGGER.info("Check-out: check-out started");
     if (errorRecoveryMode) {
-      System.out.println("IN ERM");
       // Combine all follower sets
       var combined = combine();
       if (!combined.contains(kind)) {
@@ -587,6 +565,7 @@ public class Parser {
 
   private AstNode importDeclarations () {
     followerSetStack.push(FollowerSet.IMPORT_DECLARATIONS);
+    // No check-in required
     var n = new ImportDeclarations();
     n.addChild(importDeclaration());
     while (kind == IMPORT)
@@ -603,15 +582,12 @@ public class Parser {
   // easiest implementation and the others hold no advantages for our
   // particular use case.
 
-  // No check-in required (see above)
-
   private AstNode importDeclaration () {
     followerSetStack.push(FollowerSet.IMPORT_DECLARATION);
+    // No check-in required
     confirm(IMPORT);
     var n = new ImportDeclaration(mark);
     n.addChild(importQualifiedName());
-    // I think I need some kind of check-in here.
-    // Maybe this needs to be in import declaration tail? Left off here
     checkIn(EnumSet.of(AS, SEMICOLON));
     if (kind == AS)
       n.addChild(importAsClause());
@@ -645,18 +621,13 @@ public class Parser {
       match(Token.Kind.IDENTIFIER);
       n.addChild(new ImportName(mark));
     }
-    // This should sync us to the follower set IF an error occurred above.
-    // CheckOut2 should NOT be necessary! Check-out only job is to sync if
-    // there is an error, otherwise do nothing. It should NOT print anything.
-//    checkOut2(FollowSet.IMPORT_QUALIFIED_NAME);
-    // Why does checkout not sync to ';'?
-    // Its because it is not in ERM - no errors occurred so far
     checkOut();
     followerSetStack.pop();
     return n;
   }
 
   private AstNode importAsClause () {
+    // No check-in required
     confirm(AS);
     match(Token.Kind.IDENTIFIER);
     var n = new ImportName(mark);
@@ -665,6 +636,7 @@ public class Parser {
 
   private AstNode useDeclarations () {
     followerSetStack.push(FollowerSet.USE_DECLARATIONS);
+    // No check-in required
     var n = new UseDeclarations();
     n.addChild(useDeclaration());
     while (kind == USE)
@@ -675,7 +647,7 @@ public class Parser {
 
   private AstNode useDeclaration () {
     followerSetStack.push(FollowerSet.USE_DECLARATION);
-    followerSetStack.push(SET_SEMICOLON);
+    // No check-in required
     confirm(USE);
     var n = new UseDeclaration(mark);
     n.addChild(useQualifiedName());
