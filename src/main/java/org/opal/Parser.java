@@ -612,6 +612,7 @@ public class Parser {
     n.addChild(importQualifiedName());
     // I think I need some kind of check-in here.
     // Maybe this needs to be in import declaration tail? Left off here
+    checkIn(EnumSet.of(AS, SEMICOLON));
     if (kind == AS)
       n.addChild(importAsClause());
     else if (kind == SEMICOLON) {
@@ -644,7 +645,7 @@ public class Parser {
       match(Token.Kind.IDENTIFIER);
       n.addChild(new ImportName(mark));
     }
-    // This should sync us to the follower set *** left off here
+    // This should sync us to the follower set IF an error occurred above.
     // CheckOut2 should NOT be necessary! Check-out only job is to sync if
     // there is an error, otherwise do nothing. It should NOT print anything.
 //    checkOut2(FollowSet.IMPORT_QUALIFIED_NAME);
