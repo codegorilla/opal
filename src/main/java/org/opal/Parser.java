@@ -725,6 +725,7 @@ public class Parser {
     while (FirstSet.OTHER_DECLARATION.contains(kind)) {
       n.addChild(otherDeclaration());
     }
+    followerSetStack.pop();
     return n;
   }
 

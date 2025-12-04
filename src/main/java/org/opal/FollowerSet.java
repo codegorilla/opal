@@ -34,31 +34,9 @@ public class FollowerSet {
   public static final EnumSet<Token.Kind> USE_DECLARATION =
     union(FirstSet.USE_DECLARATION, Token.Kind.SEMICOLON);
 
-  // No need for a follower set for other declarations
-
   public static final EnumSet<Token.Kind> OTHER_DECLARATIONS =
     EnumSet.of(Token.Kind.EOF);
-
-
-
-  /*
-  public static final EnumSet<Token.Kind> PERIOD =
-    EnumSet.of(Token.Kind.PERIOD);
-
-  public static final EnumSet<Token.Kind> SEMICOLON =
-    EnumSet.of(Token.Kind.SEMICOLON);
-
-  public static final EnumSet<Token.Kind> USE =
-    EnumSet.of(Token.Kind.USE);
-*/
-
-  private static EnumSet<Token.Kind> union (EnumSet<Token.Kind> a, Token.Kind b, Token.Kind c) {
-    var combined = EnumSet.copyOf(a);
-    combined.add(b);
-    combined.add(c);
-    return combined;
-  }
-
+  
   // Union of two items
 
   private static EnumSet<Token.Kind> union (
