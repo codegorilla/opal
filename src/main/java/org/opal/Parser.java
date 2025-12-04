@@ -375,6 +375,7 @@ public class Parser {
     // Experimental, showing that this is a reverse token lookup, not
     // necessarily a reverse keyword lookup
     keywordLookup.put(Token.Kind.COLON, "':'");
+    keywordLookup.put(Token.Kind.COMMA, "','");
     keywordLookup.put(Token.Kind.SEMICOLON, "';'");
     keywordLookup.put(Token.Kind.EQUAL, "'='");
     keywordLookup.put(Token.Kind.MINUS, "'-'");
@@ -410,18 +411,7 @@ public class Parser {
     var n = new TranslationUnit();
     n.addChild(packageDeclaration());
 
-    // We might need a test that allows us to say that we expect one of
-    // several keywords, not just import. Basically, if we don't see EOF, then
-    // then we expect either import, use, or other declarations.
-    // Do we need a check-in to these?
-
-    if (!FollowSet.PACKAGE_DECLARATION.contains(kind)) {
-      checkError(FollowSet.PACKAGE_DECLARATION);
-    }
-
-    // import => first set => import
-    // !first-use, !first-other, !eof => import
-    // otherwise, epsilon
+    checkIn(FirstSet.REMAINING_DECLARATIONS_1);
     if (kind == IMPORT) {
       n.addChild(importDeclarations());
     }
@@ -429,17 +419,13 @@ public class Parser {
       n.addChild(EPSILON);
     }
 
-    // Should this be a check-in?
-    if (!FollowSet.IMPORT_DECLARATIONS.contains(kind)) {
-      checkError(FollowSet.IMPORT_DECLARATIONS);
-      sync(EnumSet.of(Token.Kind.EOF));
-    }
-
+    checkIn(FirstSet.REMAINING_DECLARATIONS_2);
     if (kind == USE)
       n.addChild(useDeclarations());
     else
       n.addChild(EPSILON);
 
+    checkIn(FirstSet.REMAINING_DECLARATIONS_3);
     if (
       kind == PRIVATE ||
       kind == CLASS   ||
@@ -505,7 +491,8 @@ public class Parser {
     // Might need to set mark in process() not here
     mark = lookahead;
     if (!firstSet.contains(kind)) {
-      checkError(firstSet);
+      if (!errorRecoveryMode)
+        checkError(firstSet);
       mark = new Token(Token.Kind.ERROR, lookahead.getLexeme(), lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
       LOGGER.info("Check-in: created " + mark);
       // Combine first set and all follower sets
@@ -651,12 +638,8 @@ public class Parser {
     confirm(USE);
     var n = new UseDeclaration(mark);
     n.addChild(useQualifiedName());
-    System.out.println("HERE1");
-    followerSetStack.pop();
     match(SEMICOLON);
-    System.out.println("HERE2");
     checkOut();
-    System.out.println("HERE3");
     followerSetStack.pop();
     return n;
   }
@@ -705,27 +688,24 @@ public class Parser {
   // This production has an optional construct that requires proper handling of
   // epsilon productions.
 
-  // No check-in required, arrived on sure path
-
   private AstNode useNameGroup () {
     followerSetStack.push(SET_R_BRACE);
     confirm(L_BRACE);
     var n = new UseNameGroup(mark);
     match(Token.Kind.IDENTIFIER);
     n.addChild(new UseName(mark));
-    if (kind == COMMA) {
-      while (kind == COMMA) {
-        confirm(COMMA);
-        match(Token.Kind.IDENTIFIER);
-        n.addChild(new UseName(mark));
-      }
-    } else if (kind != R_BRACE) {
-      var err = new SyntaxError(sourceLines, "Expected ',' or '}', got " + kind, lookahead);
-      System.out.println(err);
-      recover();
+    checkIn(EnumSet.of(COMMA, R_BRACE));
+    while (kind == COMMA) {
+      confirm(COMMA);
+      match(Token.Kind.IDENTIFIER);
+      n.addChild(new UseName(mark));
+      checkIn(EnumSet.of(COMMA, R_BRACE));
     }
-    followerSetStack.pop();
     match(R_BRACE);
+    checkOut();
+    if (errorRecoveryMode && kind == R_BRACE)
+      confirm(R_BRACE);
+    followerSetStack.pop();
     return n;
   }
 

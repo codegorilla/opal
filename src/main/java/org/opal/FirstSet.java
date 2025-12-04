@@ -39,6 +39,30 @@ public class FirstSet {
   public static final EnumSet<Token.Kind> OTHER_DECLARATIONS =
     FirstSet.OTHER_DECLARATION;
 
+  public static final EnumSet<Token.Kind> REMAINING_DECLARATIONS_1 =
+    union(
+      FirstSet.IMPORT_DECLARATIONS,
+      FirstSet.USE_DECLARATIONS,
+      FirstSet.OTHER_DECLARATIONS,
+      FollowSet.TRANSLATION_UNIT
+    );
+
+  public static final EnumSet<Token.Kind> REMAINING_DECLARATIONS_2 =
+    union(
+      FirstSet.IMPORT_DECLARATIONS,
+      FirstSet.USE_DECLARATIONS,
+      FirstSet.OTHER_DECLARATIONS,
+      FollowSet.TRANSLATION_UNIT
+    );
+
+  public static final EnumSet<Token.Kind> REMAINING_DECLARATIONS_3 =
+    union(
+      FirstSet.USE_DECLARATIONS,
+      FirstSet.OTHER_DECLARATIONS,
+      FollowSet.TRANSLATION_UNIT
+    );
+
+
   public static final EnumSet<Token.Kind> DECLARATOR =
     EnumSet.of (
       Token.Kind.BOOL,
@@ -182,5 +206,79 @@ public class FirstSet {
     Token.Kind.ASTERISK,
     Token.Kind.L_BRACE
   );
+
+
+  // Union of two items
+
+  private static EnumSet<Token.Kind> union (
+    EnumSet<Token.Kind> a,
+    Token.Kind b
+  ) {
+    var combined = EnumSet.copyOf(a);
+    combined.add(b);
+    return combined;
+  }
+
+  private static EnumSet<Token.Kind> union (
+    EnumSet<Token.Kind> a,
+    EnumSet<Token.Kind> b
+  ) {
+    var combined = EnumSet.copyOf(a);
+    combined.addAll(b);
+    return combined;
+  }
+
+  // Union of three items
+
+  private static EnumSet<Token.Kind> union (
+    EnumSet<Token.Kind> a,
+    EnumSet<Token.Kind> b,
+    Token.Kind c
+  ) {
+    var combined = EnumSet.copyOf(a);
+    combined.addAll(b);
+    combined.add(c);
+    return combined;
+  }
+
+  private static EnumSet<Token.Kind> union (
+    EnumSet<Token.Kind> a,
+    EnumSet<Token.Kind> b,
+    EnumSet<Token.Kind> c
+  ) {
+    var combined = EnumSet.copyOf(a);
+    combined.addAll(b);
+    combined.addAll(c);
+    return combined;
+  }
+
+  // Union of four items
+
+  private static EnumSet<Token.Kind> union (
+    EnumSet<Token.Kind> a,
+    EnumSet<Token.Kind> b,
+    EnumSet<Token.Kind> c,
+    Token.Kind d
+  ) {
+    var combined = EnumSet.copyOf(a);
+    combined.addAll(b);
+    combined.addAll(c);
+    combined.add(d);
+    return combined;
+  }
+
+  private static EnumSet<Token.Kind> union (
+    EnumSet<Token.Kind> a,
+    EnumSet<Token.Kind> b,
+    EnumSet<Token.Kind> c,
+    EnumSet<Token.Kind> d
+  ) {
+    var combined = EnumSet.copyOf(a);
+    combined.addAll(b);
+    combined.addAll(c);
+    combined.addAll(d);
+    return combined;
+  }
+
 
 }

@@ -2,7 +2,9 @@ package main ;
 
 import opal.lang as t ;
 
-using opal.lang;
+use opal.lang.{ Bessel + Widget %, };
+
+use opal.math.*;
 
 //import opal.lang;
 
@@ -19,7 +21,6 @@ using opal.lang;
 //var t: float = 5;
 
 //var s: float = 1;
-
 
 
 //var x: *int32[2];
