@@ -1,24 +1,10 @@
-package main ;
+package main;
 
-import opal.lang as t ;
+import opal.lang as test;
 
-use opal.lang.{ Bessel + Widget %, };
+use opal.math.{ ,x + y + z };
 
-use opal.math.*;
-
-//import opal.lang;
-
-//import ash.bee;
-
-//improt import opal.lang;
-
-//use opal.math.bee + + + ;
-
-//use opal.math. + + { + + bee };
-
-//use opal.lang;
-
-//var t: float = 5;
+var t: float = 5;
 
 //var s: float = 1;
 

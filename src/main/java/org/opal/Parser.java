@@ -286,6 +286,26 @@ public class Parser {
     }
   }
 
+  // Kind of like match method, but don't consume?
+
+  private void option (Token.Kind expectedKind, Token.Kind followingKind) {
+    if (kind == expectedKind || kind == followingKind) {
+      // Happy path :)
+      LOGGER.info("Option: matched " + lookahead);
+    } else {
+      // Sad path :(
+      LOGGER.info("Option: entering sad path");
+      // To do: Maybe we should have our own error method for this
+      if (!errorRecoveryMode)
+        checkError(EnumSet.of(expectedKind, followingKind));
+      // Should we at least advance the input stream? If we do, then we
+      // effectively delete the bad token. Different sources say yes or no,
+      // but several seem to indicate that we should NOT consume.
+      errorRecoveryMode = true;
+    }
+  }
+
+
   private void generalError (Token.Kind expectedKind) {
     var expectedKindString = keywordLookup.getOrDefault(expectedKind, friendlyKind(expectedKind));
     var actualKind = lookahead.getKind();
@@ -694,12 +714,14 @@ public class Parser {
     var n = new UseNameGroup(mark);
     match(Token.Kind.IDENTIFIER);
     n.addChild(new UseName(mark));
-    checkIn(EnumSet.of(COMMA, R_BRACE));
+//    checkIn(EnumSet.of(COMMA, R_BRACE));
+    option(COMMA, R_BRACE);
     while (kind == COMMA) {
       confirm(COMMA);
       match(Token.Kind.IDENTIFIER);
       n.addChild(new UseName(mark));
-      checkIn(EnumSet.of(COMMA, R_BRACE));
+      option(COMMA, R_BRACE);
+//      checkIn(EnumSet.of(COMMA, R_BRACE));
     }
     match(R_BRACE);
     checkOut();
