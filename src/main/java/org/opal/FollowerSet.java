@@ -36,7 +36,7 @@ public class FollowerSet {
 
   public static final EnumSet<Token.Kind> OTHER_DECLARATIONS =
     EnumSet.of(Token.Kind.EOF);
-  
+
   // Union of two items
 
   private static EnumSet<Token.Kind> union (
