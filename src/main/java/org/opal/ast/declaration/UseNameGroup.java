@@ -7,8 +7,8 @@ import org.opal.ast.AstNode;
 
 public class UseNameGroup extends AstNode {
 
-  public UseNameGroup (Token token) {
-    super(token);
+  public UseNameGroup () {
+    super();
   }
 
   @Override

@@ -2,7 +2,7 @@ package main;
 
 import opal.lang as test;
 
-use opal.math.{ ,x + y + z };
+use opal.math.{ x, y };
 
 var t: float = 5;
 
@@ -10,7 +10,6 @@ var t: float = 5;
 
 
 //var x: *int32[2];
-
 
 /*
 import opal;
