@@ -286,7 +286,8 @@ public class Parser {
     }
   }
 
-  private void stall (EnumSet<Token.Kind> expectedKinds) {
+  private void panic (EnumSet<Token.Kind> expectedKinds) {
+    LOGGER.info("Panic: panic triggered");
     if (!errorRecoveryMode)
       checkError(expectedKinds);
     errorRecoveryMode = true;
@@ -581,6 +582,7 @@ public class Parser {
     confirm(IMPORT);
     var n = new ImportDeclaration(mark);
     n.addChild(importQualifiedName());
+//    n = importDeclarationTail();
     checkIn(EnumSet.of(AS, SEMICOLON));
     if (kind == AS)
       n.addChild(importAsClause());
@@ -625,6 +627,10 @@ public class Parser {
     match(Token.Kind.IDENTIFIER);
     var n = new ImportName(mark);
     return n;
+  }
+
+  private AstNode importDeclarationTail () {
+    return null;
   }
 
   private AstNode useDeclarations () {
@@ -703,7 +709,7 @@ public class Parser {
         match(Token.Kind.IDENTIFIER);
         n.addChild(new UseName(mark));
       } else {
-        stall(EnumSet.of(COMMA, R_BRACE));
+        panic(EnumSet.of(COMMA, R_BRACE));
         break;
       }
     }

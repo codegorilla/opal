@@ -2,9 +2,9 @@ package main;
 
 import opal.lang as test;
 
-use opal.math.{ x, y };
+//use opal.math.{ Bessel, Jacobian + + };
 
-var t: float = 5;
+//var t: float = 5;
 
 //var s: float = 1;
 
