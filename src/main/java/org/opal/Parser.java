@@ -56,7 +56,7 @@ public class Parser {
 
   // Used to collect modifier nodes in preparation for aggregation into
   // specialized modifiers nodes.
-  private final LinkedList<AstNode> modifierStack;
+  private final LinkedList<Modifier> modifierStack;
 
   // Used for symbol table operations. Cobalt requires a symbol table during
   // parsing in order to disambiguate a few grammar rules. We cannot wait until
@@ -434,7 +434,7 @@ public class Parser {
       kind == VAL     ||
       kind == VAR
     ) {
-      n.addChild(otherDeclarations());
+      n.setOtherDeclarations(otherDeclarations());
     }
 
     System.out.println("HERE");
@@ -648,8 +648,7 @@ public class Parser {
     UseQualifiedName n = new UseQualifiedName();
     match(Token.Kind.IDENTIFIER);
     var p = new UseName(mark);
-    // Might need to be set
-    n.addUseName(p);
+    n.setUseName(p);
     match(PERIOD);
     p.setChild(useQualifiedNameTail());
     return n;
@@ -714,12 +713,12 @@ public class Parser {
 //        throw new RuntimeException(e);
 //      }
 
-  private AstNode otherDeclarations () {
+  private OtherDeclarations otherDeclarations () {
     followerSetStack.push(FollowerSet.OTHER_DECLARATIONS);
     checkIn(FirstSet.OTHER_DECLARATIONS);
     var n = new OtherDeclarations();
     while (FirstSet.OTHER_DECLARATION.contains(kind)) {
-      n.addChild(otherDeclaration());
+      n.addOtherDeclaration(otherDeclaration());
     }
     followerSetStack.pop();
     return n;
@@ -730,12 +729,13 @@ public class Parser {
 
   private AstNode otherDeclaration () {
     followerSetStack.push(FirstSet.OTHER_DECLARATION);
-    AstNode p;
+    ExportSpecifier p;
     if (kind == PRIVATE) {
-      confirm(PRIVATE);
+      consume();
       p = new ExportSpecifier(mark);
     } else {
-      p = EPSILON;
+      // Maybe change to EPSILON later
+      p = null;
     }
     AstNode n = null;
     if (kind == TEMPLATE) {
@@ -751,6 +751,12 @@ public class Parser {
       else if (kind == VAL || kind == VAR)
         n = variableDeclaration(p);
       else {
+        panic(EnumSet.of(CLASS, TYPEALIAS, DEF, VAL, VAR));
+        modifierStack.clear();
+      }
+
+      /*
+      else {
         checkError(EnumSet.of(CLASS, TYPEALIAS, DEF, VAL, VAR));
         mark = lookahead;
         var combined = combine();
@@ -758,6 +764,7 @@ public class Parser {
         modifierStack.clear();
         n = new ErrorNode(mark);
       }
+      */
     }
     followerSetStack.pop();
     return n;
@@ -1158,36 +1165,36 @@ public class Parser {
   // following set. This is not a pure approach, as we previously assumed that
   // all members of the following set had to at least be in the FOLLOW set.
 
-  private AstNode variableDeclaration (AstNode exportSpecifier) {
+  // Check-out?
+
+  private AstNode variableDeclaration (ExportSpecifier exportSpecifier) {
     followerSetStack.push(EnumSet.of(SEMICOLON));
     confirm(kind == VAL ? VAL : VAR);
     var n = new VariableDeclaration(mark);
-    n.addChild(exportSpecifier);
-    n.addChild(variableModifiers());
+    n.setExportSpecifier(exportSpecifier);
+    n.setModifiers(variableModifiers());
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new VariableName(mark));
+    n.setName(new VariableName(mark));
     if (kind == COLON) {
-      n.addChild(variableTypeSpecifier());
+      n.setTypeSpecifier(variableTypeSpecifier());
       if (kind == EQUAL)
-        n.addChild(variableInitializer());
-      else
-        n.addChild(EPSILON);
+        n.setInitializer(variableInitializer());
     } else if (kind == EQUAL) {
-      n.addChild(EPSILON);
-      n.addChild(variableInitializer());
+      n.setInitializer(variableInitializer());
     } else {
-      checkError(EnumSet.of(COLON, EQUAL));
-      // Might not need to mark
-      mark = lookahead;
-      var combined = combine();
-      sync(combined);
+      panic(EnumSet.of(COLON, EQUAL));
+//      checkError(EnumSet.of(COLON, EQUAL));
+//      // Might not need to mark
+//      mark = lookahead;
+//      var combined = combine();
+//      sync(combined);
     }
     followerSetStack.pop();
     match(SEMICOLON);
     return n;
   }
 
-  private AstNode variableModifiers () {
+  private VariableModifiers variableModifiers () {
     var n = new VariableModifiers();
     while (!modifierStack.isEmpty())
       n.addChild(modifierStack.pop());
@@ -1197,7 +1204,7 @@ public class Parser {
   // Is this only ever arrived at on a sure path? If so, we can replace the
   // match method with confirm.
 
-  private AstNode variableTypeSpecifier () {
+  private VariableTypeSpecifier variableTypeSpecifier () {
     followerSetStack.push(EnumSet.of(EQUAL));
     match(Token.Kind.COLON);
     var n = new VariableTypeSpecifier(mark);
@@ -1206,7 +1213,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode variableInitializer () {
+  private VariableInitializer variableInitializer () {
     followerSetStack.push(EnumSet.of(SEMICOLON));
     match(EQUAL);
     var n = new VariableInitializer(mark);

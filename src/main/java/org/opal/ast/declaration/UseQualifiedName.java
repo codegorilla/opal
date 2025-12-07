@@ -9,7 +9,7 @@ import org.opal.ast.AstNode;
 
 public class UseQualifiedName extends AstNode {
 
-  private final LinkedList<UseName> children = new LinkedList<>();
+  private UseName useName = null;
 
   public UseQualifiedName () {}
 
@@ -22,13 +22,13 @@ public class UseQualifiedName extends AstNode {
   public <T> T accept (ResultVisitor<T> v) {
     return v.visit(this);
   }
-
-  public Iterable<UseName> getChildrenX () {
-    return children;
+  
+  public UseName useName () {
+    return useName;
   }
 
-  public void addUseName (UseName useName) {
-    children.add(useName);
+  public void setUseName (UseName useName) {
+    this.useName = useName;
   }
 
 }

@@ -1,16 +1,18 @@
 package org.opal.ast.declaration;
 
+import java.util.LinkedList;
+
 import org.opal.ResultVisitor;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 import org.stringtemplate.v4.ST;
 
-import java.util.LinkedList;
-
 public class OtherDeclarations extends AstNode {
 
   // Leave public for now while experimenting
   public LinkedList<ST> templates;
+
+  private final LinkedList<AstNode> children = new LinkedList<>();
 
   public OtherDeclarations () {
     super();
@@ -27,10 +29,12 @@ public class OtherDeclarations extends AstNode {
     return v.visit(this);
   }
 
-  // Deprecate these methods that ruturn Iterable<AstNode>. Use getChildren()
-  // instead to solve naming consistency issue.
-//  public Iterable<AstNode> otherDeclarations () {
-//    return getChildren();
-//  }
+  public Iterable<AstNode> children () {
+    return children;
+  }
+
+  public void addOtherDeclaration (AstNode otherDeclaration) {
+    children.add(otherDeclaration);
+  }
 
 }

@@ -21,6 +21,10 @@ public class Pass1 extends BaseVisitor {
     visit(node.packageDeclaration());
     if (node.hasImportDeclarations())
       visit(node.importDeclarations());
+    if (node.hasUseDeclarations())
+      visit(node.useDeclarations());
+    if (node.hasOtherDeclarations())
+      visit(node.otherDeclarations());
   }
 
   public void visit (PackageDeclaration node) {
@@ -39,7 +43,7 @@ public class Pass1 extends BaseVisitor {
   public void visit (ImportDeclarations node) {
     depth.increment();
     printNode(node);
-    for (var importDeclaration : node.getChildrenX())
+    for (var importDeclaration : node.children())
       visit(importDeclaration);
     depth.decrement();
   }
@@ -56,7 +60,7 @@ public class Pass1 extends BaseVisitor {
   public void visit (ImportQualifiedName node) {
     depth.increment();
     printNode(node);
-    for (var importName : node.getChildrenX())
+    for (var importName : node.children())
       visit(importName);
     depth.decrement();
   }
@@ -68,6 +72,64 @@ public class Pass1 extends BaseVisitor {
   }
 
   public void visit (ImportAsName node) {
+    depth.increment();
+    printNode(node);
+    depth.decrement();
+  }
+
+  public void visit (UseDeclarations node) {
+    depth.increment();
+    printNode(node);
+    for (var useDeclaration : node.children())
+      visit(useDeclaration);
+    depth.decrement();
+  }
+
+  public void visit (UseDeclaration node) {
+    depth.increment();
+    printNode(node);
+    visit(node.qualifiedName());
+    depth.decrement();
+  }
+
+  public void visit (UseQualifiedName node) {
+    depth.increment();
+    printNode(node);
+    visit(node.useName());
+    depth.decrement();
+  }
+
+  public void visit (UseName node) {
+    depth.increment();
+    printNode(node);
+    if (node.hasChild())
+      node.child().accept(this);
+    depth.decrement();
+  }
+
+  public void visit (UseNameGroup node) {
+    depth.increment();
+    printNode(node);
+    for (var child : node.children())
+      visit(child);
+    depth.decrement();
+  }
+
+  public void visit (UseNameWildcard node) {
+    depth.increment();
+    printNode(node);
+    depth.decrement();
+  }
+
+  public void visit (OtherDeclarations node) {
+    depth.increment();
+    printNode(node);
+    for (var otherDeclaration : node.children())
+      otherDeclaration.accept(this);
+    depth.decrement();
+  }
+
+  public void visit (VariableDeclaration node) {
     depth.increment();
     printNode(node);
     depth.decrement();

@@ -23,7 +23,7 @@ public class ImportQualifiedName extends AstNode {
     return v.visit(this);
   }
 
-  public Iterable<ImportName> getChildrenX () {
+  public Iterable<ImportName> children () {
     return children;
   }
 

@@ -26,10 +26,14 @@ public class UseName extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode getChild () {
+  public boolean hasChild () {
+    return child != null;
+  }
+
+  public AstNode child () {
     return child;
   }
-  
+
   public void setChild (AstNode child) {
     this.child = child;
   }

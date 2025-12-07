@@ -22,7 +22,7 @@ public class UseDeclarations extends AstNode {
     return v.visit(this);
   }
 
-  public Iterable<UseDeclaration> getChildrenX () {
+  public Iterable<UseDeclaration> children () {
     return children;
   }
 

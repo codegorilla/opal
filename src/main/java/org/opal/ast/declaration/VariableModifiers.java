@@ -4,11 +4,13 @@ import org.opal.ResultVisitor;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
+import java.util.LinkedList;
+
 public class VariableModifiers extends AstNode {
 
-  public VariableModifiers () {
-    super();
-  }
+  private final LinkedList<Modifier> modifiers = new LinkedList<>();
+
+  public VariableModifiers () {}
 
   @Override
   public void accept (Visitor v) {
@@ -20,8 +22,8 @@ public class VariableModifiers extends AstNode {
     return v.visit(this);
   }
 
-  public Iterable<AstNode> getModifiers () {
-    return getChildren();
+  public Iterable<Modifier> modifiers () {
+    return modifiers;
   }
 
 }

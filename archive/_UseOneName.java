@@ -4,9 +4,9 @@ import org.opal.ResultVisitor;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class UseOneName extends AstNode {
+public class _UseOneName extends AstNode {
 
-  public UseOneName () {
+  public _UseOneName () {
     super();
   }
 

@@ -9,7 +9,7 @@ import org.opal.ast.AstNode;
 
 public class UseNameGroup extends AstNode {
 
-  private final LinkedList<AstNode> children = new LinkedList<>();
+  private final LinkedList<UseName> children = new LinkedList<>();
 
   public UseNameGroup () {}
 
@@ -23,7 +23,7 @@ public class UseNameGroup extends AstNode {
     return v.visit(this);
   }
 
-  public Iterable<AstNode> getChildrenX () {
+  public Iterable<UseName> children () {
     return children;
   }
 

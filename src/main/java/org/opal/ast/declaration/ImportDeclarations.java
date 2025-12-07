@@ -23,7 +23,7 @@ public class ImportDeclarations extends AstNode {
     return v.visit(this);
   }
 
-  public Iterable<ImportDeclaration> getChildrenX () {
+  public Iterable<ImportDeclaration> children () {
     return children;
   }
 
