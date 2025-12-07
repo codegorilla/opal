@@ -10,7 +10,7 @@ import org.opal.ast.AstNode;
 
 public class ImportDeclarations extends AstNode {
 
-  private final LinkedList<ImportDeclaration> importDeclarations = new LinkedList<>();
+  private final LinkedList<ImportDeclaration> children = new LinkedList<>();
 
   public ImportDeclarations () {}
 
@@ -24,12 +24,12 @@ public class ImportDeclarations extends AstNode {
     return v.visit(this);
   }
 
-  public Iterable<ImportDeclaration> importDeclarations () {
-    return importDeclarations;
+  public Iterable<ImportDeclaration> getChildrenX () {
+    return children;
   }
 
   public void addImportDeclaration (ImportDeclaration importDeclaration) {
-    importDeclarations.add(importDeclaration);
+    children.add(importDeclaration);
   }
 
 }

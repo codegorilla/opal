@@ -86,12 +86,14 @@ public class Pass10 extends BaseVisitor {
     }
   }
 
+  /*
   public void visit (ImportDeclarations node) {
     System.out.println("Import Declarations");
     for (var importDeclaration : node.importDeclarations()) {
       visit(importDeclaration);
     }
   }
+   */
 
   public void visit (ImportDeclaration node) {
     if (node.hasAsName()) {

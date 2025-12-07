@@ -6,10 +6,10 @@ import org.opal.ast.declaration.*;
 
 public class TranslationUnit extends AstNode {
 
-  private PackageDeclaration packageDeclaration;
-  private ImportDeclarations importDeclarations;
-  private UseDeclarations useDeclarations;
-  private OtherDeclarations otherDeclarations;
+  private PackageDeclaration packageDeclaration = null;
+  private ImportDeclarations importDeclarations = null;
+  private UseDeclarations useDeclarations = null;
+  private OtherDeclarations otherDeclarations = null;
 
   public TranslationUnit () {
     super();
@@ -31,6 +31,10 @@ public class TranslationUnit extends AstNode {
 
   public void setPackageDeclaration (PackageDeclaration packageDeclaration) {
     this.packageDeclaration = packageDeclaration;
+  }
+
+  public boolean hasImportDeclarations () {
+    return importDeclarations != null;
   }
 
   public ImportDeclarations getImportDeclarations () {

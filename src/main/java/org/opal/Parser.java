@@ -417,16 +417,10 @@ public class Parser {
     followerSetStack.push(EnumSet.of(Token.Kind.EOF));
     var n = new TranslationUnit();
     n.setPackageDeclaration(packageDeclaration());
-    //n.addChild(packageDeclaration());
 
     checkIn(FirstSet.REMAINING_DECLARATIONS_1);
-    if (kind == IMPORT) {
+    if (kind == IMPORT)
       n.setImportDeclarations(importDeclarations());
-//      n.addChild(importDeclarations());
-    }
-    else {
-      n.addChild(EPSILON);
-    }
 
     checkIn(FirstSet.REMAINING_DECLARATIONS_2);
     if (kind == USE)
@@ -488,11 +482,6 @@ public class Parser {
     for (var followerSet : followerSetStack)
       combined.addAll(followerSet);
     return combined;
-  }
-
-  private void recover () {
-    var combined = combine();
-    sync(combined);
   }
 
   private void checkIn (EnumSet<Token.Kind> firstSet) {

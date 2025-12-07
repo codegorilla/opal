@@ -26,7 +26,8 @@ public class Pass1 extends BaseVisitor {
     depth.increment();
     printNode(node);
     visit(node.getPackageDeclaration());
-    visit(node.getImportDeclarations());
+    if (node.hasImportDeclarations())
+      visit(node.getImportDeclarations());
     depth.decrement();
   }
 
@@ -39,7 +40,7 @@ public class Pass1 extends BaseVisitor {
   public void visit (ImportDeclarations node) {
     depth.increment();
     printNode(node);
-    for (var importDeclaration : node.importDeclarations())
+    for (var importDeclaration : node.getChildrenX())
       visit(importDeclaration);
     depth.decrement();
   }
