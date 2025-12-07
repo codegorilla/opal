@@ -23,15 +23,20 @@ public class Pass1 extends BaseVisitor {
   }
 
   public void visit (TranslationUnit node ) {
-    depth.increment();
     printNode(node);
     visit(node.getPackageDeclaration());
     if (node.hasImportDeclarations())
       visit(node.getImportDeclarations());
-    depth.decrement();
   }
 
   public void visit (PackageDeclaration node) {
+    depth.increment();
+    printNode(node);
+    visit(node.getPackageName());
+    depth.decrement();
+  }
+
+  public void visit (PackageName node) {
     depth.increment();
     printNode(node);
     depth.decrement();

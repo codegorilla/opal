@@ -43,17 +43,9 @@ public class ImportDeclaration extends AstNode {
     return asName;
   }
 
-//  public AstNode qualifiedName () {
-//    return getChild(0);
-//  }
-
   public boolean hasAsName () {
-    return getChild(1) != null;
+    return asName != null;
   }
-
-//  public AstNode asName () {
-//    return getChild(1);
-//  }
 
   public String getAliasAttribute () {
     return aliasAttribute;

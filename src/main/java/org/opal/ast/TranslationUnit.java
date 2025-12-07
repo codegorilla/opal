@@ -44,6 +44,18 @@ public class TranslationUnit extends AstNode {
   public void setImportDeclarations (ImportDeclarations importDeclarations) {
     this.importDeclarations = importDeclarations;
   }
+  
+  public boolean hasUseDeclarations () {
+    return useDeclarations != null;
+  }
+
+  public UseDeclarations getUseDeclarations () {
+    return useDeclarations;
+  }
+
+  public void setUseDeclarations (UseDeclarations useDeclarations) {
+    this.useDeclarations = useDeclarations;
+  }
 
 
   // This needs to be updated

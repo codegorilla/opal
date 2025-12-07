@@ -424,9 +424,7 @@ public class Parser {
 
     checkIn(FirstSet.REMAINING_DECLARATIONS_2);
     if (kind == USE)
-      n.addChild(useDeclarations());
-    else
-      n.addChild(EPSILON);
+      n.setUseDeclarations(useDeclarations());
 
     checkIn(FirstSet.REMAINING_DECLARATIONS_3);
     if (
@@ -534,7 +532,7 @@ public class Parser {
     if (kind == PACKAGE) {
       confirm(PACKAGE);
       match(Token.Kind.IDENTIFIER);
-      n.addChild(new PackageName(mark));
+      n.setPackageName(new PackageName(mark));
       match(SEMICOLON);
     }
     checkOut();
@@ -598,11 +596,11 @@ public class Parser {
     checkIn(FirstSet.IMPORT_QUALIFIED_NAME);
     var n = new ImportQualifiedName();
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new ImportName(mark));
+    n.addImportName(new ImportName(mark));
     while (kind == PERIOD) {
       confirm(PERIOD);
       match(Token.Kind.IDENTIFIER);
-      n.addChild(new ImportName(mark));
+      n.addImportName(new ImportName(mark));
     }
     checkOut();
     followerSetStack.pop();
@@ -617,27 +615,23 @@ public class Parser {
     return n;
   }
 
-  private AstNode importDeclarationTail () {
-    return null;
-  }
-
-  private AstNode useDeclarations () {
+  private UseDeclarations useDeclarations () {
     followerSetStack.push(FollowerSet.USE_DECLARATIONS);
     // No check-in required
     var n = new UseDeclarations();
-    n.addChild(useDeclaration());
+    n.addUseDeclaration(useDeclaration());
     while (kind == USE)
-      n.addChild(useDeclaration());
+      n.addUseDeclaration(useDeclaration());
     followerSetStack.pop();
     return n;
   }
 
-  private AstNode useDeclaration () {
+  private UseDeclaration useDeclaration () {
     followerSetStack.push(FollowerSet.USE_DECLARATION);
     // No check-in required
     confirm(USE);
     var n = new UseDeclaration(mark);
-    n.addChild(useQualifiedName());
+    n.setQualifiedName(useQualifiedName());
     match(SEMICOLON);
     checkOut();
     followerSetStack.pop();
@@ -650,13 +644,14 @@ public class Parser {
   // call. Otherwise, it is used directly in a match method call within the
   // non-terminal production method.
 
-  private AstNode useQualifiedName () {
-    AstNode n = new UseQualifiedName();
+  private UseQualifiedName useQualifiedName () {
+    UseQualifiedName n = new UseQualifiedName();
     match(Token.Kind.IDENTIFIER);
     var p = new UseName(mark);
-    n.addChild(p);
+    // Might need to be set
+    n.addUseName(p);
     match(PERIOD);
-    p.addChild(useQualifiedNameTail());
+    p.setChild(useQualifiedNameTail());
     return n;
   }
 
@@ -664,25 +659,26 @@ public class Parser {
   // there are several options to choose from, none of which are the epsilon
   // production.
 
+  // To do: No check-out here?
+
   private AstNode useQualifiedNameTail () {
-    AstNode n;
     checkIn(FirstSet.USE_QUALIFIED_NAME_TAIL);
     if (kind == ASTERISK) {
-      confirm(ASTERISK);
-      n = new UseNameWildcard(mark);
+      consume();
+      return new UseNameWildcard(mark);
     } else if (kind == L_BRACE) {
-      n = useNameGroup();
+      return useNameGroup();
     } else if (kind == Token.Kind.IDENTIFIER) {
       confirm(Token.Kind.IDENTIFIER);
-      n = new UseName(mark);
+      var n = new UseName(mark);
       if (kind == PERIOD) {
-        confirm(PERIOD);
-        n.addChild(useQualifiedNameTail());
+        consume();
+        n.setChild(useQualifiedNameTail());
       }
+      return n;
     } else {
-      n = new ErrorNode(mark);
+      return new ErrorNode(mark);
     }
-    return n;
   }
 
   private AstNode useNameGroup () {
@@ -690,12 +686,12 @@ public class Parser {
     confirm(L_BRACE);
     var n = new UseNameGroup();
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new UseName(mark));
+    n.addUseName(new UseName(mark));
     while (kind != R_BRACE) {
       if (kind == COMMA) {
-        confirm(COMMA);
+        consume();
         match(Token.Kind.IDENTIFIER);
-        n.addChild(new UseName(mark));
+        n.addUseName(new UseName(mark));
       } else {
         panic(EnumSet.of(COMMA, R_BRACE));
         break;
@@ -704,7 +700,7 @@ public class Parser {
     match(R_BRACE);
     checkOut();
     if (errorRecoveryMode && kind == R_BRACE)
-      confirm(R_BRACE);
+      consume();
     followerSetStack.pop();
     return n;
   }

@@ -4,7 +4,11 @@ import org.opal.ResultVisitor;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
+import java.util.LinkedList;
+
 public class UseDeclarations extends AstNode {
+
+  private final LinkedList<UseDeclaration> children = new LinkedList<>();
 
   public UseDeclarations () {}
 
@@ -16,6 +20,14 @@ public class UseDeclarations extends AstNode {
   @Override
   public <T> T accept (ResultVisitor<T> v) {
     return v.visit(this);
+  }
+
+  public Iterable<UseDeclaration> getChildrenX () {
+    return children;
+  }
+
+  public void addUseDeclaration (UseDeclaration useDeclaration) {
+    children.add(useDeclaration);
   }
 
 }

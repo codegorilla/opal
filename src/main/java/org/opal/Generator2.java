@@ -85,8 +85,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
 
   public ST visit (PackageDeclaration node) {
     var st = group.getInstanceOf("interface/declaration/moduleDeclaration");
-    for (var name : node.names())
-      st.add("name", visit(name));
+    st.add("name", visit(node.getPackageName()));
     return st;
   }
 
@@ -126,11 +125,11 @@ public class Generator2 extends BaseResultVisitor<ST> {
     ST st;
     if (importPass == 0) {
       st = group.getInstanceOf("interface/declaration/importQualifiedName");
-      for (var name : node.names())
+      for (var name : node.getChildrenX())
         st.add("name", visit(name));
     } else {
       st = group.getInstanceOf("interface/declaration/namespaceQualifiedName");
-      for (var name : node.names())
+      for (var name : node.getChildrenX())
         st.add("name", visit(name));
     }
     // Alternate between first and second pass
@@ -160,14 +159,14 @@ public class Generator2 extends BaseResultVisitor<ST> {
   // one declaration.
 
   public ST visit (UseDeclaration node) {
-    genStack.push(visit(node.useQualifiedName()));
+    genStack.push(visit(node.qualifiedName()));
     var st = visit(node.getLastChild());
     return st;
   }
 
   public ST visit (UseQualifiedName node) {
     var st = group.getInstanceOf("interface/declaration/usingQualifiedName");
-    for (var useName : node.names())
+    for (var useName : node.getChildrenX())
       st.add("usingName", visit(useName));
     return st;
   }

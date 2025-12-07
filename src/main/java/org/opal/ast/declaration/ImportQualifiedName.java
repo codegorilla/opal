@@ -1,15 +1,17 @@
 package org.opal.ast.declaration;
 
+import java.util.LinkedList;
+
 import org.opal.ResultVisitor;
-import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
+
 public class ImportQualifiedName extends AstNode {
 
-  public ImportQualifiedName () {
-    super();
-  }
+  private final LinkedList<ImportName> children = new LinkedList<>();
+
+  public ImportQualifiedName () {}
 
   @Override
   public void accept (Visitor v) {
@@ -21,8 +23,12 @@ public class ImportQualifiedName extends AstNode {
     return v.visit(this);
   }
 
-  public Iterable<AstNode> names () {
-    return getChildren();
+  public Iterable<ImportName> getChildrenX () {
+    return children;
+  }
+
+  public void addImportName (ImportName importName) {
+    children.add(importName);
   }
 
 }
