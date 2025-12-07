@@ -1,6 +1,7 @@
 package org.opal;
 
 import org.opal.ast.*;
+import org.opal.ast.declaration.*;
 
 public class Pass1 extends BaseVisitor {
 
@@ -12,18 +13,59 @@ public class Pass1 extends BaseVisitor {
 
   public void process () {
     System.out.println("---");
-    visit(root);
+    visit((TranslationUnit) root);
+    //printNode((TranslationUnit)root);
   }
 
+
   public void visit (AstNode node) {
-    printNode(node);
+    node.accept(this);
+  }
+
+  public void visit (TranslationUnit node ) {
     depth.increment();
-    var children = node.getChildren();
-    for (var child : children)
-      if (child != null)
-        visit(child);
+    printNode(node);
+    visit(node.getPackageDeclaration());
+    if (node.hasImportDeclarations())
+      visit(node.getImportDeclarations());
     depth.decrement();
   }
+
+  public void visit (PackageDeclaration node) {
+    depth.increment();
+    printNode(node);
+    depth.decrement();
+  }
+
+  public void visit (ImportDeclarations node) {
+    depth.increment();
+    printNode(node);
+    for (var importDeclaration : node.getChildrenX())
+      visit(importDeclaration);
+    depth.decrement();
+  }
+
+  public void visit (ImportDeclaration node) {
+    depth.increment();
+    printNode(node);
+    depth.decrement();
+  }
+
+  /*
+  public void printNode (TranslationUnit node) {
+    System.out.println("GOT TU!");
+    var n = node.getChild(0);
+    n.accept(this);
+  }
+   */
+
+//  public void printNode (PackageDeclaration node) {
+//    System.out.println("GOT PACKAGE DECL");
+//  }
+//
+//  public void printNode (ImportDeclaration node) {
+//    System.out.println("GOT HERE!");
+//  }
 
   public void printNode (AstNode node) {
     var INDENT_SPACES = 2;

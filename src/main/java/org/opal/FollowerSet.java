@@ -2,47 +2,111 @@ package org.opal;
 
 import java.util.EnumSet;
 
-// This differs from following set. This is used for single-token insertion
-// in the match() method, whereas the former is used to construct a sync set
-// for synchronization in the sync() method. The follower set may actually be
-// equivalent to the sync set in some situations, but not always. However, it
-// is always comprises a subset of the sync set. Unfortunately, we cannot
-// automatically construct the follower set from the sync set because it isn't
-// easy to automatically determine which elements of the sync set belong to the
-// follower set.
+// These are really FOLLOWER sets, which differ from FOLLOW sets in two ways.
+// First, each follower set is a context-dependent set of tokens based on the
+// the current call stack. They get combined into a full set prior to
+// synchronization, and thus the full set is dynamic, not static. Second, the
+// follower set may contain tokens that do not strictly follow a production,
+// but are part of the production itself. For example, many statements include
+// a semicolon terminator as part of the production itself. But these are added
+// to the FOLLOWER set even though they are not part of the FOLLOW set.
 
-// NEW: I think this might be best suited to hold singleton sets that follow
-// tokens in a match method call.
+// According to online sources, EOF should be in the FOLLOW set of the start
+// symbol. It may be in the follow sets of other non-terminals.
 
 public class FollowerSet {
 
-  public static final EnumSet<Token.Kind> COLON =
-    EnumSet.of(Token.Kind.EQUAL);
+  public static final EnumSet<Token.Kind> PACKAGE_DECLARATION =
+    union(FirstSet.IMPORT_DECLARATIONS, FirstSet.USE_DECLARATIONS, FirstSet.OTHER_DECLARATIONS, Token.Kind.SEMICOLON);
 
-  public static final EnumSet<Token.Kind> EQUAL =
-    EnumSet.of(Token.Kind.EQUAL);
+  public static final EnumSet<Token.Kind> IMPORT_DECLARATIONS =
+    union(FirstSet.USE_DECLARATIONS, FirstSet.OTHER_DECLARATIONS);
 
-  public static final EnumSet<Token.Kind> EXPRESSION =
-    EnumSet.of(
-      Token.Kind.FALSE,
-      Token.Kind.TRUE,
-      Token.Kind.CHARACTER_LITERAL,
-      Token.Kind.STRING_LITERAL,
-      Token.Kind.FLOAT32_LITERAL,
-      Token.Kind.FLOAT64_LITERAL,
-      Token.Kind.INT32_LITERAL,
-      Token.Kind.INT64_LITERAL,
-      Token.Kind.UINT32_LITERAL,
-      Token.Kind.UINT64_LITERAL,
-      Token.Kind.AMPERSAND,
-      Token.Kind.ASTERISK,
-      Token.Kind.L_PARENTHESIS,
-      Token.Kind.MINUS,
-      Token.Kind.PLUS,
-      Token.Kind.TILDE
-    );
+  public static final EnumSet<Token.Kind> IMPORT_DECLARATION =
+    union(FirstSet.IMPORT_DECLARATION, Token.Kind.SEMICOLON);
 
-  public static final EnumSet<Token.Kind> L_PARENTHESIS =
-    EnumSet.of(Token.Kind.L_PARENTHESIS);
+  public static final EnumSet<Token.Kind> IMPORT_QUALIFIED_NAME =
+    EnumSet.of(Token.Kind.AS);
+
+  public static final EnumSet<Token.Kind> USE_DECLARATIONS =
+    FirstSet.OTHER_DECLARATIONS;
+
+  public static final EnumSet<Token.Kind> USE_DECLARATION =
+    union(FirstSet.USE_DECLARATION, Token.Kind.SEMICOLON);
+
+  public static final EnumSet<Token.Kind> OTHER_DECLARATIONS =
+    EnumSet.of(Token.Kind.EOF);
+
+  // Union of two items
+
+  private static EnumSet<Token.Kind> union (
+    EnumSet<Token.Kind> a,
+    Token.Kind b
+  ) {
+    var combined = EnumSet.copyOf(a);
+    combined.add(b);
+    return combined;
+  }
+
+  private static EnumSet<Token.Kind> union (
+    EnumSet<Token.Kind> a,
+    EnumSet<Token.Kind> b
+  ) {
+    var combined = EnumSet.copyOf(a);
+    combined.addAll(b);
+    return combined;
+  }
+
+  // Union of three items
+
+  private static EnumSet<Token.Kind> union (
+    EnumSet<Token.Kind> a,
+    EnumSet<Token.Kind> b,
+    Token.Kind c
+  ) {
+    var combined = EnumSet.copyOf(a);
+    combined.addAll(b);
+    combined.add(c);
+    return combined;
+  }
+
+  private static EnumSet<Token.Kind> union (
+    EnumSet<Token.Kind> a,
+    EnumSet<Token.Kind> b,
+    EnumSet<Token.Kind> c
+  ) {
+    var combined = EnumSet.copyOf(a);
+    combined.addAll(b);
+    combined.addAll(c);
+    return combined;
+  }
+
+  // Union of four items
+
+  private static EnumSet<Token.Kind> union (
+    EnumSet<Token.Kind> a,
+    EnumSet<Token.Kind> b,
+    EnumSet<Token.Kind> c,
+    Token.Kind d
+  ) {
+    var combined = EnumSet.copyOf(a);
+    combined.addAll(b);
+    combined.addAll(c);
+    combined.add(d);
+    return combined;
+  }
+
+  private static EnumSet<Token.Kind> union (
+    EnumSet<Token.Kind> a,
+    EnumSet<Token.Kind> b,
+    EnumSet<Token.Kind> c,
+    EnumSet<Token.Kind> d
+  ) {
+    var combined = EnumSet.copyOf(a);
+    combined.addAll(b);
+    combined.addAll(c);
+    combined.addAll(d);
+    return combined;
+  }
 
 }

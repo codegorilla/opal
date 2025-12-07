@@ -1,11 +1,16 @@
 package org.opal.ast.declaration;
 
+import java.util.LinkedList;
+
 import org.opal.ResultVisitor;
 import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
+
 public class ImportDeclarations extends AstNode {
+
+  private final LinkedList<ImportDeclaration> children = new LinkedList<>();
 
   public ImportDeclarations () {}
 
@@ -19,7 +24,12 @@ public class ImportDeclarations extends AstNode {
     return v.visit(this);
   }
 
-  public Iterable<AstNode> importDeclarations () {
-    return getChildren();
+  public Iterable<ImportDeclaration> getChildrenX () {
+    return children;
   }
+
+  public void addImportDeclaration (ImportDeclaration importDeclaration) {
+    children.add(importDeclaration);
+  }
+
 }
