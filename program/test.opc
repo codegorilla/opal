@@ -1,7 +1,7 @@
 package main;
 
 import opal.lang;
-import opal.math;
+import opal.math as m;
 
 use opal.math.{ Bessel, Jacobian };
 

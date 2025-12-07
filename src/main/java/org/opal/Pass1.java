@@ -13,26 +13,20 @@ public class Pass1 extends BaseVisitor {
 
   public void process () {
     System.out.println("---");
-    visit((TranslationUnit) root);
-    //printNode((TranslationUnit)root);
-  }
-
-
-  public void visit (AstNode node) {
-    node.accept(this);
+    visit((TranslationUnit)root);
   }
 
   public void visit (TranslationUnit node ) {
     printNode(node);
-    visit(node.getPackageDeclaration());
+    visit(node.packageDeclaration());
     if (node.hasImportDeclarations())
-      visit(node.getImportDeclarations());
+      visit(node.importDeclarations());
   }
 
   public void visit (PackageDeclaration node) {
     depth.increment();
     printNode(node);
-    visit(node.getPackageName());
+    visit(node.packageName());
     depth.decrement();
   }
 
@@ -53,24 +47,31 @@ public class Pass1 extends BaseVisitor {
   public void visit (ImportDeclaration node) {
     depth.increment();
     printNode(node);
+    visit(node.qualifiedName());
+    if (node.hasAsName())
+      visit(node.asName());
     depth.decrement();
   }
 
-  /*
-  public void printNode (TranslationUnit node) {
-    System.out.println("GOT TU!");
-    var n = node.getChild(0);
-    n.accept(this);
+  public void visit (ImportQualifiedName node) {
+    depth.increment();
+    printNode(node);
+    for (var importName : node.getChildrenX())
+      visit(importName);
+    depth.decrement();
   }
-   */
 
-//  public void printNode (PackageDeclaration node) {
-//    System.out.println("GOT PACKAGE DECL");
-//  }
-//
-//  public void printNode (ImportDeclaration node) {
-//    System.out.println("GOT HERE!");
-//  }
+  public void visit (ImportName node) {
+    depth.increment();
+    printNode(node);
+    depth.decrement();
+  }
+
+  public void visit (ImportAsName node) {
+    depth.increment();
+    printNode(node);
+    depth.decrement();
+  }
 
   public void printNode (AstNode node) {
     var INDENT_SPACES = 2;

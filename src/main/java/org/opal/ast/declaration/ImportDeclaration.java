@@ -11,7 +11,7 @@ public class ImportDeclaration extends AstNode {
   private String aliasAttribute = null;
 
   private ImportQualifiedName qualifiedName = null;
-  private AstNode asName = null;
+  private ImportAsName asName = null;
 
   public ImportDeclaration (Token token) {
     super(token);
@@ -35,11 +35,11 @@ public class ImportDeclaration extends AstNode {
     return qualifiedName;
   }
 
-  public void setAsName (AstNode asName) {
+  public void setAsName (ImportAsName asName) {
     this.asName = asName;
   }
 
-  public AstNode asName () {
+  public ImportAsName asName () {
     return asName;
   }
 

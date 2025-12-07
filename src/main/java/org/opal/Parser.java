@@ -607,11 +607,11 @@ public class Parser {
     return n;
   }
 
-  private AstNode importAsClause () {
+  private ImportAsName importAsClause () {
     // No check-in required
     confirm(AS);
     match(Token.Kind.IDENTIFIER);
-    var n = new ImportName(mark);
+    var n = new ImportAsName(mark);
     return n;
   }
 
