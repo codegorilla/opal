@@ -416,11 +416,13 @@ public class Parser {
   private AstNode translationUnit () {
     followerSetStack.push(EnumSet.of(Token.Kind.EOF));
     var n = new TranslationUnit();
-    n.addChild(packageDeclaration());
+    n.setPackageDeclaration(packageDeclaration());
+    //n.addChild(packageDeclaration());
 
     checkIn(FirstSet.REMAINING_DECLARATIONS_1);
     if (kind == IMPORT) {
-      n.addChild(importDeclarations());
+      n.setImportDeclarations(importDeclarations());
+//      n.addChild(importDeclarations());
     }
     else {
       n.addChild(EPSILON);
@@ -533,7 +535,7 @@ public class Parser {
   private final EnumSet<Token.Kind> SET_SEMICOLON = EnumSet.of(SEMICOLON);
   private final EnumSet<Token.Kind> SET_R_BRACE = EnumSet.of(R_BRACE);
 
-  private AstNode packageDeclaration () {
+  private PackageDeclaration packageDeclaration () {
     followerSetStack.push(FollowerSet.PACKAGE_DECLARATION);
     // Hypothesis: Check-ins occur when the parser must choose one of several
     // paths, and the epsilon production is not one of the options. This will
@@ -557,13 +559,13 @@ public class Parser {
   // an explicit check for 'import' keyword. Thus, we can only get here if the
   // current lookahead token is known for sure to be 'import'.
 
-  private AstNode importDeclarations () {
+  private ImportDeclarations importDeclarations () {
     followerSetStack.push(FollowerSet.IMPORT_DECLARATIONS);
     // No check-in required
     var n = new ImportDeclarations();
-    n.addChild(importDeclaration());
+    n.addImportDeclaration(importDeclaration());
     while (kind == IMPORT)
-      n.addChild(importDeclaration());
+      n.addImportDeclaration(importDeclaration());
     followerSetStack.pop();
     return n;
   }
@@ -576,20 +578,17 @@ public class Parser {
   // easiest implementation and the others hold no advantages for our
   // particular use case.
 
-  private AstNode importDeclaration () {
+  private ImportDeclaration importDeclaration () {
     followerSetStack.push(FollowerSet.IMPORT_DECLARATION);
     // No check-in required
     confirm(IMPORT);
     var n = new ImportDeclaration(mark);
-    n.addChild(importQualifiedName());
-//    n = importDeclarationTail();
-    checkIn(EnumSet.of(AS, SEMICOLON));
-    if (kind == AS)
-      n.addChild(importAsClause());
-    else if (kind == SEMICOLON) {
-      // Might not need epsilon because nothing comes after this
-      System.out.println("GOT HERE!");
-      n.addChild(EPSILON);
+    n.setQualifiedName(importQualifiedName());
+    if (kind != SEMICOLON) {
+      if (kind == AS)
+        n.setAsName(importAsClause());
+      else
+        panic(EnumSet.of(AS, SEMICOLON));
     }
     match(SEMICOLON);
     checkOut();
@@ -605,7 +604,7 @@ public class Parser {
   // is not a great one (due to epsilon production). It shows that there might
   // be room for improvement.
 
-  private AstNode importQualifiedName () {
+  private ImportQualifiedName importQualifiedName () {
     followerSetStack.push(FollowerSet.IMPORT_QUALIFIED_NAME);
     checkIn(FirstSet.IMPORT_QUALIFIED_NAME);
     var n = new ImportQualifiedName();

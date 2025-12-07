@@ -10,6 +10,9 @@ public class ImportDeclaration extends AstNode {
   // Alias as determined from import declaration analysis
   private String aliasAttribute = null;
 
+  private ImportQualifiedName qualifiedName = null;
+  private AstNode asName = null;
+
   public ImportDeclaration (Token token) {
     super(token);
   }
@@ -24,17 +27,33 @@ public class ImportDeclaration extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode qualifiedName () {
-    return getChild(0);
+  public void setQualifiedName (ImportQualifiedName qualifiedName) {
+    this.qualifiedName = qualifiedName;
   }
+
+  public ImportQualifiedName qualifiedName () {
+    return qualifiedName;
+  }
+
+  public void setAsName (AstNode asName) {
+    this.asName = asName;
+  }
+
+  public AstNode asName () {
+    return asName;
+  }
+
+//  public AstNode qualifiedName () {
+//    return getChild(0);
+//  }
 
   public boolean hasAsName () {
     return getChild(1) != null;
   }
 
-  public AstNode asName () {
-    return getChild(1);
-  }
+//  public AstNode asName () {
+//    return getChild(1);
+//  }
 
   public String getAliasAttribute () {
     return aliasAttribute;

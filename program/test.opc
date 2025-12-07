@@ -1,8 +1,9 @@
 package main;
 
-import opal.lang as test;
+import opal.lang;
+import opal.math;
 
-//use opal.math.{ Bessel, Jacobian + + };
+use opal.math.{ Bessel, Jacobian };
 
 //var t: float = 5;
 
