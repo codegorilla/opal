@@ -19,6 +19,14 @@ public class Pass1 extends BaseVisitor {
     visit((TranslationUnit)root);
   }
 
+  public void printNode (AstNode node) {
+    var INDENT_SPACES = 2;
+    var spaces = " ".repeat(INDENT_SPACES * depth.get());
+    var className = node.getClass().getSimpleName();
+    var token = node.getToken();
+    System.out.println(spaces + "- " + className + (token != null ? ": " + token : ""));
+  }
+
   public void visit (TranslationUnit node ) {
     printNode(node);
     visit(node.packageDeclaration());
@@ -29,6 +37,8 @@ public class Pass1 extends BaseVisitor {
     if (node.hasOtherDeclarations())
       visit(node.otherDeclarations());
   }
+
+  // DECLARATIONS
 
   public void visit (PackageDeclaration node) {
     depth.increment();
@@ -154,6 +164,8 @@ public class Pass1 extends BaseVisitor {
     depth.decrement();
   }
 
+  // STATEMENTS
+
   // EXPRESSIONS
 
   public void visit (Expression node) {
@@ -213,14 +225,6 @@ public class Pass1 extends BaseVisitor {
     depth.increment();
     printNode(node);
     depth.decrement();
-  }
-
-  public void printNode (AstNode node) {
-    var INDENT_SPACES = 2;
-    var spaces = " ".repeat(INDENT_SPACES * depth.get());
-    var className = node.getClass().getSimpleName();
-    var token = node.getToken();
-    System.out.println(spaces + "- " + className + (token != null ? ": " + token : ""));
   }
 
 }
