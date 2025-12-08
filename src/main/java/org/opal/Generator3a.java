@@ -434,7 +434,7 @@ public class Generator3a extends BaseResultVisitor<ST> {
 
   public ST visit (VariableTypeSpecifier node) {
     var st = group.getInstanceOf("common/declaration/variableTypeSpecifier");
-    st.add("type", visit(node.type()));
+    st.add("type", visit(node.getDeclarator()));
     return st;
   }
 

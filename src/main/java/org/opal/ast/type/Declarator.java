@@ -6,9 +6,10 @@ import org.opal.ast.AstNode;
 
 public class Declarator extends AstNode {
 
-  public Declarator () {
-    super();
-  }
+  private AstNode directDeclarator = null;
+  private PointerDeclarators pointerDeclarators = null;
+
+  public Declarator () {}
 
   @Override
   public void accept (Visitor v) {
@@ -18,6 +19,22 @@ public class Declarator extends AstNode {
   @Override
   public <T> T accept (ResultVisitor<T> v) {
     return v.visit(this);
+  }
+
+  public AstNode getDirectDeclarator () {
+    return directDeclarator;
+  }
+
+  public PointerDeclarators getPointerDeclarators () {
+    return pointerDeclarators;
+  }
+
+  public void setDirectDeclarator (AstNode directDeclarator) {
+    this.directDeclarator = directDeclarator;
+  }
+
+  public void setPointerDeclarators (PointerDeclarators pointerDeclarators) {
+    this.pointerDeclarators = pointerDeclarators;
   }
 
 }

@@ -2,6 +2,7 @@ package org.opal;
 
 import org.opal.ast.*;
 import org.opal.ast.declaration.*;
+import org.opal.ast.type.*;
 
 public class Pass1 extends BaseVisitor {
 
@@ -130,6 +131,52 @@ public class Pass1 extends BaseVisitor {
   }
 
   public void visit (VariableDeclaration node) {
+    depth.increment();
+    printNode(node);
+    visit(node.getName());
+    if (node.hasTypeSpecifier())
+      visit(node.getTypeSpecifier());
+    depth.decrement();
+  }
+
+  public void visit (VariableName node) {
+    depth.increment();
+    printNode(node);
+    depth.decrement();
+  }
+
+  public void visit (VariableTypeSpecifier node) {
+    depth.increment();
+    printNode(node);
+    visit(node.getDeclarator());
+    depth.decrement();
+  }
+
+  // TYPES
+
+  public void visit (Declarator node) {
+    depth.increment();
+    printNode(node);
+    visit(node.getPointerDeclarators());
+    node.getDirectDeclarator().accept(this);
+    depth.decrement();
+  }
+
+  public void visit (PointerDeclarators node) {
+    depth.increment();
+    printNode(node);
+    for (var pointerDeclarator : node.children())
+      visit(pointerDeclarator);
+    depth.decrement();
+  }
+
+  public void visit (PointerDeclarator node) {
+    depth.increment();
+    printNode(node);
+    depth.decrement();
+  }
+
+  public void visit (PrimitiveType node) {
     depth.increment();
     printNode(node);
     depth.decrement();

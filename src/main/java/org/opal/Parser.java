@@ -1206,9 +1206,9 @@ public class Parser {
 
   private VariableTypeSpecifier variableTypeSpecifier () {
     followerSetStack.push(EnumSet.of(EQUAL));
-    match(Token.Kind.COLON);
-    var n = new VariableTypeSpecifier(mark);
-    n.addChild(declarator(null));
+    match(COLON);
+    var n = new VariableTypeSpecifier();
+    n.setDeclarator(declarator(null));
     followerSetStack.pop();
     return n;
   }
@@ -2062,13 +2062,15 @@ public class Parser {
   // resembles the input. Then, during semantic analysis, the actual types are
   // built by walking this tree in the appropriate order.
 
-  private AstNode declarator (EnumSet<Token.Kind> syncSet) {
+  // Should this still be syncSet or should it be followerSet?
+
+  private Declarator declarator (EnumSet<Token.Kind> syncSet) {
     if (syncSet != null)
       followerSetStack.push(syncSet);
     var n = new Declarator();
     if (kind == ASTERISK)
-      n.addChild(pointerDeclarators());
-    n.addChild(directDeclarator());
+      n.setPointerDeclarators(pointerDeclarators());
+    n.setDirectDeclarator(directDeclarator());
     if (kind == L_BRACKET)
       n.addChild(arrayDeclarators());
     if (syncSet != null)
@@ -2098,7 +2100,7 @@ public class Parser {
     ) {
       confirm(kind);
       // Should be simple declarator
-      n = new PrimitiveType(mark);
+      return new PrimitiveType(mark);
     } else if (kind == Token.Kind.IDENTIFIER) {
       confirm(Token.Kind.IDENTIFIER);
       n = new NominalType(mark);
@@ -2135,11 +2137,11 @@ public class Parser {
     return n;
   }
 
-  private AstNode pointerDeclarators () {
+  private PointerDeclarators pointerDeclarators () {
     var n = new PointerDeclarators();
     while (kind == ASTERISK) {
       confirm(ASTERISK);
-      n.addChild(new PointerDeclarator(mark));
+      n.addPointerDeclarator(new PointerDeclarator(mark));
     }
     return n;
   }
