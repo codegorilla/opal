@@ -2072,7 +2072,7 @@ public class Parser {
       n.setPointerDeclarators(pointerDeclarators());
     n.setDirectDeclarator(directDeclarator());
     if (kind == L_BRACKET)
-      n.addChild(arrayDeclarators());
+      n.setArrayDeclarators(arrayDeclarators());
     if (syncSet != null)
       followerSetStack.pop();
     return n;
@@ -2146,11 +2146,10 @@ public class Parser {
     return n;
   }
 
-  private AstNode arrayDeclarators () {
+  private ArrayDeclarators arrayDeclarators () {
     var n = new ArrayDeclarators();
-    while (kind == L_BRACKET) {
+    while (kind == L_BRACKET)
       n.addChild(arrayDeclarator());
-    }
     return n;
   }
 

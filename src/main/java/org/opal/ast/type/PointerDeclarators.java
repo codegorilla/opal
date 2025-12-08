@@ -5,9 +5,6 @@ import java.util.LinkedList;
 import org.opal.ResultVisitor;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
-import org.opal.ast.declaration.ImportDeclaration;
-import org.opal.ast.declaration.UseDeclaration;
-
 
 public class PointerDeclarators extends AstNode {
 

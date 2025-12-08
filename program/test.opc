@@ -7,7 +7,7 @@ package main;
 //use opal.math.{ Bessel, Jacobian };
 //use opal.math.*;
 
-var t: **float = 5;
+var t: **float[2] = 5;
 
 //var s: float = 1;
 

@@ -6,7 +6,6 @@ import org.opal.ResultVisitor;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-
 public class ImportDeclarations extends AstNode {
 
   private final LinkedList<ImportDeclaration> children = new LinkedList<>();

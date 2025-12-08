@@ -159,6 +159,15 @@ public class Pass1 extends BaseVisitor {
     printNode(node);
     visit(node.getPointerDeclarators());
     node.getDirectDeclarator().accept(this);
+    visit(node.getArrayDeclarators());
+    depth.decrement();
+  }
+
+  public void visit (ArrayDeclarators node) {
+    depth.increment();
+    printNode(node);
+    for (var arrayDeclarator : node.children())
+      visit(arrayDeclarator);
     depth.decrement();
   }
 

@@ -1,10 +1,10 @@
 package org.opal.ast.declaration;
 
+import java.util.LinkedList;
+
 import org.opal.ResultVisitor;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
-
-import java.util.LinkedList;
 
 public class UseDeclarations extends AstNode {
 

@@ -7,6 +7,7 @@ import org.opal.ast.AstNode;
 public class Declarator extends AstNode {
 
   private AstNode directDeclarator = null;
+  private ArrayDeclarators arrayDeclarators = null;
   private PointerDeclarators pointerDeclarators = null;
 
   public Declarator () {}
@@ -25,12 +26,20 @@ public class Declarator extends AstNode {
     return directDeclarator;
   }
 
+  public ArrayDeclarators getArrayDeclarators () {
+    return arrayDeclarators;
+  }
+
   public PointerDeclarators getPointerDeclarators () {
     return pointerDeclarators;
   }
 
   public void setDirectDeclarator (AstNode directDeclarator) {
     this.directDeclarator = directDeclarator;
+  }
+
+  public void setArrayDeclarators (ArrayDeclarators arrayDeclarators) {
+    this.arrayDeclarators = arrayDeclarators;
   }
 
   public void setPointerDeclarators (PointerDeclarators pointerDeclarators) {
