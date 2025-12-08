@@ -3,9 +3,8 @@ package org.opal.ast.expression;
 import org.opal.ResultVisitor;
 import org.opal.Token;
 import org.opal.Visitor;
-import org.opal.ast.AstNode;
 
-public class This extends AstNode {
+public class This extends Expression {
 
   public This (Token token) {
     super(token);

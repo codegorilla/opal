@@ -1610,11 +1610,11 @@ public class Parser {
   // necessary. We can use 'instanceof' to know if any expression node is the
   // root expression node or not.
 
-  private AstNode expression (boolean root) {
+  private Expression expression (boolean root) {
     var n = assignmentExpression();
     if (root) {
       var p = new Expression();
-      p.addChild(n);
+      p.setSubexpression(n);
       n = p;
     }
     return n;
@@ -1624,7 +1624,7 @@ public class Parser {
   // conditional statement to indicate that the developer truly intends to have
   // an assignment rather than an equality check.
 
-  private AstNode assignmentExpression () {
+  private Expression assignmentExpression () {
     var n = logicalOrExpression();
     while (
       kind == EQUAL ||
@@ -1648,7 +1648,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode logicalOrExpression () {
+  private Expression logicalOrExpression () {
     var n = logicalAndExpression();
     while (kind == OR) {
       confirm(OR);
@@ -1660,7 +1660,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode logicalAndExpression () {
+  private Expression logicalAndExpression () {
     var n = inclusiveOrExpression();
     while (kind == AND) {
       confirm(AND);
@@ -1672,7 +1672,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode inclusiveOrExpression () {
+  private Expression inclusiveOrExpression () {
     var n = exclusiveOrExpression();
     while (kind == BAR) {
       confirm(BAR);
@@ -1684,7 +1684,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode exclusiveOrExpression () {
+  private Expression exclusiveOrExpression () {
     var n = andExpression();
     while (kind == CARET) {
       confirm(CARET);
@@ -1696,7 +1696,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode andExpression () {
+  private Expression andExpression () {
     var n = equalityExpression();
     while (kind == AMPERSAND) {
       confirm(AMPERSAND);
@@ -1708,7 +1708,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode equalityExpression () {
+  private Expression equalityExpression () {
     var n = relationalExpression();
     while (kind == EQUAL_EQUAL || kind == EXCLAMATION_EQUAL) {
       confirm(kind);
@@ -1720,7 +1720,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode relationalExpression () {
+  private Expression relationalExpression () {
     var n = shiftExpression();
     while (kind == GREATER || kind == LESS || kind == GREATER_EQUAL || kind == LESS_EQUAL) {
       confirm(kind);
@@ -1732,7 +1732,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode shiftExpression () {
+  private Expression shiftExpression () {
     var n = additiveExpression();
     while (kind == GREATER_GREATER || kind == LESS_LESS) {
       confirm(kind);
@@ -1744,7 +1744,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode additiveExpression () {
+  private Expression additiveExpression () {
     var n = multiplicativeExpression();
     while (kind == PLUS || kind == MINUS) {
       confirm(kind);
@@ -1756,7 +1756,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode multiplicativeExpression () {
+  private Expression multiplicativeExpression () {
     var n = unaryExpression();
     while (kind == ASTERISK || kind == SLASH || kind == PERCENT) {
       confirm(kind);
@@ -1772,8 +1772,8 @@ public class Parser {
   // unaryExpression and castExpression methods. What effect might that have?
   // (See p. 54, Ellis & Stroustrup, 1990.)
 
-  private AstNode unaryExpression () {
-    AstNode n = null;
+  private Expression unaryExpression () {
+    Expression n = null;
     if (kind == ASTERISK || kind == MINUS || kind == PLUS || kind == EXCLAMATION || kind == TILDE) {
       confirm(kind);
       n = new UnaryExpression(mark);
@@ -1791,7 +1791,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode castExpression () {
+  private Expression castExpression () {
     var n = new CastExpression(lookahead);
     match(lookahead.getKind());
     match(Token.Kind.LESS);
@@ -1810,7 +1810,7 @@ public class Parser {
   // the delete expression is the reason why, and if so, adjust the grammar to
   // match.
 
-  private AstNode deleteExpression () {
+  private Expression deleteExpression () {
     var n = new DeleteExpression(lookahead);
     match(Token.Kind.DELETE);
     if (kind == Token.Kind.L_BRACKET) {
@@ -1822,7 +1822,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode newExpression () {
+  private Expression newExpression () {
     var n = new NewExpression(lookahead);
     match(Token.Kind.NEW);
     n.addChild(kind == Token.Kind.L_BRACKET ? newPlacement() : null);
@@ -1859,8 +1859,9 @@ public class Parser {
   // grammar to avoid this problem, the for now we will just stick with the
   // traditional design.
 
-  private AstNode postfixExpression () {
+  private Expression postfixExpression () {
     var node = primaryExpression();
+    /*
     while (
       kind == Token.Kind.L_BRACKET ||
       kind == Token.Kind.MINUS_GREATER ||
@@ -1880,6 +1881,7 @@ public class Parser {
           System.out.println("Error: No viable alternative in postfixExpression");
       }
     }
+    */
     return node;
   }
 
@@ -1892,7 +1894,7 @@ public class Parser {
     return node;
   }
 
-  private AstNode dereferencingMemberAccess (AstNode nameExpr) {
+  private Expression dereferencingMemberAccess (AstNode nameExpr) {
     var node = new DereferencingMemberAccess(lookahead);
     match(Token.Kind.MINUS_GREATER);
     node.addChild(nameExpr);
@@ -1952,8 +1954,8 @@ public class Parser {
   // To do: This is not erroring out on bad input to new expression. Needs
   // investigation.
 
-  private AstNode primaryExpression () {
-    AstNode n = null;
+  private Expression primaryExpression () {
+    Expression n = null;
     if (
       kind == FALSE ||
       kind == TRUE ||
@@ -1985,8 +1987,8 @@ public class Parser {
     return n;
   }
 
-  private AstNode literal () {
-    AstNode n;
+  private Expression literal () {
+    Expression n;
     if (kind == FALSE) {
       confirm(FALSE);
       n = new BooleanLiteral(mark);
@@ -2025,7 +2027,9 @@ public class Parser {
       mark = lookahead;
       var combined = combine();
       sync(combined);
-      n = new ErrorNode(mark);
+//      n = new ErrorNode(mark);
+      // Maybe create ExpressionErrorNode?
+      n = null;
     }
     return n;
   }
@@ -2034,20 +2038,20 @@ public class Parser {
   // if we can achieve the same thing in cobalt. For now, just assume it is a
   // pointer.
 
-  private AstNode this_ () {
+  private Expression this_ () {
     var n = new This(lookahead);
     match(THIS);
     return n;
   }
 
-  private AstNode parenthesizedExpression () {
+  private Expression parenthesizedExpression () {
     match(L_PARENTHESIS);
     var n = expression(false);
     match(R_PARENTHESIS);
     return n;
   }
 
-  private AstNode name () {
+  private Expression name () {
     var n = new Name(lookahead);
     match(Token.Kind.IDENTIFIER);
     return n;
@@ -2149,17 +2153,17 @@ public class Parser {
   private ArrayDeclarators arrayDeclarators () {
     var n = new ArrayDeclarators();
     while (kind == L_BRACKET)
-      n.addChild(arrayDeclarator());
+      n.addArrayDeclarator(arrayDeclarator());
     return n;
   }
 
   // Check that expression is const during semantic analysis
 
-  private AstNode arrayDeclarator () {
+  private ArrayDeclarator arrayDeclarator () {
     confirm(L_BRACKET);
     var n = new ArrayDeclarator(mark);
     if (FirstSet.EXPRESSION.contains(kind))
-      n.addChild(expression(true));
+      n.setExpression(expression(true));
     match(R_BRACKET);
     return n;
   }

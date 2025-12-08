@@ -2,6 +2,8 @@ package org.opal;
 
 import org.opal.ast.*;
 import org.opal.ast.declaration.*;
+import org.opal.ast.expression.Expression;
+import org.opal.ast.expression.IntegerLiteral;
 import org.opal.ast.type.*;
 
 public class Pass1 extends BaseVisitor {
@@ -152,6 +154,21 @@ public class Pass1 extends BaseVisitor {
     depth.decrement();
   }
 
+  // EXPRESSIONS
+
+  public void visit (Expression node) {
+    depth.increment();
+    printNode(node);
+    node.getSubexpression().accept(this);
+    depth.decrement();
+  }
+
+  public void visit (IntegerLiteral node) {
+    depth.increment();
+    printNode(node);
+    depth.decrement();
+  }
+
   // TYPES
 
   public void visit (Declarator node) {
@@ -168,6 +185,13 @@ public class Pass1 extends BaseVisitor {
     printNode(node);
     for (var arrayDeclarator : node.children())
       visit(arrayDeclarator);
+    depth.decrement();
+  }
+
+  public void visit (ArrayDeclarator node) {
+    depth.increment();
+    printNode(node);
+    visit(node.getExpression());
     depth.decrement();
   }
 

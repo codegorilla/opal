@@ -5,7 +5,7 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class CharacterLiteral extends AstNode {
+public class CharacterLiteral extends Expression {
 
   public CharacterLiteral (Token token) {
     super(token);

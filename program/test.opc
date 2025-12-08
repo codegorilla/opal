@@ -5,9 +5,9 @@ package main;
 
 //use opal.math.pi;
 //use opal.math.{ Bessel, Jacobian };
-//use opal.math.*;
+use opal.math.*;
 
-var t: **float[2] = 5;
+var t: **float[2][4] = 5;
 
 //var s: float = 1;
 

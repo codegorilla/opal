@@ -5,7 +5,7 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class ArraySubscript extends AstNode {
+public class ArraySubscript extends Expression {
 
   public ArraySubscript (Token token) {
     super(token);

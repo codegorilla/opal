@@ -5,7 +5,7 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class NewInitializer extends AstNode {
+public class NewInitializer extends Expression {
 
   public NewInitializer (Token token) {
     super(token);

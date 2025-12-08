@@ -5,7 +5,7 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class RoutineCall extends AstNode {
+public class RoutineCall extends Expression {
 
   public RoutineCall (Token token) {
     super(token);

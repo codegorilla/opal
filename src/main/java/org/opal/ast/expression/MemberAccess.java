@@ -5,7 +5,7 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class MemberAccess extends AstNode {
+public class MemberAccess extends Expression {
 
   public MemberAccess (Token token) {
     super(token);
