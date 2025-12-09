@@ -156,6 +156,8 @@ public interface Visitor {
   public void visit (PointerDeclarators node);
   public void visit (PointerDeclarator node);
 
+  public void visit (BogusDirectDeclarator node);
+
   // TYPES
 
 //  public void visit (Type node);

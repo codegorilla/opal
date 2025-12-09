@@ -2066,15 +2066,24 @@ public class Parser {
 
   // Should this still be syncSet or should it be followerSet?
 
+  // Need a check-in here
+
   private Declarator declarator (EnumSet<Token.Kind> syncSet) {
     if (syncSet != null)
       followerSetStack.push(syncSet);
+    checkIn(FirstSet.DECLARATOR);
     var n = new Declarator();
     if (kind == ASTERISK)
       n.setPointerDeclarators(pointerDeclarators());
-    n.setDirectDeclarator(directDeclarator());
-    if (kind == L_BRACKET)
-      n.setArrayDeclarators(arrayDeclarators());
+    // To do: Need to complete this set check
+    if (kind == Token.Kind.FLOAT64) {
+      n.setDirectDeclarator(directDeclarator());
+      if (kind == L_BRACKET)
+        n.setArrayDeclarators(arrayDeclarators());
+    } else {
+      n.setDirectDeclarator(new BogusDirectDeclarator(mark));
+    }
+    checkOut();
     if (syncSet != null)
       followerSetStack.pop();
     return n;

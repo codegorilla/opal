@@ -155,6 +155,8 @@ public interface ResultVisitor <T> {
   public T visit (PointerDeclarators node);
   public T visit (PointerDeclarator node);
 
+  public T visit (BogusDirectDeclarator node);
+
   // TYPES
 
 //  public T visit (Type node);
