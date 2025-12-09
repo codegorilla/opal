@@ -3,6 +3,7 @@ package org.opal;
 import org.opal.ast.*;
 import org.opal.ast.declaration.*;
 import org.opal.ast.expression.Expression;
+import org.opal.ast.expression.FloatingPointLiteral;
 import org.opal.ast.expression.IntegerLiteral;
 import org.opal.ast.type.*;
 
@@ -148,6 +149,8 @@ public class Pass1 extends BaseVisitor {
     visit(node.getName());
     if (node.hasTypeSpecifier())
       visit(node.getTypeSpecifier());
+    if (node.hasInitializer())
+      visit(node.getInitializer());
     depth.decrement();
   }
 
@@ -164,6 +167,13 @@ public class Pass1 extends BaseVisitor {
     depth.decrement();
   }
 
+  public void visit (VariableInitializer node) {
+    depth.increment();
+    printNode(node);
+    visit(node.getExpression());
+    depth.decrement();
+  }
+
   // STATEMENTS
 
   // EXPRESSIONS
@@ -172,6 +182,12 @@ public class Pass1 extends BaseVisitor {
     depth.increment();
     printNode(node);
     node.getSubexpression().accept(this);
+    depth.decrement();
+  }
+
+  public void visit (FloatingPointLiteral node) {
+    depth.increment();
+    printNode(node);
     depth.decrement();
   }
 
@@ -186,9 +202,11 @@ public class Pass1 extends BaseVisitor {
   public void visit (Declarator node) {
     depth.increment();
     printNode(node);
-    visit(node.getPointerDeclarators());
+    if (node.hasPointerDeclarators())
+      visit(node.getPointerDeclarators());
     node.getDirectDeclarator().accept(this);
-    visit(node.getArrayDeclarators());
+    if (node.hasArrayDeclarators())
+      visit(node.getArrayDeclarators());
     depth.decrement();
   }
 

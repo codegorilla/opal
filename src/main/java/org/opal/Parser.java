@@ -1206,7 +1206,7 @@ public class Parser {
 
   private VariableTypeSpecifier variableTypeSpecifier () {
     followerSetStack.push(EnumSet.of(EQUAL));
-    match(COLON);
+    confirm(COLON);
     var n = new VariableTypeSpecifier();
     n.setDeclarator(declarator(null));
     followerSetStack.pop();
@@ -1214,11 +1214,9 @@ public class Parser {
   }
 
   private VariableInitializer variableInitializer () {
-    followerSetStack.push(EnumSet.of(SEMICOLON));
-    match(EQUAL);
-    var n = new VariableInitializer(mark);
-    n.addChild(expression(true));
-    followerSetStack.pop();
+    confirm(EQUAL);
+    var n = new VariableInitializer();
+    n.setExpression(expression(true));
     return n;
   }
 

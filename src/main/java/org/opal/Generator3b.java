@@ -295,7 +295,7 @@ public class Generator3b extends BaseResultVisitor<ST> {
   public ST visit (VariableInitializer node) {
     if (node.hasChildren()) {
       var st = group.getInstanceOf("common/declaration/variableInitializer");
-      st.add("expression", visit(node.expression()));
+      st.add("expression", visit(node.getExpression()));
       return st;
     }
     else

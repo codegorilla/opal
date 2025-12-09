@@ -544,7 +544,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
 
   public ST visit (VariableInitializer node) {
     var st = group.getInstanceOf("common/declaration/variableInitializer");
-    st.add("expression", visit(node.expression()));
+    st.add("expression", visit(node.getExpression()));
     return st;
   }
 

@@ -22,6 +22,14 @@ public class Declarator extends AstNode {
     return v.visit(this);
   }
 
+  public boolean hasPointerDeclarators () {
+    return pointerDeclarators != null;
+  }
+
+  public boolean hasArrayDeclarators () {
+    return arrayDeclarators != null;
+  }
+
   public AstNode getDirectDeclarator () {
     return directDeclarator;
   }
