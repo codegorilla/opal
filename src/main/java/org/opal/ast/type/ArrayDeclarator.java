@@ -6,7 +6,7 @@ import org.opal.Visitor;
 import org.opal.ast.AstNode;
 import org.opal.ast.expression.Expression;
 
-public class ArrayDeclarator extends AstNode {
+public class ArrayDeclarator extends Declarator {
 
   private Expression expression = null;
 

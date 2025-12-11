@@ -5,7 +5,7 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class RoutinePointerDeclarator extends AstNode {
+public class RoutinePointerDeclarator extends Declarator {
 
   public RoutinePointerDeclarator (Token token) {
     super(token);

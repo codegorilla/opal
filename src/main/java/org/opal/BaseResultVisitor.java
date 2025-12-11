@@ -163,7 +163,7 @@ public class BaseResultVisitor<T> implements ResultVisitor <T> {
   public T visit (PointerDeclarators node) { return null; }
   public T visit (PointerDeclarator node) { return null; }
 
-  public T visit (BogusDirectDeclarator node) { return null; }
+  public T visit (BogusDeclarator node) { return null; }
 
   // TYPES
 

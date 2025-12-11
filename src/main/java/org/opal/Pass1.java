@@ -202,8 +202,9 @@ public class Pass1 extends BaseVisitor {
   public void visit (Declarator node) {
     depth.increment();
     printNode(node);
-    if (node.hasPointerDeclarators())
+    if (node.hasPointerDeclarators()) {
       visit(node.getPointerDeclarators());
+    }
     node.getDirectDeclarator().accept(this);
     if (node.hasArrayDeclarators())
       visit(node.getArrayDeclarators());
@@ -245,7 +246,7 @@ public class Pass1 extends BaseVisitor {
     depth.decrement();
   }
 
-  public void visit (BogusDirectDeclarator node) {
+  public void visit (BogusDeclarator node) {
     depth.increment();
     printNode(node);
     depth.decrement();

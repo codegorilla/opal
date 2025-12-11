@@ -3,7 +3,6 @@ package org.opal;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.sun.source.tree.ForLoopTree;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
@@ -2081,7 +2080,9 @@ public class Parser {
       if (kind == L_BRACKET)
         n.setArrayDeclarators(arrayDeclarators());
     } else {
-      n.setDirectDeclarator(new BogusDirectDeclarator(mark));
+      // Print some kind of error
+      System.out.println("Syntax error: Missing direct declarator");
+      n.setDirectDeclarator(new BogusDeclarator(mark));
     }
     checkOut();
     if (syncSet != null)
@@ -2089,8 +2090,8 @@ public class Parser {
     return n;
   }
 
-  private AstNode directDeclarator () {
-    AstNode n;
+  private Declarator directDeclarator () {
+    Declarator n;
     if (
       kind == Token.Kind.BOOL    ||
       kind == Token.Kind.INT     ||
@@ -2131,7 +2132,7 @@ public class Parser {
   // For now, assume all routine pointers must have a return type specified,
   // in which case, the last child of the AST node is the return type.
 
-  private AstNode routinePointerDeclarator () {
+  private Declarator routinePointerDeclarator () {
     confirm(CARET);
     var n = new RoutinePointerDeclarator(mark);
     match(L_PARENTHESIS);
