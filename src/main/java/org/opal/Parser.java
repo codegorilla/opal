@@ -2065,23 +2065,20 @@ public class Parser {
 
   // Should this still be syncSet or should it be followerSet?
 
-  // Need a check-in here
-
   private Declarator declarator (EnumSet<Token.Kind> syncSet) {
     if (syncSet != null)
       followerSetStack.push(syncSet);
     checkIn(FirstSet.DECLARATOR);
     var n = new Declarator();
-    if (kind == ASTERISK)
-      n.setPointerDeclarators(pointerDeclarators());
-    // To do: Need to complete this set check
-    if (kind == Token.Kind.FLOAT64) {
+    if (FirstSet.DECLARATOR.contains(kind)) {
+      if (kind == ASTERISK)
+        n.setPointerDeclarators(pointerDeclarators());
       n.setDirectDeclarator(directDeclarator());
       if (kind == L_BRACKET)
         n.setArrayDeclarators(arrayDeclarators());
     } else {
-      // Print some kind of error
-      System.out.println("Syntax error: Missing direct declarator");
+      // Print some kind of error? Not sure we need to because the check-in
+      // presumably already covers it.
       n.setDirectDeclarator(new BogusDeclarator(mark));
     }
     checkOut();
@@ -2090,7 +2087,12 @@ public class Parser {
     return n;
   }
 
+  // Need a check-in here
+
+  //The FIRST set actually needs to be limited to direct declarator
+
   private Declarator directDeclarator () {
+    checkIn(FirstSet.DECLARATOR);
     Declarator n;
     if (
       kind == Token.Kind.BOOL    ||
@@ -2123,8 +2125,7 @@ public class Parser {
       n = declarator(null);
       match(R_PARENTHESIS);
     } else {
-      // Error - Needs sync
-      n = null;
+      n = new BogusDeclarator(mark);
     }
     return n;
   }
