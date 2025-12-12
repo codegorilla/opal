@@ -62,51 +62,7 @@ public class FirstSet {
       FollowSet.TRANSLATION_UNIT
     );
 
-
-  public static final EnumSet<Token.Kind> DECLARATOR =
-    EnumSet.of (
-      Token.Kind.BOOL,
-      Token.Kind.DOUBLE,
-      Token.Kind.FLOAT,
-      Token.Kind.FLOAT32,
-      Token.Kind.FLOAT64,
-      Token.Kind.INT,
-      Token.Kind.INT8,
-      Token.Kind.INT16,
-      Token.Kind.INT32,
-      Token.Kind.INT64,
-      Token.Kind.LONG,
-      Token.Kind.NULL_T,
-      Token.Kind.SHORT,
-      Token.Kind.UINT,
-      Token.Kind.UINT8,
-      Token.Kind.UINT16,
-      Token.Kind.UINT32,
-      Token.Kind.UINT64,
-      Token.Kind.VOID,
-      Token.Kind.IDENTIFIER,
-      Token.Kind.ASTERISK,
-      Token.Kind.CARET,
-      Token.Kind.L_BRACKET,
-      Token.Kind.L_PARENTHESIS
-    );
-
-  //  Might not use these directly
-  public static final EnumSet<Token.Kind> ARRAY_DECLARATOR =
-    EnumSet.of (Token.Kind.L_BRACKET);
-
-  public static final EnumSet<Token.Kind> POINTER_DECLARATOR =
-    EnumSet.of (Token.Kind.ASTERISK);
-
-  public static final EnumSet<Token.Kind> ROUTINE_POINTER_DECLARATOR =
-    EnumSet.of (Token.Kind.CARET);
-
-  public static final EnumSet<Token.Kind> COMPOUND_DECLARATOR =
-    EnumSet.of (Token.Kind.IDENTIFIER);
-
-
-
-  // Reminder: Order of declaration matters!
+  // DECLARATIONS
 
   // Might not use directly
   public static final EnumSet<Token.Kind> CLASS_DECLARATION =
@@ -119,9 +75,6 @@ public class FirstSet {
   // Might not use directly
   public static final EnumSet<Token.Kind> VARIABLE_DECLARATION =
     EnumSet.of(Token.Kind.VAL, Token.Kind.VAR);
-
-
-
 
 
   public static final EnumSet<Token.Kind> STANDARD_STATEMENT = EnumSet.of (
@@ -185,27 +138,53 @@ public class FirstSet {
     Token.Kind.UINT64_LITERAL
   );
 
-  public static final EnumSet<Token.Kind> TYPE = EnumSet.of (
-    Token.Kind.BOOL,
-    Token.Kind.INT,
-    Token.Kind.INT8,
-    Token.Kind.INT16,
-    Token.Kind.INT32,
-    Token.Kind.INT64,
-    Token.Kind.UINT,
-    Token.Kind.UINT8,
-    Token.Kind.UINT16,
-    Token.Kind.UINT32,
-    Token.Kind.UINT64,
-    Token.Kind.FLOAT,
-    Token.Kind.DOUBLE,
-    Token.Kind.FLOAT32,
-    Token.Kind.FLOAT64,
-    Token.Kind.VOID,
-    Token.Kind.IDENTIFIER,
-    Token.Kind.ASTERISK,
-    Token.Kind.L_BRACE
-  );
+  // DECLARATORS
+
+  public static final EnumSet<Token.Kind> PRIMITIVE_TYPE =
+    EnumSet.of (
+      Token.Kind.BOOL,
+      Token.Kind.DOUBLE,
+      Token.Kind.FLOAT,
+      Token.Kind.FLOAT32,
+      Token.Kind.FLOAT64,
+      Token.Kind.INT,
+      Token.Kind.INT8,
+      Token.Kind.INT16,
+      Token.Kind.INT32,
+      Token.Kind.INT64,
+      Token.Kind.LONG,
+      Token.Kind.NULL_T,
+      Token.Kind.SHORT,
+      Token.Kind.UINT,
+      Token.Kind.UINT8,
+      Token.Kind.UINT16,
+      Token.Kind.UINT32,
+      Token.Kind.UINT64,
+      Token.Kind.VOID
+    );
+
+  public static final EnumSet<Token.Kind> NOMINAL_TYPE =
+    EnumSet.of(Token.Kind.IDENTIFIER);
+
+  public static final EnumSet<Token.Kind> ARRAY_DECLARATOR =
+    EnumSet.of (Token.Kind.L_BRACKET);
+
+  public static final EnumSet<Token.Kind> POINTER_DECLARATOR =
+    EnumSet.of (Token.Kind.ASTERISK);
+
+  public static final EnumSet<Token.Kind> ROUTINE_POINTER_DECLARATOR =
+    EnumSet.of (Token.Kind.CARET);
+
+  public static final EnumSet<Token.Kind> DIRECT_DECLARATOR =
+    union (
+      FirstSet.PRIMITIVE_TYPE,
+      FirstSet.NOMINAL_TYPE,
+      FirstSet.ROUTINE_POINTER_DECLARATOR,
+      EnumSet.of(Token.Kind.L_PARENTHESIS)
+    );
+
+  public static final EnumSet<Token.Kind> DECLARATOR =
+    union(FirstSet.DIRECT_DECLARATOR, FirstSet.POINTER_DECLARATOR);
 
 
   // Union of two items

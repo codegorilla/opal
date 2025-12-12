@@ -488,7 +488,6 @@ public class Parser {
     if (!firstSet.contains(kind)) {
       if (!errorRecoveryMode)
         checkError(firstSet);
-      mark = new Token(Token.Kind.ERROR, lookahead.getLexeme(), lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
       LOGGER.info("Check-in: created " + mark);
       // Combine first set and all follower sets
       var combined = EnumSet.copyOf(firstSet);
@@ -2070,7 +2069,31 @@ public class Parser {
       followerSetStack.push(syncSet);
     checkIn(FirstSet.DECLARATOR);
     var n = new Declarator();
-    if (FirstSet.DECLARATOR.contains(kind)) {
+    if (
+      kind == ASTERISK              ||
+      kind == CARET                 ||
+      kind == L_PARENTHESIS         ||
+      kind == Token.Kind.IDENTIFIER ||
+      kind == Token.Kind.BOOL       ||
+      kind == Token.Kind.DOUBLE     ||
+      kind == Token.Kind.FLOAT      ||
+      kind == Token.Kind.FLOAT32    ||
+      kind == Token.Kind.FLOAT64    ||
+      kind == Token.Kind.INT        ||
+      kind == Token.Kind.INT8       ||
+      kind == Token.Kind.INT16      ||
+      kind == Token.Kind.INT32      ||
+      kind == Token.Kind.INT64      ||
+      kind == Token.Kind.LONG       ||
+      kind == Token.Kind.NULL_T     ||
+      kind == Token.Kind.SHORT      ||
+      kind == Token.Kind.UINT       ||
+      kind == Token.Kind.UINT8      ||
+      kind == Token.Kind.UINT16     ||
+      kind == Token.Kind.UINT32     ||
+      kind == Token.Kind.UINT64     ||
+      kind == Token.Kind.VOID
+    ) {
       if (kind == ASTERISK)
         n.setPointerDeclarators(pointerDeclarators());
       n.setDirectDeclarator(directDeclarator());
@@ -2087,12 +2110,19 @@ public class Parser {
     return n;
   }
 
+  private boolean oneOf (Token.Kind... kinds) {
+    for (var i : kinds)
+      if (kind == i)
+        return true;
+    return false;
+  }
+
   // Need a check-in here
 
   //The FIRST set actually needs to be limited to direct declarator
 
   private Declarator directDeclarator () {
-    checkIn(FirstSet.DECLARATOR);
+    checkIn(FirstSet.DIRECT_DECLARATOR);
     Declarator n;
     if (
       kind == Token.Kind.BOOL    ||
@@ -2137,7 +2167,7 @@ public class Parser {
     confirm(CARET);
     var n = new RoutinePointerDeclarator(mark);
     match(L_PARENTHESIS);
-    if (FirstSet.TYPE.contains(kind)) {
+    if (FirstSet.DECLARATOR.contains(kind)) {
       n.addChild(declarator(EnumSet.of(COMMA, R_PARENTHESIS)));
     }
     while (kind == COMMA) {
