@@ -389,6 +389,8 @@ public class Parser {
     keywordLookup.put(Token.Kind.ASTERISK, "'*'");
     keywordLookup.put(Token.Kind.L_BRACE, "'{'");
     keywordLookup.put(Token.Kind.R_BRACE, "'}'");
+    keywordLookup.put(Token.Kind.L_BRACKET, "'['");
+    keywordLookup.put(Token.Kind.R_BRACKET, "']'");
     keywordLookup.put(Token.Kind.AS, "'as'");
   }
 
@@ -2097,8 +2099,12 @@ public class Parser {
       if (kind == ASTERISK)
         n.setPointerDeclarators(pointerDeclarators());
       n.setDirectDeclarator(directDeclarator());
-      if (kind == L_BRACKET)
-        n.setArrayDeclarators(arrayDeclarators());
+      if (kind != EQUAL && kind != SEMICOLON) {
+        if (kind == L_BRACKET)
+          n.setArrayDeclarators(arrayDeclarators());
+        else
+          panic(EnumSet.of(L_BRACKET, EQUAL, SEMICOLON));
+      }
     } else {
       n.setDirectDeclarator(new BogusDeclarator(mark));
     }
@@ -2189,8 +2195,14 @@ public class Parser {
   private ArrayDeclarators arrayDeclarators () {
     // No check-in required for now. Might need one for generic types.
     var n = new ArrayDeclarators();
-    while (kind == L_BRACKET)
-      n.addArrayDeclarator(arrayDeclarator());
+    while (kind != EQUAL && kind != SEMICOLON) {
+      if (kind == L_BRACKET)
+        n.addArrayDeclarator(arrayDeclarator());
+      else {
+        panic(EnumSet.of(L_BRACKET, EQUAL, SEMICOLON));
+        break;
+      }
+    }
     return n;
   }
 

@@ -215,7 +215,8 @@ public class Pass1 extends BaseVisitor {
     depth.increment();
     printNode(node);
     for (var arrayDeclarator : node.children())
-      visit(arrayDeclarator);
+      arrayDeclarator.accept(this);
+//      visit(arrayDeclarator);
     depth.decrement();
   }
 

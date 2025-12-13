@@ -8,7 +8,7 @@ import org.opal.ast.AstNode;
 
 public class ArrayDeclarators extends AstNode {
 
-  private final LinkedList<ArrayDeclarator> children = new LinkedList<>();
+  private final LinkedList<Declarator> children = new LinkedList<>();
 
   public ArrayDeclarators () {}
 
@@ -22,11 +22,11 @@ public class ArrayDeclarators extends AstNode {
     return v.visit(this);
   }
 
-  public Iterable<ArrayDeclarator> children () {
+  public Iterable<Declarator> children () {
     return children;
   }
 
-  public void addArrayDeclarator (ArrayDeclarator arrayDeclarator) {
+  public void addArrayDeclarator (Declarator arrayDeclarator) {
     children.add(arrayDeclarator);
   }
 
