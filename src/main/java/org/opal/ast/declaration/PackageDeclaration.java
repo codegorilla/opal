@@ -7,6 +7,8 @@ import org.opal.ast.AstNode;
 
 public class PackageDeclaration extends AstNode {
 
+  private PackageName packageName = null;
+
   public PackageDeclaration(Token token) {
     super(token);
   }
@@ -21,13 +23,12 @@ public class PackageDeclaration extends AstNode {
     return v.visit(this);
   }
 
-  // DEPRECATED
-//  public AstNode packageName () {
-//    return getChild(0);
-//  }
+  public PackageName packageName () {
+    return packageName;
+  }
 
-  public Iterable<AstNode> names () {
-    return getChildren();
+  public void setPackageName (PackageName packageName) {
+    this.packageName = packageName;
   }
 
 }

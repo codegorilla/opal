@@ -7,6 +7,12 @@ import org.opal.ast.AstNode;
 
 public class VariableDeclaration extends AstNode {
 
+  private ExportSpecifier exportSpecifier = null;
+  private VariableModifiers modifiers = null;
+  private VariableName name = null;
+  private VariableTypeSpecifier typeSpecifier = null;
+  private VariableInitializer initializer = null;
+
   public VariableDeclaration (Token token) {
     super(token);
   }
@@ -21,36 +27,56 @@ public class VariableDeclaration extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode exportSpecifier () {
-    return getChild(0);
+  public ExportSpecifier exportSpecifier () {
+    return exportSpecifier;
   }
 
   public boolean hasExportSpecifier () {
-    return getChild(0) != null;
-  }
-
-  public boolean hasTypeSpecifier () {
-    return getChild(3) != null;
+    return exportSpecifier != null;
   }
 
   public boolean hasInitializer () {
-    return getChild(4) != null;
-  }
-  
-  public AstNode modifiers () {
-    return getChild(1);
+    return initializer != null;
   }
 
-  public AstNode name () {
-    return getChild(2);
+  public boolean hasTypeSpecifier () {
+    return typeSpecifier != null;
   }
 
-  public AstNode typeSpecifier () {
-    return getChild(3);
+  public VariableInitializer getInitializer () {
+    return initializer;
   }
 
-  public AstNode initializer () {
-    return getChild(4);
+  public VariableModifiers getModifiers () {
+    return modifiers;
+  }
+
+  public VariableName getName () {
+    return name;
+  }
+
+  public VariableTypeSpecifier getTypeSpecifier () {
+    return typeSpecifier;
+  }
+
+  public void setExportSpecifier (ExportSpecifier exportSpecifier) {
+    this.exportSpecifier = exportSpecifier;
+  }
+
+  public void setInitializer (VariableInitializer initializer) {
+    this.initializer = initializer;
+  }
+
+  public void setModifiers (VariableModifiers modifiers) {
+    this.modifiers = modifiers;
+  }
+
+  public void setName (VariableName name) {
+    this.name = name;
+  }
+
+  public void setTypeSpecifier (VariableTypeSpecifier typeSpecifier) {
+    this.typeSpecifier = typeSpecifier;
   }
 
 }

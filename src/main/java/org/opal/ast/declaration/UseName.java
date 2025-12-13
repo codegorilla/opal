@@ -7,6 +7,11 @@ import org.opal.ast.AstNode;
 
 public class UseName extends AstNode {
 
+  // I don't have a better name for this and it can be one of several kinds of
+  // nodes. Just use AstNode type for now and use generic name "child".
+
+  private AstNode child = null;
+
   public UseName (Token token) {
     super(token);
   }
@@ -19,6 +24,18 @@ public class UseName extends AstNode {
   @Override
   public <T> T accept (ResultVisitor<T> v) {
     return v.visit(this);
+  }
+
+  public boolean hasChild () {
+    return child != null;
+  }
+
+  public AstNode child () {
+    return child;
+  }
+
+  public void setChild (AstNode child) {
+    this.child = child;
   }
 
 }

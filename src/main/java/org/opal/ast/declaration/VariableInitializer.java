@@ -4,12 +4,13 @@ import org.opal.ResultVisitor;
 import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
+import org.opal.ast.expression.Expression;
 
 public class VariableInitializer extends AstNode {
 
-  public VariableInitializer (Token token) {
-    super(token);
-  }
+  private Expression expression = null;
+
+  public VariableInitializer () {}
 
   @Override
   public void accept (Visitor v) {
@@ -21,8 +22,12 @@ public class VariableInitializer extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode expression () {
-    return getChild(0);
+  public Expression getExpression () {
+    return expression;
+  }
+
+  public void setExpression (Expression expression) {
+    this.expression = expression;
   }
 
 }

@@ -5,7 +5,7 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class DeleteExpression extends AstNode {
+public class DeleteExpression extends Expression {
 
   private boolean arrayFlag = false;
 

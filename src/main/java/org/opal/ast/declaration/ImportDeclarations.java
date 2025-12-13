@@ -3,10 +3,8 @@ package org.opal.ast.declaration;
 import java.util.LinkedList;
 
 import org.opal.ResultVisitor;
-import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
-
 
 public class ImportDeclarations extends AstNode {
 
@@ -24,7 +22,7 @@ public class ImportDeclarations extends AstNode {
     return v.visit(this);
   }
 
-  public Iterable<ImportDeclaration> getChildrenX () {
+  public Iterable<ImportDeclaration> children () {
     return children;
   }
 

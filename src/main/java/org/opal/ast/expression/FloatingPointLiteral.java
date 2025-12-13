@@ -5,7 +5,7 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class FloatingPointLiteral extends AstNode {
+public class FloatingPointLiteral extends Expression {
 
   public FloatingPointLiteral (Token token) {
     super(token);

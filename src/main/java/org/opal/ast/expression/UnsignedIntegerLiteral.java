@@ -5,7 +5,7 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class UnsignedIntegerLiteral extends AstNode {
+public class UnsignedIntegerLiteral extends Expression {
 
   public UnsignedIntegerLiteral (Token token) {
     super(token);

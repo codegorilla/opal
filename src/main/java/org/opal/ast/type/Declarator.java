@@ -1,13 +1,22 @@
 package org.opal.ast.type;
 
 import org.opal.ResultVisitor;
+import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
+import java.lang.reflect.Array;
+
 public class Declarator extends AstNode {
 
-  public Declarator () {
-    super();
+  private Declarator directDeclarator = null;
+  private ArrayDeclarators arrayDeclarators = null;
+  private PointerDeclarators pointerDeclarators = null;
+
+  public Declarator () {}
+
+  public Declarator (Token token) {
+    super(token);
   }
 
   @Override
@@ -18,6 +27,38 @@ public class Declarator extends AstNode {
   @Override
   public <T> T accept (ResultVisitor<T> v) {
     return v.visit(this);
+  }
+
+  public boolean hasPointerDeclarators () {
+    return pointerDeclarators != null;
+  }
+
+  public boolean hasArrayDeclarators () {
+    return arrayDeclarators != null;
+  }
+
+  public Declarator getDirectDeclarator () {
+    return directDeclarator;
+  }
+
+  public ArrayDeclarators getArrayDeclarators () {
+    return arrayDeclarators;
+  }
+
+  public PointerDeclarators getPointerDeclarators () {
+    return pointerDeclarators;
+  }
+
+  public void setDirectDeclarator (Declarator directDeclarator) {
+    this.directDeclarator = directDeclarator;
+  }
+
+  public void setArrayDeclarators (ArrayDeclarators arrayDeclarators) {
+    this.arrayDeclarators = arrayDeclarators;
+  }
+
+  public void setPointerDeclarators (PointerDeclarators pointerDeclarators) {
+    this.pointerDeclarators = pointerDeclarators;
   }
 
 }

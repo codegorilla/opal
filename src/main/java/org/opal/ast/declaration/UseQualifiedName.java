@@ -1,15 +1,17 @@
 package org.opal.ast.declaration;
 
+import java.util.LinkedList;
+
 import org.opal.ResultVisitor;
-import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
+
 public class UseQualifiedName extends AstNode {
 
-  public UseQualifiedName () {
-    super();
-  }
+  private UseName useName = null;
+
+  public UseQualifiedName () {}
 
   @Override
   public void accept (Visitor v) {
@@ -20,9 +22,13 @@ public class UseQualifiedName extends AstNode {
   public <T> T accept (ResultVisitor<T> v) {
     return v.visit(this);
   }
+  
+  public UseName useName () {
+    return useName;
+  }
 
-  public Iterable<AstNode> names () {
-    return getChildren();
+  public void setUseName (UseName useName) {
+    this.useName = useName;
   }
 
 }

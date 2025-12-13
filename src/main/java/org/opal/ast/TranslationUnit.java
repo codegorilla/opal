@@ -25,7 +25,7 @@ public class TranslationUnit extends AstNode {
     return v.visit(this);
   }
 
-  public PackageDeclaration getPackageDeclaration () {
+  public PackageDeclaration packageDeclaration () {
     return packageDeclaration;
   }
 
@@ -37,12 +37,36 @@ public class TranslationUnit extends AstNode {
     return importDeclarations != null;
   }
 
-  public ImportDeclarations getImportDeclarations () {
+  public ImportDeclarations importDeclarations () {
     return importDeclarations;
   }
 
   public void setImportDeclarations (ImportDeclarations importDeclarations) {
     this.importDeclarations = importDeclarations;
+  }
+
+  public boolean hasOtherDeclarations () {
+    return otherDeclarations != null;
+  }
+
+  public OtherDeclarations otherDeclarations () {
+    return otherDeclarations;
+  }
+
+  public void setOtherDeclarations (OtherDeclarations otherDeclarations) {
+    this.otherDeclarations = otherDeclarations;
+  }
+
+  public boolean hasUseDeclarations () {
+    return useDeclarations != null;
+  }
+
+  public UseDeclarations useDeclarations () {
+    return useDeclarations;
+  }
+
+  public void setUseDeclarations (UseDeclarations useDeclarations) {
+    this.useDeclarations = useDeclarations;
   }
 
 

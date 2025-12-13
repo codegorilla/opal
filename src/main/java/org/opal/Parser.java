@@ -3,7 +3,6 @@ package org.opal;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.sun.source.tree.ForLoopTree;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
@@ -56,7 +55,7 @@ public class Parser {
 
   // Used to collect modifier nodes in preparation for aggregation into
   // specialized modifiers nodes.
-  private final LinkedList<AstNode> modifierStack;
+  private final LinkedList<Modifier> modifierStack;
 
   // Used for symbol table operations. Cobalt requires a symbol table during
   // parsing in order to disambiguate a few grammar rules. We cannot wait until
@@ -390,6 +389,8 @@ public class Parser {
     keywordLookup.put(Token.Kind.ASTERISK, "'*'");
     keywordLookup.put(Token.Kind.L_BRACE, "'{'");
     keywordLookup.put(Token.Kind.R_BRACE, "'}'");
+    keywordLookup.put(Token.Kind.L_BRACKET, "'['");
+    keywordLookup.put(Token.Kind.R_BRACKET, "']'");
     keywordLookup.put(Token.Kind.AS, "'as'");
   }
 
@@ -424,9 +425,7 @@ public class Parser {
 
     checkIn(FirstSet.REMAINING_DECLARATIONS_2);
     if (kind == USE)
-      n.addChild(useDeclarations());
-    else
-      n.addChild(EPSILON);
+      n.setUseDeclarations(useDeclarations());
 
     checkIn(FirstSet.REMAINING_DECLARATIONS_3);
     if (
@@ -436,7 +435,7 @@ public class Parser {
       kind == VAL     ||
       kind == VAR
     ) {
-      n.addChild(otherDeclarations());
+      n.setOtherDeclarations(otherDeclarations());
     }
 
     System.out.println("HERE");
@@ -491,7 +490,6 @@ public class Parser {
     if (!firstSet.contains(kind)) {
       if (!errorRecoveryMode)
         checkError(firstSet);
-      mark = new Token(Token.Kind.ERROR, lookahead.getLexeme(), lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
       LOGGER.info("Check-in: created " + mark);
       // Combine first set and all follower sets
       var combined = EnumSet.copyOf(firstSet);
@@ -534,7 +532,7 @@ public class Parser {
     if (kind == PACKAGE) {
       confirm(PACKAGE);
       match(Token.Kind.IDENTIFIER);
-      n.addChild(new PackageName(mark));
+      n.setPackageName(new PackageName(mark));
       match(SEMICOLON);
     }
     checkOut();
@@ -598,46 +596,42 @@ public class Parser {
     checkIn(FirstSet.IMPORT_QUALIFIED_NAME);
     var n = new ImportQualifiedName();
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new ImportName(mark));
+    n.addImportName(new ImportName(mark));
     while (kind == PERIOD) {
       confirm(PERIOD);
       match(Token.Kind.IDENTIFIER);
-      n.addChild(new ImportName(mark));
+      n.addImportName(new ImportName(mark));
     }
     checkOut();
     followerSetStack.pop();
     return n;
   }
 
-  private AstNode importAsClause () {
+  private ImportAsName importAsClause () {
     // No check-in required
     confirm(AS);
     match(Token.Kind.IDENTIFIER);
-    var n = new ImportName(mark);
+    var n = new ImportAsName(mark);
     return n;
   }
 
-  private AstNode importDeclarationTail () {
-    return null;
-  }
-
-  private AstNode useDeclarations () {
+  private UseDeclarations useDeclarations () {
     followerSetStack.push(FollowerSet.USE_DECLARATIONS);
     // No check-in required
     var n = new UseDeclarations();
-    n.addChild(useDeclaration());
+    n.addUseDeclaration(useDeclaration());
     while (kind == USE)
-      n.addChild(useDeclaration());
+      n.addUseDeclaration(useDeclaration());
     followerSetStack.pop();
     return n;
   }
 
-  private AstNode useDeclaration () {
+  private UseDeclaration useDeclaration () {
     followerSetStack.push(FollowerSet.USE_DECLARATION);
     // No check-in required
     confirm(USE);
     var n = new UseDeclaration(mark);
-    n.addChild(useQualifiedName());
+    n.setQualifiedName(useQualifiedName());
     match(SEMICOLON);
     checkOut();
     followerSetStack.pop();
@@ -650,13 +644,13 @@ public class Parser {
   // call. Otherwise, it is used directly in a match method call within the
   // non-terminal production method.
 
-  private AstNode useQualifiedName () {
-    AstNode n = new UseQualifiedName();
+  private UseQualifiedName useQualifiedName () {
+    UseQualifiedName n = new UseQualifiedName();
     match(Token.Kind.IDENTIFIER);
     var p = new UseName(mark);
-    n.addChild(p);
+    n.setUseName(p);
     match(PERIOD);
-    p.addChild(useQualifiedNameTail());
+    p.setChild(useQualifiedNameTail());
     return n;
   }
 
@@ -664,25 +658,26 @@ public class Parser {
   // there are several options to choose from, none of which are the epsilon
   // production.
 
+  // To do: No check-out here?
+
   private AstNode useQualifiedNameTail () {
-    AstNode n;
     checkIn(FirstSet.USE_QUALIFIED_NAME_TAIL);
     if (kind == ASTERISK) {
-      confirm(ASTERISK);
-      n = new UseNameWildcard(mark);
+      consume();
+      return new UseNameWildcard(mark);
     } else if (kind == L_BRACE) {
-      n = useNameGroup();
+      return useNameGroup();
     } else if (kind == Token.Kind.IDENTIFIER) {
       confirm(Token.Kind.IDENTIFIER);
-      n = new UseName(mark);
+      var n = new UseName(mark);
       if (kind == PERIOD) {
-        confirm(PERIOD);
-        n.addChild(useQualifiedNameTail());
+        consume();
+        n.setChild(useQualifiedNameTail());
       }
+      return n;
     } else {
-      n = new ErrorNode(mark);
+      return new ErrorNode(mark);
     }
-    return n;
   }
 
   private AstNode useNameGroup () {
@@ -690,12 +685,12 @@ public class Parser {
     confirm(L_BRACE);
     var n = new UseNameGroup();
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new UseName(mark));
+    n.addUseName(new UseName(mark));
     while (kind != R_BRACE) {
       if (kind == COMMA) {
-        confirm(COMMA);
+        consume();
         match(Token.Kind.IDENTIFIER);
-        n.addChild(new UseName(mark));
+        n.addUseName(new UseName(mark));
       } else {
         panic(EnumSet.of(COMMA, R_BRACE));
         break;
@@ -704,7 +699,7 @@ public class Parser {
     match(R_BRACE);
     checkOut();
     if (errorRecoveryMode && kind == R_BRACE)
-      confirm(R_BRACE);
+      consume();
     followerSetStack.pop();
     return n;
   }
@@ -718,12 +713,12 @@ public class Parser {
 //        throw new RuntimeException(e);
 //      }
 
-  private AstNode otherDeclarations () {
+  private OtherDeclarations otherDeclarations () {
     followerSetStack.push(FollowerSet.OTHER_DECLARATIONS);
     checkIn(FirstSet.OTHER_DECLARATIONS);
     var n = new OtherDeclarations();
     while (FirstSet.OTHER_DECLARATION.contains(kind)) {
-      n.addChild(otherDeclaration());
+      n.addOtherDeclaration(otherDeclaration());
     }
     followerSetStack.pop();
     return n;
@@ -734,12 +729,13 @@ public class Parser {
 
   private AstNode otherDeclaration () {
     followerSetStack.push(FirstSet.OTHER_DECLARATION);
-    AstNode p;
+    ExportSpecifier p;
     if (kind == PRIVATE) {
-      confirm(PRIVATE);
+      consume();
       p = new ExportSpecifier(mark);
     } else {
-      p = EPSILON;
+      // Maybe change to EPSILON later
+      p = null;
     }
     AstNode n = null;
     if (kind == TEMPLATE) {
@@ -755,6 +751,12 @@ public class Parser {
       else if (kind == VAL || kind == VAR)
         n = variableDeclaration(p);
       else {
+        panic(EnumSet.of(CLASS, TYPEALIAS, DEF, VAL, VAR));
+        modifierStack.clear();
+      }
+
+      /*
+      else {
         checkError(EnumSet.of(CLASS, TYPEALIAS, DEF, VAL, VAR));
         mark = lookahead;
         var combined = combine();
@@ -762,6 +764,7 @@ public class Parser {
         modifierStack.clear();
         n = new ErrorNode(mark);
       }
+      */
     }
     followerSetStack.pop();
     return n;
@@ -1162,36 +1165,36 @@ public class Parser {
   // following set. This is not a pure approach, as we previously assumed that
   // all members of the following set had to at least be in the FOLLOW set.
 
-  private AstNode variableDeclaration (AstNode exportSpecifier) {
+  // Check-out?
+
+  private AstNode variableDeclaration (ExportSpecifier exportSpecifier) {
     followerSetStack.push(EnumSet.of(SEMICOLON));
     confirm(kind == VAL ? VAL : VAR);
     var n = new VariableDeclaration(mark);
-    n.addChild(exportSpecifier);
-    n.addChild(variableModifiers());
+    n.setExportSpecifier(exportSpecifier);
+    n.setModifiers(variableModifiers());
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new VariableName(mark));
+    n.setName(new VariableName(mark));
     if (kind == COLON) {
-      n.addChild(variableTypeSpecifier());
+      n.setTypeSpecifier(variableTypeSpecifier());
       if (kind == EQUAL)
-        n.addChild(variableInitializer());
-      else
-        n.addChild(EPSILON);
+        n.setInitializer(variableInitializer());
     } else if (kind == EQUAL) {
-      n.addChild(EPSILON);
-      n.addChild(variableInitializer());
+      n.setInitializer(variableInitializer());
     } else {
-      checkError(EnumSet.of(COLON, EQUAL));
-      // Might not need to mark
-      mark = lookahead;
-      var combined = combine();
-      sync(combined);
+      panic(EnumSet.of(COLON, EQUAL));
+//      checkError(EnumSet.of(COLON, EQUAL));
+//      // Might not need to mark
+//      mark = lookahead;
+//      var combined = combine();
+//      sync(combined);
     }
     followerSetStack.pop();
     match(SEMICOLON);
     return n;
   }
 
-  private AstNode variableModifiers () {
+  private VariableModifiers variableModifiers () {
     var n = new VariableModifiers();
     while (!modifierStack.isEmpty())
       n.addChild(modifierStack.pop());
@@ -1201,21 +1204,19 @@ public class Parser {
   // Is this only ever arrived at on a sure path? If so, we can replace the
   // match method with confirm.
 
-  private AstNode variableTypeSpecifier () {
+  private VariableTypeSpecifier variableTypeSpecifier () {
     followerSetStack.push(EnumSet.of(EQUAL));
-    match(Token.Kind.COLON);
-    var n = new VariableTypeSpecifier(mark);
-    n.addChild(declarator(null));
+    confirm(COLON);
+    var n = new VariableTypeSpecifier();
+    n.setDeclarator(declarator(null));
     followerSetStack.pop();
     return n;
   }
 
-  private AstNode variableInitializer () {
-    followerSetStack.push(EnumSet.of(SEMICOLON));
-    match(EQUAL);
-    var n = new VariableInitializer(mark);
-    n.addChild(expression(true));
-    followerSetStack.pop();
+  private VariableInitializer variableInitializer () {
+    confirm(EQUAL);
+    var n = new VariableInitializer();
+    n.setExpression(expression(true));
     return n;
   }
 
@@ -1607,11 +1608,11 @@ public class Parser {
   // necessary. We can use 'instanceof' to know if any expression node is the
   // root expression node or not.
 
-  private AstNode expression (boolean root) {
+  private Expression expression (boolean root) {
     var n = assignmentExpression();
     if (root) {
       var p = new Expression();
-      p.addChild(n);
+      p.setSubexpression(n);
       n = p;
     }
     return n;
@@ -1621,7 +1622,7 @@ public class Parser {
   // conditional statement to indicate that the developer truly intends to have
   // an assignment rather than an equality check.
 
-  private AstNode assignmentExpression () {
+  private Expression assignmentExpression () {
     var n = logicalOrExpression();
     while (
       kind == EQUAL ||
@@ -1645,7 +1646,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode logicalOrExpression () {
+  private Expression logicalOrExpression () {
     var n = logicalAndExpression();
     while (kind == OR) {
       confirm(OR);
@@ -1657,7 +1658,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode logicalAndExpression () {
+  private Expression logicalAndExpression () {
     var n = inclusiveOrExpression();
     while (kind == AND) {
       confirm(AND);
@@ -1669,7 +1670,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode inclusiveOrExpression () {
+  private Expression inclusiveOrExpression () {
     var n = exclusiveOrExpression();
     while (kind == BAR) {
       confirm(BAR);
@@ -1681,7 +1682,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode exclusiveOrExpression () {
+  private Expression exclusiveOrExpression () {
     var n = andExpression();
     while (kind == CARET) {
       confirm(CARET);
@@ -1693,7 +1694,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode andExpression () {
+  private Expression andExpression () {
     var n = equalityExpression();
     while (kind == AMPERSAND) {
       confirm(AMPERSAND);
@@ -1705,7 +1706,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode equalityExpression () {
+  private Expression equalityExpression () {
     var n = relationalExpression();
     while (kind == EQUAL_EQUAL || kind == EXCLAMATION_EQUAL) {
       confirm(kind);
@@ -1717,7 +1718,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode relationalExpression () {
+  private Expression relationalExpression () {
     var n = shiftExpression();
     while (kind == GREATER || kind == LESS || kind == GREATER_EQUAL || kind == LESS_EQUAL) {
       confirm(kind);
@@ -1729,7 +1730,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode shiftExpression () {
+  private Expression shiftExpression () {
     var n = additiveExpression();
     while (kind == GREATER_GREATER || kind == LESS_LESS) {
       confirm(kind);
@@ -1741,7 +1742,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode additiveExpression () {
+  private Expression additiveExpression () {
     var n = multiplicativeExpression();
     while (kind == PLUS || kind == MINUS) {
       confirm(kind);
@@ -1753,7 +1754,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode multiplicativeExpression () {
+  private Expression multiplicativeExpression () {
     var n = unaryExpression();
     while (kind == ASTERISK || kind == SLASH || kind == PERCENT) {
       confirm(kind);
@@ -1769,8 +1770,8 @@ public class Parser {
   // unaryExpression and castExpression methods. What effect might that have?
   // (See p. 54, Ellis & Stroustrup, 1990.)
 
-  private AstNode unaryExpression () {
-    AstNode n = null;
+  private Expression unaryExpression () {
+    Expression n = null;
     if (kind == ASTERISK || kind == MINUS || kind == PLUS || kind == EXCLAMATION || kind == TILDE) {
       confirm(kind);
       n = new UnaryExpression(mark);
@@ -1788,7 +1789,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode castExpression () {
+  private Expression castExpression () {
     var n = new CastExpression(lookahead);
     match(lookahead.getKind());
     match(Token.Kind.LESS);
@@ -1807,7 +1808,7 @@ public class Parser {
   // the delete expression is the reason why, and if so, adjust the grammar to
   // match.
 
-  private AstNode deleteExpression () {
+  private Expression deleteExpression () {
     var n = new DeleteExpression(lookahead);
     match(Token.Kind.DELETE);
     if (kind == Token.Kind.L_BRACKET) {
@@ -1819,7 +1820,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode newExpression () {
+  private Expression newExpression () {
     var n = new NewExpression(lookahead);
     match(Token.Kind.NEW);
     n.addChild(kind == Token.Kind.L_BRACKET ? newPlacement() : null);
@@ -1856,8 +1857,9 @@ public class Parser {
   // grammar to avoid this problem, the for now we will just stick with the
   // traditional design.
 
-  private AstNode postfixExpression () {
+  private Expression postfixExpression () {
     var node = primaryExpression();
+    /*
     while (
       kind == Token.Kind.L_BRACKET ||
       kind == Token.Kind.MINUS_GREATER ||
@@ -1877,6 +1879,7 @@ public class Parser {
           System.out.println("Error: No viable alternative in postfixExpression");
       }
     }
+    */
     return node;
   }
 
@@ -1889,7 +1892,7 @@ public class Parser {
     return node;
   }
 
-  private AstNode dereferencingMemberAccess (AstNode nameExpr) {
+  private Expression dereferencingMemberAccess (AstNode nameExpr) {
     var node = new DereferencingMemberAccess(lookahead);
     match(Token.Kind.MINUS_GREATER);
     node.addChild(nameExpr);
@@ -1949,8 +1952,8 @@ public class Parser {
   // To do: This is not erroring out on bad input to new expression. Needs
   // investigation.
 
-  private AstNode primaryExpression () {
-    AstNode n = null;
+  private Expression primaryExpression () {
+    Expression n = null;
     if (
       kind == FALSE ||
       kind == TRUE ||
@@ -1982,8 +1985,8 @@ public class Parser {
     return n;
   }
 
-  private AstNode literal () {
-    AstNode n;
+  private Expression literal () {
+    Expression n;
     if (kind == FALSE) {
       confirm(FALSE);
       n = new BooleanLiteral(mark);
@@ -2022,7 +2025,9 @@ public class Parser {
       mark = lookahead;
       var combined = combine();
       sync(combined);
-      n = new ErrorNode(mark);
+//      n = new ErrorNode(mark);
+      // Maybe create ExpressionErrorNode?
+      n = null;
     }
     return n;
   }
@@ -2031,20 +2036,20 @@ public class Parser {
   // if we can achieve the same thing in cobalt. For now, just assume it is a
   // pointer.
 
-  private AstNode this_ () {
+  private Expression this_ () {
     var n = new This(lookahead);
     match(THIS);
     return n;
   }
 
-  private AstNode parenthesizedExpression () {
+  private Expression parenthesizedExpression () {
     match(L_PARENTHESIS);
     var n = expression(false);
     match(R_PARENTHESIS);
     return n;
   }
 
-  private AstNode name () {
+  private Expression name () {
     var n = new Name(lookahead);
     match(Token.Kind.IDENTIFIER);
     return n;
@@ -2059,22 +2064,64 @@ public class Parser {
   // resembles the input. Then, during semantic analysis, the actual types are
   // built by walking this tree in the appropriate order.
 
-  private AstNode declarator (EnumSet<Token.Kind> syncSet) {
+  // Should this still be syncSet or should it be followerSet?
+
+  private Declarator declarator (EnumSet<Token.Kind> syncSet) {
     if (syncSet != null)
       followerSetStack.push(syncSet);
+    checkIn(FirstSet.DECLARATOR);
     var n = new Declarator();
-    if (kind == ASTERISK)
-      n.addChild(pointerDeclarators());
-    n.addChild(directDeclarator());
-    if (kind == L_BRACKET)
-      n.addChild(arrayDeclarators());
+    if (
+      kind == ASTERISK              ||
+      kind == CARET                 ||
+      kind == L_PARENTHESIS         ||
+      kind == Token.Kind.IDENTIFIER ||
+      kind == Token.Kind.BOOL       ||
+      kind == Token.Kind.DOUBLE     ||
+      kind == Token.Kind.FLOAT      ||
+      kind == Token.Kind.FLOAT32    ||
+      kind == Token.Kind.FLOAT64    ||
+      kind == Token.Kind.INT        ||
+      kind == Token.Kind.INT8       ||
+      kind == Token.Kind.INT16      ||
+      kind == Token.Kind.INT32      ||
+      kind == Token.Kind.INT64      ||
+      kind == Token.Kind.LONG       ||
+      kind == Token.Kind.NULL_T     ||
+      kind == Token.Kind.SHORT      ||
+      kind == Token.Kind.UINT       ||
+      kind == Token.Kind.UINT8      ||
+      kind == Token.Kind.UINT16     ||
+      kind == Token.Kind.UINT32     ||
+      kind == Token.Kind.UINT64     ||
+      kind == Token.Kind.VOID
+    ) {
+      if (kind == ASTERISK)
+        n.setPointerDeclarators(pointerDeclarators());
+      n.setDirectDeclarator(directDeclarator());
+      if (kind != EQUAL && kind != SEMICOLON) {
+        if (kind == L_BRACKET)
+          n.setArrayDeclarators(arrayDeclarators());
+        else
+          panic(EnumSet.of(L_BRACKET, EQUAL, SEMICOLON));
+      }
+    } else {
+      n.setDirectDeclarator(new BogusDeclarator(mark));
+    }
+    checkOut();
     if (syncSet != null)
       followerSetStack.pop();
     return n;
   }
 
-  private AstNode directDeclarator () {
-    AstNode n;
+  // Need a check-in here
+
+  //The FIRST set actually needs to be limited to direct declarator
+
+  private Declarator directDeclarator () {
+    followerSetStack.push(EnumSet.of(L_BRACKET));
+    checkIn(FirstSet.DIRECT_DECLARATOR);
+    Declarator n;
     if (
       kind == Token.Kind.BOOL    ||
       kind == Token.Kind.INT     ||
@@ -2095,7 +2142,7 @@ public class Parser {
     ) {
       confirm(kind);
       // Should be simple declarator
-      n = new PrimitiveType(mark);
+      return new PrimitiveType(mark);
     } else if (kind == Token.Kind.IDENTIFIER) {
       confirm(Token.Kind.IDENTIFIER);
       n = new NominalType(mark);
@@ -2106,20 +2153,20 @@ public class Parser {
       n = declarator(null);
       match(R_PARENTHESIS);
     } else {
-      // Error - Needs sync
-      n = null;
+      n = new BogusDeclarator(mark);
     }
+    followerSetStack.pop();
     return n;
   }
 
   // For now, assume all routine pointers must have a return type specified,
   // in which case, the last child of the AST node is the return type.
 
-  private AstNode routinePointerDeclarator () {
+  private Declarator routinePointerDeclarator () {
     confirm(CARET);
     var n = new RoutinePointerDeclarator(mark);
     match(L_PARENTHESIS);
-    if (FirstSet.TYPE.contains(kind)) {
+    if (FirstSet.DECLARATOR.contains(kind)) {
       n.addChild(declarator(EnumSet.of(COMMA, R_PARENTHESIS)));
     }
     while (kind == COMMA) {
@@ -2132,30 +2179,40 @@ public class Parser {
     return n;
   }
 
-  private AstNode pointerDeclarators () {
+  // A check-in may not required if we are sure that the previous check-out
+  // procedure must have brought us to a member of the FIRST set.
+
+  private PointerDeclarators pointerDeclarators () {
+    // No check-in required
     var n = new PointerDeclarators();
     while (kind == ASTERISK) {
       confirm(ASTERISK);
-      n.addChild(new PointerDeclarator(mark));
+      n.addPointerDeclarator(new PointerDeclarator(mark));
     }
     return n;
   }
 
-  private AstNode arrayDeclarators () {
+  private ArrayDeclarators arrayDeclarators () {
+    // No check-in required for now. Might need one for generic types.
     var n = new ArrayDeclarators();
-    while (kind == L_BRACKET) {
-      n.addChild(arrayDeclarator());
+    while (kind != EQUAL && kind != SEMICOLON) {
+      if (kind == L_BRACKET)
+        n.addArrayDeclarator(arrayDeclarator());
+      else {
+        panic(EnumSet.of(L_BRACKET, EQUAL, SEMICOLON));
+        break;
+      }
     }
     return n;
   }
 
   // Check that expression is const during semantic analysis
 
-  private AstNode arrayDeclarator () {
+  private ArrayDeclarator arrayDeclarator () {
     confirm(L_BRACKET);
     var n = new ArrayDeclarator(mark);
     if (FirstSet.EXPRESSION.contains(kind))
-      n.addChild(expression(true));
+      n.setExpression(expression(true));
     match(R_BRACKET);
     return n;
   }

@@ -7,7 +7,10 @@ import org.opal.ast.AstNode;
 
 public class UseDeclaration extends AstNode {
 
+  // Not sure if this is used anymore?
   private Kind kind = null;
+
+  private UseQualifiedName qualifiedName = null;
 
   public UseDeclaration (Token token) {
     super(token);
@@ -23,12 +26,17 @@ public class UseDeclaration extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode useQualifiedName () {
-    return getChild(0);
+  public void setQualifiedName (UseQualifiedName qualifiedName) {
+    this.qualifiedName = qualifiedName;
+  }
+
+  public UseQualifiedName qualifiedName () {
+    return qualifiedName;
   }
 
   // The second child may constitute one, some, or all names.
 
+  // Not sure if these are used anymore?
   public AstNode useOneName () {
     return getChild(1);
   }

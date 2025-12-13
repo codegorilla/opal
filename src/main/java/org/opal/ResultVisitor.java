@@ -34,9 +34,7 @@ public interface ResultVisitor <T> {
   public T visit (UseDeclaration node);
   public T visit (UseQualifiedName node);
   public T visit (UseName node);
-  public T visit (UseOneName node);
   public T visit (UseNameGroup node);
-  public T visit (UseSomeName node);
   public T visit (UseNameWildcard node);
 
   // Other declarations
@@ -156,6 +154,8 @@ public interface ResultVisitor <T> {
   public T visit (ArrayDeclarator node);
   public T visit (PointerDeclarators node);
   public T visit (PointerDeclarator node);
+
+  public T visit (BogusDeclarator node);
 
   // TYPES
 

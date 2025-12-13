@@ -395,14 +395,14 @@ public class Generator3a extends BaseResultVisitor<ST> {
     if (pass == VARIABLE_PASS) {
       if (node.hasExportSpecifier()) {
         var st = group.getInstanceOf("common/declaration/variableDeclaration");
-        if (node.modifiers().hasChildren())
-          st.add("modifiers", visit(node.modifiers()));
-        stack.push(visit(node.name()));
+        if (node.getModifiers().hasChildren())
+          st.add("modifiers", visit(node.getModifiers()));
+        stack.push(visit(node.getName()));
         if (node.hasTypeSpecifier())
-          st.add("typeSpecifier", visit(node.typeSpecifier()));
+          st.add("typeSpecifier", visit(node.getTypeSpecifier()));
         st.add("declarator", stack.pop());
         if (node.hasInitializer())
-          st.add("initializer", visit(node.initializer()));
+          st.add("initializer", visit(node.getInitializer()));
         return st;
       } else {
         return null;
@@ -414,7 +414,7 @@ public class Generator3a extends BaseResultVisitor<ST> {
 
   public ST visit (VariableModifiers node) {
     var st = group.getInstanceOf("common/declaration/variableModifiers");
-    for (var modifier : node.getModifiers())
+    for (var modifier : node.modifiers())
       st.add("modifier", visit(modifier));
     return st;
   }
@@ -434,14 +434,14 @@ public class Generator3a extends BaseResultVisitor<ST> {
 
   public ST visit (VariableTypeSpecifier node) {
     var st = group.getInstanceOf("common/declaration/variableTypeSpecifier");
-    st.add("type", visit(node.type()));
+    st.add("type", visit(node.getDeclarator()));
     return st;
   }
 
   public ST visit (VariableInitializer node) {
     if (node.hasChildren()) {
       var st = group.getInstanceOf("common/declaration/variableInitializer");
-      st.add("expression", visit(node.expression()));
+      st.add("expression", visit(node.getExpression()));
       return st;
     }
     else

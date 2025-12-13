@@ -72,8 +72,7 @@ public class Generator3 extends BaseResultVisitor<ST> {
 
   public ST visit (PackageDeclaration node) {
     var st = group.getInstanceOf("implementation/declaration/moduleDeclaration");
-    for (var name : node.names())
-      st.add("name", visit(name));
+    st.add("name", visit(node.packageName()));
     return st;
   }
 

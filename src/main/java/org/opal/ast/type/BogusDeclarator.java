@@ -1,13 +1,15 @@
-package org.opal.ast.declaration;
+package org.opal.ast.type;
 
 import org.opal.ResultVisitor;
+import org.opal.Token;
 import org.opal.Visitor;
-import org.opal.ast.AstNode;
 
-public class UseOneName extends AstNode {
+// Not sure if we really need to capture a token or not
 
-  public UseOneName () {
-    super();
+public class BogusDeclarator extends Declarator {
+
+  public BogusDeclarator (Token token) {
+    super(token);
   }
 
   @Override
@@ -18,10 +20,6 @@ public class UseOneName extends AstNode {
   @Override
   public <T> T accept (ResultVisitor<T> v) {
     return v.visit(this);
-  }
-
-  public AstNode useName () {
-    return getChild(0);
   }
 
 }

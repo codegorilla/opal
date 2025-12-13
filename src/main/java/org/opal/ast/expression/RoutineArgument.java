@@ -4,7 +4,7 @@ import org.opal.ResultVisitor;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class RoutineArgument extends AstNode {
+public class RoutineArgument extends Expression {
 
   public RoutineArgument () {
     super();

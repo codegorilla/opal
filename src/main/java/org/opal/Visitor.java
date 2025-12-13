@@ -34,9 +34,7 @@ public interface Visitor {
   public void visit (UseDeclaration node);
   public void visit (UseQualifiedName node);
   public void visit (UseName node);
-  public void visit (UseOneName node);
   public void visit (UseNameGroup node);
-  public void visit (UseSomeName node);
   public void visit (UseNameWildcard node);
 
   // Other declarations
@@ -157,6 +155,8 @@ public interface Visitor {
   public void visit (ArrayDeclarator node);
   public void visit (PointerDeclarators node);
   public void visit (PointerDeclarator node);
+
+  public void visit (BogusDeclarator node);
 
   // TYPES
 

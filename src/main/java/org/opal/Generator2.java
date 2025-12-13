@@ -85,8 +85,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
 
   public ST visit (PackageDeclaration node) {
     var st = group.getInstanceOf("interface/declaration/moduleDeclaration");
-    for (var name : node.names())
-      st.add("name", visit(name));
+    st.add("name", visit(node.packageName()));
     return st;
   }
 
@@ -126,11 +125,11 @@ public class Generator2 extends BaseResultVisitor<ST> {
     ST st;
     if (importPass == 0) {
       st = group.getInstanceOf("interface/declaration/importQualifiedName");
-      for (var name : node.names())
+      for (var name : node.children())
         st.add("name", visit(name));
     } else {
       st = group.getInstanceOf("interface/declaration/namespaceQualifiedName");
-      for (var name : node.names())
+      for (var name : node.children())
         st.add("name", visit(name));
     }
     // Alternate between first and second pass
@@ -160,15 +159,14 @@ public class Generator2 extends BaseResultVisitor<ST> {
   // one declaration.
 
   public ST visit (UseDeclaration node) {
-    genStack.push(visit(node.useQualifiedName()));
+    genStack.push(visit(node.qualifiedName()));
     var st = visit(node.getLastChild());
     return st;
   }
 
   public ST visit (UseQualifiedName node) {
     var st = group.getInstanceOf("interface/declaration/usingQualifiedName");
-    for (var useName : node.names())
-      st.add("usingName", visit(useName));
+      st.add("usingName", visit(node.useName()));
     return st;
   }
 
@@ -177,12 +175,14 @@ public class Generator2 extends BaseResultVisitor<ST> {
     return st;
   }
 
+  /*
   public ST visit (UseOneName node) {
     var st = group.getInstanceOf("interface/declaration/usingDeclarationOneName");
     st.add("usingQualifiedName", genStack.pop());
     st.add("usingLast", visit(node.useName()));
     return st;
   }
+  */
 
   public ST visit (UseNameGroup node) {
     var st = group.getInstanceOf("interface/declaration/usingDeclarationSomeNames");
@@ -192,12 +192,14 @@ public class Generator2 extends BaseResultVisitor<ST> {
     return st;
   }
 
+  /*
   public ST visit (UseSomeName node) {
     var st = group.getInstanceOf("interface/declaration/usingDeclarationSomeName");
     st.add("usingQualifiedName", genStack.peek());
     st.add("usingLast", node.getToken().getLexeme());
     return st;
   }
+  */
 
   public ST visit (UseNameWildcard node) {
     var st = group.getInstanceOf("interface/declaration/usingDeclarationAllNames");
@@ -494,14 +496,14 @@ public class Generator2 extends BaseResultVisitor<ST> {
   public ST visit (VariableDeclaration node) {
     if (!node.hasExportSpecifier()) {
       var st = group.getInstanceOf("common/declaration/variableDeclaration");
-      if (node.modifiers().hasChildren())
-        st.add("modifiers", visit(node.modifiers()));
-      stack.push(visit(node.name()));
+      if (node.getModifiers().hasChildren())
+        st.add("modifiers", visit(node.getModifiers()));
+      stack.push(visit(node.getName()));
       if (node.hasTypeSpecifier())
-        st.add("typeSpecifier", visit(node.typeSpecifier()));
+        st.add("typeSpecifier", visit(node.getTypeSpecifier()));
       st.add("declarator", stack.pop());
       if (node.hasInitializer())
-        st.add("initializer", visit(node.initializer()));
+        st.add("initializer", visit(node.getInitializer()));
       return st;
     }
     else
@@ -510,7 +512,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
 
   public ST visit (VariableModifiers node) {
     var st = group.getInstanceOf("common/declaration/variableModifiers");
-    for (var modifier : node.getModifiers())
+    for (var modifier : node.modifiers())
       st.add("modifier", visit(modifier));
     return st;
   }
@@ -536,13 +538,13 @@ public class Generator2 extends BaseResultVisitor<ST> {
 
   public ST visit (VariableTypeSpecifier node) {
     var st = group.getInstanceOf("common/declaration/variableTypeSpecifier");
-    st.add("type", visit(node.type()));
+    st.add("type", visit(node.getDeclarator()));
     return st;
   }
 
   public ST visit (VariableInitializer node) {
     var st = group.getInstanceOf("common/declaration/variableInitializer");
-    st.add("expression", visit(node.expression()));
+    st.add("expression", visit(node.getExpression()));
     return st;
   }
 

@@ -5,7 +5,7 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class CastExpression extends AstNode {
+public class CastExpression extends Expression {
 
   public CastExpression (Token token) {
     super(token);

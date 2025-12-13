@@ -5,7 +5,7 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class BooleanLiteral extends AstNode {
+public class BooleanLiteral extends Expression {
 
   public BooleanLiteral (Token token) {
     super(token);
