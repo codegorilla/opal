@@ -2100,8 +2100,6 @@ public class Parser {
       if (kind == L_BRACKET)
         n.setArrayDeclarators(arrayDeclarators());
     } else {
-      // Print some kind of error? Not sure we need to because the check-in
-      // presumably already covers it.
       n.setDirectDeclarator(new BogusDeclarator(mark));
     }
     checkOut();
@@ -2110,18 +2108,12 @@ public class Parser {
     return n;
   }
 
-  private boolean oneOf (Token.Kind... kinds) {
-    for (var i : kinds)
-      if (kind == i)
-        return true;
-    return false;
-  }
-
   // Need a check-in here
 
   //The FIRST set actually needs to be limited to direct declarator
 
   private Declarator directDeclarator () {
+    followerSetStack.push(EnumSet.of(L_BRACKET));
     checkIn(FirstSet.DIRECT_DECLARATOR);
     Declarator n;
     if (
@@ -2157,6 +2149,7 @@ public class Parser {
     } else {
       n = new BogusDeclarator(mark);
     }
+    followerSetStack.pop();
     return n;
   }
 
@@ -2180,7 +2173,11 @@ public class Parser {
     return n;
   }
 
+  // A check-in may not required if we are sure that the previous check-out
+  // procedure must have brought us to a member of the FIRST set.
+
   private PointerDeclarators pointerDeclarators () {
+    // No check-in required
     var n = new PointerDeclarators();
     while (kind == ASTERISK) {
       confirm(ASTERISK);
@@ -2190,6 +2187,7 @@ public class Parser {
   }
 
   private ArrayDeclarators arrayDeclarators () {
+    // No check-in required for now. Might need one for generic types.
     var n = new ArrayDeclarators();
     while (kind == L_BRACKET)
       n.addArrayDeclarator(arrayDeclarator());
