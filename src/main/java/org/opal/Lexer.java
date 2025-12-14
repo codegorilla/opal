@@ -37,8 +37,8 @@ public class Lexer {
     if (!input.isEmpty())
       current = input.charAt(0);
     this.sourceLines = sourceLines;
-    var keywordTable = new KeywordTable();
-    keywordLookup = keywordTable.getForwardLookupTable();
+    var lookupTable = new LookupTable();
+    keywordLookup = lookupTable.getForwardLookupTable();
 
     // Set up logging
     var level = Level.INFO;

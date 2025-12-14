@@ -2,18 +2,26 @@ package org.opal;
 
 import java.util.HashMap;
 
-public class KeywordTable {
+// I don't think we need the reverse lookup table here. The forward lookup
+// functionality only works with keywords. Punctuation/operators are handled by
+// the lexer inherently.
+
+// For reverse lookup, we need both keywords and punctuation/operators. So just
+// handling keywords doesn't work.
+
+public class LookupTable {
 
   // Mappings from string to token-kind and vice versa
   private final HashMap<String, Token.Kind> forwardLookupTable = new HashMap<>();
   private final HashMap<Token.Kind, String> reverseLookupTable = new HashMap<>();
 
-  public KeywordTable () {
+  public LookupTable () {
     buildForwardLookupTable();
     buildReverseLookupTable();
   }
 
-  // The tables are built lazily on demand
+  // The tables are built lazily on demand. Why? I think it was because I was
+  // planning to have more than one. Lazy build probably not needed anymore.
 
   public void buildForwardLookupTable() {
     forwardLookupTable.put("abstract", Token.Kind.ABSTRACT);
@@ -96,12 +104,60 @@ public class KeywordTable {
     forwardLookupTable.put("void", Token.Kind.VOID);
   }
 
-  // Creation of a reverse lookup table from the forward lookup table is
-  // trivial because the key-value mappings are unique.
-
   public void buildReverseLookupTable () {
+
+    // Populate keywords from forward lookup table
     for (var entry : forwardLookupTable.entrySet())
       reverseLookupTable.put(entry.getValue(), entry.getKey());
+
+    // Populate simple punctuation and operators
+    reverseLookupTable.put(Token.Kind.AMPERSAND, "&");
+    reverseLookupTable.put(Token.Kind.ASTERISK, "*");
+    reverseLookupTable.put(Token.Kind.BAR, "|");
+    reverseLookupTable.put(Token.Kind.CARET, "^");
+    reverseLookupTable.put(Token.Kind.COLON, ":");
+    reverseLookupTable.put(Token.Kind.COMMA, ",");
+    reverseLookupTable.put(Token.Kind.EQUAL, "=");
+    reverseLookupTable.put(Token.Kind.EXCLAMATION, "!");
+    reverseLookupTable.put(Token.Kind.GREATER, ">");
+    reverseLookupTable.put(Token.Kind.L_BRACE, "{");
+    reverseLookupTable.put(Token.Kind.L_BRACKET, "[");
+    reverseLookupTable.put(Token.Kind.L_PARENTHESIS, "(");
+    reverseLookupTable.put(Token.Kind.LESS, "<");
+    reverseLookupTable.put(Token.Kind.MINUS, "-");
+    reverseLookupTable.put(Token.Kind.PERCENT, "%");
+    reverseLookupTable.put(Token.Kind.PERIOD, ".");
+    reverseLookupTable.put(Token.Kind.PLUS, "+");
+    reverseLookupTable.put(Token.Kind.R_BRACE, "}");
+    reverseLookupTable.put(Token.Kind.R_BRACKET, "]");
+    reverseLookupTable.put(Token.Kind.R_PARENTHESIS, ")");
+    reverseLookupTable.put(Token.Kind.SEMICOLON, ";");
+    reverseLookupTable.put(Token.Kind.SLASH, "/");
+    reverseLookupTable.put(Token.Kind.TILDE, "~");
+
+    // Populate compound punctuation and operators
+    reverseLookupTable.put(Token.Kind.AMPERSAND_AMPERSAND, "&&");
+    reverseLookupTable.put(Token.Kind.AMPERSAND_EQUAL, "&=");
+    reverseLookupTable.put(Token.Kind.ASTERISK_EQUAL, "*=");
+    reverseLookupTable.put(Token.Kind.BAR_BAR, "||");
+    reverseLookupTable.put(Token.Kind.BAR_EQUAL, "|=");
+    reverseLookupTable.put(Token.Kind.CARET_EQUAL, "^=");
+    reverseLookupTable.put(Token.Kind.EQUAL_EQUAL, "==");
+    reverseLookupTable.put(Token.Kind.EXCLAMATION_EQUAL, "!=");
+    reverseLookupTable.put(Token.Kind.EXCLAMATION_LESS, "!<");
+    reverseLookupTable.put(Token.Kind.GREATER_EQUAL, ">=");
+    reverseLookupTable.put(Token.Kind.GREATER_GREATER, ">>");
+    reverseLookupTable.put(Token.Kind.GREATER_GREATER_EQUAL, ">>=");
+    reverseLookupTable.put(Token.Kind.LESS_EQUAL, "<=");
+    reverseLookupTable.put(Token.Kind.LESS_LESS, "<<");
+    reverseLookupTable.put(Token.Kind.LESS_LESS_EQUAL, "<<=");
+    reverseLookupTable.put(Token.Kind.MINUS_EQUAL, "-=");
+    reverseLookupTable.put(Token.Kind.MINUS_GREATER, "->");
+    reverseLookupTable.put(Token.Kind.PERCENT_EQUAL, "%=");
+    reverseLookupTable.put(Token.Kind.PERIOD_PERIOD, "..");
+    reverseLookupTable.put(Token.Kind.PLUS_EQUAL, "+=");
+    reverseLookupTable.put(Token.Kind.SLASH_EQUAL, "/=");
+    reverseLookupTable.put(Token.Kind.TILDE_EQUAL, "~=");
   }
 
   public HashMap<String, Token.Kind> getForwardLookupTable () {

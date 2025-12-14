@@ -63,8 +63,11 @@ public class Parser {
   private final Scope builtinScope;
   private Scope currentScope;
 
-  // Reverse keyword mapping from token-kind to string
-  private final HashMap<Token.Kind, String> keywordLookup;
+  // Reverse mapping from token-kind to string
+//  private final HashMap<Token.Kind, String> reverseLookup;
+
+  // Not really a keyword table.
+  private final HashMap<Token.Kind, String> reverseLookup;
 
   // Note: Leave this disabled for now so the error recovery code can be built
   // with the most raw output to make it easier to understand behavior and
@@ -233,16 +236,19 @@ public class Parser {
 //    syncSetStack = new LinkedList<>();
 //    syncSetStack.push(EnumSet.noneOf(Token.Kind.class));
 
-    var keywordTable = new KeywordTable();
-    keywordLookup = keywordTable.getReverseLookupTable();
-    buildReverseKeywordLookupTable();
+    var lookupTable = new LookupTable();
+    reverseLookup = lookupTable.getReverseLookupTable();
+
+    //buildReverseLookupTable();
 
     // Set up logging
     var level = Level.INFO;
     Configurator.setRootLevel(level);
   }
 
-  // Maybe replace this with a map that maps kinds back to strings
+  // In the process of replacing this with a map that maps kinds back to
+  // strings
+  @Deprecated
   private String friendlyKind (Token.Kind kind) {
     return kind.toString().toLowerCase().replace("_", " ");
   }
@@ -292,10 +298,31 @@ public class Parser {
     errorRecoveryMode = true;
   }
 
+  private void panic (String expectedString) {
+    LOGGER.info("Panic: panic triggered");
+    if (!errorRecoveryMode) {
+      var message = "expected " + expectedString + ", found " + reverseLookup.get(kind);
+      var error = new SyntaxError(sourceLines, message, lookahead);
+      System.out.println(error);
+    }
+    errorRecoveryMode = true;
+  }
+
+  private void panic (String expectedString, Token.Kind expectedKind) {
+    LOGGER.info("Panic: panic triggered");
+    if (!errorRecoveryMode) {
+      var message1 = "expected " + expectedString + " or '" + reverseLookup.get(expectedKind) + "'";
+      var message2 = ", found '" + reverseLookup.get(kind) + "'";
+      var error = new SyntaxError(sourceLines, message1 + message2, lookahead);
+      System.out.println(error);
+    }
+    errorRecoveryMode = true;
+  }
+
   private void generalError (Token.Kind expectedKind) {
-    var expectedKindString = keywordLookup.getOrDefault(expectedKind, friendlyKind(expectedKind));
+    var expectedKindString = reverseLookup.getOrDefault(expectedKind, friendlyKind(expectedKind));
     var actualKind = lookahead.getKind();
-    var actualKindString = keywordLookup.getOrDefault(actualKind, friendlyKind(actualKind));
+    var actualKindString = reverseLookup.getOrDefault(actualKind, friendlyKind(actualKind));
     var message = "expected " + expectedKindString + ", found " + actualKindString;
     var error = new SyntaxError(sourceLines, message, lookahead);
     System.out.println(error);
@@ -307,11 +334,11 @@ public class Parser {
 
   private void checkError (EnumSet<Token.Kind> expectedKinds) {
     var expectedKindsString = expectedKinds.stream()
-      .map(kind -> keywordLookup.getOrDefault(kind, friendlyKind(kind)))
+      .map(kind -> reverseLookup.getOrDefault(kind, friendlyKind(kind)))
       .sorted()
       .collect(Collectors.joining(", "));
     var actualKind = kind;
-    var actualKindString = keywordLookup.getOrDefault(actualKind, friendlyKind(actualKind));
+    var actualKindString = reverseLookup.getOrDefault(actualKind, friendlyKind(actualKind));
     var messageSome = "expected one of " + expectedKindsString + "; found " + actualKindString;
     var messageOne  = "expected "        + expectedKindsString + ", found " + actualKindString;
     var message = expectedKinds.size() > 1 ? messageSome : messageOne;
@@ -319,15 +346,25 @@ public class Parser {
     System.out.println(error);
   }
 
+  // Message is really custom kinds message, not any message
+
+  private void checkError (String message) {
+    var actualKind = kind;
+    var actualKindString = reverseLookup.getOrDefault(actualKind, friendlyKind(actualKind));
+    var messageOne  = "expected " + message + ", found " + actualKindString;
+    var error = new SyntaxError(sourceLines, messageOne, lookahead);
+    System.out.println(error);
+  }
+
   // Experiment with only two items
 
   private void checkError2 (EnumSet<Token.Kind> expectedKinds) {
     var expectedKindsString = expectedKinds.stream()
-      .map(kind -> keywordLookup.getOrDefault(kind, friendlyKind(kind)))
+      .map(kind -> reverseLookup.getOrDefault(kind, friendlyKind(kind)))
       .sorted()
       .toList();
     var actualKind = kind;
-    var actualKindString = keywordLookup.getOrDefault(actualKind, friendlyKind(actualKind));
+    var actualKindString = reverseLookup.getOrDefault(actualKind, friendlyKind(actualKind));
     var message = "expected " + expectedKindsString.get(0) +
                   " or "      + expectedKindsString.get(1) +
                   ", found " + actualKindString;
@@ -362,7 +399,7 @@ public class Parser {
   }
 
   public AstNode process () {
-    buildReverseKeywordLookupTable();
+//    buildReverseLookupTable();
     definePrimitiveTypes();
     LOGGER.info("*** Parsing started... ***");
     var node = translationUnit();
@@ -375,23 +412,6 @@ public class Parser {
 //    var s = builtinScope.getSymbolTable().getData;
 //    System.out.println(s);
     return node;
-  }
-
-  private void buildReverseKeywordLookupTable () {
-    // Experimental, showing that this is a reverse token lookup, not
-    // necessarily a reverse keyword lookup
-    keywordLookup.put(Token.Kind.COLON, "':'");
-    keywordLookup.put(Token.Kind.COMMA, "','");
-    keywordLookup.put(Token.Kind.SEMICOLON, "';'");
-    keywordLookup.put(Token.Kind.EQUAL, "'='");
-    keywordLookup.put(Token.Kind.MINUS, "'-'");
-    keywordLookup.put(Token.Kind.PLUS, "'+'");
-    keywordLookup.put(Token.Kind.ASTERISK, "'*'");
-    keywordLookup.put(Token.Kind.L_BRACE, "'{'");
-    keywordLookup.put(Token.Kind.R_BRACE, "'}'");
-    keywordLookup.put(Token.Kind.L_BRACKET, "'['");
-    keywordLookup.put(Token.Kind.R_BRACKET, "']'");
-    keywordLookup.put(Token.Kind.AS, "'as'");
   }
 
   private void definePrimitiveTypes () {
@@ -2212,33 +2232,12 @@ public class Parser {
     confirm(L_BRACKET);
     var n = new ArrayDeclarator(mark);
     if (kind != R_BRACKET) {
-      if (
-        kind == Token.Kind.IDENTIFIER ||
-        kind == L_PARENTHESIS ||
-        kind == CAST ||
-        kind == DIVINE ||
-        kind == TRANSMUTE ||
-        kind == NEW ||
-        kind == DELETE ||
-        kind == AMPERSAND ||
-        kind == ASTERISK ||
-        kind == EXCLAMATION ||
-        kind == MINUS ||
-        kind == PLUS ||
-        kind == TILDE ||
-        kind == FALSE ||
-        kind == TRUE ||
-        kind == CHARACTER_LITERAL ||
-        kind == FLOAT32_LITERAL ||
-        kind == FLOAT64_LITERAL ||
-        kind == INT32_LITERAL ||
-        kind == INT64_LITERAL ||
-        kind == NULL ||
-        kind == STRING_LITERAL ||
-        kind == UINT32_LITERAL ||
-        kind == UINT64_LITERAL
-      ) {
+      if (FirstSet.EXPRESSION.contains(kind)) {
         n.setExpression(expression(true));
+      } else {
+        // Should be anything in the first set, so maybe we need a custom panic
+        // that can print a custom error message, like "expected expression or ']'"
+        panic("start of expression", R_BRACKET);
       }
     }
     match(R_BRACKET);
