@@ -2211,8 +2211,36 @@ public class Parser {
   private ArrayDeclarator arrayDeclarator () {
     confirm(L_BRACKET);
     var n = new ArrayDeclarator(mark);
-    if (FirstSet.EXPRESSION.contains(kind))
-      n.setExpression(expression(true));
+    if (kind != R_BRACKET) {
+      if (
+        kind == Token.Kind.IDENTIFIER ||
+        kind == L_PARENTHESIS ||
+        kind == CAST ||
+        kind == DIVINE ||
+        kind == TRANSMUTE ||
+        kind == NEW ||
+        kind == DELETE ||
+        kind == AMPERSAND ||
+        kind == ASTERISK ||
+        kind == EXCLAMATION ||
+        kind == MINUS ||
+        kind == PLUS ||
+        kind == TILDE ||
+        kind == FALSE ||
+        kind == TRUE ||
+        kind == CHARACTER_LITERAL ||
+        kind == FLOAT32_LITERAL ||
+        kind == FLOAT64_LITERAL ||
+        kind == INT32_LITERAL ||
+        kind == INT64_LITERAL ||
+        kind == NULL ||
+        kind == STRING_LITERAL ||
+        kind == UINT32_LITERAL ||
+        kind == UINT64_LITERAL
+      ) {
+        n.setExpression(expression(true));
+      }
+    }
     match(R_BRACKET);
     return n;
   }

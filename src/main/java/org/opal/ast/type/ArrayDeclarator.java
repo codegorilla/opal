@@ -24,6 +24,10 @@ public class ArrayDeclarator extends Declarator {
     return v.visit(this);
   }
 
+  public boolean hasExpression () {
+    return expression != null;
+  }
+
   public Expression getExpression () {
     return expression;
   }

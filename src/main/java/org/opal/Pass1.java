@@ -223,7 +223,8 @@ public class Pass1 extends BaseVisitor {
   public void visit (ArrayDeclarator node) {
     depth.increment();
     printNode(node);
-    visit(node.getExpression());
+    if (node.hasExpression())
+      visit(node.getExpression());
     depth.decrement();
   }
 
