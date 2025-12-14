@@ -64,9 +64,6 @@ public class Parser {
   private Scope currentScope;
 
   // Reverse mapping from token-kind to string
-//  private final HashMap<Token.Kind, String> reverseLookup;
-
-  // Not really a keyword table.
   private final HashMap<Token.Kind, String> reverseLookup;
 
   // Note: Leave this disabled for now so the error recovery code can be built
@@ -239,8 +236,6 @@ public class Parser {
     var lookupTable = new LookupTable();
     reverseLookup = lookupTable.getReverseLookupTable();
 
-    //buildReverseLookupTable();
-
     // Set up logging
     var level = Level.INFO;
     Configurator.setRootLevel(level);
@@ -298,10 +293,47 @@ public class Parser {
     errorRecoveryMode = true;
   }
 
-  private void panic (String expectedString) {
-    LOGGER.info("Panic: panic triggered");
+  // TBD: I am not sure we ever have a single expected kind when panicking.
+  private void panic (Token.Kind expectedKind) {
+    LOGGER.info("Panic: panic(1) triggered");
     if (!errorRecoveryMode) {
-      var message = "expected " + expectedString + ", found " + reverseLookup.get(kind);
+      // Some error message
+    }
+    errorRecoveryMode = true;
+  }
+
+  private void panic (Token.Kind expectedKind1, Token.Kind expectedKind2) {
+    LOGGER.info("Panic: panic(2) triggered");
+    if (!errorRecoveryMode) {
+      var expectedMessage1 = "expected '" + reverseLookup.get(expectedKind1);
+      var expectedMessage2 = "' or '" + reverseLookup.get(expectedKind2);
+      var foundMessage = "', found '" + reverseLookup.get(kind) + "'";
+      var message = expectedMessage1 + expectedMessage2 + foundMessage;
+      var error = new SyntaxError(sourceLines, message, lookahead);
+    }
+    errorRecoveryMode = true;
+  }
+
+  private void panic (Token.Kind... expectedKinds) {
+    LOGGER.info("Panic: panic(V) triggered");
+    if (!errorRecoveryMode) {
+      var s = new StringBuilder("expected ");
+      s.append("'").append(reverseLookup.get(expectedKinds[0])).append("'");
+      for (var i=1; i<expectedKinds.length-1; i++)
+        s.append(", '").append(reverseLookup.get(expectedKinds[i])).append("'");
+      s.append(", or '").append(reverseLookup.get(expectedKinds[expectedKinds.length-1])).append("'");
+      var expectedMessage = s.toString();
+      var foundMessage = "'; found '" + reverseLookup.get(kind) + "'";
+      var message = expectedMessage + foundMessage;
+      var error = new SyntaxError(sourceLines, message, lookahead);
+    }
+    errorRecoveryMode = true;
+  }
+
+  private void panic (String expectedString) {
+    LOGGER.info("Panic: panic(S) triggered");
+    if (!errorRecoveryMode) {
+      var message = "expected " + expectedString + ", found '" + reverseLookup.get(kind) + "'";
       var error = new SyntaxError(sourceLines, message, lookahead);
       System.out.println(error);
     }
@@ -309,11 +341,12 @@ public class Parser {
   }
 
   private void panic (String expectedString, Token.Kind expectedKind) {
-    LOGGER.info("Panic: panic triggered");
+    LOGGER.info("Panic: panic(S+1) triggered");
     if (!errorRecoveryMode) {
-      var message1 = "expected " + expectedString + " or '" + reverseLookup.get(expectedKind) + "'";
-      var message2 = ", found '" + reverseLookup.get(kind) + "'";
-      var error = new SyntaxError(sourceLines, message1 + message2, lookahead);
+      var expectedMessage = "expected " + expectedString + " or '" + reverseLookup.get(expectedKind);
+      var foundMessage = "', found '" + reverseLookup.get(kind) + "'";
+      var message = expectedMessage + foundMessage;
+      var error = new SyntaxError(sourceLines, message, lookahead);
       System.out.println(error);
     }
     errorRecoveryMode = true;
@@ -399,7 +432,6 @@ public class Parser {
   }
 
   public AstNode process () {
-//    buildReverseLookupTable();
     definePrimitiveTypes();
     LOGGER.info("*** Parsing started... ***");
     var node = translationUnit();
@@ -520,6 +552,28 @@ public class Parser {
     LOGGER.info("Check-in: check-in complete");
   }
 
+  // Special variant of checkIn that uses a custom string for expected kinds
+
+  private void checkIn (EnumSet<Token.Kind> firstSet, String expectedString) {
+    LOGGER.info("Check-in: check-in started");
+    // Might need to set mark in process() not here
+    mark = lookahead;
+    if (!firstSet.contains(kind)) {
+      if (!errorRecoveryMode) {
+        var message = "expected " + expectedString + ", found '" + reverseLookup.get(kind) + "'";
+        var error = new SyntaxError(sourceLines, message, lookahead);
+        System.out.println(error);
+      }
+      LOGGER.info("Check-in: created " + mark);
+      // Combine first set and all follower sets
+      var combined = EnumSet.copyOf(firstSet);
+      for (var followerSet : followerSetStack)
+        combined.addAll(followerSet);
+      sync(combined);
+    }
+    LOGGER.info("Check-in: check-in complete");
+  }
+
   private void checkOut () {
     LOGGER.info("Check-out: check-out started");
     if (errorRecoveryMode) {
@@ -595,7 +649,7 @@ public class Parser {
       if (kind == AS)
         n.setAsName(importAsClause());
       else
-        panic(EnumSet.of(AS, SEMICOLON));
+        panic(AS, SEMICOLON);
     }
     match(SEMICOLON);
     checkOut();
@@ -712,7 +766,7 @@ public class Parser {
         match(Token.Kind.IDENTIFIER);
         n.addUseName(new UseName(mark));
       } else {
-        panic(EnumSet.of(COMMA, R_BRACE));
+        panic(COMMA, R_BRACE);
         break;
       }
     }
@@ -771,20 +825,11 @@ public class Parser {
       else if (kind == VAL || kind == VAR)
         n = variableDeclaration(p);
       else {
+        // Probably should panic with custom "expected start of declaration"
+        // message
         panic(EnumSet.of(CLASS, TYPEALIAS, DEF, VAL, VAR));
         modifierStack.clear();
       }
-
-      /*
-      else {
-        checkError(EnumSet.of(CLASS, TYPEALIAS, DEF, VAL, VAR));
-        mark = lookahead;
-        var combined = combine();
-        sync(combined);
-        modifierStack.clear();
-        n = new ErrorNode(mark);
-      }
-      */
     }
     followerSetStack.pop();
     return n;
@@ -1202,12 +1247,7 @@ public class Parser {
     } else if (kind == EQUAL) {
       n.setInitializer(variableInitializer());
     } else {
-      panic(EnumSet.of(COLON, EQUAL));
-//      checkError(EnumSet.of(COLON, EQUAL));
-//      // Might not need to mark
-//      mark = lookahead;
-//      var combined = combine();
-//      sync(combined);
+      panic(COLON, EQUAL);
     }
     followerSetStack.pop();
     match(SEMICOLON);
@@ -1628,11 +1668,44 @@ public class Parser {
   // necessary. We can use 'instanceof' to know if any expression node is the
   // root expression node or not.
 
+  // Expressions tend to have variable sync sets
+
+  // Top-level categories such as declaration, statement, expression tend to
+  // have large FIRST sets. In this case, it is ok to use the "contains"
+  // method. Otherwise, we prefer to use chains of "if" statements.
+
+  // I think panics are mostly used when there are no check-ins. Need to
+  // verify.
+
+  // To do: We want check-in to have special variants depending on size of
+  // first set, just like panic method.
+
+  private Expression expression (EnumSet<Token.Kind> syncSet) {
+    if (syncSet != null)
+      followerSetStack.push(syncSet);
+    checkIn(FirstSet.EXPRESSION, "start of expression");
+    Expression n;
+    if (FirstSet.EXPRESSION.contains(kind)) {
+      n = assignmentExpression();
+    } else {
+      // Yes, we need this! If the sync never hits anything in the first set
+      // then we need to return a bogus expression!
+      n = new BogusExpression(mark);
+    }
+    checkOut();
+    return n;
+  }
+
+  private Expression subExpression () {
+    return assignmentExpression();
+  }
+
+  @Deprecated
   private Expression expression (boolean root) {
     var n = assignmentExpression();
     if (root) {
       var p = new Expression();
-      p.setSubexpression(n);
+      p.setSubExpression(n);
       n = p;
     }
     return n;
@@ -2232,13 +2305,15 @@ public class Parser {
     confirm(L_BRACKET);
     var n = new ArrayDeclarator(mark);
     if (kind != R_BRACKET) {
-      if (FirstSet.EXPRESSION.contains(kind)) {
-        n.setExpression(expression(true));
-      } else {
-        // Should be anything in the first set, so maybe we need a custom panic
-        // that can print a custom error message, like "expected expression or ']'"
-        panic("start of expression", R_BRACKET);
-      }
+      n.setExpression(expression(EnumSet.of(R_BRACKET)));
+//      // To do: Should we just go to expression and do a check-in?
+//      if (FirstSet.EXPRESSION.contains(kind)) {
+//        n.setExpression(expression(true));
+//      } else {
+//        // To do: Probably need a bogus expression here?
+////        n.setExpression();
+//        panic("start of expression", R_BRACKET);
+//      }
     }
     match(R_BRACKET);
     return n;

@@ -7,7 +7,7 @@ import org.opal.ast.AstNode;
 
 public class Expression extends AstNode {
 
-  private Expression subexpression = null;
+  private Expression subExpression = null;
 
   public Expression () {}
 
@@ -25,12 +25,16 @@ public class Expression extends AstNode {
     return v.visit(this);
   }
 
-  public Expression getSubexpression () {
-    return subexpression;
+  public boolean hasSubExpression () {
+    return subExpression != null;
   }
 
-  public void setSubexpression (Expression subexpression) {
-    this.subexpression = subexpression;
+  public Expression getSubExpression () {
+    return subExpression;
+  }
+
+  public void setSubExpression (Expression subExpression) {
+    this.subExpression = subExpression;
   }
 
 

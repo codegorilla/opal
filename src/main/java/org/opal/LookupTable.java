@@ -2,28 +2,18 @@ package org.opal;
 
 import java.util.HashMap;
 
-// I don't think we need the reverse lookup table here. The forward lookup
-// functionality only works with keywords. Punctuation/operators are handled by
-// the lexer inherently.
-
-// For reverse lookup, we need both keywords and punctuation/operators. So just
-// handling keywords doesn't work.
-
 public class LookupTable {
 
   // Mappings from string to token-kind and vice versa
-  private final HashMap<String, Token.Kind> forwardLookupTable = new HashMap<>();
-  private final HashMap<Token.Kind, String> reverseLookupTable = new HashMap<>();
+  private HashMap<String, Token.Kind> forwardLookupTable;
+  private HashMap<Token.Kind, String> reverseLookupTable;
 
   public LookupTable () {
     buildForwardLookupTable();
-    buildReverseLookupTable();
   }
 
-  // The tables are built lazily on demand. Why? I think it was because I was
-  // planning to have more than one. Lazy build probably not needed anymore.
-
-  public void buildForwardLookupTable() {
+  private void buildForwardLookupTable() {
+    forwardLookupTable = new HashMap<>();
     forwardLookupTable.put("abstract", Token.Kind.ABSTRACT);
     forwardLookupTable.put("and", Token.Kind.AND);
     forwardLookupTable.put("as", Token.Kind.AS);
@@ -104,7 +94,8 @@ public class LookupTable {
     forwardLookupTable.put("void", Token.Kind.VOID);
   }
 
-  public void buildReverseLookupTable () {
+  private void buildReverseLookupTable () {
+    reverseLookupTable = new HashMap<>();
 
     // Populate keywords from forward lookup table
     for (var entry : forwardLookupTable.entrySet())
@@ -164,7 +155,12 @@ public class LookupTable {
     return forwardLookupTable;
   }
 
+  // Reverse lookup table table is built lazily because it is only used during
+  // parsing (e.g. for friendly error messages).
+
   public HashMap<Token.Kind, String> getReverseLookupTable () {
+    if (reverseLookupTable == null)
+      buildReverseLookupTable();
     return reverseLookupTable;
   }
 }

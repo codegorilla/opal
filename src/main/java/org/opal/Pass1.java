@@ -2,10 +2,14 @@ package org.opal;
 
 import org.opal.ast.*;
 import org.opal.ast.declaration.*;
-import org.opal.ast.expression.Expression;
-import org.opal.ast.expression.FloatingPointLiteral;
-import org.opal.ast.expression.IntegerLiteral;
+import org.opal.ast.expression.*;
 import org.opal.ast.type.*;
+
+// We cannot use a generic "visit" method that takes an AST node because it
+// won't be able to tell what kind of node it is and will treat them as plain
+// AST nodes. That was fine when using regular nodes (with generic lists of
+// children) but it doesn't work when using irregular nodes where the specific
+// kind of node is important for method resolution.
 
 public class Pass1 extends BaseVisitor {
 
@@ -44,7 +48,7 @@ public class Pass1 extends BaseVisitor {
   public void visit (PackageDeclaration node) {
     depth.increment();
     printNode(node);
-    visit(node.packageName());
+    node.getPackageName().accept(this);
     depth.decrement();
   }
 
@@ -58,7 +62,7 @@ public class Pass1 extends BaseVisitor {
     depth.increment();
     printNode(node);
     for (var importDeclaration : node.children())
-      visit(importDeclaration);
+      importDeclaration.accept(this);
     depth.decrement();
   }
 
@@ -163,14 +167,14 @@ public class Pass1 extends BaseVisitor {
   public void visit (VariableTypeSpecifier node) {
     depth.increment();
     printNode(node);
-    visit(node.getDeclarator());
+    node.getDeclarator().accept(this);
     depth.decrement();
   }
 
   public void visit (VariableInitializer node) {
     depth.increment();
     printNode(node);
-    visit(node.getExpression());
+    node.getExpression().accept(this);
     depth.decrement();
   }
 
@@ -181,7 +185,19 @@ public class Pass1 extends BaseVisitor {
   public void visit (Expression node) {
     depth.increment();
     printNode(node);
-    node.getSubexpression().accept(this);
+    if (node.hasSubExpression())
+      node.getSubExpression().accept(this);
+    depth.decrement();
+  }
+
+  // How come no subexpression?!??!! Oh, maybe still using setChild. Investigate.
+
+  public void visit (UnaryExpression node) {
+    System.out.println("GOT UNARY EXPR HERE!");
+    depth.increment();
+    printNode(node);
+    if (node.hasSubExpression())
+      node.getSubExpression().accept(this);
     depth.decrement();
   }
 
@@ -224,7 +240,7 @@ public class Pass1 extends BaseVisitor {
     depth.increment();
     printNode(node);
     if (node.hasExpression())
-      visit(node.getExpression());
+      node.getExpression().accept(this);
     depth.decrement();
   }
 
