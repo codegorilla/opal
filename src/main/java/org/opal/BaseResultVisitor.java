@@ -154,6 +154,7 @@ public class BaseResultVisitor<T> implements ResultVisitor <T> {
   public T visit (Name node) { return null; }
   public T visit (This node) { return null; }
   public T visit (ErrorNode node) { return null; }
+  public T visit (BogusExpression node) { return null; }
 
   // NEW TYPES
 

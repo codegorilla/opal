@@ -146,6 +146,8 @@ public interface Visitor {
   public void visit (Name node);
   public void visit (This node);
   public void visit (ErrorNode node);
+  public void visit (BogusExpression node);
+
 
   // NEW TYPES
 

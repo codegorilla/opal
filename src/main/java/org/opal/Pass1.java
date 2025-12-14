@@ -11,6 +11,9 @@ import org.opal.ast.type.*;
 // children) but it doesn't work when using irregular nodes where the specific
 // kind of node is important for method resolution.
 
+// If a specific type isn't being used properly, make sure it is declared in
+// the various visitor interfaces and base classes!
+
 public class Pass1 extends BaseVisitor {
 
   private final Counter depth = new Counter();
@@ -178,7 +181,7 @@ public class Pass1 extends BaseVisitor {
     depth.decrement();
   }
 
-  // STATEMENTS
+  // STATEMENTS - TBD
 
   // EXPRESSIONS
 
@@ -190,10 +193,7 @@ public class Pass1 extends BaseVisitor {
     depth.decrement();
   }
 
-  // How come no subexpression?!??!! Oh, maybe still using setChild. Investigate.
-
   public void visit (UnaryExpression node) {
-    System.out.println("GOT UNARY EXPR HERE!");
     depth.increment();
     printNode(node);
     if (node.hasSubExpression())
@@ -208,6 +208,12 @@ public class Pass1 extends BaseVisitor {
   }
 
   public void visit (IntegerLiteral node) {
+    depth.increment();
+    printNode(node);
+    depth.decrement();
+  }
+
+  public void visit (BogusExpression node) {
     depth.increment();
     printNode(node);
     depth.decrement();
@@ -232,15 +238,15 @@ public class Pass1 extends BaseVisitor {
     printNode(node);
     for (var arrayDeclarator : node.children())
       arrayDeclarator.accept(this);
-//      visit(arrayDeclarator);
     depth.decrement();
   }
 
   public void visit (ArrayDeclarator node) {
     depth.increment();
     printNode(node);
-    if (node.hasExpression())
+    if (node.hasExpression()) {
       node.getExpression().accept(this);
+    }
     depth.decrement();
   }
 
@@ -248,7 +254,7 @@ public class Pass1 extends BaseVisitor {
     depth.increment();
     printNode(node);
     for (var pointerDeclarator : node.children())
-      visit(pointerDeclarator);
+      pointerDeclarator.accept(this);
     depth.decrement();
   }
 

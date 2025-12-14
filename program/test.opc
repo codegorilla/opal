@@ -9,7 +9,7 @@ use opal.math.*;
 
 //var t: **int[2.5][4] = 5;
 
-var t: int[2][/ -10] = 5;
+var t: int[2][/|] = 5;
 
 //var s: float = 1;
 

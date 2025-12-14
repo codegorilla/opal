@@ -146,6 +146,7 @@ public interface ResultVisitor <T> {
   public T visit (Name node);
   public T visit (This node);
   public T visit (ErrorNode node);
+  public T visit (BogusExpression node);
 
   // NEW TYPES
 

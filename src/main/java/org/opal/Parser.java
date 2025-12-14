@@ -1666,19 +1666,12 @@ public class Parser {
   // node, where the final computed type and other synthesized attributes can be
   // stored to aid in such things as type-checking. This might not actually be
   // necessary. We can use 'instanceof' to know if any expression node is the
-  // root expression node or not.
-
-  // Expressions tend to have variable sync sets
+  // root expression node or not. UPDATE: I think I want to stop using an
+  // explicit root expression node.
 
   // Top-level categories such as declaration, statement, expression tend to
   // have large FIRST sets. In this case, it is ok to use the "contains"
   // method. Otherwise, we prefer to use chains of "if" statements.
-
-  // I think panics are mostly used when there are no check-ins. Need to
-  // verify.
-
-  // To do: We want check-in to have special variants depending on size of
-  // first set, just like panic method.
 
   private Expression expression (EnumSet<Token.Kind> syncSet) {
     if (syncSet != null)
@@ -1868,7 +1861,7 @@ public class Parser {
     if (kind == ASTERISK || kind == MINUS || kind == PLUS || kind == EXCLAMATION || kind == TILDE) {
       confirm(kind);
       n = new UnaryExpression(mark);
-      n.addChild(unaryExpression());
+      n.setSubExpression(unaryExpression());
     } else if (kind == CAST || kind == DIVINE || kind == TRANSMUTE) {
       n = castExpression();
     } else if (kind == DELETE) {
