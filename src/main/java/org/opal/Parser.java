@@ -2294,20 +2294,14 @@ public class Parser {
 
   // Check that expression is const during semantic analysis
 
+  // I believe this conforms to the correct way of handling optional items. Use
+  // this as an example for other constructs.
+
   private ArrayDeclarator arrayDeclarator () {
     confirm(L_BRACKET);
     var n = new ArrayDeclarator(mark);
-    if (kind != R_BRACKET) {
+    if (kind != R_BRACKET)
       n.setExpression(expression(EnumSet.of(R_BRACKET)));
-//      // To do: Should we just go to expression and do a check-in?
-//      if (FirstSet.EXPRESSION.contains(kind)) {
-//        n.setExpression(expression(true));
-//      } else {
-//        // To do: Probably need a bogus expression here?
-////        n.setExpression();
-//        panic("start of expression", R_BRACKET);
-//      }
-    }
     match(R_BRACKET);
     return n;
   }
