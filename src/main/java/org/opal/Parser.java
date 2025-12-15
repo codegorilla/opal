@@ -333,7 +333,10 @@ public class Parser {
   private void panic (String expectedString) {
     LOGGER.info("Panic: panic(S) triggered");
     if (!errorRecoveryMode) {
-      var message = "expected " + expectedString + ", found '" + reverseLookup.get(kind) + "'";
+      var expectedMessage = "expected " + expectedString;
+      var foundObject = (kind == Token.Kind.IDENTIFIER) ? "identifier" : "'" + reverseLookup.get(kind) + "'";
+      var foundMessage =  ", but found " + foundObject;
+      var message = expectedMessage + foundMessage;
       var error = new SyntaxError(sourceLines, message, lookahead);
       System.out.println(error);
     }
@@ -466,20 +469,22 @@ public class Parser {
 
   // Maybe we need a check-in here
 
+  // TBD: Are check-ins in the middle of a production proper? I think the
+  // purpose of these is to ensure that error message say, "expected X or Y",
+  // not just "expected Y". Should we just be looking at follow sets?
+
   private AstNode translationUnit () {
     followerSetStack.push(EnumSet.of(Token.Kind.EOF));
     var n = new TranslationUnit();
     n.setPackageDeclaration(packageDeclaration());
-
-    checkIn(FirstSet.REMAINING_DECLARATIONS_1);
+    checkIn(FirstSet.REMAINING_DECLARATIONS_1, "'import', 'use', or start of other declaration");
     if (kind == IMPORT)
       n.setImportDeclarations(importDeclarations());
-
-    checkIn(FirstSet.REMAINING_DECLARATIONS_2);
+    checkIn(FirstSet.REMAINING_DECLARATIONS_2, "'import', 'use', or start of other declaration");
     if (kind == USE)
       n.setUseDeclarations(useDeclarations());
 
-    checkIn(FirstSet.REMAINING_DECLARATIONS_3);
+    checkIn(FirstSet.REMAINING_DECLARATIONS_3, "'use' or start of other declaration");
     if (
       kind == PRIVATE ||
       kind == CLASS   ||
@@ -554,13 +559,29 @@ public class Parser {
 
   // Special variant of checkIn that uses a custom string for expected kinds
 
+  private void panicX (String expectedString) {
+    LOGGER.info("Panic: panic(S) triggered");
+    if (!errorRecoveryMode) {
+      var expectedMessage = "expected " + expectedString;
+      var foundObject = (kind == Token.Kind.IDENTIFIER) ? "identifier" : "'" + reverseLookup.get(kind) + "'";
+      var foundMessage =  ", but found " + foundObject;
+      var message = expectedMessage + foundMessage;
+      var error = new SyntaxError(sourceLines, message, lookahead);
+      System.out.println(error);
+    }
+    errorRecoveryMode = true;
+  }
+
   private void checkIn (EnumSet<Token.Kind> firstSet, String expectedString) {
     LOGGER.info("Check-in: check-in started");
     // Might need to set mark in process() not here
     mark = lookahead;
     if (!firstSet.contains(kind)) {
       if (!errorRecoveryMode) {
-        var message = "expected " + expectedString + ", found '" + reverseLookup.get(kind) + "'";
+        var expectedMessage = "expected " + expectedString;
+        var foundObject = (kind == Token.Kind.IDENTIFIER) ? "identifier" : "'" + reverseLookup.get(kind) + "'";
+        var foundMessage =  ", but found " + foundObject;
+        var message = expectedMessage + foundMessage;
         var error = new SyntaxError(sourceLines, message, lookahead);
         System.out.println(error);
       }

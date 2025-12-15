@@ -49,7 +49,6 @@ public class FirstSet {
 
   public static final EnumSet<Token.Kind> REMAINING_DECLARATIONS_2 =
     union(
-      FirstSet.IMPORT_DECLARATIONS,
       FirstSet.USE_DECLARATIONS,
       FirstSet.OTHER_DECLARATIONS,
       FollowSet.TRANSLATION_UNIT
@@ -57,7 +56,7 @@ public class FirstSet {
 
   public static final EnumSet<Token.Kind> REMAINING_DECLARATIONS_3 =
     union(
-      FirstSet.USE_DECLARATIONS,
+//      FirstSet.USE_DECLARATIONS,
       FirstSet.OTHER_DECLARATIONS,
       FollowSet.TRANSLATION_UNIT
     );
@@ -259,5 +258,11 @@ public class FirstSet {
     return combined;
   }
 
+//  private static EnumSet<Token.Kind> union (EnumSet<Token.Kind>... sets) {
+//    var combined = EnumSet.copyOf(sets[0]);
+//    for (int i=0; i<sets.length; i++)
+//      combined.addAll(sets[i]);
+//    return combined;
+//  }
 
 }

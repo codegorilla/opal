@@ -1,15 +1,20 @@
 package main;
 
-//import opal.lang;
+bleep
+
+import opal.lang;
 //import opal.math as m;
 
 //use opal.math.pi;
 //use opal.math.{ Bessel, Jacobian };
-use opal.math.*;
+
++ + use opal.math.*;
+
++ + use opal.math.cos;
 
 //var t: **int[2.5][4] = 5;
 
-var t: int[2][/|] = 5;
+//var t: int[2][/|] = 5;
 
 //var s: float = 1;
 
