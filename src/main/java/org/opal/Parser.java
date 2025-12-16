@@ -477,25 +477,27 @@ public class Parser {
     followerSetStack.push(EnumSet.of(Token.Kind.EOF));
     var n = new TranslationUnit();
     n.setPackageDeclaration(packageDeclaration());
-    checkIn(FirstSet.REMAINING_DECLARATIONS_1, "'import', 'use', or start of other declaration");
-    if (kind == IMPORT)
-      n.setImportDeclarations(importDeclarations());
-    checkIn(FirstSet.REMAINING_DECLARATIONS_2, "'import', 'use', or start of other declaration");
-    if (kind == USE)
-      n.setUseDeclarations(useDeclarations());
+    n.setOtherDeclarations(otherDeclarations());
 
-    checkIn(FirstSet.REMAINING_DECLARATIONS_3, "'use' or start of other declaration");
-    if (
-      kind == PRIVATE ||
-      kind == CLASS   ||
-      kind == DEF     ||
-      kind == VAL     ||
-      kind == VAR
-    ) {
-      n.setOtherDeclarations(otherDeclarations());
-    }
-
-    System.out.println("HERE");
+//    checkIn(FirstSet.REMAINING_DECLARATIONS_1, "'import', 'use', or start of other declaration");
+//    if (kind == IMPORT)
+//      n.setImportDeclarations(importDeclarations());
+//    checkIn(FirstSet.REMAINING_DECLARATIONS_2, "'import', 'use', or start of other declaration");
+//    if (kind == USE)
+//      n.setUseDeclarations(useDeclarations());
+//
+//    checkIn(FirstSet.REMAINING_DECLARATIONS_3, "'use' or start of other declaration");
+//    if (
+//      kind == PRIVATE ||
+//      kind == CLASS   ||
+//      kind == DEF     ||
+//      kind == VAL     ||
+//      kind == VAR
+//    ) {
+//      n.setOtherDeclarations(otherDeclarations());
+//    }
+//
+//    System.out.println("HERE");
 
 //    else if (kind == Token.Kind.EOF) {
 //    } else {
@@ -637,20 +639,55 @@ public class Parser {
     return n;
   }
 
+  // We want to do a special form of check-in because this may be an epsilon
+  // production.
+
+  // It is only an error IF lookahead kind is not in FIRST set *AND* not in
+  // FOLLOW set. This is because this may result in an epsilon production.
+
+  private OtherDeclarations otherDeclarations () {
+    // This is an aggregator node. Its unclear whether we should ALWAYS create
+    // this or ONLY create it if there is at least one child. I believe it is
+    // easier if we always create it.
+    var n = new OtherDeclarations();
+    var firstSet = FirstSet.OTHER_DECLARATIONS;
+    if (!firstSet.contains(kind) && kind != Token.Kind.EOF) {
+      if (!errorRecoveryMode) {
+        var expectedMessage = "expected " + "start of declaration";
+        var foundObject = (kind == Token.Kind.IDENTIFIER) ? "identifier" : "'" + reverseLookup.get(kind) + "'";
+        var foundMessage =  ", but found " + foundObject;
+        var message = expectedMessage + foundMessage;
+        var error = new SyntaxError(sourceLines, message, lookahead);
+        System.out.println(error);
+      }
+      var combined = EnumSet.copyOf(firstSet);
+      for (var followerSet : followerSetStack)
+        combined.addAll(followerSet);
+      sync(combined);
+    }
+    while (kind != Token.Kind.EOF) {
+      // We need to go another level down to allow more check-ins
+      // Cannot do if-else chain here because that won't allow opportunity to
+      // synchronize to first-set.
+      n.addOtherDeclaration(otherDeclaration());
+    }
+    return n;
+  }
+
   // No check-in is required because we only arrive at this production through
   // an explicit check for 'import' keyword. Thus, we can only get here if the
   // current lookahead token is known for sure to be 'import'.
 
-  private ImportDeclarations importDeclarations () {
-    followerSetStack.push(FollowerSet.IMPORT_DECLARATIONS);
-    // No check-in required
-    var n = new ImportDeclarations();
-    n.addImportDeclaration(importDeclaration());
-    while (kind == IMPORT)
-      n.addImportDeclaration(importDeclaration());
-    followerSetStack.pop();
-    return n;
-  }
+//  private ImportDeclarations importDeclarations () {
+//    followerSetStack.push(FollowerSet.IMPORT_DECLARATIONS);
+//    // No check-in required
+//    var n = new ImportDeclarations();
+//    n.addImportDeclaration(importDeclaration());
+//    while (kind == IMPORT)
+//      n.addImportDeclaration(importDeclaration());
+//    followerSetStack.pop();
+//    return n;
+//  }
 
   // We could implement this several ways. First, we could use a binary tree
   // with dots as internal nodes and names as leaf nodes. Second, we could
@@ -808,16 +845,16 @@ public class Parser {
 //        throw new RuntimeException(e);
 //      }
 
-  private OtherDeclarations otherDeclarations () {
-    followerSetStack.push(FollowerSet.OTHER_DECLARATIONS);
-    checkIn(FirstSet.OTHER_DECLARATIONS);
-    var n = new OtherDeclarations();
-    while (FirstSet.OTHER_DECLARATION.contains(kind)) {
-      n.addOtherDeclaration(otherDeclaration());
-    }
-    followerSetStack.pop();
-    return n;
-  }
+//  private OtherDeclarations otherDeclarations () {
+//    followerSetStack.push(FollowerSet.OTHER_DECLARATIONS);
+//    checkIn(FirstSet.OTHER_DECLARATIONS);
+//    var n = new OtherDeclarations();
+//    while (FirstSet.OTHER_DECLARATION.contains(kind)) {
+//      n.addOtherDeclaration(otherDeclaration());
+//    }
+//    followerSetStack.pop();
+//    return n;
+//  }
 
   // Entities may be declared as private, indicating that they are not
   // exported. Otherwise, they are considered public, i.e. exported.

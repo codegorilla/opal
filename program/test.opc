@@ -1,6 +1,6 @@
 package main;
 
-bleep
+//bleep
 
 import opal.lang;
 //import opal.math as m;
@@ -8,9 +8,9 @@ import opal.lang;
 //use opal.math.pi;
 //use opal.math.{ Bessel, Jacobian };
 
-+ + use opal.math.*;
+//+ + use opal.math.*;
 
-+ + use opal.math.cos;
+//+ + use opal.math.cos;
 
 //var t: **int[2.5][4] = 5;
 
