@@ -1,8 +1,9 @@
 package main;
 
-//bleep
 
-import opal.lang;
+import opal.lang
+import opal.math;
+
 //import opal.math as m;
 
 //use opal.math.pi;

@@ -5,7 +5,7 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class UseDeclaration extends AstNode {
+public class UseDeclaration extends Declaration {
 
   // Not sure if this is used anymore?
   private Kind kind = null;

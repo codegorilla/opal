@@ -25,6 +25,7 @@ public class BaseResultVisitor<T> implements ResultVisitor <T> {
 
   // General declarations
   public T visit (Declarations node) { return null; }
+  public T visit (Declaration node) { return null; }
 
   // Package declarations
   public T visit (PackageDeclaration node) { return null; }
@@ -103,6 +104,9 @@ public class BaseResultVisitor<T> implements ResultVisitor <T> {
   public T visit (VariableName node) { return null; }
   public T visit (VariableTypeSpecifier node) { return null; }
   public T visit (VariableInitializer node) { return null; }
+
+  // Special declarations
+  public T visit (BogusDeclaration node) { return null; }
 
   // STATEMENTS
 

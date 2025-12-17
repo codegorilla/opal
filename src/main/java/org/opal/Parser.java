@@ -310,6 +310,7 @@ public class Parser {
       var foundMessage = "', found '" + reverseLookup.get(kind) + "'";
       var message = expectedMessage1 + expectedMessage2 + foundMessage;
       var error = new SyntaxError(sourceLines, message, lookahead);
+      System.out.println(error);
     }
     errorRecoveryMode = true;
   }
@@ -326,6 +327,7 @@ public class Parser {
       var foundMessage = "'; found '" + reverseLookup.get(kind) + "'";
       var message = expectedMessage + foundMessage;
       var error = new SyntaxError(sourceLines, message, lookahead);
+      System.out.println(error);
     }
     errorRecoveryMode = true;
   }
@@ -650,27 +652,54 @@ public class Parser {
     // this or ONLY create it if there is at least one child. I believe it is
     // easier if we always create it.
     var n = new OtherDeclarations();
-    var firstSet = FirstSet.OTHER_DECLARATIONS;
-    if (!firstSet.contains(kind) && kind != Token.Kind.EOF) {
-      if (!errorRecoveryMode) {
-        var expectedMessage = "expected " + "start of declaration";
-        var foundObject = (kind == Token.Kind.IDENTIFIER) ? "identifier" : "'" + reverseLookup.get(kind) + "'";
-        var foundMessage =  ", but found " + foundObject;
-        var message = expectedMessage + foundMessage;
-        var error = new SyntaxError(sourceLines, message, lookahead);
-        System.out.println(error);
-      }
-      var combined = EnumSet.copyOf(firstSet);
-      for (var followerSet : followerSetStack)
-        combined.addAll(followerSet);
-      sync(combined);
-    }
+//    var firstSet = FirstSet.OTHER_DECLARATIONS;
+//    if (!firstSet.contains(kind) && kind != Token.Kind.EOF) {
+//      if (!errorRecoveryMode) {
+//        var expectedMessage = "expected " + "start of declaration";
+//        var foundObject = (kind == Token.Kind.IDENTIFIER) ? "identifier" : "'" + reverseLookup.get(kind) + "'";
+//        var foundMessage =  ", but found " + foundObject;
+//        var message = expectedMessage + foundMessage;
+//        var error = new SyntaxError(sourceLines, message, lookahead);
+//        System.out.println(error);
+//      }
+//      var combined = EnumSet.copyOf(firstSet);
+//      for (var followerSet : followerSetStack)
+//        combined.addAll(followerSet);
+//      sync(combined);
+//    }
+
+    // EOF is the only token kind in the FOLLOW set and it is a static set
+
     while (kind != Token.Kind.EOF) {
       // We need to go another level down to allow more check-ins
       // Cannot do if-else chain here because that won't allow opportunity to
       // synchronize to first-set.
-      n.addOtherDeclaration(otherDeclaration());
+      n.addOtherDeclaration(otherDeclaration1());
     }
+    return n;
+  }
+
+  // Can there ever be a bogus declaration? If declarations can always produce
+  // epsilon productions, maybe not.
+
+  // The check-in either gets us to something in the first set or something in
+  // the follow set. If it takes us to the follow set then this is a bogus
+  // declaration.
+
+  // Check-out syncs us to the end of the declaration if required.
+
+  private Declaration otherDeclaration1 () {
+    checkIn(FirstSet.OTHER_DECLARATION, "start of declaration");
+    Declaration n;
+    if (kind == IMPORT) {
+      n = importDeclaration();
+    } else if (kind == USE) {
+      n = useDeclaration();
+    } else {
+      n = new BogusDeclaration(mark);
+    }
+    checkOut();
+    // Do we need to consume semicolon here?
     return n;
   }
 
@@ -706,8 +735,9 @@ public class Parser {
     if (kind != SEMICOLON) {
       if (kind == AS)
         n.setAsName(importAsClause());
-      else
+      else {
         panic(AS, SEMICOLON);
+      }
     }
     match(SEMICOLON);
     checkOut();

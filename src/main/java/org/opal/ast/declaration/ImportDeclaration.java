@@ -5,7 +5,7 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class ImportDeclaration extends AstNode {
+public class ImportDeclaration extends Declaration {
 
   // Alias as determined from import declaration analysis
   private String aliasAttribute = null;

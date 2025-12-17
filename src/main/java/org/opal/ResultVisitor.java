@@ -17,6 +17,7 @@ public interface ResultVisitor <T> {
 
   // General declarations
   public T visit (Declarations node);
+  public T visit (Declaration node);
 
   // Package declarations
   public T visit (PackageDeclaration node);
@@ -95,6 +96,9 @@ public interface ResultVisitor <T> {
   public T visit (VariableName node);
   public T visit (VariableTypeSpecifier node);
   public T visit (VariableInitializer node);
+
+  // Special declarations
+  public T visit (BogusDeclaration node);
 
   // STATEMENTS
 

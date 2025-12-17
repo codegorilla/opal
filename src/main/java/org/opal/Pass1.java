@@ -61,6 +61,20 @@ public class Pass1 extends BaseVisitor {
     depth.decrement();
   }
 
+  public void visit (OtherDeclarations node) {
+    depth.increment();
+    printNode(node);
+    for (var otherDeclaration : node.children())
+      otherDeclaration.accept(this);
+    depth.decrement();
+  }
+
+  public void visit (BogusDeclaration node) {
+    depth.increment();
+    printNode(node);
+    depth.decrement();
+  }
+
   public void visit (ImportDeclarations node) {
     depth.increment();
     printNode(node);
@@ -142,13 +156,6 @@ public class Pass1 extends BaseVisitor {
     depth.decrement();
   }
 
-  public void visit (OtherDeclarations node) {
-    depth.increment();
-    printNode(node);
-    for (var otherDeclaration : node.children())
-      otherDeclaration.accept(this);
-    depth.decrement();
-  }
 
   public void visit (VariableDeclaration node) {
     depth.increment();

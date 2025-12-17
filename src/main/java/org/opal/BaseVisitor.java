@@ -25,6 +25,7 @@ public class BaseVisitor implements Visitor {
 
   // General declarations
   public void visit (Declarations node) {}
+  public void visit (Declaration node) {}
 
   // Package declarations
   public void visit (PackageDeclaration node) {}
@@ -103,6 +104,9 @@ public class BaseVisitor implements Visitor {
   public void visit (VariableName node) {}
   public void visit (VariableTypeSpecifier node) {}
   public void visit (VariableInitializer node) {}
+
+  // Special declarations
+  public void visit (BogusDeclaration node) {}
 
   // STATEMENTS
 
