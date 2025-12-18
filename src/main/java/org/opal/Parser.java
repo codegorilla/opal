@@ -214,6 +214,9 @@ public class Parser {
   private static final Token.Kind UINT32_LITERAL = Token.Kind.UINT32_LITERAL;
   private static final Token.Kind UINT64_LITERAL = Token.Kind.UINT64_LITERAL;
 
+  private static final EnumSet<Token.Kind> SYNC_DECL = EnumSet.of(SEMICOLON, R_BRACE, Token.Kind.EOF);
+  private static final EnumSet<Token.Kind> SYNC_STMT = EnumSet.of(SEMICOLON, R_BRACE, Token.Kind.EOF);
+
   public Parser (LinkedList<Token> input, List<String> sourceLines) {
     this.input = input;
     position = new Counter();
@@ -688,8 +691,21 @@ public class Parser {
 
   // Check-out syncs us to the end of the declaration if required.
 
+  private void recover (EnumSet<Token.Kind> syncSet) {
+    LOGGER.info("Recover: synchronization started");
+    while (!syncSet.contains(kind)) {
+      LOGGER.info("Recover: skipped {}", lookahead);
+      consume();
+    }
+    LOGGER.info("Recover: synchronization complete");
+  }
+
   private Declaration otherDeclaration1 () {
-    checkIn(FirstSet.OTHER_DECLARATION, "start of declaration");
+    // This is the new check-in
+    if (!FirstSet.OTHER_DECLARATION.contains(kind)) {
+      panic("start of declaration");
+      recover(SyncSet.OTHER_DECLARATION);
+    }
     Declaration n;
     if (kind == IMPORT) {
       n = importDeclaration();
@@ -699,6 +715,8 @@ public class Parser {
       n = new BogusDeclaration(mark);
     }
     checkOut();
+    System.out.println(lookahead);
+    System.out.println("BREAK");
     // Do we need to consume semicolon here?
     return n;
   }
