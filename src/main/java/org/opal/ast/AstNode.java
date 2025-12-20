@@ -29,6 +29,8 @@ public abstract class AstNode {
 
   public AstNode (Token token) {
     this.token = token;
+    // Inherit error condition from token
+    error = token.getError();
   }
 
   public void addChild (AstNode node) {

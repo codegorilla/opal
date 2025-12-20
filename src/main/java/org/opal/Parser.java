@@ -305,15 +305,20 @@ public class Parser {
 
   // TBD: I am not sure we ever have a single expected kind when panicking.
   private void panic (Token.Kind expectedKind) {
-    LOGGER.info("Panic: panic(1) triggered");
+    LOGGER.info("Panic: panic/1 triggered");
     if (!errorRecoveryMode) {
-      // Some error message
+      var expectedMessage = "expected '" + reverseLookup.get(expectedKind) + "'";
+      var foundObject = (kind == Token.Kind.IDENTIFIER) ? "identifier" : "'" + reverseLookup.get(kind) + "'";
+      var foundMessage =  ", but found " + foundObject;
+      var message = expectedMessage + foundMessage;
+      var error = new SyntaxError(sourceLines, message, lookahead);
+      System.out.println(error);
     }
     errorRecoveryMode = true;
   }
 
   private void panic (Token.Kind expectedKind1, Token.Kind expectedKind2) {
-    LOGGER.info("Panic: panic(2) triggered");
+    LOGGER.info("Panic: panic/2 triggered");
     if (!errorRecoveryMode) {
       var expectedMessage1 = "expected '" + reverseLookup.get(expectedKind1);
       var expectedMessage2 = "' or '" + reverseLookup.get(expectedKind2);
@@ -326,7 +331,7 @@ public class Parser {
   }
 
   private void panic (Token.Kind... expectedKinds) {
-    LOGGER.info("Panic: panic(3) triggered");
+    LOGGER.info("Panic: panic/3 triggered");
     if (!errorRecoveryMode) {
       var s = new StringBuilder("expected ");
       s.append("'").append(reverseLookup.get(expectedKinds[0])).append("'");
@@ -343,7 +348,7 @@ public class Parser {
   }
 
   private void panic (String expectedString) {
-    LOGGER.info("Panic: panic(S) triggered");
+    LOGGER.info("Panic: panic/s triggered");
     if (!errorRecoveryMode) {
       var expectedMessage = "expected " + expectedString;
       var foundObject = (kind == Token.Kind.IDENTIFIER) ? "identifier" : "'" + reverseLookup.get(kind) + "'";
@@ -371,7 +376,7 @@ public class Parser {
     var expectedKindString = reverseLookup.getOrDefault(expectedKind, friendlyKind(expectedKind));
     var actualKind = lookahead.getKind();
     var actualKindString = reverseLookup.getOrDefault(actualKind, friendlyKind(actualKind));
-    var message = "expected " + expectedKindString + ", but found " + actualKindString;
+    var message = "expected '" + expectedKindString + "', but found '" + actualKindString + "'";
     var error = new SyntaxError(sourceLines, message, lookahead);
     System.out.println(error);
   }
@@ -491,7 +496,9 @@ public class Parser {
     followerSetStack.push(EnumSet.of(Token.Kind.EOF));
     var n = new TranslationUnit();
     n.setPackageDeclaration(packageDeclaration());
+    System.out.println("STOP HERE2");
     n.setOtherDeclarations(otherDeclarations());
+    System.out.println("STOP HERE3");
 
 //    checkIn(FirstSet.REMAINING_DECLARATIONS_1, "'import', 'use', or start of other declaration");
 //    if (kind == IMPORT)
@@ -636,26 +643,35 @@ public class Parser {
   private final EnumSet<Token.Kind> SET_R_BRACE = EnumSet.of(R_BRACE);
 
   private PackageDeclaration packageDeclaration () {
-    // Hypothesis: Check-ins occur when the parser must choose one of several
-    // paths, and the epsilon production is not one of the options. This will
-    // force the parser to sync up to any item in the FIRST or FOLLOWER sets.
     // This is the new check-in
+    LOGGER.info("Check-in: started");
     if (!FirstSet.PACKAGE_DECLARATION.contains(kind)) {
-      panic("start of declaration");
+      panic(PACKAGE);
+      // Maybe recover should take the first set and follow set as arguments
       recover(SyncSet.PACKAGE_DECLARATION);
     }
-    // WHAT IS MARK?
-    var n = new PackageDeclaration(mark);
+    LOGGER.info("Check-in: complete");
+    // Can node be null or would we return a bogus node?
+    PackageDeclaration node = null;
     if (kind == PACKAGE) {
-      confirm(PACKAGE);
-      match(Token.Kind.IDENTIFIER);
-      n.setPackageName(new PackageName(mark));
+      var token = confirm(PACKAGE);
+      node = new PackageDeclaration(token);
+      node.setPackageName(packageName());
       match(SEMICOLON);
+      LOGGER.info("Check-out: started");
+      // FOLLOWER set or FOLLOW set? I believe FOLLOW set.
+      if (!FollowSet.PACKAGE_DECLARATION.contains(kind)) {
+        panic("start of declaration");
+      }
+      LOGGER.info("Check-out: complete");
     }
-    checkOut();
-    if (errorRecoveryMode && kind == SEMICOLON)
-      confirm(SEMICOLON);
-    return n;
+    // To do: If it is ';' I think we need to consume it.
+    return node;
+  }
+
+  private PackageName packageName () {
+    var token = match(Token.Kind.IDENTIFIER);
+    return new PackageName(token);
   }
 
   // We want to do a special form of check-in because this may be an epsilon
