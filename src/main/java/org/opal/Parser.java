@@ -563,8 +563,9 @@ public class Parser {
 //    return combined;
 //  }
 
+  @Deprecated
   private void checkIn (EnumSet<Token.Kind> firstSet) {
-    LOGGER.info("Check-in: check-in started");
+    LOGGER.info("DEP Check-in: check-in started");
     // Might need to set mark in process() not here
     mark = lookahead;
     if (!firstSet.contains(kind)) {
@@ -577,26 +578,14 @@ public class Parser {
         combined.addAll(followerSet);
       sync(combined);
     }
-    LOGGER.info("Check-in: check-in complete");
+    LOGGER.info("DEP Check-in: check-in complete");
   }
 
   // Special variant of checkIn that uses a custom string for expected kinds
 
-  private void panicX (String expectedString) {
-    LOGGER.info("Panic: panic(S) triggered");
-    if (!errorRecoveryMode) {
-      var expectedMessage = "expected " + expectedString;
-      var foundObject = (kind == Token.Kind.IDENTIFIER) ? "identifier" : "'" + reverseLookup.get(kind) + "'";
-      var foundMessage =  ", but found " + foundObject;
-      var message = expectedMessage + foundMessage;
-      var error = new SyntaxError(sourceLines, message, lookahead);
-      System.out.println(error);
-    }
-    errorRecoveryMode = true;
-  }
-
+  @Deprecated
   private void checkIn (EnumSet<Token.Kind> firstSet, String expectedString) {
-    LOGGER.info("Check-in: check-in started");
+    LOGGER.info("DEP Check-in: check-in started");
     // Might need to set mark in process() not here
     mark = lookahead;
     if (!firstSet.contains(kind)) {
@@ -608,65 +597,74 @@ public class Parser {
         var error = new SyntaxError(sourceLines, message, lookahead);
         System.out.println(error);
       }
-      LOGGER.info("Check-in: created " + mark);
+      LOGGER.info("DEP Check-in: created " + mark);
       // Combine first set and all follower sets
       var combined = EnumSet.copyOf(firstSet);
       for (var followerSet : followerSetStack)
         combined.addAll(followerSet);
       sync(combined);
     }
+    LOGGER.info("DEP Check-in: check-in complete");
+  }
+
+  @Deprecated
+  private void checkOut () {}
+
+  // We likely need multiple versions of check-in and check-out because the error messages may differ
+
+  private void checkIn (EnumSet<Token.Kind> firstSet, EnumSet<Token.Kind> followSet, Token.Kind expectedKind) {
+    LOGGER.info("Check-in: check-in started");
+    if (!firstSet.contains(kind)) {
+      panic(expectedKind);
+      recover(union(firstSet, followSet));
+    }
     LOGGER.info("Check-in: check-in complete");
   }
 
-  // Update: Should we pass in the follow-set?
-
-  private void checkOut () {
+  private void checkOut (EnumSet<Token.Kind> followSet, String expectedKindString) {
     LOGGER.info("Check-out: check-out started");
-    if (errorRecoveryMode) {
-      // Combine all follower sets
-//      var combined = combine();
-//      if (!combined.contains(kind)) {
-//        sync(combined);
-//      }
-      // Not sure if we need to reset this here or if we can wait until next
-      // match. Should be equivalent since check-out takes you to next match
-      // or confirm.
-      //errorRecoveryMode = false;
+    if (!followSet.contains(kind)) {
+      panic(expectedKindString);
+      recover(followSet);
+      cleanup();
     }
     LOGGER.info("Check-out: check-out complete");
   }
 
-  // SET_SEMICOLON is a special add-on to the FOLLOWER set stack. It allows
-  // synchronization to halt at semicolons that are part of the current
-  // production.
-  private final EnumSet<Token.Kind> SET_SEMICOLON = EnumSet.of(SEMICOLON);
-  private final EnumSet<Token.Kind> SET_R_BRACE = EnumSet.of(R_BRACE);
+  private final EnumSet<Token.Kind> SYNC_GLOBAL = EnumSet.of(SEMICOLON, R_BRACE, Token.Kind.EOF);
+
+  private void recover (EnumSet<Token.Kind> recoverSet) {
+    LOGGER.info("Recover: synchronization started");
+    var syncSet = union(recoverSet, SYNC_GLOBAL);
+    while (!syncSet.contains(kind)) {
+      LOGGER.info("Recover: skipped {}", lookahead);
+      consume();
+    }
+    LOGGER.info("Recover: synchronization complete");
+  }
+
+  // Should we just return a token from consume?
+
+  private void cleanup () {
+    if (kind == SEMICOLON || kind == R_BRACE) {
+      var mark1 = lookahead;
+      consume();
+      LOGGER.info("Cleanup: cleaned {}", mark1);
+    }
+  }
 
   private PackageDeclaration packageDeclaration () {
-    // This is the new check-in
-    LOGGER.info("Check-in: started");
-    if (!FirstSet.PACKAGE_DECLARATION.contains(kind)) {
-      panic(PACKAGE);
-      // Maybe recover should take the first set and follow set as arguments
-      recover(SyncSet.PACKAGE_DECLARATION);
-    }
-    LOGGER.info("Check-in: complete");
-    // Can node be null or would we return a bogus node?
-    PackageDeclaration node = null;
+    checkIn(FirstSet.PACKAGE_DECLARATION, FollowSet.PACKAGE_DECLARATION, PACKAGE);
     if (kind == PACKAGE) {
       var token = confirm(PACKAGE);
-      node = new PackageDeclaration(token);
+      var node = new PackageDeclaration(token);
       node.setPackageName(packageName());
       match(SEMICOLON);
-      LOGGER.info("Check-out: started");
-      // FOLLOWER set or FOLLOW set? I believe FOLLOW set.
-      if (!FollowSet.PACKAGE_DECLARATION.contains(kind)) {
-        panic("start of declaration");
-      }
-      LOGGER.info("Check-out: complete");
+      checkOut(FollowSet.PACKAGE_DECLARATION, "start of declaration");
+      return node;
     }
-    // To do: If it is ';' I think we need to consume it.
-    return node;
+    cleanup();
+    return null;
   }
 
   private PackageName packageName () {
@@ -721,14 +719,6 @@ public class Parser {
 
   // Check-out syncs us to the end of the declaration if required.
 
-  private void recover (EnumSet<Token.Kind> syncSet) {
-    LOGGER.info("Recover: synchronization started");
-    while (!syncSet.contains(kind)) {
-      LOGGER.info("Recover: skipped {}", lookahead);
-      consume();
-    }
-    LOGGER.info("Recover: synchronization complete");
-  }
 
   // Check-in belongs in otherDeclaration because it must be in sync in order
   // to dispatch to the correct declaration production routine.
@@ -909,7 +899,6 @@ public class Parser {
   }
 
   private AstNode useNameGroup () {
-    followerSetStack.push(SET_R_BRACE);
     confirm(L_BRACE);
     var n = new UseNameGroup();
     match(Token.Kind.IDENTIFIER);
@@ -928,7 +917,6 @@ public class Parser {
     checkOut();
     if (errorRecoveryMode && kind == R_BRACE)
       consume();
-    followerSetStack.pop();
     return n;
   }
 
