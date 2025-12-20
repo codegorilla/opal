@@ -254,6 +254,8 @@ public class Parser {
   // Note: Instead of an ERROR kind, we could just mark whatever the lookahead
   // is and then annotate the token with an error flag.
 
+  // This doesn't consume the sync token - it just gets us TO it
+
   private void sync (EnumSet<Token.Kind> syncSet) {
 //    mark = new Token(Token.Kind.ERROR, lookahead.getLexeme(), lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
 //    LOGGER.info("Sync: created " + mark);
@@ -267,25 +269,28 @@ public class Parser {
     LOGGER.info("Sync: synchronization complete");
   }
 
-  private boolean match (Token.Kind expectedKind) {
+  private Token match (Token.Kind expectedKind) {
     if (lookahead.getKind() == expectedKind) {
       // Happy path :)
       LOGGER.info("Match: matched " + lookahead);
+      // We should phase instance mark eventually since match now
+      // returns a token
       mark = lookahead;
+      var mark1 = lookahead;
       consume();
       errorRecoveryMode = false;
-      return true;
+      return mark1;
     } else {
-      // Sad path :(
+      // Sad path
       LOGGER.info("Match: entering sad path");
-      mark = lookahead;
+      lookahead.setError();
       if (!errorRecoveryMode)
         generalError(expectedKind);
       // Should we at least advance the input stream? If we do, then we
       // effectively delete the bad token. Different sources say yes or no,
       // but several seem to indicate that we should NOT consume.
       errorRecoveryMode = true;
-      return false;
+      return lookahead;
     }
   }
 
@@ -295,6 +300,8 @@ public class Parser {
       checkError(expectedKinds);
     errorRecoveryMode = true;
   }
+
+  // These should probably just be called "error" or something like that
 
   // TBD: I am not sure we ever have a single expected kind when panicking.
   private void panic (Token.Kind expectedKind) {
@@ -319,7 +326,7 @@ public class Parser {
   }
 
   private void panic (Token.Kind... expectedKinds) {
-    LOGGER.info("Panic: panic(V) triggered");
+    LOGGER.info("Panic: panic(3) triggered");
     if (!errorRecoveryMode) {
       var s = new StringBuilder("expected ");
       s.append("'").append(reverseLookup.get(expectedKinds[0])).append("'");
@@ -327,7 +334,7 @@ public class Parser {
         s.append(", '").append(reverseLookup.get(expectedKinds[i])).append("'");
       s.append(", or '").append(reverseLookup.get(expectedKinds[expectedKinds.length-1])).append("'");
       var expectedMessage = s.toString();
-      var foundMessage = "'; found '" + reverseLookup.get(kind) + "'";
+      var foundMessage = ", but found '" + reverseLookup.get(kind) + "'";
       var message = expectedMessage + foundMessage;
       var error = new SyntaxError(sourceLines, message, lookahead);
       System.out.println(error);
@@ -364,7 +371,7 @@ public class Parser {
     var expectedKindString = reverseLookup.getOrDefault(expectedKind, friendlyKind(expectedKind));
     var actualKind = lookahead.getKind();
     var actualKindString = reverseLookup.getOrDefault(actualKind, friendlyKind(actualKind));
-    var message = "expected " + expectedKindString + ", found " + actualKindString;
+    var message = "expected " + expectedKindString + ", but found " + actualKindString;
     var error = new SyntaxError(sourceLines, message, lookahead);
     System.out.println(error);
   }
@@ -417,12 +424,14 @@ public class Parser {
   // and does not return a result. Instead, it throws an exception. This can
   // only fail if there is a bug in the compiler.
 
-  private void confirm (Token.Kind expectedKind) {
+  private Token confirm (Token.Kind expectedKind) {
     if (lookahead.getKind() == expectedKind) {
       LOGGER.info("Confirm: confirmed " + lookahead);
       mark = lookahead;
+      var mark1 = lookahead;
       consume();
       errorRecoveryMode = false;
+      return mark;
     } else {
       var expectedKindFriendly = friendlyKind(expectedKind);
       var actualKindFriendly = friendlyKind(lookahead.getKind());
@@ -540,12 +549,12 @@ public class Parser {
   // not known at compile time. There can be multiple versions of the FOLLOWING
   // set for a given production.
 
-  private EnumSet<Token.Kind> combine () {
-    var combined = EnumSet.noneOf(Token.Kind.class);
-    for (var followerSet : followerSetStack)
-      combined.addAll(followerSet);
-    return combined;
-  }
+//  private EnumSet<Token.Kind> combine () {
+//    var combined = EnumSet.noneOf(Token.Kind.class);
+//    for (var followerSet : followerSetStack)
+//      combined.addAll(followerSet);
+//    return combined;
+//  }
 
   private void checkIn (EnumSet<Token.Kind> firstSet) {
     LOGGER.info("Check-in: check-in started");
@@ -602,14 +611,16 @@ public class Parser {
     LOGGER.info("Check-in: check-in complete");
   }
 
+  // Update: Should we pass in the follow-set?
+
   private void checkOut () {
     LOGGER.info("Check-out: check-out started");
     if (errorRecoveryMode) {
       // Combine all follower sets
-      var combined = combine();
-      if (!combined.contains(kind)) {
-        sync(combined);
-      }
+//      var combined = combine();
+//      if (!combined.contains(kind)) {
+//        sync(combined);
+//      }
       // Not sure if we need to reset this here or if we can wait until next
       // match. Should be equivalent since check-out takes you to next match
       // or confirm.
@@ -625,11 +636,15 @@ public class Parser {
   private final EnumSet<Token.Kind> SET_R_BRACE = EnumSet.of(R_BRACE);
 
   private PackageDeclaration packageDeclaration () {
-    followerSetStack.push(FollowerSet.PACKAGE_DECLARATION);
     // Hypothesis: Check-ins occur when the parser must choose one of several
     // paths, and the epsilon production is not one of the options. This will
     // force the parser to sync up to any item in the FIRST or FOLLOWER sets.
-    checkIn(FirstSet.PACKAGE_DECLARATION);
+    // This is the new check-in
+    if (!FirstSet.PACKAGE_DECLARATION.contains(kind)) {
+      panic("start of declaration");
+      recover(SyncSet.PACKAGE_DECLARATION);
+    }
+    // WHAT IS MARK?
     var n = new PackageDeclaration(mark);
     if (kind == PACKAGE) {
       confirm(PACKAGE);
@@ -640,7 +655,6 @@ public class Parser {
     checkOut();
     if (errorRecoveryMode && kind == SEMICOLON)
       confirm(SEMICOLON);
-    followerSetStack.pop();
     return n;
   }
 
@@ -700,6 +714,9 @@ public class Parser {
     LOGGER.info("Recover: synchronization complete");
   }
 
+  // Check-in belongs in otherDeclaration because it must be in sync in order
+  // to dispatch to the correct declaration production routine.
+
   private Declaration otherDeclaration1 () {
     // This is the new check-in
     if (!FirstSet.OTHER_DECLARATION.contains(kind)) {
@@ -714,9 +731,16 @@ public class Parser {
     } else {
       n = new BogusDeclaration(mark);
     }
-    checkOut();
-    System.out.println(lookahead);
-    System.out.println("BREAK");
+    // Brings us TO a token in the sync set. If it is in the global set, we
+    // would need to consume it. Since the correct token depends on what kind
+    // of declaration it is, we don't know what kind of token is correct at
+    // this point, so I don't think a check-out makes sense here. It
+    // probably belongs in the individual declaration routines. This contrasts
+    // with the check-in. We need the check-in in this routine because it needs
+    // to be able to decide which routine to dispatch to.
+    //checkOut();
+    //System.out.println(lookahead);
+    //System.out.println("BREAK");
     // Do we need to consume semicolon here?
     return n;
   }
@@ -745,7 +769,6 @@ public class Parser {
   // particular use case.
 
   private ImportDeclaration importDeclaration () {
-    followerSetStack.push(FollowerSet.IMPORT_DECLARATION);
     // No check-in required
     confirm(IMPORT);
     var n = new ImportDeclaration(mark);
@@ -759,7 +782,6 @@ public class Parser {
     }
     match(SEMICOLON);
     checkOut();
-    followerSetStack.pop();
     return n;
   }
 
@@ -771,19 +793,29 @@ public class Parser {
   // is not a great one (due to epsilon production). It shows that there might
   // be room for improvement.
 
+  // No check-ins on minor productions
+
   private ImportQualifiedName importQualifiedName () {
-    followerSetStack.push(FollowerSet.IMPORT_QUALIFIED_NAME);
-    checkIn(FirstSet.IMPORT_QUALIFIED_NAME);
     var n = new ImportQualifiedName();
-    match(Token.Kind.IDENTIFIER);
-    n.addImportName(new ImportName(mark));
-    while (kind == PERIOD) {
-      confirm(PERIOD);
-      match(Token.Kind.IDENTIFIER);
-      n.addImportName(new ImportName(mark));
+    n.addImportName(importName());
+    while (kind != AS && kind != SEMICOLON) {
+      if (kind == PERIOD) {
+        consume();
+        n.addImportName(importName());
+      } else {
+        panic(PERIOD, AS, SEMICOLON);
+        break;
+      }
     }
     checkOut();
-    followerSetStack.pop();
+    return n;
+  }
+
+  private ImportName importName () {
+    var token = match(Token.Kind.IDENTIFIER);
+    var n = new ImportName(token);
+    if (token.getError())
+      n.setError();
     return n;
   }
 
@@ -2215,8 +2247,8 @@ public class Parser {
     } else {
       checkError(FirstSet.LITERAL);
       mark = lookahead;
-      var combined = combine();
-      sync(combined);
+      //var combined = combine();
+      //sync(combined);
 //      n = new ErrorNode(mark);
       // Maybe create ExpressionErrorNode?
       n = null;

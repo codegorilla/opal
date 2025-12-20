@@ -17,6 +17,9 @@ public class Token {
   // Column number where first character occurs, counting from one
   private final int column;
 
+  // Tokens may be flagged as erroneous by parser's match method
+  private boolean error = false;
+
   public Token (Token.Kind kind, String lexeme, int index, int line, int column) {
     this.kind = kind;
     this.lexeme = lexeme;
@@ -43,6 +46,14 @@ public class Token {
 
   public int getColumn () {
     return column;
+  }
+
+  public boolean getError () {
+    return error;
+  }
+
+  public void setError () {
+    error = true;
   }
 
   public String toString () {

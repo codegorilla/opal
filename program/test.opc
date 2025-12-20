@@ -1,8 +1,8 @@
 package main;
 
 
-+ import opal.lang;
-import opal.math;
+//+ import +opal.lang+.math;
+//import opal.math;
 
 //import opal.math as m;
 
