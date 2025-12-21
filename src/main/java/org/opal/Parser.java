@@ -496,9 +496,7 @@ public class Parser {
     followerSetStack.push(EnumSet.of(Token.Kind.EOF));
     var n = new TranslationUnit();
     n.setPackageDeclaration(packageDeclaration());
-    System.out.println("STOP HERE2");
     n.setOtherDeclarations(otherDeclarations());
-    System.out.println("STOP HERE3");
 
 //    checkIn(FirstSet.REMAINING_DECLARATIONS_1, "'import', 'use', or start of other declaration");
 //    if (kind == IMPORT)
@@ -621,17 +619,18 @@ public class Parser {
     LOGGER.info("Check-in: check-in complete");
   }
 
+  // Check-out only occurs if we are in error recovery mode (i.e. a panic occurred).
+
   private void checkOut (EnumSet<Token.Kind> followSet, String expectedKindString) {
     LOGGER.info("Check-out: check-out started");
-    if (!followSet.contains(kind)) {
-      panic(expectedKindString);
+    if (!followSet.contains(kind) && errorRecoveryMode) {
       recover(followSet);
       cleanup();
     }
     LOGGER.info("Check-out: check-out complete");
   }
 
-  private final EnumSet<Token.Kind> SYNC_GLOBAL = EnumSet.of(SEMICOLON, R_BRACE, Token.Kind.EOF);
+  private static final EnumSet<Token.Kind> SYNC_GLOBAL = EnumSet.of(SEMICOLON, R_BRACE, Token.Kind.EOF);
 
   private void recover (EnumSet<Token.Kind> recoverSet) {
     LOGGER.info("Recover: synchronization started");
@@ -643,13 +642,17 @@ public class Parser {
     LOGGER.info("Recover: synchronization complete");
   }
 
+  // When can we clear error recovery mode? I believe it is on match, confirm,
+  // and cleanup. Note: For this reason, we probably cannot just consume on
+  // entering an if body, but should confirm instead.
+
   // Should we just return a token from consume?
 
   private void cleanup () {
     if (kind == SEMICOLON || kind == R_BRACE) {
-      var mark1 = lookahead;
+      LOGGER.info("Cleanup: cleaned {}", lookahead);
       consume();
-      LOGGER.info("Cleanup: cleaned {}", mark1);
+      errorRecoveryMode = false;
     }
   }
 
@@ -672,40 +675,19 @@ public class Parser {
     return new PackageName(token);
   }
 
-  // We want to do a special form of check-in because this may be an epsilon
-  // production.
-
-  // It is only an error IF lookahead kind is not in FIRST set *AND* not in
-  // FOLLOW set. This is because this may result in an epsilon production.
-
   private OtherDeclarations otherDeclarations () {
-    // This is an aggregator node. Its unclear whether we should ALWAYS create
-    // this or ONLY create it if there is at least one child. I believe it is
-    // easier if we always create it.
     var n = new OtherDeclarations();
-//    var firstSet = FirstSet.OTHER_DECLARATIONS;
-//    if (!firstSet.contains(kind) && kind != Token.Kind.EOF) {
-//      if (!errorRecoveryMode) {
-//        var expectedMessage = "expected " + "start of declaration";
-//        var foundObject = (kind == Token.Kind.IDENTIFIER) ? "identifier" : "'" + reverseLookup.get(kind) + "'";
-//        var foundMessage =  ", but found " + foundObject;
-//        var message = expectedMessage + foundMessage;
-//        var error = new SyntaxError(sourceLines, message, lookahead);
-//        System.out.println(error);
-//      }
-//      var combined = EnumSet.copyOf(firstSet);
-//      for (var followerSet : followerSetStack)
-//        combined.addAll(followerSet);
-//      sync(combined);
-//    }
-
-    // EOF is the only token kind in the FOLLOW set and it is a static set
-
-    while (kind != Token.Kind.EOF) {
-      // We need to go another level down to allow more check-ins
-      // Cannot do if-else chain here because that won't allow opportunity to
-      // synchronize to first-set.
-      n.addOtherDeclaration(otherDeclaration1());
+    while (true) {
+      if (FirstSet.OTHER_DECLARATION.contains(kind)) {
+        n.addOtherDeclaration(otherDeclaration1());
+      } else if (FollowSet.OTHER_DECLARATION.contains(kind)) {
+        // Do nothing, epsilon production
+        break;
+      } else {
+        panic("start of declaration");
+        recover(FollowSet.OTHER_DECLARATION);
+        cleanup();
+      }
     }
     return n;
   }

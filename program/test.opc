@@ -1,4 +1,6 @@
-package main+;
+package main;
+
+importa opal;
 
 
 //+ import +opal.lang+.math;
