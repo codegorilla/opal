@@ -272,7 +272,7 @@ public class Parser {
   private Token match (Token.Kind expectedKind) {
     if (lookahead.getKind() == expectedKind) {
       // Happy path :)
-      LOGGER.info("Match: matched " + lookahead);
+      LOGGER.info("matched " + lookahead);
       // We should phase instance mark eventually since match now
       // returns a token
       mark = lookahead;
@@ -282,7 +282,7 @@ public class Parser {
       return mark1;
     } else {
       // Sad path
-      LOGGER.info("Match: entering sad path");
+      LOGGER.info("entering sad path");
       lookahead.setError();
       if (!errorRecoveryMode)
         generalError(expectedKind);
@@ -295,7 +295,7 @@ public class Parser {
   }
 
   private void panic (EnumSet<Token.Kind> expectedKinds) {
-    LOGGER.info("Panic: panic triggered");
+    LOGGER.info("panic triggered");
     if (!errorRecoveryMode)
       checkError(expectedKinds);
     errorRecoveryMode = true;
@@ -305,7 +305,7 @@ public class Parser {
 
   // TBD: I am not sure we ever have a single expected kind when panicking.
   private void panic (Token.Kind expectedKind) {
-    LOGGER.info("Panic: panic/1 triggered");
+    LOGGER.info("panic/1 triggered");
     if (!errorRecoveryMode) {
       var expectedMessage = "expected '" + reverseLookup.get(expectedKind) + "'";
       var foundObject = (kind == Token.Kind.IDENTIFIER) ? "identifier" : "'" + reverseLookup.get(kind) + "'";
@@ -318,7 +318,7 @@ public class Parser {
   }
 
   private void panic (Token.Kind expectedKind1, Token.Kind expectedKind2) {
-    LOGGER.info("Panic: panic/2 triggered");
+    LOGGER.info("panic/2 triggered");
     if (!errorRecoveryMode) {
       var expectedMessage1 = "expected '" + reverseLookup.get(expectedKind1);
       var expectedMessage2 = "' or '" + reverseLookup.get(expectedKind2);
@@ -331,7 +331,7 @@ public class Parser {
   }
 
   private void panic (Token.Kind... expectedKinds) {
-    LOGGER.info("Panic: panic/3 triggered");
+    LOGGER.info("panic/3 triggered");
     if (!errorRecoveryMode) {
       var s = new StringBuilder("expected ");
       s.append("'").append(reverseLookup.get(expectedKinds[0])).append("'");
@@ -348,7 +348,7 @@ public class Parser {
   }
 
   private void panic (String expectedString) {
-    LOGGER.info("Panic: panic/s triggered");
+    LOGGER.info("panic/s triggered");
     if (!errorRecoveryMode) {
       var expectedMessage = "expected " + expectedString;
       var foundObject = (kind == Token.Kind.IDENTIFIER) ? "identifier" : "'" + reverseLookup.get(kind) + "'";
@@ -360,6 +360,7 @@ public class Parser {
     errorRecoveryMode = true;
   }
 
+  @Deprecated
   private void panic (String expectedString, Token.Kind expectedKind) {
     LOGGER.info("Panic: panic(S+1) triggered");
     if (!errorRecoveryMode) {
@@ -431,7 +432,7 @@ public class Parser {
 
   private Token confirm (Token.Kind expectedKind) {
     if (lookahead.getKind() == expectedKind) {
-      LOGGER.info("Confirm: confirmed " + lookahead);
+      LOGGER.info("confirmed " + lookahead);
       mark = lookahead;
       var mark1 = lookahead;
       consume();
@@ -611,35 +612,35 @@ public class Parser {
   // We likely need multiple versions of check-in and check-out because the error messages may differ
 
   private void checkIn (EnumSet<Token.Kind> firstSet, EnumSet<Token.Kind> followSet, Token.Kind expectedKind) {
-    LOGGER.info("Check-in: check-in started");
+    LOGGER.info("check-in started");
     if (!firstSet.contains(kind)) {
       panic(expectedKind);
       recover(union(firstSet, followSet));
     }
-    LOGGER.info("Check-in: check-in complete");
+    LOGGER.info("check-in complete");
   }
 
   // Check-out only occurs if we are in error recovery mode (i.e. a panic occurred).
 
   private void checkOut (EnumSet<Token.Kind> followSet, String expectedKindString) {
-    LOGGER.info("Check-out: check-out started");
+    LOGGER.info("check-out started");
     if (!followSet.contains(kind) && errorRecoveryMode) {
       recover(followSet);
       cleanup();
     }
-    LOGGER.info("Check-out: check-out complete");
+    LOGGER.info("check-out complete");
   }
 
   private static final EnumSet<Token.Kind> SYNC_GLOBAL = EnumSet.of(SEMICOLON, R_BRACE, Token.Kind.EOF);
 
   private void recover (EnumSet<Token.Kind> recoverSet) {
-    LOGGER.info("Recover: synchronization started");
+    LOGGER.info("recovery started");
     var syncSet = union(recoverSet, SYNC_GLOBAL);
     while (!syncSet.contains(kind)) {
-      LOGGER.info("Recover: skipped {}", lookahead);
+      LOGGER.info("skipped {}", lookahead);
       consume();
     }
-    LOGGER.info("Recover: synchronization complete");
+    LOGGER.info("recovery complete");
   }
 
   // When can we clear error recovery mode? I believe it is on match, confirm,
@@ -650,7 +651,7 @@ public class Parser {
 
   private void cleanup () {
     if (kind == SEMICOLON || kind == R_BRACE) {
-      LOGGER.info("Cleanup: cleaned {}", lookahead);
+      LOGGER.info("cleaned {}", lookahead);
       consume();
       errorRecoveryMode = false;
     }
@@ -675,15 +676,14 @@ public class Parser {
     return new PackageName(token);
   }
 
+  // This is how you handle optionals!
+
   private OtherDeclarations otherDeclarations () {
     var n = new OtherDeclarations();
-    while (true) {
-      if (FirstSet.OTHER_DECLARATION.contains(kind)) {
+    while (!FollowSet.OTHER_DECLARATION.contains(kind)) {
+      if (FirstSet.OTHER_DECLARATION.contains(kind))
         n.addOtherDeclaration(otherDeclaration1());
-      } else if (FollowSet.OTHER_DECLARATION.contains(kind)) {
-        // Do nothing, epsilon production
-        break;
-      } else {
+      else {
         panic("start of declaration");
         recover(FollowSet.OTHER_DECLARATION);
         cleanup();
@@ -692,31 +692,18 @@ public class Parser {
     return n;
   }
 
-  // Can there ever be a bogus declaration? If declarations can always produce
-  // epsilon productions, maybe not.
-
-  // The check-in either gets us to something in the first set or something in
-  // the follow set. If it takes us to the follow set then this is a bogus
-  // declaration.
-
-  // Check-out syncs us to the end of the declaration if required.
-
-
-  // Check-in belongs in otherDeclaration because it must be in sync in order
-  // to dispatch to the correct declaration production routine.
+  // We don't need a check-in for otherDeclaration because it is optional, so
+  // the check-in logic is in the caller. If we enter this production, then we
+  // already know that the current token is in the FIRST set.
 
   private Declaration otherDeclaration1 () {
-    // This is the new check-in
-    if (!FirstSet.OTHER_DECLARATION.contains(kind)) {
-      panic("start of declaration");
-      recover(SyncSet.OTHER_DECLARATION);
-    }
     Declaration n;
     if (kind == IMPORT) {
       n = importDeclaration();
     } else if (kind == USE) {
       n = useDeclaration();
     } else {
+      // This cannot happen so we should throw an exception here
       n = new BogusDeclaration(mark);
     }
     // Brings us TO a token in the sync set. If it is in the global set, we
