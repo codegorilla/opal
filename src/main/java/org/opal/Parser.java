@@ -42,8 +42,8 @@ public class Parser {
   private Token.Kind kind;
 
   // Experimental
-  private Token previous;
-  private Token mark;
+  @Deprecated
+  private Token mark2 = new Token(Token.Kind.IDENTIFIER, "DEPRECATED_MARK", 1, 1, 1);
 
   private final List<String> sourceLines;
 
@@ -217,13 +217,13 @@ public class Parser {
   private static final EnumSet<Token.Kind> SYNC_DECL = EnumSet.of(SEMICOLON, R_BRACE, Token.Kind.EOF);
   private static final EnumSet<Token.Kind> SYNC_STMT = EnumSet.of(SEMICOLON, R_BRACE, Token.Kind.EOF);
 
+
+
   public Parser (LinkedList<Token> input, List<String> sourceLines) {
     this.input = input;
     position = new Counter();
     lookahead = input.get(position.get());
     kind = lookahead.getKind();
-    previous = null;
-    mark = null;
     this.sourceLines = sourceLines;
     //stack = new LinkedList<>();
     nodeStack = new LinkedList<>();
@@ -232,9 +232,6 @@ public class Parser {
     currentScope = builtinScope;
 
     followerSetStack = new LinkedList<>();
-    // Deprecated
-//    syncSetStack = new LinkedList<>();
-//    syncSetStack.push(EnumSet.noneOf(Token.Kind.class));
 
     var lookupTable = new LookupTable();
     reverseLookup = lookupTable.getReverseLookupTable();
@@ -275,14 +272,13 @@ public class Parser {
       LOGGER.info("matched " + lookahead);
       // We should phase instance mark eventually since match now
       // returns a token
-      mark = lookahead;
-      var mark1 = lookahead;
+      var mark = lookahead;
       consume();
       errorRecoveryMode = false;
-      return mark1;
+      return mark;
     } else {
       // Sad path
-      LOGGER.info("entering sad path");
+      LOGGER.info("mis-matched " + lookahead);
       lookahead.setError();
       if (!errorRecoveryMode)
         generalError(expectedKind);
@@ -433,8 +429,7 @@ public class Parser {
   private Token confirm (Token.Kind expectedKind) {
     if (lookahead.getKind() == expectedKind) {
       LOGGER.info("confirmed " + lookahead);
-      mark = lookahead;
-      var mark1 = lookahead;
+      var mark = lookahead;
       consume();
       errorRecoveryMode = false;
       return mark;
@@ -497,7 +492,11 @@ public class Parser {
     followerSetStack.push(EnumSet.of(Token.Kind.EOF));
     var n = new TranslationUnit();
     n.setPackageDeclaration(packageDeclaration());
-    n.setOtherDeclarations(otherDeclarations());
+    n.setImportDeclarations(importDeclarations());
+    n.setUseDeclarations(useDeclarations());
+
+
+    //n.setOtherDeclarations(otherDeclarations());
 
 //    checkIn(FirstSet.REMAINING_DECLARATIONS_1, "'import', 'use', or start of other declaration");
 //    if (kind == IMPORT)
@@ -566,11 +565,10 @@ public class Parser {
   private void checkIn (EnumSet<Token.Kind> firstSet) {
     LOGGER.info("DEP Check-in: check-in started");
     // Might need to set mark in process() not here
-    mark = lookahead;
     if (!firstSet.contains(kind)) {
       if (!errorRecoveryMode)
         checkError(firstSet);
-      LOGGER.info("Check-in: created " + mark);
+      LOGGER.info("Check-in: created " + mark2);
       // Combine first set and all follower sets
       var combined = EnumSet.copyOf(firstSet);
       for (var followerSet : followerSetStack)
@@ -586,7 +584,6 @@ public class Parser {
   private void checkIn (EnumSet<Token.Kind> firstSet, String expectedString) {
     LOGGER.info("DEP Check-in: check-in started");
     // Might need to set mark in process() not here
-    mark = lookahead;
     if (!firstSet.contains(kind)) {
       if (!errorRecoveryMode) {
         var expectedMessage = "expected " + expectedString;
@@ -596,7 +593,7 @@ public class Parser {
         var error = new SyntaxError(sourceLines, message, lookahead);
         System.out.println(error);
       }
-      LOGGER.info("DEP Check-in: created " + mark);
+      LOGGER.info("DEP Check-in: created " + mark2);
       // Combine first set and all follower sets
       var combined = EnumSet.copyOf(firstSet);
       for (var followerSet : followerSetStack)
@@ -664,7 +661,7 @@ public class Parser {
       var node = new PackageDeclaration(token);
       node.setPackageName(packageName());
       match(SEMICOLON);
-      checkOut(FollowSet.PACKAGE_DECLARATION, "start of declaration");
+      checkOut(FollowSet.PACKAGE_DECLARATION, "start of import, use, or other declaration");
       return node;
     }
     cleanup();
@@ -675,6 +672,158 @@ public class Parser {
     var token = match(Token.Kind.IDENTIFIER);
     return new PackageName(token);
   }
+
+  private ImportDeclarations importDeclarations () {
+    var n = new ImportDeclarations();
+    while (!FollowSet.IMPORT_DECLARATIONS.contains(kind)) {
+      if (kind == IMPORT)
+        n.addImportDeclaration(importDeclaration());
+      else {
+        panic("start of import, use, or other declaration");
+        recover(union(FirstSet.IMPORT_DECLARATION, FollowSet.IMPORT_DECLARATIONS));
+        cleanup();
+      }
+    }
+    return n;
+  }
+
+  // We could implement this several ways. First, we could use a binary tree
+  // with dots as internal nodes and names as leaf nodes. Second, we could
+  // simply have a chain of names, with each child names being under its
+  // respective parent. Lastly, we can have a list of names under the import
+  // declaration. We choose to go with the latter case because that is the
+  // easiest implementation and the others hold no advantages for our
+  // particular use case.
+
+  // We don't need a check-in for importDeclaration because it is optional, so
+  // the check-in logic is in the caller. If we enter this production, then we
+  // already know that the current token is in the FIRST set.
+
+  private ImportDeclaration importDeclaration () {
+    var token = confirm(IMPORT);
+    var node = new ImportDeclaration(token);
+    node.setQualifiedName(importQualifiedName());
+    if (kind != SEMICOLON) {
+      if (kind == AS)
+        node.setAsName(importAsClause());
+      else
+        panic(AS, SEMICOLON);
+    }
+    match(SEMICOLON);
+    checkOut(FollowSet.IMPORT_DECLARATION, "start of import, use, or other declaration");
+    return node;
+  }
+
+  private ImportQualifiedName importQualifiedName () {
+    var node = new ImportQualifiedName();
+    node.addImportName(importName());
+    while (kind != AS && kind != SEMICOLON) {
+      if (kind == PERIOD) {
+        consume();
+        node.addImportName(importName());
+      } else {
+        panic(PERIOD, AS, SEMICOLON);
+        break;
+      }
+    }
+    return node;
+  }
+
+  private ImportName importName () {
+    var token = match(Token.Kind.IDENTIFIER);
+    var n = new ImportName(token);
+    if (token.getError())
+      n.setError();
+    return n;
+  }
+
+  private ImportAsName importAsClause () {
+    confirm(AS);
+    var token = match(Token.Kind.IDENTIFIER);
+    return new ImportAsName(token);
+  }
+
+  private UseDeclarations useDeclarations () {
+    var n = new UseDeclarations();
+    while (!FollowSet.USE_DECLARATIONS.contains(kind)) {
+      if (kind == USE)
+        n.addUseDeclaration(useDeclaration());
+      else {
+        panic("start of use or other declaration");
+        recover(union(FirstSet.IMPORT_DECLARATION, FollowSet.IMPORT_DECLARATIONS));
+        cleanup();
+      }
+    }
+    return n;
+  }
+
+  private UseDeclaration useDeclaration () {
+    var token = confirm(USE);
+    var node = new UseDeclaration(token);
+    node.setQualifiedName(useQualifiedName());
+    match(SEMICOLON);
+    checkOut(FollowSet.USE_DECLARATION, "start of use or other declaration");
+    return node;
+  }
+
+  // Follower sets are used in two different ways, depending on whether or not
+  // the token needs to be captured in an AST node or not. If so, it is passed
+  // into a "terminal" production method, where it gets used in a match method
+  // call. Otherwise, it is used directly in a match method call within the
+  // non-terminal production method.
+
+  private UseQualifiedName useQualifiedName () {
+    UseQualifiedName n = new UseQualifiedName();
+    var token = match(Token.Kind.IDENTIFIER);
+    var p = new UseName(token);
+    n.setUseName(p);
+    match(PERIOD);
+    p.setChild(useQualifiedNameTail());
+    return n;
+  }
+
+  private AstNode useQualifiedNameTail () {
+    checkIn(FirstSet.USE_QUALIFIED_NAME_TAIL);
+    if (kind == ASTERISK) {
+      consume();
+      return new UseNameWildcard(mark2);
+    } else if (kind == L_BRACE) {
+      return useNameGroup();
+    } else if (kind == Token.Kind.IDENTIFIER) {
+      confirm(Token.Kind.IDENTIFIER);
+      var n = new UseName(mark2);
+      if (kind == PERIOD) {
+        consume();
+        n.setChild(useQualifiedNameTail());
+      }
+      return n;
+    } else {
+      return new ErrorNode(mark2);
+    }
+  }
+
+  private AstNode useNameGroup () {
+    confirm(L_BRACE);
+    var n = new UseNameGroup();
+    match(Token.Kind.IDENTIFIER);
+    n.addUseName(new UseName(mark2));
+    while (kind != R_BRACE) {
+      if (kind == COMMA) {
+        consume();
+        match(Token.Kind.IDENTIFIER);
+        n.addUseName(new UseName(mark2));
+      } else {
+        panic(COMMA, R_BRACE);
+        break;
+      }
+    }
+    match(R_BRACE);
+    checkOut();
+    if (errorRecoveryMode && kind == R_BRACE)
+      consume();
+    return n;
+  }
+
 
   // This is how you handle optionals!
 
@@ -704,7 +853,7 @@ public class Parser {
       n = useDeclaration();
     } else {
       // This cannot happen so we should throw an exception here
-      n = new BogusDeclaration(mark);
+      n = new BogusDeclaration(mark2);
     }
     // Brings us TO a token in the sync set. If it is in the global set, we
     // would need to consume it. Since the correct token depends on what kind
@@ -720,174 +869,6 @@ public class Parser {
     return n;
   }
 
-  // No check-in is required because we only arrive at this production through
-  // an explicit check for 'import' keyword. Thus, we can only get here if the
-  // current lookahead token is known for sure to be 'import'.
-
-//  private ImportDeclarations importDeclarations () {
-//    followerSetStack.push(FollowerSet.IMPORT_DECLARATIONS);
-//    // No check-in required
-//    var n = new ImportDeclarations();
-//    n.addImportDeclaration(importDeclaration());
-//    while (kind == IMPORT)
-//      n.addImportDeclaration(importDeclaration());
-//    followerSetStack.pop();
-//    return n;
-//  }
-
-  // We could implement this several ways. First, we could use a binary tree
-  // with dots as internal nodes and names as leaf nodes. Second, we could
-  // simply have a chain of names, with each child names being under its
-  // respective parent. Lastly, we can have a list of names under the import
-  // declaration. We choose to go with the latter case because that is the
-  // easiest implementation and the others hold no advantages for our
-  // particular use case.
-
-  private ImportDeclaration importDeclaration () {
-    // No check-in required
-    confirm(IMPORT);
-    var n = new ImportDeclaration(mark);
-    n.setQualifiedName(importQualifiedName());
-    if (kind != SEMICOLON) {
-      if (kind == AS)
-        n.setAsName(importAsClause());
-      else {
-        panic(AS, SEMICOLON);
-      }
-    }
-    match(SEMICOLON);
-    checkOut();
-    return n;
-  }
-
-  // This might be a candidate for error recovery of epsilon production.
-  // Input "import opal-lang;" gives an error but the resulting ERROR token
-  // does not get captured in the AST even though it is not able to be
-  // corrected. This demonstrates that if an error occurs at all, we cannot
-  // rely on it being apparent from looking at the AST. Also, the error given
-  // is not a great one (due to epsilon production). It shows that there might
-  // be room for improvement.
-
-  // No check-ins on minor productions
-
-  private ImportQualifiedName importQualifiedName () {
-    var n = new ImportQualifiedName();
-    n.addImportName(importName());
-    while (kind != AS && kind != SEMICOLON) {
-      if (kind == PERIOD) {
-        consume();
-        n.addImportName(importName());
-      } else {
-        panic(PERIOD, AS, SEMICOLON);
-        break;
-      }
-    }
-    checkOut();
-    return n;
-  }
-
-  private ImportName importName () {
-    var token = match(Token.Kind.IDENTIFIER);
-    var n = new ImportName(token);
-    if (token.getError())
-      n.setError();
-    return n;
-  }
-
-  private ImportAsName importAsClause () {
-    // No check-in required
-    confirm(AS);
-    match(Token.Kind.IDENTIFIER);
-    var n = new ImportAsName(mark);
-    return n;
-  }
-
-  private UseDeclarations useDeclarations () {
-    followerSetStack.push(FollowerSet.USE_DECLARATIONS);
-    // No check-in required
-    var n = new UseDeclarations();
-    n.addUseDeclaration(useDeclaration());
-    while (kind == USE)
-      n.addUseDeclaration(useDeclaration());
-    followerSetStack.pop();
-    return n;
-  }
-
-  private UseDeclaration useDeclaration () {
-    followerSetStack.push(FollowerSet.USE_DECLARATION);
-    // No check-in required
-    confirm(USE);
-    var n = new UseDeclaration(mark);
-    n.setQualifiedName(useQualifiedName());
-    match(SEMICOLON);
-    checkOut();
-    followerSetStack.pop();
-    return n;
-  }
-
-  // Follower sets are used in two different ways, depending on whether or not
-  // the token needs to be captured in an AST node or not. If so, it is passed
-  // into a "terminal" production method, where it gets used in a match method
-  // call. Otherwise, it is used directly in a match method call within the
-  // non-terminal production method.
-
-  private UseQualifiedName useQualifiedName () {
-    UseQualifiedName n = new UseQualifiedName();
-    match(Token.Kind.IDENTIFIER);
-    var p = new UseName(mark);
-    n.setUseName(p);
-    match(PERIOD);
-    p.setChild(useQualifiedNameTail());
-    return n;
-  }
-
-  // This is consistent with the hypothesis on check-ins that they appear when
-  // there are several options to choose from, none of which are the epsilon
-  // production.
-
-  // To do: No check-out here?
-
-  private AstNode useQualifiedNameTail () {
-    checkIn(FirstSet.USE_QUALIFIED_NAME_TAIL);
-    if (kind == ASTERISK) {
-      consume();
-      return new UseNameWildcard(mark);
-    } else if (kind == L_BRACE) {
-      return useNameGroup();
-    } else if (kind == Token.Kind.IDENTIFIER) {
-      confirm(Token.Kind.IDENTIFIER);
-      var n = new UseName(mark);
-      if (kind == PERIOD) {
-        consume();
-        n.setChild(useQualifiedNameTail());
-      }
-      return n;
-    } else {
-      return new ErrorNode(mark);
-    }
-  }
-
-  private AstNode useNameGroup () {
-    confirm(L_BRACE);
-    var n = new UseNameGroup();
-    match(Token.Kind.IDENTIFIER);
-    n.addUseName(new UseName(mark));
-    while (kind != R_BRACE) {
-      if (kind == COMMA) {
-        consume();
-        match(Token.Kind.IDENTIFIER);
-        n.addUseName(new UseName(mark));
-      } else {
-        panic(COMMA, R_BRACE);
-        break;
-      }
-    }
-    match(R_BRACE);
-    checkOut();
-    if (errorRecoveryMode && kind == R_BRACE)
-      consume();
-    return n;
-  }
 
   // OTHER DECLARATIONS
 
@@ -917,7 +898,7 @@ public class Parser {
     ExportSpecifier p;
     if (kind == PRIVATE) {
       consume();
-      p = new ExportSpecifier(mark);
+      p = new ExportSpecifier(mark2);
     } else {
       // Maybe change to EPSILON later
       p = null;
@@ -980,7 +961,7 @@ public class Parser {
       kind == VOLATILE
     ) {
       confirm(kind);
-      modifierStack.push(new Modifier(mark));
+      modifierStack.push(new Modifier(mark2));
     }
   }
 
@@ -988,11 +969,11 @@ public class Parser {
 
   private AstNode classDeclaration (AstNode exportSpecifier) {
     confirm(CLASS);
-    var n = new ClassDeclaration(mark);
+    var n = new ClassDeclaration(mark2);
     n.addChild(exportSpecifier);
     n.addChild(classModifiers());
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new ClassName(mark));
+    n.addChild(new ClassName(mark2));
     if (kind == EXTENDS)
       n.addChild(baseClasses(EnumSet.of(L_BRACE)));
     else
@@ -1017,11 +998,11 @@ public class Parser {
     confirm(EXTENDS);
     var n = new BaseClasses();
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new BaseClass(mark));
+    n.addChild(new BaseClass(mark2));
     while (kind == COMMA) {
       confirm(COMMA);
       match(Token.Kind.IDENTIFIER);
-      n.addChild(new BaseClass(mark));
+      n.addChild(new BaseClass(mark2));
     }
     followerSetStack.pop();
     return n;
@@ -1052,10 +1033,10 @@ public class Parser {
     AstNode accessSpecifier;
     if (kind == PRIVATE) {
       confirm(PRIVATE);
-      accessSpecifier = new MemberAccessSpecifier(mark);
+      accessSpecifier = new MemberAccessSpecifier(mark2);
     } else if (kind == PROTECTED) {
       confirm(PROTECTED);
-      accessSpecifier = new MemberAccessSpecifier(mark);
+      accessSpecifier = new MemberAccessSpecifier(mark2);
     } else {
       accessSpecifier = EPSILON;
     }
@@ -1087,7 +1068,7 @@ public class Parser {
       kind == VOLATILE
     ) {
       confirm(kind);
-      modifierStack.push(new Modifier(mark));
+      modifierStack.push(new Modifier(mark2));
     }
   }
 
@@ -1098,10 +1079,10 @@ public class Parser {
 
   private AstNode memberTypealiasDeclaration (AstNode accessSpecifier) {
     confirm(TYPEALIAS);
-    var n = new MemberTypealiasDeclaration(mark);
+    var n = new MemberTypealiasDeclaration(mark2);
     n.addChild(accessSpecifier);
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new TypealiasName(mark));
+    n.addChild(new TypealiasName(mark2));
     // Follower set is whatever can start a type
     match(EQUAL);
     n.addChild(declarator(null));
@@ -1111,26 +1092,26 @@ public class Parser {
 
   private AstNode memberRoutineDeclaration (AstNode accessSpecifier) {
     confirm(DEF);
-    var n = new MemberRoutineDeclaration(mark);
+    var n = new MemberRoutineDeclaration(mark2);
     n.addChild(accessSpecifier);
     n.addChild(memberRoutineModifiers());
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new RoutineName(mark));
+    n.addChild(new RoutineName(mark2));
     n.addChild(routineParameters());
     // No following set required here because these are completely optional
     n.addChild(cvQualifiers());
     if (kind == AMPERSAND) {
       confirm(AMPERSAND);
-      n.addChild(new RefQualifier(mark));
+      n.addChild(new RefQualifier(mark2));
     } else if (kind == AMPERSAND_AMPERSAND) {
       confirm(AMPERSAND_AMPERSAND);
-      n.addChild(new RefQualifier(mark));
+      n.addChild(new RefQualifier(mark2));
     } else {
       n.addChild(EPSILON);
     }
     if (kind == NOEXCEPT) {
       confirm(NOEXCEPT);
-      n.addChild(new NoexceptSpecifier(mark));
+      n.addChild(new NoexceptSpecifier(mark2));
     } else {
       n.addChild(EPSILON);
     }
@@ -1154,17 +1135,17 @@ public class Parser {
     var n = new CVQualifiers();
     if (kind == CONST) {
       confirm(CONST);
-      n.addChild(new CVQualifier(mark));
+      n.addChild(new CVQualifier(mark2));
       if (kind == VOLATILE) {
         confirm(VOLATILE);
-        n.addChild(new CVQualifier(mark));
+        n.addChild(new CVQualifier(mark2));
       }
     } else if (kind == VOLATILE) {
       confirm(VOLATILE);
-      n.addChild(new CVQualifier(mark));
+      n.addChild(new CVQualifier(mark2));
       if (kind == CONST) {
         confirm(CONST);
-        n.addChild(new CVQualifier(mark));
+        n.addChild(new CVQualifier(mark2));
       }
     }
     return n;
@@ -1172,11 +1153,11 @@ public class Parser {
 
   private AstNode memberVariableDeclaration (AstNode accessSpecifier) {
     confirm(kind == VAL ? VAL : VAR);
-    var n = new MemberVariableDeclaration(mark);
+    var n = new MemberVariableDeclaration(mark2);
     n.addChild(accessSpecifier);
     n.addChild(variableModifiers());
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new VariableName(mark));
+    n.addChild(new VariableName(mark2));
     if (kind == COLON) {
       n.addChild(variableTypeSpecifier());
       if (kind == EQUAL)
@@ -1195,10 +1176,10 @@ public class Parser {
 
   private AstNode typealiasDeclaration (AstNode exportSpecifier) {
     confirm(TYPEALIAS);
-    var n = new TypealiasDeclaration(mark);
+    var n = new TypealiasDeclaration(mark2);
     n.addChild(exportSpecifier);
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new TypealiasName(mark));
+    n.addChild(new TypealiasName(mark2));
     // To do: Follower set is whatever can start a type
     match(EQUAL);
     n.addChild(declarator(null));
@@ -1210,7 +1191,7 @@ public class Parser {
     confirm(TYPEALIAS);
     var n = new LocalTypealiasDeclaration(lookahead);
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new TypealiasName(mark));
+    n.addChild(new TypealiasName(mark2));
     // To do: Follower set is whatever can start a type
     match(EQUAL);
     n.addChild(declarator(null));
@@ -1231,15 +1212,15 @@ public class Parser {
 
   private AstNode routineDeclaration (AstNode exportSpecifier) {
     confirm(DEF);
-    var n = new RoutineDeclaration(mark);
+    var n = new RoutineDeclaration(mark2);
     n.addChild(exportSpecifier);
     n.addChild(routineModifiers());
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new RoutineName(mark));
+    n.addChild(new RoutineName(mark2));
     n.addChild(routineParameters());
     if (kind == NOEXCEPT) {
       confirm(NOEXCEPT);
-      n.addChild(new NoexceptSpecifier(mark));
+      n.addChild(new NoexceptSpecifier(mark2));
     } else {
       n.addChild(EPSILON);
     }
@@ -1282,7 +1263,7 @@ public class Parser {
     followerSetStack.push(syncSet);
     var n = new RoutineParameter();
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new RoutineParameterName(mark));
+    n.addChild(new RoutineParameterName(mark2));
     n.addChild(routineParameterTypeSpecifier(EnumSet.of(COMMA, R_PARENTHESIS)));
     followerSetStack.pop();
     return n;
@@ -1291,7 +1272,7 @@ public class Parser {
   private AstNode routineParameterTypeSpecifier (EnumSet<Token.Kind> syncSet) {
     followerSetStack.push(syncSet);
     match(COLON);
-    var n = new RoutineParameterTypeSpecifier(mark);
+    var n = new RoutineParameterTypeSpecifier(mark2);
     n.addChild(declarator(null));
     followerSetStack.pop();
     return n;
@@ -1346,11 +1327,11 @@ public class Parser {
   private AstNode variableDeclaration (ExportSpecifier exportSpecifier) {
     followerSetStack.push(EnumSet.of(SEMICOLON));
     confirm(kind == VAL ? VAL : VAR);
-    var n = new VariableDeclaration(mark);
+    var n = new VariableDeclaration(mark2);
     n.setExportSpecifier(exportSpecifier);
     n.setModifiers(variableModifiers());
     match(Token.Kind.IDENTIFIER);
-    n.setName(new VariableName(mark));
+    n.setName(new VariableName(mark2));
     if (kind == COLON) {
       n.setTypeSpecifier(variableTypeSpecifier());
       if (kind == EQUAL)
@@ -1393,10 +1374,10 @@ public class Parser {
 
   private AstNode localVariableDeclaration () {
     confirm(kind == VAL ? VAL : VAR);
-    var n = new LocalVariableDeclaration(mark);
+    var n = new LocalVariableDeclaration(mark2);
     n.addChild(variableModifiers());
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new VariableName(mark));
+    n.addChild(new VariableName(mark2));
     if (kind == COLON) {
       n.addChild(variableTypeSpecifier());
       if (kind == EQUAL)
@@ -1496,7 +1477,7 @@ public class Parser {
 
   private AstNode breakStatement () {
     confirm(BREAK);
-    var n = new BreakStatement(mark);
+    var n = new BreakStatement(mark2);
     match(SEMICOLON);
     return n;
   }
@@ -1794,7 +1775,7 @@ public class Parser {
     } else {
       // Yes, we need this! If the sync never hits anything in the first set
       // then we need to return a bogus expression!
-      n = new BogusExpression(mark);
+      n = new BogusExpression(mark2);
     }
     checkOut();
     return n;
@@ -1835,7 +1816,7 @@ public class Parser {
       kind == BAR_EQUAL
     ) {
       confirm(kind);
-      var p = new BinaryExpression(mark);
+      var p = new BinaryExpression(mark2);
       p.addChild(n);
       p.addChild(logicalOrExpression());
       n = p;
@@ -1847,7 +1828,7 @@ public class Parser {
     var n = logicalAndExpression();
     while (kind == OR) {
       confirm(OR);
-      var p = new BinaryExpression(mark);
+      var p = new BinaryExpression(mark2);
       p.addChild(n);
       p.addChild(logicalAndExpression());
       n = p;
@@ -1859,7 +1840,7 @@ public class Parser {
     var n = inclusiveOrExpression();
     while (kind == AND) {
       confirm(AND);
-      var p = new BinaryExpression(mark);
+      var p = new BinaryExpression(mark2);
       p.addChild(n);
       p.addChild(inclusiveOrExpression());
       n = p;
@@ -1871,7 +1852,7 @@ public class Parser {
     var n = exclusiveOrExpression();
     while (kind == BAR) {
       confirm(BAR);
-      var p = new BinaryExpression(mark);
+      var p = new BinaryExpression(mark2);
       p.addChild(n);
       p.addChild(exclusiveOrExpression());
       n = p;
@@ -1883,7 +1864,7 @@ public class Parser {
     var n = andExpression();
     while (kind == CARET) {
       confirm(CARET);
-      var p = new BinaryExpression(mark);
+      var p = new BinaryExpression(mark2);
       p.addChild(n);
       p.addChild(andExpression());
       n = p;
@@ -1895,7 +1876,7 @@ public class Parser {
     var n = equalityExpression();
     while (kind == AMPERSAND) {
       confirm(AMPERSAND);
-      var p = new BinaryExpression(mark);
+      var p = new BinaryExpression(mark2);
       p.addChild(n);
       p.addChild(equalityExpression());
       n = p;
@@ -1907,7 +1888,7 @@ public class Parser {
     var n = relationalExpression();
     while (kind == EQUAL_EQUAL || kind == EXCLAMATION_EQUAL) {
       confirm(kind);
-      var p = new BinaryExpression(mark);
+      var p = new BinaryExpression(mark2);
       p.addChild(n);
       p.addChild(relationalExpression());
       n = p;
@@ -1919,7 +1900,7 @@ public class Parser {
     var n = shiftExpression();
     while (kind == GREATER || kind == LESS || kind == GREATER_EQUAL || kind == LESS_EQUAL) {
       confirm(kind);
-      var p = new BinaryExpression(mark);
+      var p = new BinaryExpression(mark2);
       p.addChild(n);
       p.addChild(shiftExpression());
       n = p;
@@ -1931,7 +1912,7 @@ public class Parser {
     var n = additiveExpression();
     while (kind == GREATER_GREATER || kind == LESS_LESS) {
       confirm(kind);
-      var p = new BinaryExpression(mark);
+      var p = new BinaryExpression(mark2);
       p.addChild(n);
       p.addChild(additiveExpression());
       n = p;
@@ -1943,7 +1924,7 @@ public class Parser {
     var n = multiplicativeExpression();
     while (kind == PLUS || kind == MINUS) {
       confirm(kind);
-      var p = new BinaryExpression(mark);
+      var p = new BinaryExpression(mark2);
       p.addChild(n);
       p.addChild(multiplicativeExpression());
       n = p;
@@ -1955,7 +1936,7 @@ public class Parser {
     var n = unaryExpression();
     while (kind == ASTERISK || kind == SLASH || kind == PERCENT) {
       confirm(kind);
-      var p = new BinaryExpression(mark);
+      var p = new BinaryExpression(mark2);
       p.addChild(n);
       p.addChild(unaryExpression());
       n = p;
@@ -1971,7 +1952,7 @@ public class Parser {
     Expression n = null;
     if (kind == ASTERISK || kind == MINUS || kind == PLUS || kind == EXCLAMATION || kind == TILDE) {
       confirm(kind);
-      n = new UnaryExpression(mark);
+      n = new UnaryExpression(mark2);
       n.setSubExpression(unaryExpression());
     } else if (kind == CAST || kind == DIVINE || kind == TRANSMUTE) {
       n = castExpression();
@@ -2186,40 +2167,39 @@ public class Parser {
     Expression n;
     if (kind == FALSE) {
       confirm(FALSE);
-      n = new BooleanLiteral(mark);
+      n = new BooleanLiteral(mark2);
     } else if (kind == TRUE) {
       confirm(TRUE);
-      n = new BooleanLiteral(mark);
+      n = new BooleanLiteral(mark2);
     } else if (kind == CHARACTER_LITERAL) {
       confirm(CHARACTER_LITERAL);
-      n = new CharacterLiteral(mark);
+      n = new CharacterLiteral(mark2);
     } else if (kind == FLOAT32_LITERAL) {
       confirm(FLOAT32_LITERAL);
-      n = new FloatingPointLiteral(mark);
+      n = new FloatingPointLiteral(mark2);
     } else if (kind == FLOAT64_LITERAL) {
       confirm(FLOAT64_LITERAL);
-      n = new FloatingPointLiteral(mark);
+      n = new FloatingPointLiteral(mark2);
     } else if (kind == INT32_LITERAL) {
       confirm(INT32_LITERAL);
-      n = new IntegerLiteral(mark);
+      n = new IntegerLiteral(mark2);
     } else if (kind == INT64_LITERAL) {
       confirm(INT64_LITERAL);
-      n = new IntegerLiteral(mark);
+      n = new IntegerLiteral(mark2);
     } else if (kind == NULL) {
       confirm(NULL);
-      n = new NullLiteral(mark);
+      n = new NullLiteral(mark2);
     } else if (kind == STRING_LITERAL) {
       confirm(STRING_LITERAL);
-      n = new StringLiteral(mark);
+      n = new StringLiteral(mark2);
     } else if (kind == UINT32_LITERAL) {
       confirm(UINT32_LITERAL);
-      n = new UnsignedIntegerLiteral(mark);
+      n = new UnsignedIntegerLiteral(mark2);
     } else if (kind == UINT64_LITERAL) {
       confirm(UINT64_LITERAL);
-      n = new UnsignedIntegerLiteral(mark);
+      n = new UnsignedIntegerLiteral(mark2);
     } else {
       checkError(FirstSet.LITERAL);
-      mark = lookahead;
       //var combined = combine();
       //sync(combined);
 //      n = new ErrorNode(mark);
@@ -2303,7 +2283,7 @@ public class Parser {
           panic(EnumSet.of(L_BRACKET, EQUAL, SEMICOLON));
       }
     } else {
-      n.setDirectDeclarator(new BogusDeclarator(mark));
+      n.setDirectDeclarator(new BogusDeclarator(mark2));
     }
     checkOut();
     if (syncSet != null)
@@ -2339,10 +2319,10 @@ public class Parser {
     ) {
       confirm(kind);
       // Should be simple declarator
-      return new PrimitiveType(mark);
+      return new PrimitiveType(mark2);
     } else if (kind == Token.Kind.IDENTIFIER) {
       confirm(Token.Kind.IDENTIFIER);
-      n = new NominalType(mark);
+      n = new NominalType(mark2);
     } else if (kind == CARET) {
       n = routinePointerDeclarator();
     } else if (kind == L_PARENTHESIS) {
@@ -2350,7 +2330,7 @@ public class Parser {
       n = declarator(null);
       match(R_PARENTHESIS);
     } else {
-      n = new BogusDeclarator(mark);
+      n = new BogusDeclarator(mark2);
     }
     followerSetStack.pop();
     return n;
@@ -2361,7 +2341,7 @@ public class Parser {
 
   private Declarator routinePointerDeclarator () {
     confirm(CARET);
-    var n = new RoutinePointerDeclarator(mark);
+    var n = new RoutinePointerDeclarator(mark2);
     match(L_PARENTHESIS);
     if (FirstSet.DECLARATOR.contains(kind)) {
       n.addChild(declarator(EnumSet.of(COMMA, R_PARENTHESIS)));
@@ -2384,7 +2364,7 @@ public class Parser {
     var n = new PointerDeclarators();
     while (kind == ASTERISK) {
       confirm(ASTERISK);
-      n.addPointerDeclarator(new PointerDeclarator(mark));
+      n.addPointerDeclarator(new PointerDeclarator(mark2));
     }
     return n;
   }
@@ -2410,7 +2390,7 @@ public class Parser {
 
   private ArrayDeclarator arrayDeclarator () {
     confirm(L_BRACKET);
-    var n = new ArrayDeclarator(mark);
+    var n = new ArrayDeclarator(mark2);
     if (kind != R_BRACKET)
       n.setExpression(expression(EnumSet.of(R_BRACKET)));
     match(R_BRACKET);
