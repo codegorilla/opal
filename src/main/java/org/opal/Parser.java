@@ -299,12 +299,13 @@ public class Parser {
 
   // These should probably just be called "error" or something like that
 
-  // TBD: I am not sure we ever have a single expected kind when panicking.
   private void panic (Token.Kind expectedKind) {
     LOGGER.info("panic/1 triggered");
     if (!errorRecoveryMode) {
-      var expectedMessage = "expected '" + reverseLookup.get(expectedKind) + "'";
-      var foundObject = (kind == Token.Kind.IDENTIFIER) ? "identifier" : "'" + reverseLookup.get(kind) + "'";
+      var expectedMessage =
+        "expected " + quote(reverseLookup.get(expectedKind));
+      var foundObject =
+        kind == Token.Kind.IDENTIFIER ? quote(lookahead.getLexeme()) : quote(reverseLookup.get(kind));
       var foundMessage =  ", but found " + foundObject;
       var message = expectedMessage + foundMessage;
       var error = new SyntaxError(sourceLines, message, lookahead);
@@ -316,10 +317,30 @@ public class Parser {
   private void panic (Token.Kind expectedKind1, Token.Kind expectedKind2) {
     LOGGER.info("panic/2 triggered");
     if (!errorRecoveryMode) {
-      var expectedMessage1 = "expected '" + reverseLookup.get(expectedKind1);
-      var expectedMessage2 = "' or '" + reverseLookup.get(expectedKind2);
-      var foundMessage = "', found '" + reverseLookup.get(kind) + "'";
-      var message = expectedMessage1 + expectedMessage2 + foundMessage;
+      var expectedMessage =
+        "expected " + quote(reverseLookup.get(expectedKind1)) +
+        " or "      + quote(reverseLookup.get(expectedKind2));
+      var foundObject =
+        kind == Token.Kind.IDENTIFIER ? quote(lookahead.getLexeme()) : quote(reverseLookup.get(kind));
+      var foundMessage = ", but found " + foundObject;
+      var message = expectedMessage + foundMessage;
+      var error = new SyntaxError(sourceLines, message, lookahead);
+      System.out.println(error);
+    }
+    errorRecoveryMode = true;
+  }
+
+  private void panic (Token.Kind expectedKind1, Token.Kind expectedKind2, Token.Kind expectedKind3) {
+    LOGGER.info("panic/3 triggered");
+    if (!errorRecoveryMode) {
+      var expectedMessage =
+        "expected " + quote(reverseLookup.get(expectedKind1)) +
+        ", "        + quote(reverseLookup.get(expectedKind2)) +
+        ", or "     + quote(reverseLookup.get(expectedKind3));
+      var foundObject =
+        kind == Token.Kind.IDENTIFIER ? quote(lookahead.getLexeme()) : quote(reverseLookup.get(kind));
+      var foundMessage = ", but found " + foundObject;
+      var message = expectedMessage + foundMessage;
       var error = new SyntaxError(sourceLines, message, lookahead);
       System.out.println(error);
     }
@@ -327,7 +348,7 @@ public class Parser {
   }
 
   private void panic (Token.Kind... expectedKinds) {
-    LOGGER.info("panic/3 triggered");
+    LOGGER.info("panic/v triggered");
     if (!errorRecoveryMode) {
       var s = new StringBuilder("expected ");
       s.append("'").append(reverseLookup.get(expectedKinds[0])).append("'");
@@ -335,7 +356,9 @@ public class Parser {
         s.append(", '").append(reverseLookup.get(expectedKinds[i])).append("'");
       s.append(", or '").append(reverseLookup.get(expectedKinds[expectedKinds.length-1])).append("'");
       var expectedMessage = s.toString();
-      var foundMessage = ", but found '" + reverseLookup.get(kind) + "'";
+      var foundObject =
+        kind == Token.Kind.IDENTIFIER ? quote(lookahead.getLexeme()) : quote(reverseLookup.get(kind));
+      var foundMessage =  ", but found " + foundObject;
       var message = expectedMessage + foundMessage;
       var error = new SyntaxError(sourceLines, message, lookahead);
       System.out.println(error);
@@ -347,13 +370,18 @@ public class Parser {
     LOGGER.info("panic/s triggered");
     if (!errorRecoveryMode) {
       var expectedMessage = "expected " + expectedString;
-      var foundObject = (kind == Token.Kind.IDENTIFIER) ? "identifier" : "'" + reverseLookup.get(kind) + "'";
+      var foundObject =
+        kind == Token.Kind.IDENTIFIER ? quote(lookahead.getLexeme()) : quote(reverseLookup.get(kind));
       var foundMessage =  ", but found " + foundObject;
       var message = expectedMessage + foundMessage;
       var error = new SyntaxError(sourceLines, message, lookahead);
       System.out.println(error);
     }
     errorRecoveryMode = true;
+  }
+
+  private String quote (String input) {
+    return "'" + input + "'";
   }
 
   @Deprecated
@@ -661,7 +689,7 @@ public class Parser {
       var node = new PackageDeclaration(token);
       node.setPackageName(packageName());
       match(SEMICOLON);
-      checkOut(FollowSet.PACKAGE_DECLARATION, "start of import, use, or other declaration");
+      checkOut(FollowSet.PACKAGE_DECLARATION, "'import', 'use', or start of other declaration");
       return node;
     }
     cleanup();
@@ -679,7 +707,7 @@ public class Parser {
       if (kind == IMPORT)
         n.addImportDeclaration(importDeclaration());
       else {
-        panic("start of import, use, or other declaration");
+        panic("'import', 'use', or start of other declaration");
         recover(union(FirstSet.IMPORT_DECLARATION, FollowSet.IMPORT_DECLARATIONS));
         cleanup();
       }
@@ -706,16 +734,11 @@ public class Parser {
     if (kind != SEMICOLON) {
       if (kind == AS)
         node.setAsName(importAsClause());
-      else {
+      else
         panic(AS, SEMICOLON);
-        recover(EnumSet.of(AS, SEMICOLON));
-        // Re-attempt
-        if (kind == AS)
-          node.setAsName(importAsClause());
-      }
     }
     match(SEMICOLON);
-    checkOut(FollowSet.IMPORT_DECLARATION, "start of import, use, or other declaration");
+    checkOut(FollowSet.IMPORT_DECLARATION, "'import', 'use', or start of other declaration");
     return node;
   }
 
@@ -727,10 +750,10 @@ public class Parser {
         consume();
         node.addImportName(importName());
       } else {
-        panic(PERIOD, AS, SEMICOLON);
         // Experiment
-        recover(EnumSet.of(AS, SEMICOLON));
-//        break;
+        panic(PERIOD, AS, SEMICOLON);
+//        panic(PERIOD, AS);
+        break;
       }
     }
     return node;
@@ -753,7 +776,7 @@ public class Parser {
       if (kind == USE)
         n.addUseDeclaration(useDeclaration());
       else {
-        panic("start of use or other declaration");
+        panic("'use' or start of other declaration");
         recover(union(FirstSet.IMPORT_DECLARATION, FollowSet.IMPORT_DECLARATIONS));
         cleanup();
       }
@@ -766,7 +789,7 @@ public class Parser {
     var node = new UseDeclaration(token);
     node.setQualifiedName(useQualifiedName());
     match(SEMICOLON);
-    checkOut(FollowSet.USE_DECLARATION, "start of use or other declaration");
+    checkOut(FollowSet.USE_DECLARATION, "'use' or start of other declaration");
     return node;
   }
 
