@@ -87,16 +87,6 @@ public class Parser {
   // Represents epsilon productions
   private static final AstNode EPSILON = null;
 
-  // Following sets are like FOLLOW sets, but are context aware, so they are
-  // generally subsets of FOLLOW sets.
-
-  // Stack for follower sets
-  private final LinkedList<EnumSet<Token.Kind>> followerSetStack;
-
-  // Deprecated
-  // Stack for sync sets
-  //private final LinkedList<EnumSet<Token.Kind>> syncSetStack;
-
   // Convenience aliases
   private static final Token.Kind ABSTRACT = Token.Kind.ABSTRACT;
   private static final Token.Kind AND = Token.Kind.AND;
@@ -230,8 +220,6 @@ public class Parser {
     modifierStack = new LinkedList<>();
     builtinScope = new Scope(Scope.Kind.BUILT_IN);
     currentScope = builtinScope;
-
-    followerSetStack = new LinkedList<>();
 
     var lookupTable = new LookupTable();
     reverseLookup = lookupTable.getReverseLookupTable();
@@ -591,12 +579,6 @@ public class Parser {
     return node;
   }
 
-  // Follower sets are used in two different ways, depending on whether or not
-  // the token needs to be captured in an AST node or not. If so, it is passed
-  // into a "terminal" production method, where it gets used in a match method
-  // call. Otherwise, it is used directly in a match method call within the
-  // non-terminal production method.
-
   private UseQualifiedName useQualifiedName () {
     UseQualifiedName n = new UseQualifiedName();
     var token = match(Token.Kind.IDENTIFIER);
@@ -705,13 +687,11 @@ public class Parser {
 //      }
 
 //  private OtherDeclarations otherDeclarations () {
-//    followerSetStack.push(FollowerSet.OTHER_DECLARATIONS);
 //    checkIn(FirstSet.OTHER_DECLARATIONS);
 //    var n = new OtherDeclarations();
 //    while (FirstSet.OTHER_DECLARATION.contains(kind)) {
 //      n.addOtherDeclaration(otherDeclaration());
 //    }
-//    followerSetStack.pop();
 //    return n;
 //  }
 
@@ -719,7 +699,6 @@ public class Parser {
   // exported. Otherwise, they are considered public, i.e. exported.
 
   private AstNode otherDeclaration () {
-    followerSetStack.push(FirstSet.OTHER_DECLARATION);
     ExportSpecifier p;
     if (kind == PRIVATE) {
       consume();
@@ -748,7 +727,6 @@ public class Parser {
         modifierStack.clear();
       }
     }
-    followerSetStack.pop();
     return n;
   }
 
@@ -819,7 +797,6 @@ public class Parser {
   // of private inheritance are better met by composition instead.
 
   private AstNode baseClasses (EnumSet<Token.Kind> syncSet) {
-    followerSetStack.push(syncSet);
     confirm(EXTENDS);
     var n = new BaseClasses();
     match(Token.Kind.IDENTIFIER);
@@ -829,7 +806,6 @@ public class Parser {
       match(Token.Kind.IDENTIFIER);
       n.addChild(new BaseClass(mark2));
     }
-    followerSetStack.pop();
     return n;
   }
 
@@ -854,7 +830,6 @@ public class Parser {
   // MEMBER DECLARATIONS
 
   private AstNode memberDeclaration (EnumSet<Token.Kind> syncSet) {
-    followerSetStack.push(syncSet);
     AstNode accessSpecifier;
     if (kind == PRIVATE) {
       confirm(PRIVATE);
@@ -877,7 +852,6 @@ public class Parser {
       // Error - need to sync?
       n = null;
     }
-    followerSetStack.pop();
     return n;
   }
 
@@ -897,8 +871,6 @@ public class Parser {
     }
   }
 
-  // To do: Finish follower set
-
   // What if there are modifiers on typealias? Is that a syntax error or
   // semantic error?
 
@@ -908,7 +880,6 @@ public class Parser {
     n.addChild(accessSpecifier);
     match(Token.Kind.IDENTIFIER);
     n.addChild(new TypealiasName(mark2));
-    // Follower set is whatever can start a type
     match(EQUAL);
     n.addChild(declarator(null));
     match(SEMICOLON);
@@ -1005,7 +976,6 @@ public class Parser {
     n.addChild(exportSpecifier);
     match(Token.Kind.IDENTIFIER);
     n.addChild(new TypealiasName(mark2));
-    // To do: Follower set is whatever can start a type
     match(EQUAL);
     n.addChild(declarator(null));
     match(SEMICOLON);
@@ -1017,7 +987,6 @@ public class Parser {
     var n = new LocalTypealiasDeclaration(lookahead);
     match(Token.Kind.IDENTIFIER);
     n.addChild(new TypealiasName(mark2));
-    // To do: Follower set is whatever can start a type
     match(EQUAL);
     n.addChild(declarator(null));
     match(SEMICOLON);
@@ -1085,21 +1054,17 @@ public class Parser {
   // Routine parameters are for all intents and purposes local variables
 
   private AstNode routineParameter (EnumSet<Token.Kind> syncSet) {
-    followerSetStack.push(syncSet);
     var n = new RoutineParameter();
     match(Token.Kind.IDENTIFIER);
     n.addChild(new RoutineParameterName(mark2));
     n.addChild(routineParameterTypeSpecifier(EnumSet.of(COMMA, R_PARENTHESIS)));
-    followerSetStack.pop();
     return n;
   }
 
   private AstNode routineParameterTypeSpecifier (EnumSet<Token.Kind> syncSet) {
-    followerSetStack.push(syncSet);
     match(COLON);
     var n = new RoutineParameterTypeSpecifier(mark2);
     n.addChild(declarator(null));
-    followerSetStack.pop();
     return n;
   }
 
@@ -1112,11 +1077,9 @@ public class Parser {
   // to a type specifier.
 
   private AstNode routineReturnTypeSpecifier () {
-    followerSetStack.push(EnumSet.of(L_BRACE));
     confirm(MINUS_GREATER);
     var n = new RoutineReturnTypeSpecifier();
     n.addChild(declarator(null));
-    followerSetStack.pop();
     return n;
   }
 
@@ -1150,7 +1113,6 @@ public class Parser {
   // Check-out?
 
   private AstNode variableDeclaration (ExportSpecifier exportSpecifier) {
-    followerSetStack.push(EnumSet.of(SEMICOLON));
     confirm(kind == VAL ? VAL : VAR);
     var n = new VariableDeclaration(mark2);
     n.setExportSpecifier(exportSpecifier);
@@ -1166,7 +1128,6 @@ public class Parser {
     } else {
       panic(COLON, EQUAL);
     }
-    followerSetStack.pop();
     match(SEMICOLON);
     return n;
   }
@@ -1182,11 +1143,9 @@ public class Parser {
   // match method with confirm.
 
   private VariableTypeSpecifier variableTypeSpecifier () {
-    followerSetStack.push(EnumSet.of(EQUAL));
     confirm(COLON);
     var n = new VariableTypeSpecifier();
     n.setDeclarator(declarator(null));
-    followerSetStack.pop();
     return n;
   }
 
@@ -1591,8 +1550,6 @@ public class Parser {
   // method. Otherwise, we prefer to use chains of "if" statements.
 
   private Expression expression (EnumSet<Token.Kind> syncSet) {
-    if (syncSet != null)
-      followerSetStack.push(syncSet);
     checkIn(FirstSet.EXPRESSION, "start of expression");
     Expression n;
     if (FirstSet.EXPRESSION.contains(kind)) {
@@ -2066,11 +2023,7 @@ public class Parser {
   // resembles the input. Then, during semantic analysis, the actual types are
   // built by walking this tree in the appropriate order.
 
-  // Should this still be syncSet or should it be followerSet?
-
   private Declarator declarator (EnumSet<Token.Kind> syncSet) {
-    if (syncSet != null)
-      followerSetStack.push(syncSet);
     checkIn(FirstSet.DECLARATOR);
     var n = new Declarator();
     if (
@@ -2111,8 +2064,6 @@ public class Parser {
       n.setDirectDeclarator(new BogusDeclarator(mark2));
     }
     checkOut();
-    if (syncSet != null)
-      followerSetStack.pop();
     return n;
   }
 
@@ -2121,7 +2072,6 @@ public class Parser {
   //The FIRST set actually needs to be limited to direct declarator
 
   private Declarator directDeclarator () {
-    followerSetStack.push(EnumSet.of(L_BRACKET));
     checkIn(FirstSet.DIRECT_DECLARATOR);
     Declarator n;
     if (
@@ -2157,7 +2107,6 @@ public class Parser {
     } else {
       n = new BogusDeclarator(mark2);
     }
-    followerSetStack.pop();
     return n;
   }
 
