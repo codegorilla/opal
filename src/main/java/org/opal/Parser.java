@@ -268,16 +268,12 @@ public class Parser {
 
   private Token match (Token.Kind expectedKind) {
     if (lookahead.getKind() == expectedKind) {
-      // Happy path :)
       LOGGER.info("matched " + lookahead);
-      // We should phase instance mark eventually since match now
-      // returns a token
       var mark = lookahead;
       consume();
       errorRecoveryMode = false;
       return mark;
     } else {
-      // Sad path
       LOGGER.info("mis-matched " + lookahead);
       lookahead.setError();
       if (!errorRecoveryMode)
@@ -290,112 +286,7 @@ public class Parser {
     }
   }
 
-  private void panic (EnumSet<Token.Kind> expectedKinds) {
-    LOGGER.info("panic triggered");
-    if (!errorRecoveryMode)
-      checkError(expectedKinds);
-    errorRecoveryMode = true;
-  }
-
-  // These should probably just be called "error" or something like that
-
-  private void panic (Token.Kind expectedKind) {
-    LOGGER.info("panic/1 triggered");
-    if (!errorRecoveryMode) {
-      var expectedMessage =
-        "expected " + quote(reverseLookup.get(expectedKind));
-      var foundObject =
-        kind == Token.Kind.IDENTIFIER ? quote(lookahead.getLexeme()) : quote(reverseLookup.get(kind));
-      var foundMessage =  ", but found " + foundObject;
-      var message = expectedMessage + foundMessage;
-      var error = new SyntaxError(sourceLines, message, lookahead);
-      System.out.println(error);
-    }
-    errorRecoveryMode = true;
-  }
-
-  private void panic (Token.Kind expectedKind1, Token.Kind expectedKind2) {
-    LOGGER.info("panic/2 triggered");
-    if (!errorRecoveryMode) {
-      var expectedMessage =
-        "expected " + quote(reverseLookup.get(expectedKind1)) +
-        " or "      + quote(reverseLookup.get(expectedKind2));
-      var foundObject =
-        kind == Token.Kind.IDENTIFIER ? quote(lookahead.getLexeme()) : quote(reverseLookup.get(kind));
-      var foundMessage = ", but found " + foundObject;
-      var message = expectedMessage + foundMessage;
-      var error = new SyntaxError(sourceLines, message, lookahead);
-      System.out.println(error);
-    }
-    errorRecoveryMode = true;
-  }
-
-  private void panic (Token.Kind expectedKind1, Token.Kind expectedKind2, Token.Kind expectedKind3) {
-    LOGGER.info("panic/3 triggered");
-    if (!errorRecoveryMode) {
-      var expectedMessage =
-        "expected " + quote(reverseLookup.get(expectedKind1)) +
-        ", "        + quote(reverseLookup.get(expectedKind2)) +
-        ", or "     + quote(reverseLookup.get(expectedKind3));
-      var foundObject =
-        kind == Token.Kind.IDENTIFIER ? quote(lookahead.getLexeme()) : quote(reverseLookup.get(kind));
-      var foundMessage = ", but found " + foundObject;
-      var message = expectedMessage + foundMessage;
-      var error = new SyntaxError(sourceLines, message, lookahead);
-      System.out.println(error);
-    }
-    errorRecoveryMode = true;
-  }
-
-  private void panic (Token.Kind... expectedKinds) {
-    LOGGER.info("panic/v triggered");
-    if (!errorRecoveryMode) {
-      var s = new StringBuilder("expected ");
-      s.append("'").append(reverseLookup.get(expectedKinds[0])).append("'");
-      for (var i=1; i<expectedKinds.length-1; i++)
-        s.append(", '").append(reverseLookup.get(expectedKinds[i])).append("'");
-      s.append(", or '").append(reverseLookup.get(expectedKinds[expectedKinds.length-1])).append("'");
-      var expectedMessage = s.toString();
-      var foundObject =
-        kind == Token.Kind.IDENTIFIER ? quote(lookahead.getLexeme()) : quote(reverseLookup.get(kind));
-      var foundMessage =  ", but found " + foundObject;
-      var message = expectedMessage + foundMessage;
-      var error = new SyntaxError(sourceLines, message, lookahead);
-      System.out.println(error);
-    }
-    errorRecoveryMode = true;
-  }
-
-  private void panic (String expectedString) {
-    LOGGER.info("panic/s triggered");
-    if (!errorRecoveryMode) {
-      var expectedMessage = "expected " + expectedString;
-      var foundObject =
-        kind == Token.Kind.IDENTIFIER ? quote(lookahead.getLexeme()) : quote(reverseLookup.get(kind));
-      var foundMessage =  ", but found " + foundObject;
-      var message = expectedMessage + foundMessage;
-      var error = new SyntaxError(sourceLines, message, lookahead);
-      System.out.println(error);
-    }
-    errorRecoveryMode = true;
-  }
-
-  private String quote (String input) {
-    return "'" + input + "'";
-  }
-
-  @Deprecated
-  private void panic (String expectedString, Token.Kind expectedKind) {
-    LOGGER.info("Panic: panic(S+1) triggered");
-    if (!errorRecoveryMode) {
-      var expectedMessage = "expected " + expectedString + " or '" + reverseLookup.get(expectedKind);
-      var foundMessage = "', found '" + reverseLookup.get(kind) + "'";
-      var message = expectedMessage + foundMessage;
-      var error = new SyntaxError(sourceLines, message, lookahead);
-      System.out.println(error);
-    }
-    errorRecoveryMode = true;
-  }
+  //var expectedString = quote(reverseLookup.get(expectedKind));
 
   private void generalError (Token.Kind expectedKind) {
     var expectedKindString = reverseLookup.getOrDefault(expectedKind, friendlyKind(expectedKind));
@@ -406,53 +297,9 @@ public class Parser {
     System.out.println(error);
   }
 
-  // This probably only pertains when there are a finite set of multiple
-  // options. Thus expected kinds will always be greater than one. But this has
-  // not been proven yet.
-
-  private void checkError (EnumSet<Token.Kind> expectedKinds) {
-    var expectedKindsString = expectedKinds.stream()
-      .map(kind -> reverseLookup.getOrDefault(kind, friendlyKind(kind)))
-      .sorted()
-      .collect(Collectors.joining(", "));
-    var actualKind = kind;
-    var actualKindString = reverseLookup.getOrDefault(actualKind, friendlyKind(actualKind));
-    var messageSome = "expected one of " + expectedKindsString + "; found " + actualKindString;
-    var messageOne  = "expected "        + expectedKindsString + ", found " + actualKindString;
-    var message = expectedKinds.size() > 1 ? messageSome : messageOne;
-    var error = new SyntaxError(sourceLines, message, lookahead);
-    System.out.println(error);
-  }
-
-  // Message is really custom kinds message, not any message
-
-  private void checkError (String message) {
-    var actualKind = kind;
-    var actualKindString = reverseLookup.getOrDefault(actualKind, friendlyKind(actualKind));
-    var messageOne  = "expected " + message + ", found " + actualKindString;
-    var error = new SyntaxError(sourceLines, messageOne, lookahead);
-    System.out.println(error);
-  }
-
-  // Experiment with only two items
-
-  private void checkError2 (EnumSet<Token.Kind> expectedKinds) {
-    var expectedKindsString = expectedKinds.stream()
-      .map(kind -> reverseLookup.getOrDefault(kind, friendlyKind(kind)))
-      .sorted()
-      .toList();
-    var actualKind = kind;
-    var actualKindString = reverseLookup.getOrDefault(actualKind, friendlyKind(actualKind));
-    var message = "expected " + expectedKindsString.get(0) +
-                  " or "      + expectedKindsString.get(1) +
-                  ", found " + actualKindString;
-    var error = new SyntaxError(sourceLines, message, lookahead);
-    System.out.println(error);
-  }
-
-  // Confirm is similar to match, but it does not perform any error recovery
-  // and does not return a result. Instead, it throws an exception. This can
-  // only fail if there is a bug in the compiler.
+  // Confirm is similar to match, but it throws an exception instead of
+  // printing an error message and triggering error recovery. This can only
+  // fail if there is a bug in the compiler.
 
   private Token confirm (Token.Kind expectedKind) {
     if (lookahead.getKind() == expectedKind) {
@@ -475,6 +322,55 @@ public class Parser {
       lookahead = input.get(position.get());
       kind = lookahead.getKind();
     }
+  }
+
+  // These should probably just be called "error" or something like that
+
+  private void panic (Token.Kind expectedKind) {
+    var expectedString = quote(reverseLookup.get(expectedKind));
+    panic(expectedString);
+  }
+
+  private void panic (Token.Kind expectedKind1, Token.Kind expectedKind2) {
+    var expectedString =
+      quote(reverseLookup.get(expectedKind1)) + " or " +
+      quote(reverseLookup.get(expectedKind2));
+    panic(expectedString);
+  }
+
+  private void panic (Token.Kind expectedKind1, Token.Kind expectedKind2, Token.Kind expectedKind3) {
+    var expectedString =
+      quote(reverseLookup.get(expectedKind1)) + ", " +
+      quote(reverseLookup.get(expectedKind2)) + ", or " +
+      quote(reverseLookup.get(expectedKind3));
+    panic(expectedString);
+  }
+
+  private void panic (Token.Kind... expectedKinds) {
+    var first  = quote(reverseLookup.get(expectedKinds[0]));
+    var last   = quote(reverseLookup.get(expectedKinds[expectedKinds.length-1]));
+    var middle = new StringBuilder();
+    for (var i=1; i<expectedKinds.length-1; i++)
+      middle.append(", ").append(quote(reverseLookup.get(expectedKinds[i])));
+    middle.append(", or ");
+    var expectedString = first + middle + last;
+    panic(expectedString);
+  }
+
+  private void panic (String expectedString) {
+    LOGGER.info("panic triggered");
+    if (!errorRecoveryMode) {
+      var foundString =
+        kind == Token.Kind.IDENTIFIER ? quote(lookahead.getLexeme()) : quote(reverseLookup.get(kind));
+      var message = "expected " + expectedString + ", but found " + foundString;
+      var error = new SyntaxError(sourceLines, message, lookahead);
+      System.out.println(error);
+    }
+    errorRecoveryMode = true;
+  }
+
+  private String quote (String input) {
+    return "'" + input + "'";
   }
 
   public AstNode process () {
@@ -570,8 +466,9 @@ public class Parser {
     LOGGER.info("DEP Check-in: check-in started");
     // Might need to set mark in process() not here
     if (!firstSet.contains(kind)) {
-      if (!errorRecoveryMode)
-        checkError(firstSet);
+      if (!errorRecoveryMode) {
+        //checkError(firstSet);
+      }
       LOGGER.info("Check-in: created " + mark2);
       // Combine first set and all follower sets
       var combined = EnumSet.copyOf(firstSet);
@@ -920,7 +817,7 @@ public class Parser {
       else {
         // Probably should panic with custom "expected start of declaration"
         // message
-        panic(EnumSet.of(CLASS, TYPEALIAS, DEF, VAL, VAR));
+        panic(CLASS, TYPEALIAS, DEF, VAL, VAR);
         modifierStack.clear();
       }
     }
@@ -2200,7 +2097,7 @@ public class Parser {
       confirm(UINT64_LITERAL);
       n = new UnsignedIntegerLiteral(mark2);
     } else {
-      checkError(FirstSet.LITERAL);
+//      checkError(FirstSet.LITERAL);
       //var combined = combine();
       //sync(combined);
 //      n = new ErrorNode(mark);
@@ -2281,7 +2178,7 @@ public class Parser {
         if (kind == L_BRACKET)
           n.setArrayDeclarators(arrayDeclarators());
         else
-          panic(EnumSet.of(L_BRACKET, EQUAL, SEMICOLON));
+          panic(L_BRACKET, EQUAL, SEMICOLON);
       }
     } else {
       n.setDirectDeclarator(new BogusDeclarator(mark2));
@@ -2377,7 +2274,7 @@ public class Parser {
       if (kind == L_BRACKET)
         n.addArrayDeclarator(arrayDeclarator());
       else {
-        panic(EnumSet.of(L_BRACKET, EQUAL, SEMICOLON));
+        panic(L_BRACKET, EQUAL, SEMICOLON);
         break;
       }
     }
