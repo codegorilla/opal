@@ -706,8 +706,13 @@ public class Parser {
     if (kind != SEMICOLON) {
       if (kind == AS)
         node.setAsName(importAsClause());
-      else
+      else {
         panic(AS, SEMICOLON);
+        recover(EnumSet.of(AS, SEMICOLON));
+        // Re-attempt
+        if (kind == AS)
+          node.setAsName(importAsClause());
+      }
     }
     match(SEMICOLON);
     checkOut(FollowSet.IMPORT_DECLARATION, "start of import, use, or other declaration");
@@ -723,7 +728,9 @@ public class Parser {
         node.addImportName(importName());
       } else {
         panic(PERIOD, AS, SEMICOLON);
-        break;
+        // Experiment
+        recover(EnumSet.of(AS, SEMICOLON));
+//        break;
       }
     }
     return node;
@@ -731,10 +738,7 @@ public class Parser {
 
   private ImportName importName () {
     var token = match(Token.Kind.IDENTIFIER);
-    var n = new ImportName(token);
-    if (token.getError())
-      n.setError();
-    return n;
+    return new ImportName(token);
   }
 
   private ImportAsName importAsClause () {

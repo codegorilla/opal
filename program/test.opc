@@ -1,6 +1,6 @@
 package main;
 
-+ + import opal.lang-math as math;
++ + import opal.lang.math asf + math;
 
 
 //+ import +opal.lang+.math;
