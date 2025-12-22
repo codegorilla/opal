@@ -517,34 +517,11 @@ public class Parser {
   // not just "expected Y". Should we just be looking at follow sets?
 
   private AstNode translationUnit () {
-    followerSetStack.push(EnumSet.of(Token.Kind.EOF));
     var n = new TranslationUnit();
     n.setPackageDeclaration(packageDeclaration());
     n.setImportDeclarations(importDeclarations());
     n.setUseDeclarations(useDeclarations());
-
-
     //n.setOtherDeclarations(otherDeclarations());
-
-//    checkIn(FirstSet.REMAINING_DECLARATIONS_1, "'import', 'use', or start of other declaration");
-//    if (kind == IMPORT)
-//      n.setImportDeclarations(importDeclarations());
-//    checkIn(FirstSet.REMAINING_DECLARATIONS_2, "'import', 'use', or start of other declaration");
-//    if (kind == USE)
-//      n.setUseDeclarations(useDeclarations());
-//
-//    checkIn(FirstSet.REMAINING_DECLARATIONS_3, "'use' or start of other declaration");
-//    if (
-//      kind == PRIVATE ||
-//      kind == CLASS   ||
-//      kind == DEF     ||
-//      kind == VAL     ||
-//      kind == VAR
-//    ) {
-//      n.setOtherDeclarations(otherDeclarations());
-//    }
-//
-//    System.out.println("HERE");
 
 //    else if (kind == Token.Kind.EOF) {
 //    } else {
@@ -558,7 +535,6 @@ public class Parser {
     //scope.setEnclosingScope(currentScope);
     //currentScope = scope;
     //n.setScope(currentScope);
-    followerSetStack.pop();
     return n;
   }
 
@@ -750,9 +726,7 @@ public class Parser {
         consume();
         node.addImportName(importName());
       } else {
-        // Experiment
         panic(PERIOD, AS, SEMICOLON);
-//        panic(PERIOD, AS);
         break;
       }
     }
