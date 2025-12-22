@@ -241,29 +241,65 @@ public class Parser {
     Configurator.setRootLevel(level);
   }
 
-  // In the process of replacing this with a map that maps kinds back to
-  // strings
+  // ***** BEGIN DEPRECATED STUFF *****
+
   @Deprecated
-  private String friendlyKind (Token.Kind kind) {
-    return kind.toString().toLowerCase().replace("_", " ");
+  private void checkIn (EnumSet<Token.Kind> firstSet) {}
+
+  @Deprecated
+  private void checkIn (EnumSet<Token.Kind> firstSet, String expectedString) {}
+
+  @Deprecated
+  private void checkOut () {}
+
+  // ***** END DEPRECATED STUFF *****
+
+  // We likely need multiple versions of check-in and check-out because the error messages may differ
+
+  private void checkIn (EnumSet<Token.Kind> firstSet, EnumSet<Token.Kind> followSet, Token.Kind expectedKind) {
+    LOGGER.info("check-in started");
+    if (!firstSet.contains(kind)) {
+      panic(expectedKind);
+      recover(union(firstSet, followSet));
+    }
+    LOGGER.info("check-in complete");
   }
 
-  // Note: Instead of an ERROR kind, we could just mark whatever the lookahead
-  // is and then annotate the token with an error flag.
+  // Check-out only occurs if we are in error recovery mode (i.e. a panic occurred).
 
-  // This doesn't consume the sync token - it just gets us TO it
+  private void checkOut (EnumSet<Token.Kind> followSet, String expectedKindString) {
+    LOGGER.info("check-out started");
+    if (!followSet.contains(kind) && errorRecoveryMode) {
+      recover(followSet);
+      cleanup();
+    }
+    LOGGER.info("check-out complete");
+  }
 
-  private void sync (EnumSet<Token.Kind> syncSet) {
-//    mark = new Token(Token.Kind.ERROR, lookahead.getLexeme(), lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
-//    LOGGER.info("Sync: created " + mark);
-    LOGGER.info("Sync: synchronization started");
-    // Combine all sync sets
-    // Scan forward until we hit something in the sync set
+  private static final EnumSet<Token.Kind> SYNC_GLOBAL = EnumSet.of(SEMICOLON, R_BRACE, Token.Kind.EOF);
+
+  private void recover (EnumSet<Token.Kind> recoverSet) {
+    LOGGER.info("recovery started");
+    var syncSet = union(recoverSet, SYNC_GLOBAL);
     while (!syncSet.contains(kind)) {
-      LOGGER.info("Sync: skipped {}", lookahead);
+      LOGGER.info("skipped {}", lookahead);
       consume();
     }
-    LOGGER.info("Sync: synchronization complete");
+    LOGGER.info("recovery complete");
+  }
+
+  // When can we clear error recovery mode? I believe it is on match, confirm,
+  // and cleanup. Note: For this reason, we probably cannot just consume on
+  // entering an if body, but should confirm instead.
+
+  // Should we just return a token from consume?
+
+  private void cleanup () {
+    if (kind == SEMICOLON || kind == R_BRACE) {
+      LOGGER.info("cleaned {}", lookahead);
+      consume();
+      errorRecoveryMode = false;
+    }
   }
 
   private Token match (Token.Kind expectedKind) {
@@ -277,7 +313,7 @@ public class Parser {
       LOGGER.info("mis-matched " + lookahead);
       lookahead.setError();
       if (!errorRecoveryMode)
-        generalError(expectedKind);
+        matchError(expectedKind);
       // Should we at least advance the input stream? If we do, then we
       // effectively delete the bad token. Different sources say yes or no,
       // but several seem to indicate that we should NOT consume.
@@ -286,15 +322,19 @@ public class Parser {
     }
   }
 
-  //var expectedString = quote(reverseLookup.get(expectedKind));
-
-  private void generalError (Token.Kind expectedKind) {
-    var expectedKindString = reverseLookup.getOrDefault(expectedKind, friendlyKind(expectedKind));
-    var actualKind = lookahead.getKind();
-    var actualKindString = reverseLookup.getOrDefault(actualKind, friendlyKind(actualKind));
-    var message = "expected '" + expectedKindString + "', but found '" + actualKindString + "'";
+  private void matchError (Token.Kind expectedKind) {
+    var expectedKindString = reverseLookup.get(expectedKind);
+    var expectedString =
+      expectedKindString == null ? friendlyKind(expectedKind) : quote(expectedKindString);
+    var foundString =
+      kind == Token.Kind.IDENTIFIER ? quote(lookahead.getLexeme()) : quote(reverseLookup.get(kind));
+    var message = "expected " + expectedString + ", but found " + foundString;
     var error = new SyntaxError(sourceLines, message, lookahead);
     System.out.println(error);
+  }
+
+  private String friendlyKind (Token.Kind kind) {
+    return kind.toString().toLowerCase().replace("_", " ");
   }
 
   // Confirm is similar to match, but it throws an exception instead of
@@ -311,7 +351,7 @@ public class Parser {
     } else {
       var expectedKindFriendly = friendlyKind(expectedKind);
       var actualKindFriendly = friendlyKind(lookahead.getKind());
-      var message = "expected " + expectedKindFriendly + ", found " + actualKindFriendly;
+      var message = "expected " + expectedKindFriendly + ", but found " + actualKindFriendly;
       throw new IllegalArgumentException("internal error: " + message);
     }
   }
@@ -419,14 +459,6 @@ public class Parser {
     n.setUseDeclarations(useDeclarations());
     //n.setOtherDeclarations(otherDeclarations());
 
-//    else if (kind == Token.Kind.EOF) {
-//    } else {
-//      // Assume error and that we don't want epsilon production
-//      n.addChild(otherDeclarations());
-//      //checkError(EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR));
-//      //sync(EnumSet.of(Token.Kind.EOF)); // Why doesn't this sync to EOF?
-//    }
-
     //var scope = new Scope(Scope.Kind.GLOBAL);
     //scope.setEnclosingScope(currentScope);
     //currentScope = scope;
@@ -449,111 +481,6 @@ public class Parser {
   // same name.
 
   // To do: Support qualified names for packages
-
-  // FOLLOW set is statically determined, whereas FOLLOWING set is sometimes
-  // not known at compile time. There can be multiple versions of the FOLLOWING
-  // set for a given production.
-
-//  private EnumSet<Token.Kind> combine () {
-//    var combined = EnumSet.noneOf(Token.Kind.class);
-//    for (var followerSet : followerSetStack)
-//      combined.addAll(followerSet);
-//    return combined;
-//  }
-
-  @Deprecated
-  private void checkIn (EnumSet<Token.Kind> firstSet) {
-    LOGGER.info("DEP Check-in: check-in started");
-    // Might need to set mark in process() not here
-    if (!firstSet.contains(kind)) {
-      if (!errorRecoveryMode) {
-        //checkError(firstSet);
-      }
-      LOGGER.info("Check-in: created " + mark2);
-      // Combine first set and all follower sets
-      var combined = EnumSet.copyOf(firstSet);
-      for (var followerSet : followerSetStack)
-        combined.addAll(followerSet);
-      sync(combined);
-    }
-    LOGGER.info("DEP Check-in: check-in complete");
-  }
-
-  // Special variant of checkIn that uses a custom string for expected kinds
-
-  @Deprecated
-  private void checkIn (EnumSet<Token.Kind> firstSet, String expectedString) {
-    LOGGER.info("DEP Check-in: check-in started");
-    // Might need to set mark in process() not here
-    if (!firstSet.contains(kind)) {
-      if (!errorRecoveryMode) {
-        var expectedMessage = "expected " + expectedString;
-        var foundObject = (kind == Token.Kind.IDENTIFIER) ? "identifier" : "'" + reverseLookup.get(kind) + "'";
-        var foundMessage =  ", but found " + foundObject;
-        var message = expectedMessage + foundMessage;
-        var error = new SyntaxError(sourceLines, message, lookahead);
-        System.out.println(error);
-      }
-      LOGGER.info("DEP Check-in: created " + mark2);
-      // Combine first set and all follower sets
-      var combined = EnumSet.copyOf(firstSet);
-      for (var followerSet : followerSetStack)
-        combined.addAll(followerSet);
-      sync(combined);
-    }
-    LOGGER.info("DEP Check-in: check-in complete");
-  }
-
-  @Deprecated
-  private void checkOut () {}
-
-  // We likely need multiple versions of check-in and check-out because the error messages may differ
-
-  private void checkIn (EnumSet<Token.Kind> firstSet, EnumSet<Token.Kind> followSet, Token.Kind expectedKind) {
-    LOGGER.info("check-in started");
-    if (!firstSet.contains(kind)) {
-      panic(expectedKind);
-      recover(union(firstSet, followSet));
-    }
-    LOGGER.info("check-in complete");
-  }
-
-  // Check-out only occurs if we are in error recovery mode (i.e. a panic occurred).
-
-  private void checkOut (EnumSet<Token.Kind> followSet, String expectedKindString) {
-    LOGGER.info("check-out started");
-    if (!followSet.contains(kind) && errorRecoveryMode) {
-      recover(followSet);
-      cleanup();
-    }
-    LOGGER.info("check-out complete");
-  }
-
-  private static final EnumSet<Token.Kind> SYNC_GLOBAL = EnumSet.of(SEMICOLON, R_BRACE, Token.Kind.EOF);
-
-  private void recover (EnumSet<Token.Kind> recoverSet) {
-    LOGGER.info("recovery started");
-    var syncSet = union(recoverSet, SYNC_GLOBAL);
-    while (!syncSet.contains(kind)) {
-      LOGGER.info("skipped {}", lookahead);
-      consume();
-    }
-    LOGGER.info("recovery complete");
-  }
-
-  // When can we clear error recovery mode? I believe it is on match, confirm,
-  // and cleanup. Note: For this reason, we probably cannot just consume on
-  // entering an if body, but should confirm instead.
-
-  // Should we just return a token from consume?
-
-  private void cleanup () {
-    if (kind == SEMICOLON || kind == R_BRACE) {
-      LOGGER.info("cleaned {}", lookahead);
-      consume();
-      errorRecoveryMode = false;
-    }
-  }
 
   private PackageDeclaration packageDeclaration () {
     checkIn(FirstSet.PACKAGE_DECLARATION, FollowSet.PACKAGE_DECLARATION, PACKAGE);

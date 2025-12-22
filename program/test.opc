@@ -1,6 +1,6 @@
 package main;
 
-+ + import +opal.lang.math beep as math;
++ + import opal.lang.math beep as math;
 
 
 //+ import +opal.lang+.math;
