@@ -59,16 +59,18 @@ public class FollowSet {
   );
 
 
-  public static final EnumSet<Token.Kind> OTHER_DECLARATIONS =
-    FollowSet.TRANSLATION_UNIT;
+  public static final EnumSet<Token.Kind> OTHER_DECLARATIONS = EnumSet.of (
+    Token.Kind.EOF
+  );
 
-  public static final EnumSet<Token.Kind> OTHER_DECLARATION =
-    union(FirstSet.OTHER_DECLARATION, FollowSet.OTHER_DECLARATIONS);
-
-  public static final EnumSet<Token.Kind> VARIABLE_DECLARATION =
-    FollowSet.OTHER_DECLARATION;
-
-
+  public static final EnumSet<Token.Kind> OTHER_DECLARATION = EnumSet.of (
+    Token.Kind.PRIVATE,
+    Token.Kind.DEF,
+    Token.Kind.CLASS,
+    Token.Kind.VAR,
+    Token.Kind.VAL,
+    Token.Kind.EOF
+  );
 
 
 

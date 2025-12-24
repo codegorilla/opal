@@ -445,7 +445,7 @@ public class Parser {
     n.setPackageDeclaration(packageDeclaration());
     n.setImportDeclarations(importDeclarations());
     n.setUseDeclarations(useDeclarations());
-    //n.setOtherDeclarations(otherDeclarations());
+    n.setOtherDeclarations(otherDeclarations());
 
     //var scope = new Scope(Scope.Kind.GLOBAL);
     //scope.setEnclosingScope(currentScope);
@@ -467,7 +467,7 @@ public class Parser {
   // translation unit, and it must appear at the very top. A package is
   // basically a direct 1:1 translation to a C++ module and namespace of the
   // same name.
-  
+
   private PackageDeclaration packageDeclaration () {
     checkIn(FirstSet.PACKAGE_DECLARATION, FollowSet.PACKAGE_DECLARATION, PACKAGE);
     if (kind == PACKAGE) {
@@ -532,19 +532,22 @@ public class Parser {
 
   private ImportQualifiedName importQualifiedName () {
     var node = new ImportQualifiedName();
-    var token1 = match(Token.Kind.IDENTIFIER);
-    node.addImportName(new ImportName(token1));
+    node.addImportName(importName());
     while (kind != AS && kind != SEMICOLON) {
       if (kind == PERIOD) {
         confirm(PERIOD);
-        var token2 = match(Token.Kind.IDENTIFIER);
-        node.addImportName(new ImportName(token2));
+        node.addImportName(importName());
       } else {
         panic(PERIOD, AS, SEMICOLON);
         break;
       }
     }
     return node;
+  }
+
+  private ImportName importName () {
+    var token = match(Token.Kind.IDENTIFIER);
+    return new ImportName(token);
   }
 
   private ImportAsName importAsClause () {
@@ -560,7 +563,7 @@ public class Parser {
         n.addUseDeclaration(useDeclaration());
       else {
         panic("'use' or start of other declaration");
-        recover(union(FirstSet.IMPORT_DECLARATION, FollowSet.IMPORT_DECLARATIONS));
+        recover(union(FirstSet.USE_DECLARATION, FollowSet.USE_DECLARATIONS));
         cleanup();
       }
     }
@@ -636,17 +639,22 @@ public class Parser {
     return new UseName(token);
   }
 
-
-  // This is how you handle optionals!
+  // OTHER DECLARATIONS
 
   private OtherDeclarations otherDeclarations () {
     var n = new OtherDeclarations();
-    while (!FollowSet.OTHER_DECLARATION.contains(kind)) {
-      if (FirstSet.OTHER_DECLARATION.contains(kind))
-        n.addOtherDeclaration(otherDeclaration1());
-      else {
-        panic("start of declaration");
-        recover(FollowSet.OTHER_DECLARATION);
+    while (!FollowSet.OTHER_DECLARATIONS.contains(kind)) {
+      if (
+        kind == PRIVATE ||
+        kind == CLASS   ||
+        kind == DEF     ||
+        kind == VAL     ||
+        kind == VAR
+      ) {
+        n.addOtherDeclaration(otherDeclaration());
+      } else {
+        panic("start of other declaration");
+        recover(union(FirstSet.OTHER_DECLARATION, FollowSet.OTHER_DECLARATIONS));
         cleanup();
       }
     }
@@ -656,49 +664,6 @@ public class Parser {
   // We don't need a check-in for otherDeclaration because it is optional, so
   // the check-in logic is in the caller. If we enter this production, then we
   // already know that the current token is in the FIRST set.
-
-  private Declaration otherDeclaration1 () {
-    Declaration n;
-    if (kind == IMPORT) {
-      n = importDeclaration();
-    } else if (kind == USE) {
-      n = useDeclaration();
-    } else {
-      // This cannot happen so we should throw an exception here
-      n = new BogusDeclaration(mark2);
-    }
-    // Brings us TO a token in the sync set. If it is in the global set, we
-    // would need to consume it. Since the correct token depends on what kind
-    // of declaration it is, we don't know what kind of token is correct at
-    // this point, so I don't think a check-out makes sense here. It
-    // probably belongs in the individual declaration routines. This contrasts
-    // with the check-in. We need the check-in in this routine because it needs
-    // to be able to decide which routine to dispatch to.
-    //checkOut();
-    //System.out.println(lookahead);
-    //System.out.println("BREAK");
-    // Do we need to consume semicolon here?
-    return n;
-  }
-
-
-  // OTHER DECLARATIONS
-
-//      System.out.println("Sleeping for " + SLEEP_TIME + " seconds in declarations...");
-//      try {
-//        Thread.sleep(SLEEP_TIME);
-//      } catch (InterruptedException e) {
-//        throw new RuntimeException(e);
-//      }
-
-//  private OtherDeclarations otherDeclarations () {
-//    checkIn(FirstSet.OTHER_DECLARATIONS);
-//    var n = new OtherDeclarations();
-//    while (FirstSet.OTHER_DECLARATION.contains(kind)) {
-//      n.addOtherDeclaration(otherDeclaration());
-//    }
-//    return n;
-//  }
 
   // Entities may be declared as private, indicating that they are not
   // exported. Otherwise, they are considered public, i.e. exported.
@@ -732,6 +697,7 @@ public class Parser {
         modifierStack.clear();
       }
     }
+    checkOut(FollowSet.OTHER_DECLARATION, "start of other declaration");
     return n;
   }
 

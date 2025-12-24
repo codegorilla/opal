@@ -35,8 +35,6 @@ public class FirstSet {
     EnumSet.of(Token.Kind.ASTERISK, Token.Kind.L_BRACE, Token.Kind.IDENTIFIER);
 
   public static final EnumSet<Token.Kind> OTHER_DECLARATION = EnumSet.of (
-    Token.Kind.IMPORT,
-    Token.Kind.USE,
     Token.Kind.PRIVATE,
     Token.Kind.CLASS,
     Token.Kind.DEF,
