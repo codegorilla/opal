@@ -590,22 +590,24 @@ public class Parser {
   }
 
   private AstNode useQualifiedNameTail () {
-    checkIn(FirstSet.USE_QUALIFIED_NAME_TAIL);
     if (kind == ASTERISK) {
-      consume();
-      return new UseNameWildcard(mark2);
+      var token = confirm(ASTERISK);
+      return new UseNameWildcard(token);
     } else if (kind == L_BRACE) {
       return useNameGroup();
     } else if (kind == Token.Kind.IDENTIFIER) {
-      confirm(Token.Kind.IDENTIFIER);
-      var n = new UseName(mark2);
+      var token = confirm(Token.Kind.IDENTIFIER);
+      var n = new UseName(token);
       if (kind == PERIOD) {
-        consume();
+        confirm(PERIOD);
         n.setChild(useQualifiedNameTail());
       }
       return n;
     } else {
-      return new ErrorNode(mark2);
+      // For now, assume a use name was intended. Perhaps phrase-level recovery
+      // can ascertain the intent more accurately.
+      panic("identifier, '{', or '*'");
+      return new UseName(lookahead);
     }
   }
 

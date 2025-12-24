@@ -39,15 +39,25 @@ public class FollowSet {
     Token.Kind.EOF
   );
 
-  
-  public static final EnumSet<Token.Kind> IMPORT_QUALIFIED_NAME =
-    EnumSet.of(Token.Kind.AS, Token.Kind.SEMICOLON);
+  public static final EnumSet<Token.Kind> USE_DECLARATIONS = EnumSet.of (
+    Token.Kind.PRIVATE,
+    Token.Kind.DEF,
+    Token.Kind.CLASS,
+    Token.Kind.VAR,
+    Token.Kind.VAL,
+    Token.Kind.EOF
+  );
 
-  public static final EnumSet<Token.Kind> USE_DECLARATIONS =
-    union(FirstSet.OTHER_DECLARATIONS, FollowSet.TRANSLATION_UNIT);
+  public static final EnumSet<Token.Kind> USE_DECLARATION = EnumSet.of (
+    Token.Kind.USE,
+    Token.Kind.PRIVATE,
+    Token.Kind.DEF,
+    Token.Kind.CLASS,
+    Token.Kind.VAR,
+    Token.Kind.VAL,
+    Token.Kind.EOF
+  );
 
-  public static final EnumSet<Token.Kind> USE_DECLARATION =
-    union(FirstSet.USE_DECLARATION, FollowSet.USE_DECLARATIONS);
 
   public static final EnumSet<Token.Kind> OTHER_DECLARATIONS =
     FollowSet.TRANSLATION_UNIT;

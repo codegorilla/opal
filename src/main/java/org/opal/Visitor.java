@@ -34,6 +34,7 @@ public interface Visitor {
   public void visit (UseDeclarations node);
   public void visit (UseDeclaration node);
   public void visit (UseQualifiedName node);
+  public void visit (UseQualifiedNameTail node);
   public void visit (UseName node);
   public void visit (UseNameGroup node);
   public void visit (UseNameWildcard node);

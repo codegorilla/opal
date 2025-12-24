@@ -1,14 +1,9 @@
 package main;
 
-+ + import opal.lang.math beep as math;
+import opal.lang.math;
 
++ + use opal.math.+pi;
 
-//+ import +opal.lang+.math;
-//import opal.math;
-
-//import opal.math as m;
-
-//use opal.math.pi;
 //use opal.math.{ Bessel, Jacobian };
 
 //+ + use opal.math.*;
