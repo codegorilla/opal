@@ -467,9 +467,7 @@ public class Parser {
   // translation unit, and it must appear at the very top. A package is
   // basically a direct 1:1 translation to a C++ module and namespace of the
   // same name.
-
-  // To do: Support qualified names for packages
-
+  
   private PackageDeclaration packageDeclaration () {
     checkIn(FirstSet.PACKAGE_DECLARATION, FollowSet.PACKAGE_DECLARATION, PACKAGE);
     if (kind == PACKAGE) {
@@ -483,6 +481,8 @@ public class Parser {
     cleanup();
     return null;
   }
+
+  // To do: Support qualified names for packages
 
   private PackageName packageName () {
     var token = match(Token.Kind.IDENTIFIER);
@@ -532,22 +532,19 @@ public class Parser {
 
   private ImportQualifiedName importQualifiedName () {
     var node = new ImportQualifiedName();
-    node.addImportName(importName());
+    var token1 = match(Token.Kind.IDENTIFIER);
+    node.addImportName(new ImportName(token1));
     while (kind != AS && kind != SEMICOLON) {
       if (kind == PERIOD) {
-        consume();
-        node.addImportName(importName());
+        confirm(PERIOD);
+        var token2 = match(Token.Kind.IDENTIFIER);
+        node.addImportName(new ImportName(token2));
       } else {
         panic(PERIOD, AS, SEMICOLON);
         break;
       }
     }
     return node;
-  }
-
-  private ImportName importName () {
-    var token = match(Token.Kind.IDENTIFIER);
-    return new ImportName(token);
   }
 
   private ImportAsName importAsClause () {
@@ -570,6 +567,10 @@ public class Parser {
     return n;
   }
 
+  // We don't need a check-in for useDeclaration because it is optional, so the
+  // check-in logic is in the caller. If we enter this production, then we
+  // already know that the current token is in the FIRST set.
+
   private UseDeclaration useDeclaration () {
     var token = confirm(USE);
     var node = new UseDeclaration(token);
@@ -581,8 +582,7 @@ public class Parser {
 
   private UseQualifiedName useQualifiedName () {
     UseQualifiedName n = new UseQualifiedName();
-    var token = match(Token.Kind.IDENTIFIER);
-    var p = new UseName(token);
+    var p = useName();
     n.setUseName(p);
     match(PERIOD);
     p.setChild(useQualifiedNameTail());
@@ -591,46 +591,49 @@ public class Parser {
 
   private AstNode useQualifiedNameTail () {
     if (kind == ASTERISK) {
-      var token = confirm(ASTERISK);
-      return new UseNameWildcard(token);
+      return useNameWildcard();
     } else if (kind == L_BRACE) {
       return useNameGroup();
     } else if (kind == Token.Kind.IDENTIFIER) {
-      var token = confirm(Token.Kind.IDENTIFIER);
-      var n = new UseName(token);
+      var n = useName();
       if (kind == PERIOD) {
         confirm(PERIOD);
         n.setChild(useQualifiedNameTail());
       }
       return n;
     } else {
-      // For now, assume a use name was intended. Perhaps phrase-level recovery
-      // can ascertain the intent more accurately.
+      // For now, assume a use name was intended. Perhaps later we can try
+      // phrase-level recovery to ascertain the intent more accurately.
       panic("identifier, '{', or '*'");
       return new UseName(lookahead);
     }
   }
 
+  private UseNameWildcard useNameWildcard () {
+    var token = confirm(ASTERISK);
+    return new UseNameWildcard(token);
+  }
+
   private AstNode useNameGroup () {
     confirm(L_BRACE);
     var n = new UseNameGroup();
-    match(Token.Kind.IDENTIFIER);
-    n.addUseName(new UseName(mark2));
+    n.addUseName(useName());
     while (kind != R_BRACE) {
       if (kind == COMMA) {
-        consume();
-        match(Token.Kind.IDENTIFIER);
-        n.addUseName(new UseName(mark2));
+        confirm(COMMA);
+        n.addUseName(useName());
       } else {
         panic(COMMA, R_BRACE);
         break;
       }
     }
     match(R_BRACE);
-    checkOut();
-    if (errorRecoveryMode && kind == R_BRACE)
-      consume();
     return n;
+  }
+
+  private UseName useName () {
+    var token = match(Token.Kind.IDENTIFIER);
+    return new UseName(token);
   }
 
 
