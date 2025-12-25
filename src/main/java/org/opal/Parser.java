@@ -339,7 +339,9 @@ public class Parser {
     } else {
       var expectedKindFriendly = friendlyKind(expectedKind);
       var actualKindFriendly = friendlyKind(lookahead.getKind());
-      var message = "expected " + expectedKindFriendly + ", but found " + actualKindFriendly;
+      var expectedMessage = "expected " + expectedKindFriendly;
+      var foundMessage = ", but found " + actualKindFriendly;
+      var message = expectedMessage + foundMessage;
       throw new IllegalArgumentException("internal error: " + message);
     }
   }
@@ -671,8 +673,8 @@ public class Parser {
   private AstNode otherDeclaration () {
     ExportSpecifier p;
     if (kind == PRIVATE) {
-      consume();
-      p = new ExportSpecifier(mark2);
+      var token = confirm(PRIVATE);
+      p = new ExportSpecifier(token);
     } else {
       // Maybe change to EPSILON later
       p = null;
@@ -1084,23 +1086,29 @@ public class Parser {
   // Check-out?
 
   private AstNode variableDeclaration (ExportSpecifier exportSpecifier) {
-    confirm(kind == VAL ? VAL : VAR);
-    var n = new VariableDeclaration(mark2);
+    var token = confirm(kind == VAL ? VAL : VAR);
+    var n = new VariableDeclaration(token);
     n.setExportSpecifier(exportSpecifier);
     n.setModifiers(variableModifiers());
-    match(Token.Kind.IDENTIFIER);
-    n.setName(new VariableName(mark2));
-    if (kind == COLON) {
-      n.setTypeSpecifier(variableTypeSpecifier());
-      if (kind == EQUAL)
+    n.setName(variableName());
+    if (kind != SEMICOLON) {
+      if (kind == COLON) {
+        n.setTypeSpecifier(variableTypeSpecifier());
+        if (kind == EQUAL)
+          n.setInitializer(variableInitializer());
+      } else if (kind == EQUAL) {
         n.setInitializer(variableInitializer());
-    } else if (kind == EQUAL) {
-      n.setInitializer(variableInitializer());
-    } else {
-      panic(COLON, EQUAL);
+      } else {
+        panic(COLON, EQUAL, SEMICOLON);
+      }
     }
     match(SEMICOLON);
     return n;
+  }
+
+  private VariableName variableName () {
+    var token = match(Token.Kind.IDENTIFIER);
+    return new VariableName(token);
   }
 
   private VariableModifiers variableModifiers () {
