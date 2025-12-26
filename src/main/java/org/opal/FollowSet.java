@@ -20,6 +20,7 @@ public class FollowSet {
   public static final EnumSet<Token.Kind> IMPORT_DECLARATIONS = EnumSet.of (
     Token.Kind.USE,
     Token.Kind.PRIVATE,
+    Token.Kind.CONST,
     Token.Kind.DEF,
     Token.Kind.CLASS,
     Token.Kind.VAR,
@@ -32,6 +33,7 @@ public class FollowSet {
     Token.Kind.IMPORT,
     Token.Kind.USE,
     Token.Kind.PRIVATE,
+    Token.Kind.CONST,
     Token.Kind.DEF,
     Token.Kind.CLASS,
     Token.Kind.VAR,
@@ -41,6 +43,7 @@ public class FollowSet {
 
   public static final EnumSet<Token.Kind> USE_DECLARATIONS = EnumSet.of (
     Token.Kind.PRIVATE,
+    Token.Kind.CONST,
     Token.Kind.DEF,
     Token.Kind.CLASS,
     Token.Kind.VAR,
@@ -51,6 +54,7 @@ public class FollowSet {
   public static final EnumSet<Token.Kind> USE_DECLARATION = EnumSet.of (
     Token.Kind.USE,
     Token.Kind.PRIVATE,
+    Token.Kind.CONST,
     Token.Kind.DEF,
     Token.Kind.CLASS,
     Token.Kind.VAR,
@@ -65,6 +69,7 @@ public class FollowSet {
 
   public static final EnumSet<Token.Kind> OTHER_DECLARATION = EnumSet.of (
     Token.Kind.PRIVATE,
+    Token.Kind.CONST,
     Token.Kind.DEF,
     Token.Kind.CLASS,
     Token.Kind.VAR,

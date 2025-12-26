@@ -21,8 +21,4 @@ public class UseNameWildcard extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode useQualifiedName () {
-    return getChild(0);
-  }
-
 }

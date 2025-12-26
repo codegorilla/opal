@@ -512,7 +512,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
 
   public ST visit (VariableModifiers node) {
     var st = group.getInstanceOf("common/declaration/variableModifiers");
-    for (var modifier : node.modifiers())
+    for (var modifier : node.children())
       st.add("modifier", visit(modifier));
     return st;
   }

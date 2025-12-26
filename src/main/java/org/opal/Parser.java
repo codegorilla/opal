@@ -648,6 +648,7 @@ public class Parser {
     while (!FollowSet.OTHER_DECLARATIONS.contains(kind)) {
       if (
         kind == PRIVATE ||
+        kind == CONST   ||
         kind == CLASS   ||
         kind == DEF     ||
         kind == VAL     ||
@@ -736,8 +737,8 @@ public class Parser {
       kind == FINAL     ||
       kind == VOLATILE
     ) {
-      confirm(kind);
-      modifierStack.push(new Modifier(mark2));
+      var token = confirm(kind);
+      modifierStack.push(new Modifier(token));
     }
   }
 
@@ -1114,12 +1115,9 @@ public class Parser {
   private VariableModifiers variableModifiers () {
     var n = new VariableModifiers();
     while (!modifierStack.isEmpty())
-      n.addChild(modifierStack.pop());
+      n.addModifier(modifierStack.pop());
     return n;
   }
-
-  // Is this only ever arrived at on a sure path? If so, we can replace the
-  // match method with confirm.
 
   private VariableTypeSpecifier variableTypeSpecifier () {
     confirm(COLON);

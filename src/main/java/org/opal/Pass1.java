@@ -162,11 +162,26 @@ public class Pass1 extends BaseVisitor {
   public void visit (VariableDeclaration node) {
     depth.increment();
     printNode(node);
-    visit(node.getName());
+    node.getModifiers().accept(this);
+    node.getName().accept(this);
     if (node.hasTypeSpecifier())
       visit(node.getTypeSpecifier());
     if (node.hasInitializer())
       visit(node.getInitializer());
+    depth.decrement();
+  }
+
+  public void visit (VariableModifiers node) {
+    depth.increment();
+    printNode(node);
+    for (var variableModifier : node.children())
+      variableModifier.accept(this);
+    depth.decrement();
+  }
+
+  public void visit (Modifier node) {
+    depth.increment();
+    printNode(node);
     depth.decrement();
   }
 

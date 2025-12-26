@@ -8,7 +8,7 @@ import java.util.LinkedList;
 
 public class VariableModifiers extends AstNode {
 
-  private final LinkedList<Modifier> modifiers = new LinkedList<>();
+  private final LinkedList<Modifier> children = new LinkedList<>();
 
   public VariableModifiers () {}
 
@@ -22,8 +22,12 @@ public class VariableModifiers extends AstNode {
     return v.visit(this);
   }
 
-  public Iterable<Modifier> modifiers () {
-    return modifiers;
+  public Iterable<Modifier> children () {
+    return children;
+  }
+
+  public void addModifier (Modifier modifier) {
+    children.add(modifier);
   }
 
 }

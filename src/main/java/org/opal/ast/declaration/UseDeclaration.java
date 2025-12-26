@@ -7,9 +7,6 @@ import org.opal.ast.AstNode;
 
 public class UseDeclaration extends Declaration {
 
-  // Not sure if this is used anymore?
-  private Kind kind = null;
-
   private UseQualifiedName qualifiedName = null;
 
   public UseDeclaration (Token token) {
@@ -32,35 +29,6 @@ public class UseDeclaration extends Declaration {
 
   public UseQualifiedName qualifiedName () {
     return qualifiedName;
-  }
-
-  // The second child may constitute one, some, or all names.
-
-  // Not sure if these are used anymore?
-  public AstNode useOneName () {
-    return getChild(1);
-  }
-
-  public AstNode useSomeNames () {
-    return getChild(1);
-  }
-
-  public AstNode useAllNames () {
-    return getChild(1);
-  }
-
-  public void setKind (UseDeclaration.Kind kind) {
-    this.kind = kind;
-  }
-
-  public UseDeclaration.Kind getKind () {
-    return kind;
-  }
-
-  public enum Kind {
-    ONE_NAME,
-    SOME_NAMES,
-    ALL_NAMES
   }
 
 }
