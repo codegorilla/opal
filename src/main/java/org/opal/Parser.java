@@ -2117,11 +2117,14 @@ public class Parser {
     Declarator n;
     if (
       kind == Token.Kind.BOOL    ||
+      kind == Token.Kind.SHORT   ||
+      kind == Token.Kind.LONG    ||
       kind == Token.Kind.INT     ||
       kind == Token.Kind.INT8    ||
       kind == Token.Kind.INT16   ||
       kind == Token.Kind.INT32   ||
       kind == Token.Kind.INT64   ||
+      kind == Token.Kind.NULL_T  ||
       kind == Token.Kind.UINT    ||
       kind == Token.Kind.UINT8   ||
       kind == Token.Kind.UINT16  ||
@@ -2198,27 +2201,27 @@ public class Parser {
   private PointerDeclarators pointerDeclarators () {
     var n = new PointerDeclarators();
     while (
-      kind != CARET &&
-      kind != L_PARENTHESIS &&
+      kind != CARET                 &&
+      kind != L_PARENTHESIS         &&
       kind != Token.Kind.IDENTIFIER &&
-      kind != Token.Kind.BOOL &&
-      kind != Token.Kind.DOUBLE &&
-      kind != Token.Kind.FLOAT &&
-      kind != Token.Kind.FLOAT32 &&
-      kind != Token.Kind.FLOAT64 &&
-      kind != Token.Kind.INT &&
-      kind != Token.Kind.INT8 &&
-      kind != Token.Kind.INT16 &&
-      kind != Token.Kind.INT32 &&
-      kind != Token.Kind.INT64 &&
-      kind != Token.Kind.LONG &&
-      kind != Token.Kind.NULL_T &&
-      kind != Token.Kind.SHORT &&
-      kind != Token.Kind.UINT &&
-      kind != Token.Kind.UINT8 &&
-      kind != Token.Kind.UINT16 &&
-      kind != Token.Kind.UINT32 &&
-      kind != Token.Kind.UINT64 &&
+      kind != Token.Kind.BOOL       &&
+      kind != Token.Kind.SHORT      &&
+      kind != Token.Kind.INT        &&
+      kind != Token.Kind.LONG       &&
+      kind != Token.Kind.INT8       &&
+      kind != Token.Kind.INT16      &&
+      kind != Token.Kind.INT32      &&
+      kind != Token.Kind.INT64      &&
+      kind != Token.Kind.NULL_T     &&
+      kind != Token.Kind.UINT       &&
+      kind != Token.Kind.UINT8      &&
+      kind != Token.Kind.UINT16     &&
+      kind != Token.Kind.UINT32     &&
+      kind != Token.Kind.UINT64     &&
+      kind != Token.Kind.FLOAT      &&
+      kind != Token.Kind.DOUBLE     &&
+      kind != Token.Kind.FLOAT32    &&
+      kind != Token.Kind.FLOAT64    &&
       kind != Token.Kind.VOID
     ) {
       if (kind == ASTERISK) {
