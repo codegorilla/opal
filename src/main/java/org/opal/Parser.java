@@ -227,20 +227,8 @@ public class Parser {
     Configurator.setRootLevel(level);
   }
 
-  // ***** BEGIN DEPRECATED STUFF *****
-
-  @Deprecated
-  private void checkIn (EnumSet<Token.Kind> firstSet) {}
-
-  @Deprecated
-  private void checkIn (EnumSet<Token.Kind> firstSet, String expectedString) {}
-
-  @Deprecated
-  private void checkOut () {}
-
-  // ***** END DEPRECATED STUFF *****
-
-  // We likely need multiple versions of check-in and check-out because the error messages may differ
+  // We might need multiple versions of check-in and check-out because the
+  // error messages may differ.
 
   private void checkIn (EnumSet<Token.Kind> firstSet, EnumSet<Token.Kind> followSet, Token.Kind expectedKind) {
     LOGGER.info("check-in started");
@@ -251,7 +239,8 @@ public class Parser {
     LOGGER.info("check-in complete");
   }
 
-  // Check-out only occurs if we are in error recovery mode (i.e. a panic occurred).
+  // Check-out only occurs if we are in error recovery mode (i.e. a panic
+  // occurred).
 
   private void checkOut (EnumSet<Token.Kind> followSet, String expectedKindString) {
     LOGGER.info("check-out started");
@@ -1525,7 +1514,6 @@ public class Parser {
   // method. Otherwise, we prefer to use chains of "if" statements.
 
   private Expression expression (Parser.Context context) {
-    checkIn(FirstSet.EXPRESSION, "start of expression");
     Expression n;
     if (FirstSet.EXPRESSION.contains(kind)) {
       n = assignmentExpression();
@@ -1534,7 +1522,6 @@ public class Parser {
       // then we need to return a bogus expression!
       n = new BogusExpression(mark2);
     }
-    checkOut();
     return n;
   }
 
