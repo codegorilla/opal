@@ -6,7 +6,7 @@ package main;
 //+ + use opal.math.*;
 //use opal.math.{ Bessel, Jacobian };
 
-const var t: int %1;
+const var t: *int %1;
 
 //: **int[2.5][4] = 5;
 

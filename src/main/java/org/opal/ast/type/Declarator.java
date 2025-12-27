@@ -15,6 +15,8 @@ public class Declarator extends AstNode {
 
   public Declarator () {}
 
+  // When should it take a token?
+
   public Declarator (Token token) {
     super(token);
   }
