@@ -1,7 +1,6 @@
 package org.opal;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.Level;
@@ -9,7 +8,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import org.opal.ast.*;
-import org.opal.ast.ErrorNode;
 import org.opal.ast.declaration.*;
 import org.opal.ast.expression.*;
 import org.opal.ast.statement.*;
@@ -1526,7 +1524,7 @@ public class Parser {
   // have large FIRST sets. In this case, it is ok to use the "contains"
   // method. Otherwise, we prefer to use chains of "if" statements.
 
-  private Expression expression (EnumSet<Token.Kind> syncSet) {
+  private Expression expression (Parser.Context context) {
     checkIn(FirstSet.EXPRESSION, "start of expression");
     Expression n;
     if (FirstSet.EXPRESSION.contains(kind)) {
@@ -2050,6 +2048,8 @@ public class Parser {
   private final static int VARIABLE_TYPE_SPECIFIER = 0;
   private final static int ROUTINE_RETURN_TYPE_SPECIFIER = 1;
 
+  // DEPRECATED
+  @Deprecated
   private Declarator declarator (EnumSet<Token.Kind> syncSet) {
     var n = new Declarator();
     if (
@@ -2089,7 +2089,7 @@ public class Parser {
     if (context == VARIABLE_TYPE_SPECIFIER) {
       if (kind != EQUAL && kind != SEMICOLON) {
         if (kind == L_BRACKET)
-          n.setArrayDeclarators(arrayDeclarators());
+          n.setArrayDeclarators(arrayDeclarators(null));
         else
           panic(L_BRACKET, EQUAL, SEMICOLON);
       }
@@ -2098,7 +2098,7 @@ public class Parser {
 
     if (kind != EQUAL && kind != SEMICOLON) {
       if (kind == L_BRACKET)
-        n.setArrayDeclarators(arrayDeclarators());
+        n.setArrayDeclarators(arrayDeclarators(null));
       else
         panic(L_BRACKET, EQUAL, SEMICOLON);
     }
@@ -2107,7 +2107,97 @@ public class Parser {
 
   private Declarator declarator (Parser.Context context) {
     var n = new Declarator();
+    n.setPointerDeclarators(pointerDeclarators());
+    n.setDirectDeclarator(directDeclarator());
+    n.setArrayDeclarators(arrayDeclarators(context));
+    return n;
+  }
+
+  private Declarator directDeclarator () {
+    Declarator n;
     if (
+      kind == Token.Kind.BOOL    ||
+      kind == Token.Kind.INT     ||
+      kind == Token.Kind.INT8    ||
+      kind == Token.Kind.INT16   ||
+      kind == Token.Kind.INT32   ||
+      kind == Token.Kind.INT64   ||
+      kind == Token.Kind.UINT    ||
+      kind == Token.Kind.UINT8   ||
+      kind == Token.Kind.UINT16  ||
+      kind == Token.Kind.UINT32  ||
+      kind == Token.Kind.UINT64  ||
+      kind == Token.Kind.FLOAT   ||
+      kind == Token.Kind.DOUBLE  ||
+      kind == Token.Kind.FLOAT32 ||
+      kind == Token.Kind.FLOAT64 ||
+      kind == Token.Kind.VOID
+    ) {
+      n = primitiveType();
+    } else if (kind == Token.Kind.IDENTIFIER) {
+      n = nominalType();
+    } else if (kind == CARET) {
+      n = routinePointerType();
+    } else if (kind == L_PARENTHESIS) {
+      confirm(L_PARENTHESIS);
+      n = declarator(Parser.Context.PARENTHESIZED_DECLARATOR);
+      match(R_PARENTHESIS);
+    } else {
+      panic("IN PANIC WITHIN DIRECT DECLARATOR!");
+      n = new Declarator();
+      n.setError();
+    }
+    return n;
+  }
+
+  private PrimitiveType primitiveType () {
+    var token = confirm(kind);
+    return new PrimitiveType(token);
+  }
+
+  private NominalType nominalType () {
+    var token = confirm(Token.Kind.IDENTIFIER);
+    return new NominalType(token);
+  }
+
+  // For now, assume all routine pointers must have a return type specified,
+  // in which case, the last child of the AST node is the return type.
+
+  private Declarator routinePointerType () {
+    var token = confirm(CARET);
+    var n = new RoutinePointerType(token);
+    n.setRoutinePointerTypeParameters(routinePointerTypeParameters());
+    match(MINUS_GREATER);
+    // Now need to match return type declarator
+    return n;
+  }
+
+  private RoutinePointerTypeParameters routinePointerTypeParameters () {
+    var token = match(L_PARENTHESIS);
+    var n = new RoutinePointerTypeParameters(token);
+    if (kind != R_PARENTHESIS) {
+      // Need if declarator first set vs. error cond
+      n.addRoutinePointerTypeParameter(routinePointerTypeParameter());
+    }
+    while (kind != R_PARENTHESIS) {
+      match(COMMA);
+      // Need if declarator first set vs. error cond
+      n.addRoutinePointerTypeParameter(routinePointerTypeParameter());
+    }
+    match(R_PARENTHESIS);
+    return n;
+  }
+
+  private RoutinePointerTypeParameter routinePointerTypeParameter () {
+    var n = new RoutinePointerTypeParameter();
+    // We need a special context to handle ')' and ','
+    n.setDeclarator(declarator((Parser.Context)null));
+    return n;
+  }
+
+  private PointerDeclarators pointerDeclarators () {
+    var n = new PointerDeclarators();
+    while (
       kind != CARET &&
       kind != L_PARENTHESIS &&
       kind != Token.Kind.IDENTIFIER &&
@@ -2132,157 +2222,67 @@ public class Parser {
       kind != Token.Kind.VOID
     ) {
       if (kind == ASTERISK) {
-        n.setPointerDeclarators(pointerDeclarators());
+        n.addPointerDeclarator(pointerDeclarator());
       } else {
         panic("'*' or direct declarator");
-      }
-    }
-    n.setDirectDeclarator(directDeclarator());
-    if (context == Parser.Context.VARIABLE_TYPE_SPECIFIER) {
-      if (kind != EQUAL && kind != SEMICOLON) {
-        if (kind == L_BRACKET)
-          n.setArrayDeclarators(arrayDeclarators());
-        else
-          panic(L_BRACKET, EQUAL, SEMICOLON);
-      }
-    } else if (context == Parser.Context.ROUTINE_RETURN_TYPE_SPECIFIER) {
-      if (kind != L_BRACE) {
-        if (kind == L_BRACKET)
-          n.setArrayDeclarators(arrayDeclarators());
-        else
-          panic(L_BRACKET, L_BRACE);
-      }
-    }
-    return n;
-  }
-
-  // Need a check-in here
-
-  //The FIRST set actually needs to be limited to direct declarator
-
-  private Declarator directDeclarator () {
-    checkIn(FirstSet.DIRECT_DECLARATOR);
-    Declarator n;
-    if (
-      kind == Token.Kind.BOOL    ||
-      kind == Token.Kind.INT     ||
-      kind == Token.Kind.INT8    ||
-      kind == Token.Kind.INT16   ||
-      kind == Token.Kind.INT32   ||
-      kind == Token.Kind.INT64   ||
-      kind == Token.Kind.UINT    ||
-      kind == Token.Kind.UINT8   ||
-      kind == Token.Kind.UINT16  ||
-      kind == Token.Kind.UINT32  ||
-      kind == Token.Kind.UINT64  ||
-      kind == Token.Kind.FLOAT   ||
-      kind == Token.Kind.DOUBLE  ||
-      kind == Token.Kind.FLOAT32 ||
-      kind == Token.Kind.FLOAT64 ||
-      kind == Token.Kind.VOID
-    ) {
-      confirm(kind);
-      // Should be simple declarator
-      return new PrimitiveType(mark2);
-    } else if (kind == Token.Kind.IDENTIFIER) {
-      confirm(Token.Kind.IDENTIFIER);
-      n = new NominalType(mark2);
-    } else if (kind == CARET) {
-      n = routinePointerDeclarator();
-    } else if (kind == L_PARENTHESIS) {
-      confirm(L_PARENTHESIS);
-      n = declarator((EnumSet)null);
-      match(R_PARENTHESIS);
-    } else {
-      n = new BogusDeclarator(mark2);
-    }
-    return n;
-  }
-
-  // For now, assume all routine pointers must have a return type specified,
-  // in which case, the last child of the AST node is the return type.
-
-  private Declarator routinePointerDeclarator () {
-    confirm(CARET);
-    var n = new RoutinePointerDeclarator(mark2);
-    match(L_PARENTHESIS);
-    if (FirstSet.DECLARATOR.contains(kind)) {
-      n.addChild(declarator(EnumSet.of(COMMA, R_PARENTHESIS)));
-    }
-    while (kind == COMMA) {
-      confirm(COMMA);
-      n.addChild(declarator(EnumSet.of(COMMA, R_PARENTHESIS)));
-    }
-    match(R_PARENTHESIS);
-    match(MINUS_GREATER);
-    n.addChild(declarator(EnumSet.of(COMMA, R_PARENTHESIS)));
-    return n;
-  }
-
-  // A check-in may not required if we are sure that the previous check-out
-  // procedure must have brought us to a member of the FIRST set.
-
-  private PointerDeclarators pointerDeclarators () {
-    // No check-in required
-    var n = new PointerDeclarators();
-    while (kind == ASTERISK) {
-      confirm(ASTERISK);
-      n.addPointerDeclarator(new PointerDeclarator(mark2));
-    }
-    return n;
-  }
-
-  private ArrayDeclarators arrayDeclarators () {
-    // No check-in required for now. Might need one for generic types.
-    var n = new ArrayDeclarators();
-    while (kind != EQUAL && kind != SEMICOLON) {
-      if (kind == L_BRACKET)
-        n.addArrayDeclarator(arrayDeclarator());
-      else {
-        panic(L_BRACKET, EQUAL, SEMICOLON);
         break;
       }
     }
     return n;
   }
 
-  // Check that expression is const during semantic analysis
+  private PointerDeclarator pointerDeclarator () {
+    var token = confirm(ASTERISK);
+    return new PointerDeclarator(token);
+  }
 
-  // I believe this conforms to the correct way of handling optional items. Use
-  // this as an example for other constructs.
-
-  private ArrayDeclarator arrayDeclarator () {
-    confirm(L_BRACKET);
-    var n = new ArrayDeclarator(mark2);
-    if (kind != R_BRACKET)
-      n.setExpression(expression(EnumSet.of(R_BRACKET)));
-    match(R_BRACKET);
+  private ArrayDeclarators arrayDeclarators (Parser.Context context) {
+    var n = new ArrayDeclarators();
+    if (context == Parser.Context.VARIABLE_TYPE_SPECIFIER) {
+      while (kind != EQUAL && kind != SEMICOLON) {
+        if (kind == L_BRACKET)
+          n.addArrayDeclarator(arrayDeclarator());
+        else {
+          panic(L_BRACKET, EQUAL, SEMICOLON);
+          break;
+        }
+      }
+    } else if (context == Parser.Context.ROUTINE_RETURN_TYPE_SPECIFIER) {
+      while (kind != L_BRACE) {
+        if (kind == L_BRACKET)
+          n.addArrayDeclarator(arrayDeclarator());
+        else {
+          panic(L_BRACKET, L_BRACE);
+          break;
+        }
+      }
+    } else if (context == Parser.Context.PARENTHESIZED_DECLARATOR) {
+      while (kind != R_PARENTHESIS) {
+        if (kind == L_BRACKET)
+          n.addArrayDeclarator(arrayDeclarator());
+        else {
+          panic(L_BRACKET, Token.Kind.R_PARENTHESIS);
+          break;
+        }
+      }
+    }
     return n;
   }
 
-  private static EnumSet<Token.Kind> union (EnumSet<Token.Kind> a, Token.Kind b) {
-    var combined = EnumSet.copyOf(a);
-    combined.add(b);
-    return combined;
-  }
+  // Need to check that expression is const during semantic analysis
 
-  private static EnumSet<Token.Kind> union (EnumSet<Token.Kind> a, Token.Kind b, Token.Kind c) {
-    var combined = EnumSet.copyOf(a);
-    combined.add(b);
-    combined.add(c);
-    return combined;
+  private ArrayDeclarator arrayDeclarator () {
+    var token = confirm(L_BRACKET);
+    var n = new ArrayDeclarator(token);
+    if (kind != R_BRACKET)
+      n.setExpression(expression(Parser.Context.ARRAY_DECLARATOR));
+    match(R_BRACKET);
+    return n;
   }
 
   private static EnumSet<Token.Kind> union (EnumSet<Token.Kind> a, EnumSet<Token.Kind> b) {
     var combined = EnumSet.copyOf(a);
     combined.addAll(b);
-    return combined;
-  }
-
-  private static EnumSet<Token.Kind> union (EnumSet<Token.Kind> a, EnumSet<Token.Kind> b, EnumSet<Token.Kind> c) {
-    var combined = EnumSet.copyOf(a);
-    combined.addAll(b);
-    combined.addAll(c);
     return combined;
   }
 
@@ -2332,7 +2332,9 @@ public class Parser {
 
   public enum Context {
     VARIABLE_TYPE_SPECIFIER,
-    ROUTINE_RETURN_TYPE_SPECIFIER
+    ROUTINE_RETURN_TYPE_SPECIFIER,
+    ARRAY_DECLARATOR,
+    PARENTHESIZED_DECLARATOR
   }
 
 

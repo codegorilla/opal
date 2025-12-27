@@ -653,7 +653,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
     return st;
   }
 
-  public ST visit (RoutinePointerDeclarator node) {
+  public ST visit (RoutinePointerType node) {
     var st = group.getInstanceOf("common/declarator/routinePointerDeclarator");
     st.add("directDeclarator", stack.pop());
     for (int i=0; i<node.getChildCount()-1; i++) {

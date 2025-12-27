@@ -171,7 +171,7 @@ public interface Visitor {
 //  public void visit (Type node);
   public void visit (NominalType node);
   public void visit (PrimitiveType node);
-  public void visit (RoutinePointerDeclarator node);
+  public void visit (RoutinePointerType node);
 
   public void visit (TemplateInstantiation node);
   public void visit (TemplateArguments node);
