@@ -853,7 +853,7 @@ public class Parser {
     match(Token.Kind.IDENTIFIER);
     n.addChild(new TypealiasName(mark2));
     match(EQUAL);
-    n.addChild(declarator((EnumSet)null));
+    n.addChild(declarator(Parser.Context.TYPEALIAS_DECLARATION));
     match(SEMICOLON);
     return n;
   }
@@ -949,7 +949,7 @@ public class Parser {
     match(Token.Kind.IDENTIFIER);
     n.addChild(new TypealiasName(mark2));
     match(EQUAL);
-    n.addChild(declarator((EnumSet)null));
+    n.addChild(declarator(Parser.Context.TYPEALIAS_DECLARATION));
     match(SEMICOLON);
     return n;
   }
@@ -960,7 +960,7 @@ public class Parser {
     match(Token.Kind.IDENTIFIER);
     n.addChild(new TypealiasName(mark2));
     match(EQUAL);
-    n.addChild(declarator((EnumSet)null));
+    n.addChild(declarator(Parser.Context.TYPEALIAS_DECLARATION));
     match(SEMICOLON);
     return n;
   }
@@ -1014,10 +1014,10 @@ public class Parser {
     match(L_PARENTHESIS);
     var n = new RoutineParameters();
     if (kind == Token.Kind.IDENTIFIER)
-      n.addChild(routineParameter(EnumSet.of(COMMA, R_PARENTHESIS)));
+      n.addChild(routineParameter());
     while (kind == COMMA) {
       confirm(COMMA);
-      n.addChild(routineParameter(EnumSet.of(COMMA, R_PARENTHESIS)));
+      n.addChild(routineParameter());
     }
     match(R_PARENTHESIS);
     return n;
@@ -1025,18 +1025,18 @@ public class Parser {
 
   // Routine parameters are for all intents and purposes local variables
 
-  private AstNode routineParameter (EnumSet<Token.Kind> syncSet) {
+  private AstNode routineParameter () {
     var n = new RoutineParameter();
     match(Token.Kind.IDENTIFIER);
     n.addChild(new RoutineParameterName(mark2));
-    n.addChild(routineParameterTypeSpecifier(EnumSet.of(COMMA, R_PARENTHESIS)));
+    n.addChild(routineParameterTypeSpecifier());
     return n;
   }
 
-  private AstNode routineParameterTypeSpecifier (EnumSet<Token.Kind> syncSet) {
+  private AstNode routineParameterTypeSpecifier () {
     match(COLON);
     var n = new RoutineParameterTypeSpecifier(mark2);
-    n.addChild(declarator((EnumSet)null));
+    n.addChild(declarator(Parser.Context.ROUTINE_PARAMETER_TYPE_SPECIFIER));
     return n;
   }
 
@@ -1051,7 +1051,7 @@ public class Parser {
   private AstNode routineReturnTypeSpecifier () {
     confirm(MINUS_GREATER);
     var n = new RoutineReturnTypeSpecifier();
-    n.addChild(declarator((EnumSet)null));
+    n.addChild(declarator(Context.ROUTINE_RETURN_TYPE_SPECIFIER));
     return n;
   }
 
@@ -1728,7 +1728,7 @@ public class Parser {
     var n = new CastExpression(lookahead);
     match(lookahead.getKind());
     match(Token.Kind.LESS);
-    n.addChild(declarator(EnumSet.of(GREATER)));
+    n.addChild(declarator(Parser.Context.CAST_EXPRESSION));
     match(Token.Kind.GREATER);
     match(Token.Kind.L_PARENTHESIS);
     n.addChild(expression(true));
@@ -1759,7 +1759,7 @@ public class Parser {
     var n = new NewExpression(lookahead);
     match(Token.Kind.NEW);
     n.addChild(kind == Token.Kind.L_BRACKET ? newPlacement() : null);
-    n.addChild(declarator((EnumSet)null));
+    n.addChild(declarator(Parser.Context.NEW_EXPRESSION));
     n.addChild(kind == Token.Kind.L_PARENTHESIS ? newInitializer() : null);
     return n;
   }
@@ -1998,112 +1998,9 @@ public class Parser {
   // resembles the input. Then, during semantic analysis, the actual types are
   // built by walking this tree in the appropriate order.
 
-//  private Declarator declarator () {
-//    var n = new Declarator();
-//    if (
-//      kind == ASTERISK              ||
-//      kind == CARET                 ||
-//      kind == L_PARENTHESIS         ||
-//      kind == Token.Kind.IDENTIFIER ||
-//      kind == Token.Kind.BOOL       ||
-//      kind == Token.Kind.DOUBLE     ||
-//      kind == Token.Kind.FLOAT      ||
-//      kind == Token.Kind.FLOAT32    ||
-//      kind == Token.Kind.FLOAT64    ||
-//      kind == Token.Kind.INT        ||
-//      kind == Token.Kind.INT8       ||
-//      kind == Token.Kind.INT16      ||
-//      kind == Token.Kind.INT32      ||
-//      kind == Token.Kind.INT64      ||
-//      kind == Token.Kind.LONG       ||
-//      kind == Token.Kind.NULL_T     ||
-//      kind == Token.Kind.SHORT      ||
-//      kind == Token.Kind.UINT       ||
-//      kind == Token.Kind.UINT8      ||
-//      kind == Token.Kind.UINT16     ||
-//      kind == Token.Kind.UINT32     ||
-//      kind == Token.Kind.UINT64     ||
-//      kind == Token.Kind.VOID
-//    ) {
-//      if (kind == ASTERISK)
-//        n.setPointerDeclarators(pointerDeclarators());
-//      n.setDirectDeclarator(directDeclarator());
-//      if (kind != EQUAL && kind != SEMICOLON) {
-//        if (kind == L_BRACKET)
-//          n.setArrayDeclarators(arrayDeclarators());
-//        else
-//          panic(L_BRACKET, EQUAL, SEMICOLON);
-//      }
-//    } else {
-//      n.setDirectDeclarator(new BogusDeclarator(mark2));
-//    }
-//    return n;
-//  }
-
-  // We need to pass in a sync set in order to account for dynamic context.
-  // Alternatively, we can hard-code different sync-sets and pass in a context
-  // enumeration. I kind of like that idea better for now.
-
-  // To do: Switch to a context enum instead of int constants
-  private final static int VARIABLE_TYPE_SPECIFIER = 0;
-  private final static int ROUTINE_RETURN_TYPE_SPECIFIER = 1;
-
-  // DEPRECATED
-  @Deprecated
-  private Declarator declarator (EnumSet<Token.Kind> syncSet) {
-    var n = new Declarator();
-    if (
-      kind != CARET                 &&
-      kind != L_PARENTHESIS         &&
-      kind != Token.Kind.IDENTIFIER &&
-      kind != Token.Kind.BOOL       &&
-      kind != Token.Kind.DOUBLE     &&
-      kind != Token.Kind.FLOAT      &&
-      kind != Token.Kind.FLOAT32    &&
-      kind != Token.Kind.FLOAT64    &&
-      kind != Token.Kind.INT        &&
-      kind != Token.Kind.INT8       &&
-      kind != Token.Kind.INT16      &&
-      kind != Token.Kind.INT32      &&
-      kind != Token.Kind.INT64      &&
-      kind != Token.Kind.LONG       &&
-      kind != Token.Kind.NULL_T     &&
-      kind != Token.Kind.SHORT      &&
-      kind != Token.Kind.UINT       &&
-      kind != Token.Kind.UINT8      &&
-      kind != Token.Kind.UINT16     &&
-      kind != Token.Kind.UINT32     &&
-      kind != Token.Kind.UINT64     &&
-      kind != Token.Kind.VOID
-    ) {
-      if (kind == ASTERISK) {
-        n.setPointerDeclarators(pointerDeclarators());
-      } else {
-        panic("'*' or direct declarator");
-      }
-    }
-    n.setDirectDeclarator(directDeclarator());
-    // This is a static FOLLOW set, which won't give a good error message
-    // because declarators occur in different contexts.
-    var context = VARIABLE_TYPE_SPECIFIER;
-    if (context == VARIABLE_TYPE_SPECIFIER) {
-      if (kind != EQUAL && kind != SEMICOLON) {
-        if (kind == L_BRACKET)
-          n.setArrayDeclarators(arrayDeclarators(null));
-        else
-          panic(L_BRACKET, EQUAL, SEMICOLON);
-      }
-
-    }
-
-    if (kind != EQUAL && kind != SEMICOLON) {
-      if (kind == L_BRACKET)
-        n.setArrayDeclarators(arrayDeclarators(null));
-      else
-        panic(L_BRACKET, EQUAL, SEMICOLON);
-    }
-    return n;
-  }
+  // Instead of passing in a sync set in order to account for dynamic context,
+  // we hard-code different sync-sets and pass in an associated context
+  // enumeration.
 
   private Declarator declarator (Parser.Context context) {
     var n = new Declarator();
@@ -2115,7 +2012,11 @@ public class Parser {
 
   private Declarator directDeclarator () {
     Declarator n;
-    if (
+    if (kind == Token.Kind.IDENTIFIER) {
+      n = nominalType();
+    } else if (kind == L_PARENTHESIS) {
+      n = parenthesizedType();
+    } else if (
       kind == Token.Kind.BOOL    ||
       kind == Token.Kind.SHORT   ||
       kind == Token.Kind.LONG    ||
@@ -2137,14 +2038,8 @@ public class Parser {
       kind == Token.Kind.VOID
     ) {
       n = primitiveType();
-    } else if (kind == Token.Kind.IDENTIFIER) {
-      n = nominalType();
     } else if (kind == CARET) {
       n = routinePointerType();
-    } else if (kind == L_PARENTHESIS) {
-      confirm(L_PARENTHESIS);
-      n = declarator(Parser.Context.PARENTHESIZED_DECLARATOR);
-      match(R_PARENTHESIS);
     } else {
       panic("IN PANIC WITHIN DIRECT DECLARATOR!");
       n = new Declarator();
@@ -2153,14 +2048,21 @@ public class Parser {
     return n;
   }
 
-  private PrimitiveType primitiveType () {
-    var token = confirm(kind);
-    return new PrimitiveType(token);
-  }
-
   private NominalType nominalType () {
     var token = confirm(Token.Kind.IDENTIFIER);
     return new NominalType(token);
+  }
+
+  private Declarator parenthesizedType () {
+    confirm(L_PARENTHESIS);
+    var n = declarator(Parser.Context.PARENTHESIZED_DECLARATOR);
+    match(R_PARENTHESIS);
+    return n;
+  }
+
+  private PrimitiveType primitiveType () {
+    var token = confirm(kind);
+    return new PrimitiveType(token);
   }
 
   // For now, assume all routine pointers must have a return type specified,
@@ -2241,7 +2143,16 @@ public class Parser {
 
   private ArrayDeclarators arrayDeclarators (Parser.Context context) {
     var n = new ArrayDeclarators();
-    if (context == Parser.Context.VARIABLE_TYPE_SPECIFIER) {
+    if (context == Context.TYPEALIAS_DECLARATION) {
+      while (kind != SEMICOLON) {
+        if (kind == L_BRACKET)
+          n.addArrayDeclarator(arrayDeclarator());
+        else {
+          panic(L_BRACKET, SEMICOLON);
+          break;
+        }
+      }
+    } else if (context == Parser.Context.VARIABLE_TYPE_SPECIFIER) {
       while (kind != EQUAL && kind != SEMICOLON) {
         if (kind == L_BRACKET)
           n.addArrayDeclarator(arrayDeclarator());
@@ -2259,12 +2170,39 @@ public class Parser {
           break;
         }
       }
-    } else if (context == Parser.Context.PARENTHESIZED_DECLARATOR) {
+    } else if (context == Parser.Context.ROUTINE_PARAMETER_TYPE_SPECIFIER) {
+      while (kind != Token.Kind.R_PARENTHESIS) {
+        if (kind == L_BRACKET)
+          n.addArrayDeclarator(arrayDeclarator());
+        else {
+          panic(L_BRACKET, R_PARENTHESIS);
+          break;
+        }
+      }
+    } else if (context == Parser.Context.PARENTHESIZED_DECLARATOR ) {
       while (kind != R_PARENTHESIS) {
         if (kind == L_BRACKET)
           n.addArrayDeclarator(arrayDeclarator());
         else {
           panic(L_BRACKET, Token.Kind.R_PARENTHESIS);
+          break;
+        }
+      }
+    } else if (context == Parser.Context.CAST_EXPRESSION) {
+      while (kind != GREATER) {
+        if (kind == L_BRACKET)
+          n.addArrayDeclarator(arrayDeclarator());
+        else {
+          panic(L_BRACKET, Token.Kind.GREATER);
+          break;
+        }
+      }
+    } else if (context == Parser.Context.NEW_EXPRESSION) {
+      while (kind != L_PARENTHESIS) {
+        if (kind == L_BRACKET)
+          n.addArrayDeclarator(arrayDeclarator());
+        else {
+          panic(L_BRACKET, Token.Kind.GREATER);
           break;
         }
       }
@@ -2334,10 +2272,14 @@ public class Parser {
   */
 
   public enum Context {
+    TYPEALIAS_DECLARATION,
     VARIABLE_TYPE_SPECIFIER,
+    ROUTINE_PARAMETER_TYPE_SPECIFIER,
     ROUTINE_RETURN_TYPE_SPECIFIER,
     ARRAY_DECLARATOR,
-    PARENTHESIZED_DECLARATOR
+    PARENTHESIZED_DECLARATOR,
+    CAST_EXPRESSION,
+    NEW_EXPRESSION
   }
 
 
