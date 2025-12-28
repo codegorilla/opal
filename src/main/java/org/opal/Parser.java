@@ -253,6 +253,9 @@ public class Parser {
 
   private static final EnumSet<Token.Kind> SYNC_GLOBAL = EnumSet.of(SEMICOLON, R_BRACE, Token.Kind.EOF);
 
+  // Why can't we exit error recovery mode once recover is complete? I think we
+  // should be able to. Do we need to wait for cleanup() to run?
+
   private void recover (EnumSet<Token.Kind> recoverSet) {
     LOGGER.info("recovery started");
     var syncSet = union(recoverSet, SYNC_GLOBAL);
@@ -260,6 +263,7 @@ public class Parser {
       LOGGER.info("skipped {}", lookahead);
       consume();
     }
+    errorRecoveryMode = false;
     LOGGER.info("recovery complete");
   }
 
@@ -267,22 +271,28 @@ public class Parser {
   // and cleanup. Note: For this reason, we probably cannot just consume on
   // entering an if body, but should confirm instead.
 
-  // Should we just return a token from consume?
+  // Update: I don't think we can clear error recovery mode on match. This can
+  // lead to pre-mature exit from error recovery mode.
+
+  // Update: Can we exit error recovery mode once recovery has run? If so, we
+  // don't need to exit ERM from cleanup.
 
   private void cleanup () {
     if (kind == SEMICOLON || kind == R_BRACE) {
       LOGGER.info("cleaned {}", lookahead);
       consume();
-      errorRecoveryMode = false;
     }
   }
+
+  // I don't think we want to reset error recovery mode on match. This should
+  // only be done after some explicit acknowledgement that error recovery is
+  // complete.
 
   private Token match (Token.Kind expectedKind) {
     if (lookahead.getKind() == expectedKind) {
       LOGGER.info("matched " + lookahead);
       var mark = lookahead;
       consume();
-      errorRecoveryMode = false;
       return mark;
     } else {
       LOGGER.info("mis-matched " + lookahead);
@@ -321,7 +331,6 @@ public class Parser {
       LOGGER.info("confirmed " + lookahead);
       var mark = lookahead;
       consume();
-      errorRecoveryMode = false;
       return mark;
     } else {
       var expectedKindFriendly = friendlyKind(expectedKind);
@@ -381,6 +390,7 @@ public class Parser {
         kind == Token.Kind.IDENTIFIER ? quote(lookahead.getLexeme()) : quote(reverseLookup.get(kind));
       var message = "expected " + expectedString + ", but found " + foundString;
       var error = new SyntaxError(sourceLines, message, lookahead);
+      System.out.println("GOT HERE IN PANIC");
       System.out.println(error);
     }
     errorRecoveryMode = true;
@@ -1876,21 +1886,7 @@ public class Parser {
 
   private Expression primaryExpression () {
     Expression n = null;
-    if (
-      kind == FALSE             ||
-      kind == TRUE              ||
-      kind == CHARACTER_LITERAL ||
-      kind == FLOAT32_LITERAL   ||
-      kind == FLOAT64_LITERAL   ||
-      kind == INT32_LITERAL     ||
-      kind == INT64_LITERAL     ||
-      kind == NULL              ||
-      kind == STRING_LITERAL    ||
-      kind == UINT32_LITERAL    ||
-      kind == UINT64_LITERAL
-    ) {
-      n = literal();
-    } else if (kind == Token.Kind.THIS) {
+    if (kind == Token.Kind.THIS) {
       n = this_();
     } else if (kind == Token.Kind.IDENTIFIER) {
       // Test this -- is this not working?
@@ -1898,7 +1894,7 @@ public class Parser {
     } else if (kind == Token.Kind.L_PARENTHESIS) {
       n = parenthesizedExpression();
     } else {
-      System.out.println("ERROR - INVALID PRIMARY EXPRESSION");
+      n = literal();
     }
     return n;
   }
@@ -1928,8 +1924,8 @@ public class Parser {
     else if (kind == UINT64_LITERAL)
       n = unsignedIntegerLiteral();
     else {
-      // I don't think we can ever get here so this can probably be handled
-      // with an exception.
+      panic("start of expression or sub-expression");
+//      System.out.println("Invalid expression");
       n = null;
     }
     return n;
