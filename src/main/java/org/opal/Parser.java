@@ -72,6 +72,10 @@ public class Parser {
   // messages. See [Par12] Sec. 9.3 for details.
   boolean errorRecoveryMode = false;
 
+  // Used to keep track of whether or not we are in a sub-expression for better
+  // error message.
+  private boolean inSubExpression = false;
+
   // Todo: we may also need a 'null_t' type, for which there is exactly one
   // value, which is 'null'. This is to match the C++ 'nullptr_t' type and its
   // corresponding single 'nullptr' value. I am not sure if this is a primitive
@@ -1532,6 +1536,7 @@ public class Parser {
       // then we need to return a bogus expression!
       n = new BogusExpression(mark2);
     }
+    inSubExpression = false;
     return n;
   }
 
@@ -1688,6 +1693,7 @@ public class Parser {
 
   private Expression multiplicativeExpression () {
     var n = unaryExpression();
+    inSubExpression = true;
     while (kind == ASTERISK || kind == SLASH || kind == PERCENT) {
       confirm(kind);
       var p = new BinaryExpression(mark2);
@@ -1701,6 +1707,8 @@ public class Parser {
   // C++ formulation might be slightly different with mutual recursion between
   // unaryExpression and castExpression methods. What effect might that have?
   // (See p. 54, Ellis & Stroustrup, 1990.)
+
+  // I forgot why we are setting a subExpression flag. What is the reason?
 
   private Expression unaryExpression () {
     Expression n = null;
@@ -1924,7 +1932,10 @@ public class Parser {
     else if (kind == UINT64_LITERAL)
       n = unsignedIntegerLiteral();
     else {
-      panic("start of expression or sub-expression");
+      if (inSubExpression)
+        panic("start of sub-expression");
+      else
+        panic("start of expression");
 //      System.out.println("Invalid expression");
       n = null;
     }
