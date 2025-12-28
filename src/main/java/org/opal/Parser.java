@@ -1877,29 +1877,25 @@ public class Parser {
   private Expression primaryExpression () {
     Expression n = null;
     if (
-      kind == FALSE ||
-      kind == TRUE ||
+      kind == FALSE             ||
+      kind == TRUE              ||
       kind == CHARACTER_LITERAL ||
-      kind == FLOAT32_LITERAL ||
-      kind == FLOAT64_LITERAL ||
-      kind == INT32_LITERAL ||
-      kind == INT64_LITERAL ||
-      kind == NULL ||
-      kind == STRING_LITERAL ||
-      kind == UINT32_LITERAL ||
+      kind == FLOAT32_LITERAL   ||
+      kind == FLOAT64_LITERAL   ||
+      kind == INT32_LITERAL     ||
+      kind == INT64_LITERAL     ||
+      kind == NULL              ||
+      kind == STRING_LITERAL    ||
+      kind == UINT32_LITERAL    ||
       kind == UINT64_LITERAL
     ) {
       n = literal();
-    } else if (kind == Token.Kind.THIS)
+    } else if (kind == Token.Kind.THIS) {
       n = this_();
-    else if (kind == Token.Kind.IDENTIFIER) {
+    } else if (kind == Token.Kind.IDENTIFIER) {
       // Test this -- is this not working?
       n = name();
-    }
-    // Defer implementing if expressions
-//    else if (kind == Token.Kind.IF)
-//      n = ifExpression();
-    else if (kind == Token.Kind.L_PARENTHESIS) {
+    } else if (kind == Token.Kind.L_PARENTHESIS) {
       n = parenthesizedExpression();
     } else {
       System.out.println("ERROR - INVALID PRIMARY EXPRESSION");
@@ -1909,48 +1905,69 @@ public class Parser {
 
   private Expression literal () {
     Expression n;
-    if (kind == FALSE) {
-      confirm(FALSE);
-      n = new BooleanLiteral(mark2);
-    } else if (kind == TRUE) {
-      confirm(TRUE);
-      n = new BooleanLiteral(mark2);
-    } else if (kind == CHARACTER_LITERAL) {
-      confirm(CHARACTER_LITERAL);
-      n = new CharacterLiteral(mark2);
-    } else if (kind == FLOAT32_LITERAL) {
-      confirm(FLOAT32_LITERAL);
-      n = new FloatingPointLiteral(mark2);
-    } else if (kind == FLOAT64_LITERAL) {
-      confirm(FLOAT64_LITERAL);
-      n = new FloatingPointLiteral(mark2);
-    } else if (kind == INT32_LITERAL) {
-      confirm(INT32_LITERAL);
-      n = new IntegerLiteral(mark2);
-    } else if (kind == INT64_LITERAL) {
-      confirm(INT64_LITERAL);
-      n = new IntegerLiteral(mark2);
-    } else if (kind == NULL) {
-      confirm(NULL);
-      n = new NullLiteral(mark2);
-    } else if (kind == STRING_LITERAL) {
-      confirm(STRING_LITERAL);
-      n = new StringLiteral(mark2);
-    } else if (kind == UINT32_LITERAL) {
-      confirm(UINT32_LITERAL);
-      n = new UnsignedIntegerLiteral(mark2);
-    } else if (kind == UINT64_LITERAL) {
-      confirm(UINT64_LITERAL);
-      n = new UnsignedIntegerLiteral(mark2);
-    } else {
-//      checkError(FirstSet.LITERAL);
-      //var combined = combine();
-      //sync(combined);
-//      n = new ErrorNode(mark);
-      // Maybe create ExpressionErrorNode?
+    if (kind == FALSE)
+      n = booleanLiteral();
+    else if (kind == TRUE)
+      n = booleanLiteral();
+    else if (kind == CHARACTER_LITERAL)
+      n = characterLiteral();
+    else if (kind == FLOAT32_LITERAL)
+      n = floatingPointLiteral();
+    else if (kind == FLOAT64_LITERAL)
+      n = floatingPointLiteral();
+    else if (kind == INT32_LITERAL)
+      n = integerLiteral();
+    else if (kind == INT64_LITERAL)
+      n = integerLiteral();
+    else if (kind == NULL)
+      n = nullLiteral();
+    else if (kind == STRING_LITERAL)
+      n = stringLiteral();
+    else if (kind == UINT32_LITERAL)
+      n = unsignedIntegerLiteral();
+    else if (kind == UINT64_LITERAL)
+      n = unsignedIntegerLiteral();
+    else {
+      // I don't think we can ever get here so this can probably be handled
+      // with an exception.
       n = null;
     }
     return n;
+  }
+
+  private BooleanLiteral booleanLiteral () {
+    var token = confirm(kind);
+    return new BooleanLiteral(token);
+  }
+
+  private CharacterLiteral characterLiteral () {
+    var token = confirm(CHARACTER_LITERAL);
+    return new CharacterLiteral(token);
+  }
+
+  private FloatingPointLiteral floatingPointLiteral () {
+    var token = confirm(kind);
+    return new FloatingPointLiteral(token);
+  }
+
+  private IntegerLiteral integerLiteral () {
+    var token = confirm(kind);
+    return new IntegerLiteral(token);
+  }
+
+  private NullLiteral nullLiteral () {
+    var token = confirm(NULL);
+    return new NullLiteral(token);
+  }
+
+  private StringLiteral stringLiteral () {
+    var token = confirm(STRING_LITERAL);
+    return new StringLiteral(token);
+  }
+
+  private UnsignedIntegerLiteral unsignedIntegerLiteral () {
+    var token = confirm(kind);
+    return new UnsignedIntegerLiteral(token);
   }
 
   // Note: In C++, 'this' is a pointer, but in cppfront, it is not. Its unclear
