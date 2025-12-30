@@ -1936,7 +1936,6 @@ public class Parser {
         panic("start of sub-expression");
       else
         panic("start of expression");
-//      System.out.println("Invalid expression");
       n = null;
     }
     return n;
