@@ -25,6 +25,7 @@ public class BaseResultVisitor<T> implements ResultVisitor <T> {
 
   // General declarations
   public T visit (Declarations node) { return null; }
+  public T visit (Declaration node) { return null; }
 
   // Package declarations
   public T visit (PackageDeclaration node) { return null; }
@@ -41,6 +42,7 @@ public class BaseResultVisitor<T> implements ResultVisitor <T> {
   public T visit (UseDeclarations node) { return null; }
   public T visit (UseDeclaration node) { return null; }
   public T visit (UseQualifiedName node) { return null; }
+  public T visit (UseQualifiedNameTail node) { return null; }
   public T visit (UseName node) { return null; }
   public T visit (UseNameGroup node) { return null; }
   public T visit (UseNameWildcard node) { return null; }
@@ -103,6 +105,9 @@ public class BaseResultVisitor<T> implements ResultVisitor <T> {
   public T visit (VariableName node) { return null; }
   public T visit (VariableTypeSpecifier node) { return null; }
   public T visit (VariableInitializer node) { return null; }
+
+  // Special declarations
+  public T visit (BogusDeclaration node) { return null; }
 
   // STATEMENTS
 
@@ -171,7 +176,7 @@ public class BaseResultVisitor<T> implements ResultVisitor <T> {
 //  public T visit (Type node) { return null; }
   public T visit (NominalType node) { return null; }
   public T visit (PrimitiveType node) { return null; }
-  public T visit (RoutinePointerDeclarator node) { return null; }
+  public T visit (RoutinePointerType node) { return null; }
 
   public T visit (TemplateInstantiation node) { return null; }
   public T visit (TemplateArguments node) { return null; }

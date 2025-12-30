@@ -8,6 +8,8 @@ import java.util.EnumSet;
 
 public class FirstSet {
 
+  // DECLARATIONS
+  
 //  public static final EnumSet<Token.Kind> TRANSLATION_UNIT =
 //    FirstSet.PACKAGE_DECLARATION;
 
@@ -32,36 +34,16 @@ public class FirstSet {
   public static final EnumSet<Token.Kind> USE_QUALIFIED_NAME_TAIL =
     EnumSet.of(Token.Kind.ASTERISK, Token.Kind.L_BRACE, Token.Kind.IDENTIFIER);
 
-
-  public static final EnumSet<Token.Kind> OTHER_DECLARATION =
-    EnumSet.of(Token.Kind.PRIVATE, Token.Kind.CLASS, Token.Kind.DEF, Token.Kind.VAL, Token.Kind.VAR);
+  public static final EnumSet<Token.Kind> OTHER_DECLARATION = EnumSet.of (
+    Token.Kind.PRIVATE,
+    Token.Kind.CLASS,
+    Token.Kind.DEF,
+    Token.Kind.VAL,
+    Token.Kind.VAR
+  );
 
   public static final EnumSet<Token.Kind> OTHER_DECLARATIONS =
     FirstSet.OTHER_DECLARATION;
-
-  public static final EnumSet<Token.Kind> REMAINING_DECLARATIONS_1 =
-    union(
-      FirstSet.IMPORT_DECLARATIONS,
-      FirstSet.USE_DECLARATIONS,
-      FirstSet.OTHER_DECLARATIONS,
-      FollowSet.TRANSLATION_UNIT
-    );
-
-  public static final EnumSet<Token.Kind> REMAINING_DECLARATIONS_2 =
-    union(
-      FirstSet.USE_DECLARATIONS,
-      FirstSet.OTHER_DECLARATIONS,
-      FollowSet.TRANSLATION_UNIT
-    );
-
-  public static final EnumSet<Token.Kind> REMAINING_DECLARATIONS_3 =
-    union(
-//      FirstSet.USE_DECLARATIONS,
-      FirstSet.OTHER_DECLARATIONS,
-      FollowSet.TRANSLATION_UNIT
-    );
-
-  // DECLARATIONS
 
   // Might not use directly
   public static final EnumSet<Token.Kind> CLASS_DECLARATION =

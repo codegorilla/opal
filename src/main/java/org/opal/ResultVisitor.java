@@ -17,6 +17,7 @@ public interface ResultVisitor <T> {
 
   // General declarations
   public T visit (Declarations node);
+  public T visit (Declaration node);
 
   // Package declarations
   public T visit (PackageDeclaration node);
@@ -33,6 +34,7 @@ public interface ResultVisitor <T> {
   public T visit (UseDeclarations node);
   public T visit (UseDeclaration node);
   public T visit (UseQualifiedName node);
+  public T visit (UseQualifiedNameTail node);
   public T visit (UseName node);
   public T visit (UseNameGroup node);
   public T visit (UseNameWildcard node);
@@ -95,6 +97,9 @@ public interface ResultVisitor <T> {
   public T visit (VariableName node);
   public T visit (VariableTypeSpecifier node);
   public T visit (VariableInitializer node);
+
+  // Special declarations
+  public T visit (BogusDeclaration node);
 
   // STATEMENTS
 
@@ -163,7 +168,7 @@ public interface ResultVisitor <T> {
 //  public T visit (Type node);
   public T visit (NominalType node);
   public T visit (PrimitiveType node);
-  public T visit (RoutinePointerDeclarator node);
+  public T visit (RoutinePointerType node);
 
   public T visit (TemplateInstantiation node);
   public T visit (TemplateArguments node);

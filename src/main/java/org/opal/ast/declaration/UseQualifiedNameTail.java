@@ -5,11 +5,11 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class UseDeclaration extends Declaration {
+// Not sure if we'll actually use this
 
-  private UseQualifiedName qualifiedName = null;
+public class UseQualifiedNameTail extends AstNode {
 
-  public UseDeclaration (Token token) {
+  public UseQualifiedNameTail (Token token) {
     super(token);
   }
 
@@ -21,14 +21,6 @@ public class UseDeclaration extends Declaration {
   @Override
   public <T> T accept (ResultVisitor<T> v) {
     return v.visit(this);
-  }
-
-  public void setQualifiedName (UseQualifiedName qualifiedName) {
-    this.qualifiedName = qualifiedName;
-  }
-
-  public UseQualifiedName qualifiedName () {
-    return qualifiedName;
   }
 
 }

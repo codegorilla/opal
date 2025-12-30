@@ -414,7 +414,7 @@ public class Generator3a extends BaseResultVisitor<ST> {
 
   public ST visit (VariableModifiers node) {
     var st = group.getInstanceOf("common/declaration/variableModifiers");
-    for (var modifier : node.modifiers())
+    for (var modifier : node.children())
       st.add("modifier", visit(modifier));
     return st;
   }
@@ -661,7 +661,7 @@ public class Generator3a extends BaseResultVisitor<ST> {
     return st;
   }
 
-  public ST visit (RoutinePointerDeclarator node) {
+  public ST visit (RoutinePointerType node) {
     var st = group.getInstanceOf("common/declarator/routinePointerDeclarator");
     st.add("directDeclarator", stack.pop());
     for (int i=0; i<node.getChildCount()-1; i++) {

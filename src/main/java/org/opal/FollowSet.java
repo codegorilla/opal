@@ -6,34 +6,76 @@ public class FollowSet {
 
   public static final EnumSet<Token.Kind> TRANSLATION_UNIT = EnumSet.of(Token.Kind.EOF);
 
-  public static final EnumSet<Token.Kind> PACKAGE_DECLARATION =
-    union(FirstSet.IMPORT_DECLARATIONS, FirstSet.USE_DECLARATIONS, FirstSet.OTHER_DECLARATIONS, FollowSet.TRANSLATION_UNIT);
+  public static final EnumSet<Token.Kind> PACKAGE_DECLARATION = EnumSet.of (
+    Token.Kind.IMPORT,
+    Token.Kind.USE,
+    Token.Kind.PRIVATE,
+    Token.Kind.DEF,
+    Token.Kind.CLASS,
+    Token.Kind.VAR,
+    Token.Kind.VAL,
+    Token.Kind.EOF
+  );
 
-  public static final EnumSet<Token.Kind> IMPORT_DECLARATIONS =
-    union(FirstSet.USE_DECLARATIONS, FirstSet.OTHER_DECLARATIONS, FollowSet.TRANSLATION_UNIT);
+  public static final EnumSet<Token.Kind> IMPORT_DECLARATIONS = EnumSet.of (
+    Token.Kind.USE,
+    Token.Kind.PRIVATE,
+    Token.Kind.CONST,
+    Token.Kind.DEF,
+    Token.Kind.CLASS,
+    Token.Kind.VAR,
+    Token.Kind.VAL,
+    Token.Kind.EOF
+  );
 
-  public static final EnumSet<Token.Kind> IMPORT_DECLARATION =
-    union(FirstSet.IMPORT_DECLARATION, FollowSet.IMPORT_DECLARATIONS);
+  // Not sure if this ever gets used
+  public static final EnumSet<Token.Kind> IMPORT_DECLARATION = EnumSet.of (
+    Token.Kind.IMPORT,
+    Token.Kind.USE,
+    Token.Kind.PRIVATE,
+    Token.Kind.CONST,
+    Token.Kind.DEF,
+    Token.Kind.CLASS,
+    Token.Kind.VAR,
+    Token.Kind.VAL,
+    Token.Kind.EOF
+  );
 
-  public static final EnumSet<Token.Kind> IMPORT_QUALIFIED_NAME =
-    EnumSet.of(Token.Kind.AS, Token.Kind.SEMICOLON);
+  public static final EnumSet<Token.Kind> USE_DECLARATIONS = EnumSet.of (
+    Token.Kind.PRIVATE,
+    Token.Kind.CONST,
+    Token.Kind.DEF,
+    Token.Kind.CLASS,
+    Token.Kind.VAR,
+    Token.Kind.VAL,
+    Token.Kind.EOF
+  );
 
-  public static final EnumSet<Token.Kind> USE_DECLARATIONS =
-    union(FirstSet.OTHER_DECLARATIONS, FollowSet.TRANSLATION_UNIT);
-
-  public static final EnumSet<Token.Kind> USE_DECLARATION =
-    union(FirstSet.USE_DECLARATION, FollowSet.USE_DECLARATIONS);
-
-  public static final EnumSet<Token.Kind> OTHER_DECLARATIONS =
-    FollowSet.TRANSLATION_UNIT;
-
-  public static final EnumSet<Token.Kind> OTHER_DECLARATION =
-    union(FirstSet.OTHER_DECLARATION, FollowSet.OTHER_DECLARATIONS);
-
-  public static final EnumSet<Token.Kind> VARIABLE_DECLARATION =
-    FollowSet.OTHER_DECLARATION;
+  public static final EnumSet<Token.Kind> USE_DECLARATION = EnumSet.of (
+    Token.Kind.USE,
+    Token.Kind.PRIVATE,
+    Token.Kind.CONST,
+    Token.Kind.DEF,
+    Token.Kind.CLASS,
+    Token.Kind.VAR,
+    Token.Kind.VAL,
+    Token.Kind.EOF
+  );
 
 
+  public static final EnumSet<Token.Kind> OTHER_DECLARATIONS = EnumSet.of (
+    Token.Kind.EOF
+  );
+
+  public static final EnumSet<Token.Kind> OTHER_DECLARATION = EnumSet.of (
+    Token.Kind.PRIVATE,
+    Token.Kind.CONST,
+    Token.Kind.DEF,
+    Token.Kind.CLASS,
+    Token.Kind.VAR,
+    Token.Kind.VAL,
+    Token.Kind.EOF
+  );
 
 
 

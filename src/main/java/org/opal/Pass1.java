@@ -32,7 +32,9 @@ public class Pass1 extends BaseVisitor {
     var spaces = " ".repeat(INDENT_SPACES * depth.get());
     var className = node.getClass().getSimpleName();
     var token = node.getToken();
-    System.out.println(spaces + "- " + className + (token != null ? ": " + token : ""));
+    var error = (token != null && token.getError());
+    var e = (error ? "(error) " : "");
+    System.out.println(spaces + "- " + e + className + (token != null ? ": " + token : ""));
   }
 
   public void visit (TranslationUnit node ) {
@@ -56,6 +58,20 @@ public class Pass1 extends BaseVisitor {
   }
 
   public void visit (PackageName node) {
+    depth.increment();
+    printNode(node);
+    depth.decrement();
+  }
+
+  public void visit (OtherDeclarations node) {
+    depth.increment();
+    printNode(node);
+    for (var otherDeclaration : node.children())
+      otherDeclaration.accept(this);
+    depth.decrement();
+  }
+
+  public void visit (BogusDeclaration node) {
     depth.increment();
     printNode(node);
     depth.decrement();
@@ -142,22 +158,30 @@ public class Pass1 extends BaseVisitor {
     depth.decrement();
   }
 
-  public void visit (OtherDeclarations node) {
-    depth.increment();
-    printNode(node);
-    for (var otherDeclaration : node.children())
-      otherDeclaration.accept(this);
-    depth.decrement();
-  }
 
   public void visit (VariableDeclaration node) {
     depth.increment();
     printNode(node);
-    visit(node.getName());
+    node.getModifiers().accept(this);
+    node.getName().accept(this);
     if (node.hasTypeSpecifier())
       visit(node.getTypeSpecifier());
     if (node.hasInitializer())
       visit(node.getInitializer());
+    depth.decrement();
+  }
+
+  public void visit (VariableModifiers node) {
+    depth.increment();
+    printNode(node);
+    for (var variableModifier : node.children())
+      variableModifier.accept(this);
+    depth.decrement();
+  }
+
+  public void visit (Modifier node) {
+    depth.increment();
+    printNode(node);
     depth.decrement();
   }
 

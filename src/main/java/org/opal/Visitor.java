@@ -17,6 +17,7 @@ public interface Visitor {
 
   // General declarations
   public void visit (Declarations node);
+  public void visit (Declaration node);
 
   // Package declarations
   public void visit (PackageDeclaration node);
@@ -33,6 +34,7 @@ public interface Visitor {
   public void visit (UseDeclarations node);
   public void visit (UseDeclaration node);
   public void visit (UseQualifiedName node);
+  public void visit (UseQualifiedNameTail node);
   public void visit (UseName node);
   public void visit (UseNameGroup node);
   public void visit (UseNameWildcard node);
@@ -95,6 +97,10 @@ public interface Visitor {
   public void visit (VariableName node);
   public void visit (VariableTypeSpecifier node);
   public void visit (VariableInitializer node);
+
+  // Special declarations
+  public void visit (BogusDeclaration node);
+
 
   // STATEMENTS
 
@@ -165,7 +171,7 @@ public interface Visitor {
 //  public void visit (Type node);
   public void visit (NominalType node);
   public void visit (PrimitiveType node);
-  public void visit (RoutinePointerDeclarator node);
+  public void visit (RoutinePointerType node);
 
   public void visit (TemplateInstantiation node);
   public void visit (TemplateArguments node);

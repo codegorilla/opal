@@ -21,6 +21,7 @@ public abstract class AstNode {
 
   private final LinkedList<AstNode> children = new LinkedList<>();
   private Token token;
+  private boolean error = false;
 
   public AstNode () {
     token = null;
@@ -28,6 +29,8 @@ public abstract class AstNode {
 
   public AstNode (Token token) {
     this.token = token;
+    // Inherit error condition from token
+    error = token.getError();
   }
 
   public void addChild (AstNode node) {
@@ -41,6 +44,14 @@ public abstract class AstNode {
 
   public boolean hasChildren () {
     return !children.isEmpty();
+  }
+
+  public boolean getError () {
+    return error;
+  }
+
+  public void setError () {
+    error = true;
   }
 
   public AstNode getChild (int index) {

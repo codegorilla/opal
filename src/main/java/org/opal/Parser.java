@@ -1,7 +1,6 @@
 package org.opal;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.Level;
@@ -9,7 +8,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import org.opal.ast.*;
-import org.opal.ast.ErrorNode;
 import org.opal.ast.declaration.*;
 import org.opal.ast.expression.*;
 import org.opal.ast.statement.*;
@@ -42,8 +40,8 @@ public class Parser {
   private Token.Kind kind;
 
   // Experimental
-  private Token previous;
-  private Token mark;
+  @Deprecated
+  private Token mark2 = new Token(Token.Kind.IDENTIFIER, "DEPRECATED_MARK", 1, 1, 1);
 
   private final List<String> sourceLines;
 
@@ -74,6 +72,10 @@ public class Parser {
   // messages. See [Par12] Sec. 9.3 for details.
   boolean errorRecoveryMode = false;
 
+  // Used to keep track of whether or not we are in a sub-expression for better
+  // error message.
+  private boolean inSubExpression = false;
+
   // Todo: we may also need a 'null_t' type, for which there is exactly one
   // value, which is 'null'. This is to match the C++ 'nullptr_t' type and its
   // corresponding single 'nullptr' value. I am not sure if this is a primitive
@@ -86,16 +88,6 @@ public class Parser {
 
   // Represents epsilon productions
   private static final AstNode EPSILON = null;
-
-  // Following sets are like FOLLOW sets, but are context aware, so they are
-  // generally subsets of FOLLOW sets.
-
-  // Stack for follower sets
-  private final LinkedList<EnumSet<Token.Kind>> followerSetStack;
-
-  // Deprecated
-  // Stack for sync sets
-  //private final LinkedList<EnumSet<Token.Kind>> syncSetStack;
 
   // Convenience aliases
   private static final Token.Kind ABSTRACT = Token.Kind.ABSTRACT;
@@ -214,24 +206,22 @@ public class Parser {
   private static final Token.Kind UINT32_LITERAL = Token.Kind.UINT32_LITERAL;
   private static final Token.Kind UINT64_LITERAL = Token.Kind.UINT64_LITERAL;
 
+  private static final EnumSet<Token.Kind> SYNC_DECL = EnumSet.of(SEMICOLON, R_BRACE, Token.Kind.EOF);
+  private static final EnumSet<Token.Kind> SYNC_STMT = EnumSet.of(SEMICOLON, R_BRACE, Token.Kind.EOF);
+
+
+
   public Parser (LinkedList<Token> input, List<String> sourceLines) {
     this.input = input;
     position = new Counter();
     lookahead = input.get(position.get());
     kind = lookahead.getKind();
-    previous = null;
-    mark = null;
     this.sourceLines = sourceLines;
     //stack = new LinkedList<>();
     nodeStack = new LinkedList<>();
     modifierStack = new LinkedList<>();
     builtinScope = new Scope(Scope.Kind.BUILT_IN);
     currentScope = builtinScope;
-
-    followerSetStack = new LinkedList<>();
-    // Deprecated
-//    syncSetStack = new LinkedList<>();
-//    syncSetStack.push(EnumSet.noneOf(Token.Kind.class));
 
     var lookupTable = new LookupTable();
     reverseLookup = lookupTable.getReverseLookupTable();
@@ -241,187 +231,117 @@ public class Parser {
     Configurator.setRootLevel(level);
   }
 
-  // In the process of replacing this with a map that maps kinds back to
-  // strings
-  @Deprecated
-  private String friendlyKind (Token.Kind kind) {
-    return kind.toString().toLowerCase().replace("_", " ");
+  // We might need multiple versions of check-in and check-out because the
+  // error messages may differ.
+
+  private void checkIn (EnumSet<Token.Kind> firstSet, EnumSet<Token.Kind> followSet, Token.Kind expectedKind) {
+    LOGGER.info("check-in started");
+    if (!firstSet.contains(kind)) {
+      panic(expectedKind);
+      recover(union(firstSet, followSet));
+    }
+    LOGGER.info("check-in complete");
   }
 
-  // Note: Instead of an ERROR kind, we could just mark whatever the lookahead
-  // is and then annotate the token with an error flag.
+  // Check-out only occurs if we are in error recovery mode (i.e. a panic
+  // occurred).
 
-  private void sync (EnumSet<Token.Kind> syncSet) {
-//    mark = new Token(Token.Kind.ERROR, lookahead.getLexeme(), lookahead.getIndex(), lookahead.getLine(), lookahead.getColumn());
-//    LOGGER.info("Sync: created " + mark);
-    LOGGER.info("Sync: synchronization started");
-    // Combine all sync sets
-    // Scan forward until we hit something in the sync set
+  private void checkOut (EnumSet<Token.Kind> followSet, String expectedKindString) {
+    LOGGER.info("check-out started");
+    if (!followSet.contains(kind) && errorRecoveryMode) {
+      recover(followSet);
+      cleanup();
+    }
+    LOGGER.info("check-out complete");
+  }
+
+  private static final EnumSet<Token.Kind> SYNC_GLOBAL = EnumSet.of(SEMICOLON, R_BRACE, Token.Kind.EOF);
+
+  // Why can't we exit error recovery mode once recover is complete? I think we
+  // should be able to. Do we need to wait for cleanup() to run?
+
+  private void recover (EnumSet<Token.Kind> recoverSet) {
+    LOGGER.info("recovery started");
+    var syncSet = union(recoverSet, SYNC_GLOBAL);
     while (!syncSet.contains(kind)) {
-      LOGGER.info("Sync: skipped {}", lookahead);
+      LOGGER.info("skipped {}", lookahead);
       consume();
     }
-    LOGGER.info("Sync: synchronization complete");
+    errorRecoveryMode = false;
+    LOGGER.info("recovery complete");
   }
 
-  private boolean match (Token.Kind expectedKind) {
-    if (lookahead.getKind() == expectedKind) {
-      // Happy path :)
-      LOGGER.info("Match: matched " + lookahead);
-      mark = lookahead;
+  // When can we clear error recovery mode? I believe it is on match, confirm,
+  // and cleanup. Note: For this reason, we probably cannot just consume on
+  // entering an if body, but should confirm instead.
+
+  // Update: I don't think we can clear error recovery mode on match. This can
+  // lead to pre-mature exit from error recovery mode.
+
+  // Update: Can we exit error recovery mode once recovery has run? If so, we
+  // don't need to exit ERM from cleanup.
+
+  private void cleanup () {
+    if (kind == SEMICOLON || kind == R_BRACE) {
+      LOGGER.info("cleaned {}", lookahead);
       consume();
-      errorRecoveryMode = false;
-      return true;
+    }
+  }
+
+  // I don't think we want to reset error recovery mode on match. This should
+  // only be done after some explicit acknowledgement that error recovery is
+  // complete.
+
+  private Token match (Token.Kind expectedKind) {
+    if (lookahead.getKind() == expectedKind) {
+      LOGGER.info("matched " + lookahead);
+      var mark = lookahead;
+      consume();
+      return mark;
     } else {
-      // Sad path :(
-      LOGGER.info("Match: entering sad path");
-      mark = lookahead;
+      LOGGER.info("mis-matched " + lookahead);
+      lookahead.setError();
       if (!errorRecoveryMode)
-        generalError(expectedKind);
+        matchError(expectedKind);
       // Should we at least advance the input stream? If we do, then we
       // effectively delete the bad token. Different sources say yes or no,
       // but several seem to indicate that we should NOT consume.
       errorRecoveryMode = true;
-      return false;
+      return lookahead;
     }
   }
 
-  private void panic (EnumSet<Token.Kind> expectedKinds) {
-    LOGGER.info("Panic: panic triggered");
-    if (!errorRecoveryMode)
-      checkError(expectedKinds);
-    errorRecoveryMode = true;
-  }
-
-  // TBD: I am not sure we ever have a single expected kind when panicking.
-  private void panic (Token.Kind expectedKind) {
-    LOGGER.info("Panic: panic(1) triggered");
-    if (!errorRecoveryMode) {
-      // Some error message
-    }
-    errorRecoveryMode = true;
-  }
-
-  private void panic (Token.Kind expectedKind1, Token.Kind expectedKind2) {
-    LOGGER.info("Panic: panic(2) triggered");
-    if (!errorRecoveryMode) {
-      var expectedMessage1 = "expected '" + reverseLookup.get(expectedKind1);
-      var expectedMessage2 = "' or '" + reverseLookup.get(expectedKind2);
-      var foundMessage = "', found '" + reverseLookup.get(kind) + "'";
-      var message = expectedMessage1 + expectedMessage2 + foundMessage;
-      var error = new SyntaxError(sourceLines, message, lookahead);
-    }
-    errorRecoveryMode = true;
-  }
-
-  private void panic (Token.Kind... expectedKinds) {
-    LOGGER.info("Panic: panic(V) triggered");
-    if (!errorRecoveryMode) {
-      var s = new StringBuilder("expected ");
-      s.append("'").append(reverseLookup.get(expectedKinds[0])).append("'");
-      for (var i=1; i<expectedKinds.length-1; i++)
-        s.append(", '").append(reverseLookup.get(expectedKinds[i])).append("'");
-      s.append(", or '").append(reverseLookup.get(expectedKinds[expectedKinds.length-1])).append("'");
-      var expectedMessage = s.toString();
-      var foundMessage = "'; found '" + reverseLookup.get(kind) + "'";
-      var message = expectedMessage + foundMessage;
-      var error = new SyntaxError(sourceLines, message, lookahead);
-    }
-    errorRecoveryMode = true;
-  }
-
-  private void panic (String expectedString) {
-    LOGGER.info("Panic: panic(S) triggered");
-    if (!errorRecoveryMode) {
-      var expectedMessage = "expected " + expectedString;
-      var foundObject = (kind == Token.Kind.IDENTIFIER) ? "identifier" : "'" + reverseLookup.get(kind) + "'";
-      var foundMessage =  ", but found " + foundObject;
-      var message = expectedMessage + foundMessage;
-      var error = new SyntaxError(sourceLines, message, lookahead);
-      System.out.println(error);
-    }
-    errorRecoveryMode = true;
-  }
-
-  private void panic (String expectedString, Token.Kind expectedKind) {
-    LOGGER.info("Panic: panic(S+1) triggered");
-    if (!errorRecoveryMode) {
-      var expectedMessage = "expected " + expectedString + " or '" + reverseLookup.get(expectedKind);
-      var foundMessage = "', found '" + reverseLookup.get(kind) + "'";
-      var message = expectedMessage + foundMessage;
-      var error = new SyntaxError(sourceLines, message, lookahead);
-      System.out.println(error);
-    }
-    errorRecoveryMode = true;
-  }
-
-  private void generalError (Token.Kind expectedKind) {
-    var expectedKindString = reverseLookup.getOrDefault(expectedKind, friendlyKind(expectedKind));
-    var actualKind = lookahead.getKind();
-    var actualKindString = reverseLookup.getOrDefault(actualKind, friendlyKind(actualKind));
-    var message = "expected " + expectedKindString + ", found " + actualKindString;
+  private void matchError (Token.Kind expectedKind) {
+    var expectedKindString = reverseLookup.get(expectedKind);
+    var expectedString =
+      expectedKindString == null ? friendlyKind(expectedKind) : quote(expectedKindString);
+    var foundString =
+      kind == Token.Kind.IDENTIFIER ? quote(lookahead.getLexeme()) : quote(reverseLookup.get(kind));
+    var message = "expected " + expectedString + ", but found " + foundString;
     var error = new SyntaxError(sourceLines, message, lookahead);
     System.out.println(error);
   }
 
-  // This probably only pertains when there are a finite set of multiple
-  // options. Thus expected kinds will always be greater than one. But this has
-  // not been proven yet.
-
-  private void checkError (EnumSet<Token.Kind> expectedKinds) {
-    var expectedKindsString = expectedKinds.stream()
-      .map(kind -> reverseLookup.getOrDefault(kind, friendlyKind(kind)))
-      .sorted()
-      .collect(Collectors.joining(", "));
-    var actualKind = kind;
-    var actualKindString = reverseLookup.getOrDefault(actualKind, friendlyKind(actualKind));
-    var messageSome = "expected one of " + expectedKindsString + "; found " + actualKindString;
-    var messageOne  = "expected "        + expectedKindsString + ", found " + actualKindString;
-    var message = expectedKinds.size() > 1 ? messageSome : messageOne;
-    var error = new SyntaxError(sourceLines, message, lookahead);
-    System.out.println(error);
+  private String friendlyKind (Token.Kind kind) {
+    return kind.toString().toLowerCase().replace("_", " ");
   }
 
-  // Message is really custom kinds message, not any message
+  // Confirm is similar to match, but it throws an exception instead of
+  // printing an error message and triggering error recovery. This can only
+  // fail if there is a bug in the compiler.
 
-  private void checkError (String message) {
-    var actualKind = kind;
-    var actualKindString = reverseLookup.getOrDefault(actualKind, friendlyKind(actualKind));
-    var messageOne  = "expected " + message + ", found " + actualKindString;
-    var error = new SyntaxError(sourceLines, messageOne, lookahead);
-    System.out.println(error);
-  }
-
-  // Experiment with only two items
-
-  private void checkError2 (EnumSet<Token.Kind> expectedKinds) {
-    var expectedKindsString = expectedKinds.stream()
-      .map(kind -> reverseLookup.getOrDefault(kind, friendlyKind(kind)))
-      .sorted()
-      .toList();
-    var actualKind = kind;
-    var actualKindString = reverseLookup.getOrDefault(actualKind, friendlyKind(actualKind));
-    var message = "expected " + expectedKindsString.get(0) +
-                  " or "      + expectedKindsString.get(1) +
-                  ", found " + actualKindString;
-    var error = new SyntaxError(sourceLines, message, lookahead);
-    System.out.println(error);
-  }
-
-  // Confirm is similar to match, but it does not perform any error recovery
-  // and does not return a result. Instead, it throws an exception. This can
-  // only fail if there is a bug in the compiler.
-
-  private void confirm (Token.Kind expectedKind) {
+  private Token confirm (Token.Kind expectedKind) {
     if (lookahead.getKind() == expectedKind) {
-      LOGGER.info("Confirm: confirmed " + lookahead);
-      mark = lookahead;
+      LOGGER.info("confirmed " + lookahead);
+      var mark = lookahead;
       consume();
-      errorRecoveryMode = false;
+      return mark;
     } else {
       var expectedKindFriendly = friendlyKind(expectedKind);
       var actualKindFriendly = friendlyKind(lookahead.getKind());
-      var message = "expected " + expectedKindFriendly + ", found " + actualKindFriendly;
+      var expectedMessage = "expected " + expectedKindFriendly;
+      var foundMessage = ", but found " + actualKindFriendly;
+      var message = expectedMessage + foundMessage;
       throw new IllegalArgumentException("internal error: " + message);
     }
   }
@@ -432,6 +352,56 @@ public class Parser {
       lookahead = input.get(position.get());
       kind = lookahead.getKind();
     }
+  }
+
+  // These should probably just be called "error" or something like that
+
+  private void panic (Token.Kind expectedKind) {
+    var expectedString = quote(reverseLookup.get(expectedKind));
+    panic(expectedString);
+  }
+
+  private void panic (Token.Kind expectedKind1, Token.Kind expectedKind2) {
+    var expectedString =
+      quote(reverseLookup.get(expectedKind1)) + " or " +
+      quote(reverseLookup.get(expectedKind2));
+    panic(expectedString);
+  }
+
+  private void panic (Token.Kind expectedKind1, Token.Kind expectedKind2, Token.Kind expectedKind3) {
+    var expectedString =
+      quote(reverseLookup.get(expectedKind1)) + ", " +
+      quote(reverseLookup.get(expectedKind2)) + ", or " +
+      quote(reverseLookup.get(expectedKind3));
+    panic(expectedString);
+  }
+
+  private void panic (Token.Kind... expectedKinds) {
+    var first  = quote(reverseLookup.get(expectedKinds[0]));
+    var last   = quote(reverseLookup.get(expectedKinds[expectedKinds.length-1]));
+    var middle = new StringBuilder();
+    for (var i=1; i<expectedKinds.length-1; i++)
+      middle.append(", ").append(quote(reverseLookup.get(expectedKinds[i])));
+    middle.append(", or ");
+    var expectedString = first + middle + last;
+    panic(expectedString);
+  }
+
+  private void panic (String expectedString) {
+    LOGGER.info("panic triggered");
+    if (!errorRecoveryMode) {
+      var foundString =
+        kind == Token.Kind.IDENTIFIER ? quote(lookahead.getLexeme()) : quote(reverseLookup.get(kind));
+      var message = "expected " + expectedString + ", but found " + foundString;
+      var error = new SyntaxError(sourceLines, message, lookahead);
+      System.out.println("GOT HERE IN PANIC");
+      System.out.println(error);
+    }
+    errorRecoveryMode = true;
+  }
+
+  private String quote (String input) {
+    return "'" + input + "'";
   }
 
   public AstNode process () {
@@ -474,42 +444,16 @@ public class Parser {
   // not just "expected Y". Should we just be looking at follow sets?
 
   private AstNode translationUnit () {
-    followerSetStack.push(EnumSet.of(Token.Kind.EOF));
     var n = new TranslationUnit();
     n.setPackageDeclaration(packageDeclaration());
-    checkIn(FirstSet.REMAINING_DECLARATIONS_1, "'import', 'use', or start of other declaration");
-    if (kind == IMPORT)
-      n.setImportDeclarations(importDeclarations());
-    checkIn(FirstSet.REMAINING_DECLARATIONS_2, "'import', 'use', or start of other declaration");
-    if (kind == USE)
-      n.setUseDeclarations(useDeclarations());
-
-    checkIn(FirstSet.REMAINING_DECLARATIONS_3, "'use' or start of other declaration");
-    if (
-      kind == PRIVATE ||
-      kind == CLASS   ||
-      kind == DEF     ||
-      kind == VAL     ||
-      kind == VAR
-    ) {
-      n.setOtherDeclarations(otherDeclarations());
-    }
-
-    System.out.println("HERE");
-
-//    else if (kind == Token.Kind.EOF) {
-//    } else {
-//      // Assume error and that we don't want epsilon production
-//      n.addChild(otherDeclarations());
-//      //checkError(EnumSet.of(PRIVATE, CLASS, DEF, VAL, VAR));
-//      //sync(EnumSet.of(Token.Kind.EOF)); // Why doesn't this sync to EOF?
-//    }
+    n.setImportDeclarations(importDeclarations());
+    n.setUseDeclarations(useDeclarations());
+    n.setOtherDeclarations(otherDeclarations());
 
     //var scope = new Scope(Scope.Kind.GLOBAL);
     //scope.setEnclosingScope(currentScope);
     //currentScope = scope;
     //n.setScope(currentScope);
-    followerSetStack.pop();
     return n;
   }
 
@@ -527,128 +471,38 @@ public class Parser {
   // basically a direct 1:1 translation to a C++ module and namespace of the
   // same name.
 
+  private PackageDeclaration packageDeclaration () {
+    checkIn(FirstSet.PACKAGE_DECLARATION, FollowSet.PACKAGE_DECLARATION, PACKAGE);
+    if (kind == PACKAGE) {
+      var token = confirm(PACKAGE);
+      var node = new PackageDeclaration(token);
+      node.setPackageName(packageName());
+      match(SEMICOLON);
+      checkOut(FollowSet.PACKAGE_DECLARATION, "'import', 'use', or start of other declaration");
+      return node;
+    }
+    cleanup();
+    return null;
+  }
+
   // To do: Support qualified names for packages
 
-  // FOLLOW set is statically determined, whereas FOLLOWING set is sometimes
-  // not known at compile time. There can be multiple versions of the FOLLOWING
-  // set for a given production.
-
-  private EnumSet<Token.Kind> combine () {
-    var combined = EnumSet.noneOf(Token.Kind.class);
-    for (var followerSet : followerSetStack)
-      combined.addAll(followerSet);
-    return combined;
+  private PackageName packageName () {
+    var token = match(Token.Kind.IDENTIFIER);
+    return new PackageName(token);
   }
-
-  private void checkIn (EnumSet<Token.Kind> firstSet) {
-    LOGGER.info("Check-in: check-in started");
-    // Might need to set mark in process() not here
-    mark = lookahead;
-    if (!firstSet.contains(kind)) {
-      if (!errorRecoveryMode)
-        checkError(firstSet);
-      LOGGER.info("Check-in: created " + mark);
-      // Combine first set and all follower sets
-      var combined = EnumSet.copyOf(firstSet);
-      for (var followerSet : followerSetStack)
-        combined.addAll(followerSet);
-      sync(combined);
-    }
-    LOGGER.info("Check-in: check-in complete");
-  }
-
-  // Special variant of checkIn that uses a custom string for expected kinds
-
-  private void panicX (String expectedString) {
-    LOGGER.info("Panic: panic(S) triggered");
-    if (!errorRecoveryMode) {
-      var expectedMessage = "expected " + expectedString;
-      var foundObject = (kind == Token.Kind.IDENTIFIER) ? "identifier" : "'" + reverseLookup.get(kind) + "'";
-      var foundMessage =  ", but found " + foundObject;
-      var message = expectedMessage + foundMessage;
-      var error = new SyntaxError(sourceLines, message, lookahead);
-      System.out.println(error);
-    }
-    errorRecoveryMode = true;
-  }
-
-  private void checkIn (EnumSet<Token.Kind> firstSet, String expectedString) {
-    LOGGER.info("Check-in: check-in started");
-    // Might need to set mark in process() not here
-    mark = lookahead;
-    if (!firstSet.contains(kind)) {
-      if (!errorRecoveryMode) {
-        var expectedMessage = "expected " + expectedString;
-        var foundObject = (kind == Token.Kind.IDENTIFIER) ? "identifier" : "'" + reverseLookup.get(kind) + "'";
-        var foundMessage =  ", but found " + foundObject;
-        var message = expectedMessage + foundMessage;
-        var error = new SyntaxError(sourceLines, message, lookahead);
-        System.out.println(error);
-      }
-      LOGGER.info("Check-in: created " + mark);
-      // Combine first set and all follower sets
-      var combined = EnumSet.copyOf(firstSet);
-      for (var followerSet : followerSetStack)
-        combined.addAll(followerSet);
-      sync(combined);
-    }
-    LOGGER.info("Check-in: check-in complete");
-  }
-
-  private void checkOut () {
-    LOGGER.info("Check-out: check-out started");
-    if (errorRecoveryMode) {
-      // Combine all follower sets
-      var combined = combine();
-      if (!combined.contains(kind)) {
-        sync(combined);
-      }
-      // Not sure if we need to reset this here or if we can wait until next
-      // match. Should be equivalent since check-out takes you to next match
-      // or confirm.
-      //errorRecoveryMode = false;
-    }
-    LOGGER.info("Check-out: check-out complete");
-  }
-
-  // SET_SEMICOLON is a special add-on to the FOLLOWER set stack. It allows
-  // synchronization to halt at semicolons that are part of the current
-  // production.
-  private final EnumSet<Token.Kind> SET_SEMICOLON = EnumSet.of(SEMICOLON);
-  private final EnumSet<Token.Kind> SET_R_BRACE = EnumSet.of(R_BRACE);
-
-  private PackageDeclaration packageDeclaration () {
-    followerSetStack.push(FollowerSet.PACKAGE_DECLARATION);
-    // Hypothesis: Check-ins occur when the parser must choose one of several
-    // paths, and the epsilon production is not one of the options. This will
-    // force the parser to sync up to any item in the FIRST or FOLLOWER sets.
-    checkIn(FirstSet.PACKAGE_DECLARATION);
-    var n = new PackageDeclaration(mark);
-    if (kind == PACKAGE) {
-      confirm(PACKAGE);
-      match(Token.Kind.IDENTIFIER);
-      n.setPackageName(new PackageName(mark));
-      match(SEMICOLON);
-    }
-    checkOut();
-    if (errorRecoveryMode && kind == SEMICOLON)
-      confirm(SEMICOLON);
-    followerSetStack.pop();
-    return n;
-  }
-
-  // No check-in is required because we only arrive at this production through
-  // an explicit check for 'import' keyword. Thus, we can only get here if the
-  // current lookahead token is known for sure to be 'import'.
 
   private ImportDeclarations importDeclarations () {
-    followerSetStack.push(FollowerSet.IMPORT_DECLARATIONS);
-    // No check-in required
     var n = new ImportDeclarations();
-    n.addImportDeclaration(importDeclaration());
-    while (kind == IMPORT)
-      n.addImportDeclaration(importDeclaration());
-    followerSetStack.pop();
+    while (!FollowSet.IMPORT_DECLARATIONS.contains(kind)) {
+      if (kind == IMPORT)
+        n.addImportDeclaration(importDeclaration());
+      else {
+        panic("'import', 'use', or start of other declaration");
+        recover(union(FirstSet.IMPORT_DECLARATION, FollowSet.IMPORT_DECLARATIONS));
+        cleanup();
+      }
+    }
     return n;
   }
 
@@ -660,174 +514,169 @@ public class Parser {
   // easiest implementation and the others hold no advantages for our
   // particular use case.
 
+  // We don't need a check-in for importDeclaration because it is optional, so
+  // the check-in logic is in the caller. If we enter this production, then we
+  // already know that the current token is in the FIRST set.
+
   private ImportDeclaration importDeclaration () {
-    followerSetStack.push(FollowerSet.IMPORT_DECLARATION);
-    // No check-in required
-    confirm(IMPORT);
-    var n = new ImportDeclaration(mark);
-    n.setQualifiedName(importQualifiedName());
+    var token = confirm(IMPORT);
+    var node = new ImportDeclaration(token);
+    node.setQualifiedName(importQualifiedName());
     if (kind != SEMICOLON) {
       if (kind == AS)
-        n.setAsName(importAsClause());
+        node.setAsName(importAsClause());
       else
         panic(AS, SEMICOLON);
     }
     match(SEMICOLON);
-    checkOut();
-    followerSetStack.pop();
-    return n;
+    checkOut(FollowSet.IMPORT_DECLARATION, "'import', 'use', or start of other declaration");
+    return node;
   }
 
-  // This might be a candidate for error recovery of epsilon production.
-  // Input "import opal-lang;" gives an error but the resulting ERROR token
-  // does not get captured in the AST even though it is not able to be
-  // corrected. This demonstrates that if an error occurs at all, we cannot
-  // rely on it being apparent from looking at the AST. Also, the error given
-  // is not a great one (due to epsilon production). It shows that there might
-  // be room for improvement.
-
   private ImportQualifiedName importQualifiedName () {
-    followerSetStack.push(FollowerSet.IMPORT_QUALIFIED_NAME);
-    checkIn(FirstSet.IMPORT_QUALIFIED_NAME);
-    var n = new ImportQualifiedName();
-    match(Token.Kind.IDENTIFIER);
-    n.addImportName(new ImportName(mark));
-    while (kind == PERIOD) {
-      confirm(PERIOD);
-      match(Token.Kind.IDENTIFIER);
-      n.addImportName(new ImportName(mark));
+    var node = new ImportQualifiedName();
+    node.addImportName(importName());
+    while (kind != AS && kind != SEMICOLON) {
+      if (kind == PERIOD) {
+        confirm(PERIOD);
+        node.addImportName(importName());
+      } else {
+        panic(PERIOD, AS, SEMICOLON);
+        break;
+      }
     }
-    checkOut();
-    followerSetStack.pop();
-    return n;
+    return node;
+  }
+
+  private ImportName importName () {
+    var token = match(Token.Kind.IDENTIFIER);
+    return new ImportName(token);
   }
 
   private ImportAsName importAsClause () {
-    // No check-in required
     confirm(AS);
-    match(Token.Kind.IDENTIFIER);
-    var n = new ImportAsName(mark);
-    return n;
+    var token = match(Token.Kind.IDENTIFIER);
+    return new ImportAsName(token);
   }
 
   private UseDeclarations useDeclarations () {
-    followerSetStack.push(FollowerSet.USE_DECLARATIONS);
-    // No check-in required
     var n = new UseDeclarations();
-    n.addUseDeclaration(useDeclaration());
-    while (kind == USE)
-      n.addUseDeclaration(useDeclaration());
-    followerSetStack.pop();
+    while (!FollowSet.USE_DECLARATIONS.contains(kind)) {
+      if (kind == USE)
+        n.addUseDeclaration(useDeclaration());
+      else {
+        panic("'use' or start of other declaration");
+        recover(union(FirstSet.USE_DECLARATION, FollowSet.USE_DECLARATIONS));
+        cleanup();
+      }
+    }
     return n;
   }
+
+  // We don't need a check-in for useDeclaration because it is optional, so the
+  // check-in logic is in the caller. If we enter this production, then we
+  // already know that the current token is in the FIRST set.
 
   private UseDeclaration useDeclaration () {
-    followerSetStack.push(FollowerSet.USE_DECLARATION);
-    // No check-in required
-    confirm(USE);
-    var n = new UseDeclaration(mark);
-    n.setQualifiedName(useQualifiedName());
+    var token = confirm(USE);
+    var node = new UseDeclaration(token);
+    node.setQualifiedName(useQualifiedName());
     match(SEMICOLON);
-    checkOut();
-    followerSetStack.pop();
-    return n;
+    checkOut(FollowSet.USE_DECLARATION, "'use' or start of other declaration");
+    return node;
   }
-
-  // Follower sets are used in two different ways, depending on whether or not
-  // the token needs to be captured in an AST node or not. If so, it is passed
-  // into a "terminal" production method, where it gets used in a match method
-  // call. Otherwise, it is used directly in a match method call within the
-  // non-terminal production method.
 
   private UseQualifiedName useQualifiedName () {
     UseQualifiedName n = new UseQualifiedName();
-    match(Token.Kind.IDENTIFIER);
-    var p = new UseName(mark);
+    var p = useName();
     n.setUseName(p);
     match(PERIOD);
     p.setChild(useQualifiedNameTail());
     return n;
   }
 
-  // This is consistent with the hypothesis on check-ins that they appear when
-  // there are several options to choose from, none of which are the epsilon
-  // production.
-
-  // To do: No check-out here?
-
   private AstNode useQualifiedNameTail () {
-    checkIn(FirstSet.USE_QUALIFIED_NAME_TAIL);
     if (kind == ASTERISK) {
-      consume();
-      return new UseNameWildcard(mark);
+      return useNameWildcard();
     } else if (kind == L_BRACE) {
       return useNameGroup();
     } else if (kind == Token.Kind.IDENTIFIER) {
-      confirm(Token.Kind.IDENTIFIER);
-      var n = new UseName(mark);
+      var n = useName();
       if (kind == PERIOD) {
-        consume();
+        confirm(PERIOD);
         n.setChild(useQualifiedNameTail());
       }
       return n;
     } else {
-      return new ErrorNode(mark);
+      // For now, assume a use name was intended. Perhaps later we can try
+      // phrase-level recovery to ascertain the intent more accurately.
+      panic("identifier, '{', or '*'");
+      return new UseName(lookahead);
     }
   }
 
+  private UseNameWildcard useNameWildcard () {
+    var token = confirm(ASTERISK);
+    return new UseNameWildcard(token);
+  }
+
   private AstNode useNameGroup () {
-    followerSetStack.push(SET_R_BRACE);
     confirm(L_BRACE);
     var n = new UseNameGroup();
-    match(Token.Kind.IDENTIFIER);
-    n.addUseName(new UseName(mark));
+    n.addUseName(useName());
     while (kind != R_BRACE) {
       if (kind == COMMA) {
-        consume();
-        match(Token.Kind.IDENTIFIER);
-        n.addUseName(new UseName(mark));
+        confirm(COMMA);
+        n.addUseName(useName());
       } else {
         panic(COMMA, R_BRACE);
         break;
       }
     }
     match(R_BRACE);
-    checkOut();
-    if (errorRecoveryMode && kind == R_BRACE)
-      consume();
-    followerSetStack.pop();
     return n;
+  }
+
+  private UseName useName () {
+    var token = match(Token.Kind.IDENTIFIER);
+    return new UseName(token);
   }
 
   // OTHER DECLARATIONS
 
-//      System.out.println("Sleeping for " + SLEEP_TIME + " seconds in declarations...");
-//      try {
-//        Thread.sleep(SLEEP_TIME);
-//      } catch (InterruptedException e) {
-//        throw new RuntimeException(e);
-//      }
-
   private OtherDeclarations otherDeclarations () {
-    followerSetStack.push(FollowerSet.OTHER_DECLARATIONS);
-    checkIn(FirstSet.OTHER_DECLARATIONS);
     var n = new OtherDeclarations();
-    while (FirstSet.OTHER_DECLARATION.contains(kind)) {
-      n.addOtherDeclaration(otherDeclaration());
+    while (!FollowSet.OTHER_DECLARATIONS.contains(kind)) {
+      if (
+        kind == PRIVATE ||
+        kind == CONST   ||
+        kind == CLASS   ||
+        kind == DEF     ||
+        kind == VAL     ||
+        kind == VAR
+      ) {
+        n.addOtherDeclaration(otherDeclaration());
+      } else {
+        panic("start of other declaration");
+        recover(union(FirstSet.OTHER_DECLARATION, FollowSet.OTHER_DECLARATIONS));
+        cleanup();
+      }
     }
-    followerSetStack.pop();
     return n;
   }
+
+  // We don't need a check-in for otherDeclaration because it is optional, so
+  // the check-in logic is in the caller. If we enter this production, then we
+  // already know that the current token is in the FIRST set.
 
   // Entities may be declared as private, indicating that they are not
   // exported. Otherwise, they are considered public, i.e. exported.
 
   private AstNode otherDeclaration () {
-    followerSetStack.push(FirstSet.OTHER_DECLARATION);
     ExportSpecifier p;
     if (kind == PRIVATE) {
-      consume();
-      p = new ExportSpecifier(mark);
+      var token = confirm(PRIVATE);
+      p = new ExportSpecifier(token);
     } else {
       // Maybe change to EPSILON later
       p = null;
@@ -848,11 +697,11 @@ public class Parser {
       else {
         // Probably should panic with custom "expected start of declaration"
         // message
-        panic(EnumSet.of(CLASS, TYPEALIAS, DEF, VAL, VAR));
+        panic(CLASS, TYPEALIAS, DEF, VAL, VAR);
         modifierStack.clear();
       }
     }
-    followerSetStack.pop();
+    checkOut(FollowSet.OTHER_DECLARATION, "start of other declaration");
     return n;
   }
 
@@ -889,8 +738,8 @@ public class Parser {
       kind == FINAL     ||
       kind == VOLATILE
     ) {
-      confirm(kind);
-      modifierStack.push(new Modifier(mark));
+      var token = confirm(kind);
+      modifierStack.push(new Modifier(token));
     }
   }
 
@@ -898,11 +747,11 @@ public class Parser {
 
   private AstNode classDeclaration (AstNode exportSpecifier) {
     confirm(CLASS);
-    var n = new ClassDeclaration(mark);
+    var n = new ClassDeclaration(mark2);
     n.addChild(exportSpecifier);
     n.addChild(classModifiers());
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new ClassName(mark));
+    n.addChild(new ClassName(mark2));
     if (kind == EXTENDS)
       n.addChild(baseClasses(EnumSet.of(L_BRACE)));
     else
@@ -923,17 +772,15 @@ public class Parser {
   // of private inheritance are better met by composition instead.
 
   private AstNode baseClasses (EnumSet<Token.Kind> syncSet) {
-    followerSetStack.push(syncSet);
     confirm(EXTENDS);
     var n = new BaseClasses();
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new BaseClass(mark));
+    n.addChild(new BaseClass(mark2));
     while (kind == COMMA) {
       confirm(COMMA);
       match(Token.Kind.IDENTIFIER);
-      n.addChild(new BaseClass(mark));
+      n.addChild(new BaseClass(mark2));
     }
-    followerSetStack.pop();
     return n;
   }
 
@@ -958,14 +805,13 @@ public class Parser {
   // MEMBER DECLARATIONS
 
   private AstNode memberDeclaration (EnumSet<Token.Kind> syncSet) {
-    followerSetStack.push(syncSet);
     AstNode accessSpecifier;
     if (kind == PRIVATE) {
       confirm(PRIVATE);
-      accessSpecifier = new MemberAccessSpecifier(mark);
+      accessSpecifier = new MemberAccessSpecifier(mark2);
     } else if (kind == PROTECTED) {
       confirm(PROTECTED);
-      accessSpecifier = new MemberAccessSpecifier(mark);
+      accessSpecifier = new MemberAccessSpecifier(mark2);
     } else {
       accessSpecifier = EPSILON;
     }
@@ -981,7 +827,6 @@ public class Parser {
       // Error - need to sync?
       n = null;
     }
-    followerSetStack.pop();
     return n;
   }
 
@@ -997,50 +842,47 @@ public class Parser {
       kind == VOLATILE
     ) {
       confirm(kind);
-      modifierStack.push(new Modifier(mark));
+      modifierStack.push(new Modifier(mark2));
     }
   }
-
-  // To do: Finish follower set
 
   // What if there are modifiers on typealias? Is that a syntax error or
   // semantic error?
 
   private AstNode memberTypealiasDeclaration (AstNode accessSpecifier) {
     confirm(TYPEALIAS);
-    var n = new MemberTypealiasDeclaration(mark);
+    var n = new MemberTypealiasDeclaration(mark2);
     n.addChild(accessSpecifier);
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new TypealiasName(mark));
-    // Follower set is whatever can start a type
+    n.addChild(new TypealiasName(mark2));
     match(EQUAL);
-    n.addChild(declarator(null));
+    n.addChild(declarator(Parser.Context.TYPEALIAS_DECLARATION));
     match(SEMICOLON);
     return n;
   }
 
   private AstNode memberRoutineDeclaration (AstNode accessSpecifier) {
     confirm(DEF);
-    var n = new MemberRoutineDeclaration(mark);
+    var n = new MemberRoutineDeclaration(mark2);
     n.addChild(accessSpecifier);
     n.addChild(memberRoutineModifiers());
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new RoutineName(mark));
+    n.addChild(new RoutineName(mark2));
     n.addChild(routineParameters());
     // No following set required here because these are completely optional
     n.addChild(cvQualifiers());
     if (kind == AMPERSAND) {
       confirm(AMPERSAND);
-      n.addChild(new RefQualifier(mark));
+      n.addChild(new RefQualifier(mark2));
     } else if (kind == AMPERSAND_AMPERSAND) {
       confirm(AMPERSAND_AMPERSAND);
-      n.addChild(new RefQualifier(mark));
+      n.addChild(new RefQualifier(mark2));
     } else {
       n.addChild(EPSILON);
     }
     if (kind == NOEXCEPT) {
       confirm(NOEXCEPT);
-      n.addChild(new NoexceptSpecifier(mark));
+      n.addChild(new NoexceptSpecifier(mark2));
     } else {
       n.addChild(EPSILON);
     }
@@ -1064,17 +906,17 @@ public class Parser {
     var n = new CVQualifiers();
     if (kind == CONST) {
       confirm(CONST);
-      n.addChild(new CVQualifier(mark));
+      n.addChild(new CVQualifier(mark2));
       if (kind == VOLATILE) {
         confirm(VOLATILE);
-        n.addChild(new CVQualifier(mark));
+        n.addChild(new CVQualifier(mark2));
       }
     } else if (kind == VOLATILE) {
       confirm(VOLATILE);
-      n.addChild(new CVQualifier(mark));
+      n.addChild(new CVQualifier(mark2));
       if (kind == CONST) {
         confirm(CONST);
-        n.addChild(new CVQualifier(mark));
+        n.addChild(new CVQualifier(mark2));
       }
     }
     return n;
@@ -1082,11 +924,11 @@ public class Parser {
 
   private AstNode memberVariableDeclaration (AstNode accessSpecifier) {
     confirm(kind == VAL ? VAL : VAR);
-    var n = new MemberVariableDeclaration(mark);
+    var n = new MemberVariableDeclaration(mark2);
     n.addChild(accessSpecifier);
     n.addChild(variableModifiers());
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new VariableName(mark));
+    n.addChild(new VariableName(mark2));
     if (kind == COLON) {
       n.addChild(variableTypeSpecifier());
       if (kind == EQUAL)
@@ -1105,13 +947,12 @@ public class Parser {
 
   private AstNode typealiasDeclaration (AstNode exportSpecifier) {
     confirm(TYPEALIAS);
-    var n = new TypealiasDeclaration(mark);
+    var n = new TypealiasDeclaration(mark2);
     n.addChild(exportSpecifier);
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new TypealiasName(mark));
-    // To do: Follower set is whatever can start a type
+    n.addChild(new TypealiasName(mark2));
     match(EQUAL);
-    n.addChild(declarator(null));
+    n.addChild(declarator(Parser.Context.TYPEALIAS_DECLARATION));
     match(SEMICOLON);
     return n;
   }
@@ -1120,10 +961,9 @@ public class Parser {
     confirm(TYPEALIAS);
     var n = new LocalTypealiasDeclaration(lookahead);
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new TypealiasName(mark));
-    // To do: Follower set is whatever can start a type
+    n.addChild(new TypealiasName(mark2));
     match(EQUAL);
-    n.addChild(declarator(null));
+    n.addChild(declarator(Parser.Context.TYPEALIAS_DECLARATION));
     match(SEMICOLON);
     return n;
   }
@@ -1141,15 +981,15 @@ public class Parser {
 
   private AstNode routineDeclaration (AstNode exportSpecifier) {
     confirm(DEF);
-    var n = new RoutineDeclaration(mark);
+    var n = new RoutineDeclaration(mark2);
     n.addChild(exportSpecifier);
     n.addChild(routineModifiers());
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new RoutineName(mark));
+    n.addChild(new RoutineName(mark2));
     n.addChild(routineParameters());
     if (kind == NOEXCEPT) {
       confirm(NOEXCEPT);
-      n.addChild(new NoexceptSpecifier(mark));
+      n.addChild(new NoexceptSpecifier(mark2));
     } else {
       n.addChild(EPSILON);
     }
@@ -1177,10 +1017,10 @@ public class Parser {
     match(L_PARENTHESIS);
     var n = new RoutineParameters();
     if (kind == Token.Kind.IDENTIFIER)
-      n.addChild(routineParameter(EnumSet.of(COMMA, R_PARENTHESIS)));
+      n.addChild(routineParameter());
     while (kind == COMMA) {
       confirm(COMMA);
-      n.addChild(routineParameter(EnumSet.of(COMMA, R_PARENTHESIS)));
+      n.addChild(routineParameter());
     }
     match(R_PARENTHESIS);
     return n;
@@ -1188,22 +1028,18 @@ public class Parser {
 
   // Routine parameters are for all intents and purposes local variables
 
-  private AstNode routineParameter (EnumSet<Token.Kind> syncSet) {
-    followerSetStack.push(syncSet);
+  private AstNode routineParameter () {
     var n = new RoutineParameter();
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new RoutineParameterName(mark));
-    n.addChild(routineParameterTypeSpecifier(EnumSet.of(COMMA, R_PARENTHESIS)));
-    followerSetStack.pop();
+    n.addChild(new RoutineParameterName(mark2));
+    n.addChild(routineParameterTypeSpecifier());
     return n;
   }
 
-  private AstNode routineParameterTypeSpecifier (EnumSet<Token.Kind> syncSet) {
-    followerSetStack.push(syncSet);
+  private AstNode routineParameterTypeSpecifier () {
     match(COLON);
-    var n = new RoutineParameterTypeSpecifier(mark);
-    n.addChild(declarator(null));
-    followerSetStack.pop();
+    var n = new RoutineParameterTypeSpecifier(mark2);
+    n.addChild(declarator(Parser.Context.ROUTINE_PARAMETER_TYPE_SPECIFIER));
     return n;
   }
 
@@ -1216,11 +1052,9 @@ public class Parser {
   // to a type specifier.
 
   private AstNode routineReturnTypeSpecifier () {
-    followerSetStack.push(EnumSet.of(L_BRACE));
     confirm(MINUS_GREATER);
     var n = new RoutineReturnTypeSpecifier();
-    n.addChild(declarator(null));
-    followerSetStack.pop();
+    n.addChild(declarator(Context.ROUTINE_RETURN_TYPE_SPECIFIER));
     return n;
   }
 
@@ -1254,43 +1088,42 @@ public class Parser {
   // Check-out?
 
   private AstNode variableDeclaration (ExportSpecifier exportSpecifier) {
-    followerSetStack.push(EnumSet.of(SEMICOLON));
-    confirm(kind == VAL ? VAL : VAR);
-    var n = new VariableDeclaration(mark);
+    var token = confirm(kind == VAL ? VAL : VAR);
+    var n = new VariableDeclaration(token);
     n.setExportSpecifier(exportSpecifier);
     n.setModifiers(variableModifiers());
-    match(Token.Kind.IDENTIFIER);
-    n.setName(new VariableName(mark));
-    if (kind == COLON) {
-      n.setTypeSpecifier(variableTypeSpecifier());
-      if (kind == EQUAL)
+    n.setName(variableName());
+    if (kind != SEMICOLON) {
+      if (kind == COLON) {
+        n.setTypeSpecifier(variableTypeSpecifier());
+        if (kind == EQUAL)
+          n.setInitializer(variableInitializer());
+      } else if (kind == EQUAL) {
         n.setInitializer(variableInitializer());
-    } else if (kind == EQUAL) {
-      n.setInitializer(variableInitializer());
-    } else {
-      panic(COLON, EQUAL);
+      } else {
+        panic(COLON, EQUAL, SEMICOLON);
+      }
     }
-    followerSetStack.pop();
     match(SEMICOLON);
     return n;
+  }
+
+  private VariableName variableName () {
+    var token = match(Token.Kind.IDENTIFIER);
+    return new VariableName(token);
   }
 
   private VariableModifiers variableModifiers () {
     var n = new VariableModifiers();
     while (!modifierStack.isEmpty())
-      n.addChild(modifierStack.pop());
+      n.addModifier(modifierStack.pop());
     return n;
   }
 
-  // Is this only ever arrived at on a sure path? If so, we can replace the
-  // match method with confirm.
-
   private VariableTypeSpecifier variableTypeSpecifier () {
-    followerSetStack.push(EnumSet.of(EQUAL));
     confirm(COLON);
     var n = new VariableTypeSpecifier();
-    n.setDeclarator(declarator(null));
-    followerSetStack.pop();
+    n.setDeclarator(declarator(Parser.Context.VARIABLE_TYPE_SPECIFIER));
     return n;
   }
 
@@ -1303,10 +1136,10 @@ public class Parser {
 
   private AstNode localVariableDeclaration () {
     confirm(kind == VAL ? VAL : VAR);
-    var n = new LocalVariableDeclaration(mark);
+    var n = new LocalVariableDeclaration(mark2);
     n.addChild(variableModifiers());
     match(Token.Kind.IDENTIFIER);
-    n.addChild(new VariableName(mark));
+    n.addChild(new VariableName(mark2));
     if (kind == COLON) {
       n.addChild(variableTypeSpecifier());
       if (kind == EQUAL)
@@ -1406,7 +1239,7 @@ public class Parser {
 
   private AstNode breakStatement () {
     confirm(BREAK);
-    var n = new BreakStatement(mark);
+    var n = new BreakStatement(mark2);
     match(SEMICOLON);
     return n;
   }
@@ -1694,19 +1527,16 @@ public class Parser {
   // have large FIRST sets. In this case, it is ok to use the "contains"
   // method. Otherwise, we prefer to use chains of "if" statements.
 
-  private Expression expression (EnumSet<Token.Kind> syncSet) {
-    if (syncSet != null)
-      followerSetStack.push(syncSet);
-    checkIn(FirstSet.EXPRESSION, "start of expression");
+  private Expression expression (Parser.Context context) {
     Expression n;
     if (FirstSet.EXPRESSION.contains(kind)) {
       n = assignmentExpression();
     } else {
       // Yes, we need this! If the sync never hits anything in the first set
       // then we need to return a bogus expression!
-      n = new BogusExpression(mark);
+      n = new BogusExpression(mark2);
     }
-    checkOut();
+    inSubExpression = false;
     return n;
   }
 
@@ -1745,7 +1575,7 @@ public class Parser {
       kind == BAR_EQUAL
     ) {
       confirm(kind);
-      var p = new BinaryExpression(mark);
+      var p = new BinaryExpression(mark2);
       p.addChild(n);
       p.addChild(logicalOrExpression());
       n = p;
@@ -1757,7 +1587,7 @@ public class Parser {
     var n = logicalAndExpression();
     while (kind == OR) {
       confirm(OR);
-      var p = new BinaryExpression(mark);
+      var p = new BinaryExpression(mark2);
       p.addChild(n);
       p.addChild(logicalAndExpression());
       n = p;
@@ -1769,7 +1599,7 @@ public class Parser {
     var n = inclusiveOrExpression();
     while (kind == AND) {
       confirm(AND);
-      var p = new BinaryExpression(mark);
+      var p = new BinaryExpression(mark2);
       p.addChild(n);
       p.addChild(inclusiveOrExpression());
       n = p;
@@ -1781,7 +1611,7 @@ public class Parser {
     var n = exclusiveOrExpression();
     while (kind == BAR) {
       confirm(BAR);
-      var p = new BinaryExpression(mark);
+      var p = new BinaryExpression(mark2);
       p.addChild(n);
       p.addChild(exclusiveOrExpression());
       n = p;
@@ -1793,7 +1623,7 @@ public class Parser {
     var n = andExpression();
     while (kind == CARET) {
       confirm(CARET);
-      var p = new BinaryExpression(mark);
+      var p = new BinaryExpression(mark2);
       p.addChild(n);
       p.addChild(andExpression());
       n = p;
@@ -1805,7 +1635,7 @@ public class Parser {
     var n = equalityExpression();
     while (kind == AMPERSAND) {
       confirm(AMPERSAND);
-      var p = new BinaryExpression(mark);
+      var p = new BinaryExpression(mark2);
       p.addChild(n);
       p.addChild(equalityExpression());
       n = p;
@@ -1817,7 +1647,7 @@ public class Parser {
     var n = relationalExpression();
     while (kind == EQUAL_EQUAL || kind == EXCLAMATION_EQUAL) {
       confirm(kind);
-      var p = new BinaryExpression(mark);
+      var p = new BinaryExpression(mark2);
       p.addChild(n);
       p.addChild(relationalExpression());
       n = p;
@@ -1829,7 +1659,7 @@ public class Parser {
     var n = shiftExpression();
     while (kind == GREATER || kind == LESS || kind == GREATER_EQUAL || kind == LESS_EQUAL) {
       confirm(kind);
-      var p = new BinaryExpression(mark);
+      var p = new BinaryExpression(mark2);
       p.addChild(n);
       p.addChild(shiftExpression());
       n = p;
@@ -1841,7 +1671,7 @@ public class Parser {
     var n = additiveExpression();
     while (kind == GREATER_GREATER || kind == LESS_LESS) {
       confirm(kind);
-      var p = new BinaryExpression(mark);
+      var p = new BinaryExpression(mark2);
       p.addChild(n);
       p.addChild(additiveExpression());
       n = p;
@@ -1853,7 +1683,7 @@ public class Parser {
     var n = multiplicativeExpression();
     while (kind == PLUS || kind == MINUS) {
       confirm(kind);
-      var p = new BinaryExpression(mark);
+      var p = new BinaryExpression(mark2);
       p.addChild(n);
       p.addChild(multiplicativeExpression());
       n = p;
@@ -1863,9 +1693,10 @@ public class Parser {
 
   private Expression multiplicativeExpression () {
     var n = unaryExpression();
+    inSubExpression = true;
     while (kind == ASTERISK || kind == SLASH || kind == PERCENT) {
       confirm(kind);
-      var p = new BinaryExpression(mark);
+      var p = new BinaryExpression(mark2);
       p.addChild(n);
       p.addChild(unaryExpression());
       n = p;
@@ -1877,11 +1708,13 @@ public class Parser {
   // unaryExpression and castExpression methods. What effect might that have?
   // (See p. 54, Ellis & Stroustrup, 1990.)
 
+  // I forgot why we are setting a subExpression flag. What is the reason?
+
   private Expression unaryExpression () {
     Expression n = null;
     if (kind == ASTERISK || kind == MINUS || kind == PLUS || kind == EXCLAMATION || kind == TILDE) {
       confirm(kind);
-      n = new UnaryExpression(mark);
+      n = new UnaryExpression(mark2);
       n.setSubExpression(unaryExpression());
     } else if (kind == CAST || kind == DIVINE || kind == TRANSMUTE) {
       n = castExpression();
@@ -1900,7 +1733,7 @@ public class Parser {
     var n = new CastExpression(lookahead);
     match(lookahead.getKind());
     match(Token.Kind.LESS);
-    n.addChild(declarator(EnumSet.of(GREATER)));
+    n.addChild(declarator(Parser.Context.CAST_EXPRESSION));
     match(Token.Kind.GREATER);
     match(Token.Kind.L_PARENTHESIS);
     n.addChild(expression(true));
@@ -1931,7 +1764,7 @@ public class Parser {
     var n = new NewExpression(lookahead);
     match(Token.Kind.NEW);
     n.addChild(kind == Token.Kind.L_BRACKET ? newPlacement() : null);
-    n.addChild(declarator(null));
+    n.addChild(declarator(Parser.Context.NEW_EXPRESSION));
     n.addChild(kind == Token.Kind.L_PARENTHESIS ? newInitializer() : null);
     return n;
   }
@@ -2061,82 +1894,86 @@ public class Parser {
 
   private Expression primaryExpression () {
     Expression n = null;
-    if (
-      kind == FALSE ||
-      kind == TRUE ||
-      kind == CHARACTER_LITERAL ||
-      kind == FLOAT32_LITERAL ||
-      kind == FLOAT64_LITERAL ||
-      kind == INT32_LITERAL ||
-      kind == INT64_LITERAL ||
-      kind == NULL ||
-      kind == STRING_LITERAL ||
-      kind == UINT32_LITERAL ||
-      kind == UINT64_LITERAL
-    ) {
-      n = literal();
-    } else if (kind == Token.Kind.THIS)
+    if (kind == Token.Kind.THIS) {
       n = this_();
-    else if (kind == Token.Kind.IDENTIFIER) {
+    } else if (kind == Token.Kind.IDENTIFIER) {
       // Test this -- is this not working?
       n = name();
-    }
-    // Defer implementing if expressions
-//    else if (kind == Token.Kind.IF)
-//      n = ifExpression();
-    else if (kind == Token.Kind.L_PARENTHESIS) {
+    } else if (kind == Token.Kind.L_PARENTHESIS) {
       n = parenthesizedExpression();
     } else {
-      System.out.println("ERROR - INVALID PRIMARY EXPRESSION");
+      n = literal();
     }
     return n;
   }
 
   private Expression literal () {
     Expression n;
-    if (kind == FALSE) {
-      confirm(FALSE);
-      n = new BooleanLiteral(mark);
-    } else if (kind == TRUE) {
-      confirm(TRUE);
-      n = new BooleanLiteral(mark);
-    } else if (kind == CHARACTER_LITERAL) {
-      confirm(CHARACTER_LITERAL);
-      n = new CharacterLiteral(mark);
-    } else if (kind == FLOAT32_LITERAL) {
-      confirm(FLOAT32_LITERAL);
-      n = new FloatingPointLiteral(mark);
-    } else if (kind == FLOAT64_LITERAL) {
-      confirm(FLOAT64_LITERAL);
-      n = new FloatingPointLiteral(mark);
-    } else if (kind == INT32_LITERAL) {
-      confirm(INT32_LITERAL);
-      n = new IntegerLiteral(mark);
-    } else if (kind == INT64_LITERAL) {
-      confirm(INT64_LITERAL);
-      n = new IntegerLiteral(mark);
-    } else if (kind == NULL) {
-      confirm(NULL);
-      n = new NullLiteral(mark);
-    } else if (kind == STRING_LITERAL) {
-      confirm(STRING_LITERAL);
-      n = new StringLiteral(mark);
-    } else if (kind == UINT32_LITERAL) {
-      confirm(UINT32_LITERAL);
-      n = new UnsignedIntegerLiteral(mark);
-    } else if (kind == UINT64_LITERAL) {
-      confirm(UINT64_LITERAL);
-      n = new UnsignedIntegerLiteral(mark);
-    } else {
-      checkError(FirstSet.LITERAL);
-      mark = lookahead;
-      var combined = combine();
-      sync(combined);
-//      n = new ErrorNode(mark);
-      // Maybe create ExpressionErrorNode?
+    if (kind == FALSE)
+      n = booleanLiteral();
+    else if (kind == TRUE)
+      n = booleanLiteral();
+    else if (kind == CHARACTER_LITERAL)
+      n = characterLiteral();
+    else if (kind == FLOAT32_LITERAL)
+      n = floatingPointLiteral();
+    else if (kind == FLOAT64_LITERAL)
+      n = floatingPointLiteral();
+    else if (kind == INT32_LITERAL)
+      n = integerLiteral();
+    else if (kind == INT64_LITERAL)
+      n = integerLiteral();
+    else if (kind == NULL)
+      n = nullLiteral();
+    else if (kind == STRING_LITERAL)
+      n = stringLiteral();
+    else if (kind == UINT32_LITERAL)
+      n = unsignedIntegerLiteral();
+    else if (kind == UINT64_LITERAL)
+      n = unsignedIntegerLiteral();
+    else {
+      if (inSubExpression)
+        panic("start of sub-expression");
+      else
+        panic("start of expression");
       n = null;
     }
     return n;
+  }
+
+  private BooleanLiteral booleanLiteral () {
+    var token = confirm(kind);
+    return new BooleanLiteral(token);
+  }
+
+  private CharacterLiteral characterLiteral () {
+    var token = confirm(CHARACTER_LITERAL);
+    return new CharacterLiteral(token);
+  }
+
+  private FloatingPointLiteral floatingPointLiteral () {
+    var token = confirm(kind);
+    return new FloatingPointLiteral(token);
+  }
+
+  private IntegerLiteral integerLiteral () {
+    var token = confirm(kind);
+    return new IntegerLiteral(token);
+  }
+
+  private NullLiteral nullLiteral () {
+    var token = confirm(NULL);
+    return new NullLiteral(token);
+  }
+
+  private StringLiteral stringLiteral () {
+    var token = confirm(STRING_LITERAL);
+    return new StringLiteral(token);
+  }
+
+  private UnsignedIntegerLiteral unsignedIntegerLiteral () {
+    var token = confirm(kind);
+    return new UnsignedIntegerLiteral(token);
   }
 
   // Note: In C++, 'this' is a pointer, but in cppfront, it is not. Its unclear
@@ -2171,71 +2008,34 @@ public class Parser {
   // resembles the input. Then, during semantic analysis, the actual types are
   // built by walking this tree in the appropriate order.
 
-  // Should this still be syncSet or should it be followerSet?
+  // Instead of passing in a sync set in order to account for dynamic context,
+  // we hard-code different sync-sets and pass in an associated context
+  // enumeration.
 
-  private Declarator declarator (EnumSet<Token.Kind> syncSet) {
-    if (syncSet != null)
-      followerSetStack.push(syncSet);
-    checkIn(FirstSet.DECLARATOR);
+  private Declarator declarator (Parser.Context context) {
     var n = new Declarator();
-    if (
-      kind == ASTERISK              ||
-      kind == CARET                 ||
-      kind == L_PARENTHESIS         ||
-      kind == Token.Kind.IDENTIFIER ||
-      kind == Token.Kind.BOOL       ||
-      kind == Token.Kind.DOUBLE     ||
-      kind == Token.Kind.FLOAT      ||
-      kind == Token.Kind.FLOAT32    ||
-      kind == Token.Kind.FLOAT64    ||
-      kind == Token.Kind.INT        ||
-      kind == Token.Kind.INT8       ||
-      kind == Token.Kind.INT16      ||
-      kind == Token.Kind.INT32      ||
-      kind == Token.Kind.INT64      ||
-      kind == Token.Kind.LONG       ||
-      kind == Token.Kind.NULL_T     ||
-      kind == Token.Kind.SHORT      ||
-      kind == Token.Kind.UINT       ||
-      kind == Token.Kind.UINT8      ||
-      kind == Token.Kind.UINT16     ||
-      kind == Token.Kind.UINT32     ||
-      kind == Token.Kind.UINT64     ||
-      kind == Token.Kind.VOID
-    ) {
-      if (kind == ASTERISK)
-        n.setPointerDeclarators(pointerDeclarators());
-      n.setDirectDeclarator(directDeclarator());
-      if (kind != EQUAL && kind != SEMICOLON) {
-        if (kind == L_BRACKET)
-          n.setArrayDeclarators(arrayDeclarators());
-        else
-          panic(EnumSet.of(L_BRACKET, EQUAL, SEMICOLON));
-      }
-    } else {
-      n.setDirectDeclarator(new BogusDeclarator(mark));
-    }
-    checkOut();
-    if (syncSet != null)
-      followerSetStack.pop();
+    n.setPointerDeclarators(pointerDeclarators());
+    n.setDirectDeclarator(directDeclarator());
+    n.setArrayDeclarators(arrayDeclarators(context));
     return n;
   }
 
-  // Need a check-in here
-
-  //The FIRST set actually needs to be limited to direct declarator
-
   private Declarator directDeclarator () {
-    followerSetStack.push(EnumSet.of(L_BRACKET));
-    checkIn(FirstSet.DIRECT_DECLARATOR);
     Declarator n;
-    if (
+    if (kind == Token.Kind.IDENTIFIER) {
+      n = nominalType();
+    } else if (kind == L_PARENTHESIS) {
+      n = parenthesizedType();
+    } else if (
       kind == Token.Kind.BOOL    ||
+      kind == Token.Kind.SHORT   ||
+      kind == Token.Kind.LONG    ||
       kind == Token.Kind.INT     ||
       kind == Token.Kind.INT8    ||
       kind == Token.Kind.INT16   ||
       kind == Token.Kind.INT32   ||
       kind == Token.Kind.INT64   ||
+      kind == Token.Kind.NULL_T  ||
       kind == Token.Kind.UINT    ||
       kind == Token.Kind.UINT8   ||
       kind == Token.Kind.UINT16  ||
@@ -2247,109 +2047,193 @@ public class Parser {
       kind == Token.Kind.FLOAT64 ||
       kind == Token.Kind.VOID
     ) {
-      confirm(kind);
-      // Should be simple declarator
-      return new PrimitiveType(mark);
-    } else if (kind == Token.Kind.IDENTIFIER) {
-      confirm(Token.Kind.IDENTIFIER);
-      n = new NominalType(mark);
+      n = primitiveType();
     } else if (kind == CARET) {
-      n = routinePointerDeclarator();
-    } else if (kind == L_PARENTHESIS) {
-      confirm(L_PARENTHESIS);
-      n = declarator(null);
-      match(R_PARENTHESIS);
+      n = routinePointerType();
     } else {
-      n = new BogusDeclarator(mark);
+      panic("IN PANIC WITHIN DIRECT DECLARATOR!");
+      n = new Declarator();
+      n.setError();
     }
-    followerSetStack.pop();
     return n;
+  }
+
+  private NominalType nominalType () {
+    var token = confirm(Token.Kind.IDENTIFIER);
+    return new NominalType(token);
+  }
+
+  private Declarator parenthesizedType () {
+    confirm(L_PARENTHESIS);
+    var n = declarator(Parser.Context.PARENTHESIZED_DECLARATOR);
+    match(R_PARENTHESIS);
+    return n;
+  }
+
+  private PrimitiveType primitiveType () {
+    var token = confirm(kind);
+    return new PrimitiveType(token);
   }
 
   // For now, assume all routine pointers must have a return type specified,
   // in which case, the last child of the AST node is the return type.
 
-  private Declarator routinePointerDeclarator () {
-    confirm(CARET);
-    var n = new RoutinePointerDeclarator(mark);
-    match(L_PARENTHESIS);
-    if (FirstSet.DECLARATOR.contains(kind)) {
-      n.addChild(declarator(EnumSet.of(COMMA, R_PARENTHESIS)));
+  private Declarator routinePointerType () {
+    var token = confirm(CARET);
+    var n = new RoutinePointerType(token);
+    n.setRoutinePointerTypeParameters(routinePointerTypeParameters());
+    match(MINUS_GREATER);
+    // Now need to match return type declarator
+    return n;
+  }
+
+  private RoutinePointerTypeParameters routinePointerTypeParameters () {
+    var token = match(L_PARENTHESIS);
+    var n = new RoutinePointerTypeParameters(token);
+    if (kind != R_PARENTHESIS) {
+      // Need if declarator first set vs. error cond
+      n.addRoutinePointerTypeParameter(routinePointerTypeParameter());
     }
-    while (kind == COMMA) {
-      confirm(COMMA);
-      n.addChild(declarator(EnumSet.of(COMMA, R_PARENTHESIS)));
+    while (kind != R_PARENTHESIS) {
+      match(COMMA);
+      // Need if declarator first set vs. error cond
+      n.addRoutinePointerTypeParameter(routinePointerTypeParameter());
     }
     match(R_PARENTHESIS);
-    match(MINUS_GREATER);
-    n.addChild(declarator(EnumSet.of(COMMA, R_PARENTHESIS)));
     return n;
   }
 
-  // A check-in may not required if we are sure that the previous check-out
-  // procedure must have brought us to a member of the FIRST set.
+  private RoutinePointerTypeParameter routinePointerTypeParameter () {
+    var n = new RoutinePointerTypeParameter();
+    // We need a special context to handle ')' and ','
+    n.setDeclarator(declarator((Parser.Context)null));
+    return n;
+  }
 
   private PointerDeclarators pointerDeclarators () {
-    // No check-in required
     var n = new PointerDeclarators();
-    while (kind == ASTERISK) {
-      confirm(ASTERISK);
-      n.addPointerDeclarator(new PointerDeclarator(mark));
-    }
-    return n;
-  }
-
-  private ArrayDeclarators arrayDeclarators () {
-    // No check-in required for now. Might need one for generic types.
-    var n = new ArrayDeclarators();
-    while (kind != EQUAL && kind != SEMICOLON) {
-      if (kind == L_BRACKET)
-        n.addArrayDeclarator(arrayDeclarator());
-      else {
-        panic(EnumSet.of(L_BRACKET, EQUAL, SEMICOLON));
+    while (
+      kind != CARET                 &&
+      kind != L_PARENTHESIS         &&
+      kind != Token.Kind.IDENTIFIER &&
+      kind != Token.Kind.BOOL       &&
+      kind != Token.Kind.SHORT      &&
+      kind != Token.Kind.INT        &&
+      kind != Token.Kind.LONG       &&
+      kind != Token.Kind.INT8       &&
+      kind != Token.Kind.INT16      &&
+      kind != Token.Kind.INT32      &&
+      kind != Token.Kind.INT64      &&
+      kind != Token.Kind.NULL_T     &&
+      kind != Token.Kind.UINT       &&
+      kind != Token.Kind.UINT8      &&
+      kind != Token.Kind.UINT16     &&
+      kind != Token.Kind.UINT32     &&
+      kind != Token.Kind.UINT64     &&
+      kind != Token.Kind.FLOAT      &&
+      kind != Token.Kind.DOUBLE     &&
+      kind != Token.Kind.FLOAT32    &&
+      kind != Token.Kind.FLOAT64    &&
+      kind != Token.Kind.VOID
+    ) {
+      if (kind == ASTERISK) {
+        n.addPointerDeclarator(pointerDeclarator());
+      } else {
+        panic("'*' or direct declarator");
         break;
       }
     }
     return n;
   }
 
-  // Check that expression is const during semantic analysis
+  private PointerDeclarator pointerDeclarator () {
+    var token = confirm(ASTERISK);
+    return new PointerDeclarator(token);
+  }
 
-  // I believe this conforms to the correct way of handling optional items. Use
-  // this as an example for other constructs.
-
-  private ArrayDeclarator arrayDeclarator () {
-    confirm(L_BRACKET);
-    var n = new ArrayDeclarator(mark);
-    if (kind != R_BRACKET)
-      n.setExpression(expression(EnumSet.of(R_BRACKET)));
-    match(R_BRACKET);
+  private ArrayDeclarators arrayDeclarators (Parser.Context context) {
+    var n = new ArrayDeclarators();
+    if (context == Context.TYPEALIAS_DECLARATION) {
+      while (kind != SEMICOLON) {
+        if (kind == L_BRACKET)
+          n.addArrayDeclarator(arrayDeclarator());
+        else {
+          panic(L_BRACKET, SEMICOLON);
+          break;
+        }
+      }
+    } else if (context == Parser.Context.VARIABLE_TYPE_SPECIFIER) {
+      while (kind != EQUAL && kind != SEMICOLON) {
+        if (kind == L_BRACKET)
+          n.addArrayDeclarator(arrayDeclarator());
+        else {
+          panic(L_BRACKET, EQUAL, SEMICOLON);
+          break;
+        }
+      }
+    } else if (context == Parser.Context.ROUTINE_RETURN_TYPE_SPECIFIER) {
+      while (kind != L_BRACE) {
+        if (kind == L_BRACKET)
+          n.addArrayDeclarator(arrayDeclarator());
+        else {
+          panic(L_BRACKET, L_BRACE);
+          break;
+        }
+      }
+    } else if (context == Parser.Context.ROUTINE_PARAMETER_TYPE_SPECIFIER) {
+      while (kind != Token.Kind.R_PARENTHESIS) {
+        if (kind == L_BRACKET)
+          n.addArrayDeclarator(arrayDeclarator());
+        else {
+          panic(L_BRACKET, R_PARENTHESIS);
+          break;
+        }
+      }
+    } else if (context == Parser.Context.PARENTHESIZED_DECLARATOR ) {
+      while (kind != R_PARENTHESIS) {
+        if (kind == L_BRACKET)
+          n.addArrayDeclarator(arrayDeclarator());
+        else {
+          panic(L_BRACKET, Token.Kind.R_PARENTHESIS);
+          break;
+        }
+      }
+    } else if (context == Parser.Context.CAST_EXPRESSION) {
+      while (kind != GREATER) {
+        if (kind == L_BRACKET)
+          n.addArrayDeclarator(arrayDeclarator());
+        else {
+          panic(L_BRACKET, Token.Kind.GREATER);
+          break;
+        }
+      }
+    } else if (context == Parser.Context.NEW_EXPRESSION) {
+      while (kind != L_PARENTHESIS) {
+        if (kind == L_BRACKET)
+          n.addArrayDeclarator(arrayDeclarator());
+        else {
+          panic(L_BRACKET, Token.Kind.GREATER);
+          break;
+        }
+      }
+    }
     return n;
   }
 
-  private static EnumSet<Token.Kind> union (EnumSet<Token.Kind> a, Token.Kind b) {
-    var combined = EnumSet.copyOf(a);
-    combined.add(b);
-    return combined;
-  }
+  // Need to check that expression is const during semantic analysis
 
-  private static EnumSet<Token.Kind> union (EnumSet<Token.Kind> a, Token.Kind b, Token.Kind c) {
-    var combined = EnumSet.copyOf(a);
-    combined.add(b);
-    combined.add(c);
-    return combined;
+  private ArrayDeclarator arrayDeclarator () {
+    var token = confirm(L_BRACKET);
+    var n = new ArrayDeclarator(token);
+    if (kind != R_BRACKET)
+      n.setExpression(expression(Parser.Context.ARRAY_DECLARATOR));
+    match(R_BRACKET);
+    return n;
   }
 
   private static EnumSet<Token.Kind> union (EnumSet<Token.Kind> a, EnumSet<Token.Kind> b) {
     var combined = EnumSet.copyOf(a);
     combined.addAll(b);
-    return combined;
-  }
-
-  private static EnumSet<Token.Kind> union (EnumSet<Token.Kind> a, EnumSet<Token.Kind> b, EnumSet<Token.Kind> c) {
-    var combined = EnumSet.copyOf(a);
-    combined.addAll(b);
-    combined.addAll(c);
     return combined;
   }
 
@@ -2396,5 +2280,17 @@ public class Parser {
     return n;
   }
   */
+
+  public enum Context {
+    TYPEALIAS_DECLARATION,
+    VARIABLE_TYPE_SPECIFIER,
+    ROUTINE_PARAMETER_TYPE_SPECIFIER,
+    ROUTINE_RETURN_TYPE_SPECIFIER,
+    ARRAY_DECLARATOR,
+    PARENTHESIZED_DECLARATOR,
+    CAST_EXPRESSION,
+    NEW_EXPRESSION
+  }
+
 
 }

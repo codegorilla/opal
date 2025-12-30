@@ -29,6 +29,9 @@ public class ImportQualifiedName extends AstNode {
 
   public void addImportName (ImportName importName) {
     children.add(importName);
+    // Should we propagate errors here or during a semantic analysis pass?
+    if (importName.getError())
+      setError();
   }
 
 }
