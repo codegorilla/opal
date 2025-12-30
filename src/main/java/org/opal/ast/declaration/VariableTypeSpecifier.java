@@ -5,10 +5,14 @@ import org.opal.ast.AstNode;
 import org.opal.ResultVisitor;
 import org.opal.Visitor;
 import org.opal.ast.type.Declarator;
+import org.opal.type.Type;
 
 public class VariableTypeSpecifier extends AstNode {
 
   private Declarator declarator;
+
+  // Type attribute
+  Type type = null;
 
   public VariableTypeSpecifier () {}
 
@@ -26,8 +30,16 @@ public class VariableTypeSpecifier extends AstNode {
     return declarator;
   }
 
+  public Type getType () {
+    return type;
+  }
+
   public void setDeclarator (Declarator declarator) {
     this.declarator = declarator;
+  }
+
+  public void setType (Type type) {
+    this.type = type;
   }
 
 }

@@ -4,6 +4,7 @@ import org.opal.ResultVisitor;
 import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
+import org.opal.type.Type;
 
 import java.lang.reflect.Array;
 

@@ -12,7 +12,8 @@ import org.opal.type.Type;
 import java.util.LinkedList;
 
 // The purpose of this pass is to annotate declarator/type AST nodes with type
-// expressions.
+// expressions. This is not necessarily a type-checking pass though - that will
+// come later.
 
 public class Pass2 extends BaseVisitor {
 
@@ -43,13 +44,13 @@ public class Pass2 extends BaseVisitor {
 
   public void visit (VariableTypeSpecifier node ) {
     node.getDeclarator().accept(this);
+    node.setType(typeStack.pop());
   }
 
   public void visit (Declarator node) {
     node.getDirectDeclarator().accept(this);
     node.getPointerDeclarators().accept(this);
     node.getArrayDeclarators().accept(this);
-//    var t = typeStack.pop();
   }
 
   public void visit (ArrayDeclarators node) {
@@ -60,6 +61,15 @@ public class Pass2 extends BaseVisitor {
   public void visit (ArrayDeclarator node) {
     var t = new ArrayType();
     t.setElementType(typeStack.pop());
+    // Hard code size for now. This will eventually just be a reference to an
+    // AST node representing the root of an expression sub-tree.
+    t.setSize(12);
+    typeStack.push(t);
+  }
+
+  public void visit (NominalType node) {
+    var t = new org.opal.type.NominalType();
+    t.setString(node.getToken().getLexeme());
     typeStack.push(t);
   }
 
