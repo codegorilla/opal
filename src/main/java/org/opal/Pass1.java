@@ -5,6 +5,8 @@ import org.opal.ast.declaration.*;
 import org.opal.ast.expression.*;
 import org.opal.ast.type.*;
 
+// The purpose of this pass is to print the AST
+
 // We cannot use a generic "visit" method that takes an AST node because it
 // won't be able to tell what kind of node it is and will treat them as plain
 // AST nodes. That was fine when using regular nodes (with generic lists of

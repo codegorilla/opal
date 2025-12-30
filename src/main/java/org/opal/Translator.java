@@ -75,6 +75,9 @@ public class Translator {
     var pass1 = new Pass1(root);
     pass1.process();
 
+    var pass2 = new Pass2(root);
+    pass2.process();
+
     // Temporary exit
     System.exit(0);
 
