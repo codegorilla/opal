@@ -290,7 +290,7 @@ public class Pass1 extends BaseVisitor {
     depth.decrement();
   }
 
-  public void visit (PrimitiveType node) {
+  public void visit (PrimitiveDeclarator node) {
     depth.increment();
     printNode(node);
     depth.decrement();

@@ -2058,9 +2058,9 @@ public class Parser {
     return n;
   }
 
-  private NominalType nominalType () {
+  private NominalDeclarator nominalType () {
     var token = confirm(Token.Kind.IDENTIFIER);
-    return new NominalType(token);
+    return new NominalDeclarator(token);
   }
 
   private Declarator parenthesizedType () {
@@ -2070,9 +2070,9 @@ public class Parser {
     return n;
   }
 
-  private PrimitiveType primitiveType () {
+  private PrimitiveDeclarator primitiveType () {
     var token = confirm(kind);
-    return new PrimitiveType(token);
+    return new PrimitiveDeclarator(token);
   }
 
   // For now, assume all routine pointers must have a return type specified,

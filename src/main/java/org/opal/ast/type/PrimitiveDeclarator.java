@@ -3,11 +3,10 @@ package org.opal.ast.type;
 import org.opal.ResultVisitor;
 import org.opal.Token;
 import org.opal.Visitor;
-import org.opal.ast.AstNode;
 
-public class PrimitiveType extends Declarator {
+public class PrimitiveDeclarator extends Declarator {
 
-  public PrimitiveType (Token token) {
+  public PrimitiveDeclarator (Token token) {
     super(token);
   }
 

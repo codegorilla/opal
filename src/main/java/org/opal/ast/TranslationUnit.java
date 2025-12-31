@@ -3,13 +3,20 @@ package org.opal.ast;
 import org.opal.ResultVisitor;
 import org.opal.Visitor;
 import org.opal.ast.declaration.*;
+import org.opal.symbol.Scope;
 
 public class TranslationUnit extends AstNode {
 
+  // Child nodes
   private PackageDeclaration packageDeclaration = null;
   private ImportDeclarations importDeclarations = null;
   private UseDeclarations useDeclarations = null;
   private OtherDeclarations otherDeclarations = null;
+
+  // Attributes
+
+  // Built-in scope
+  private Scope scope;
 
   public TranslationUnit () {
     super();
@@ -73,6 +80,14 @@ public class TranslationUnit extends AstNode {
   // This needs to be updated
   public AstNode declarations () {
     return getChild(0);
+  }
+
+  public Scope getScope () {
+    return scope;
+  }
+
+  public void setScope (Scope scope) {
+    this.scope = scope;
   }
 
 }

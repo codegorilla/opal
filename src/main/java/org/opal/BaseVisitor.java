@@ -174,8 +174,8 @@ public class BaseVisitor implements Visitor {
   // TYPES
 
 //  public void visit (Type node) {}
-  public void visit (NominalType node) {}
-  public void visit (PrimitiveType node) {}
+  public void visit (NominalDeclarator node) {}
+  public void visit (PrimitiveDeclarator node) {}
   public void visit (RoutinePointerType node) {}
 
   public void visit (TemplateInstantiation node) {}

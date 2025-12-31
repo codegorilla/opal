@@ -174,8 +174,8 @@ public class BaseResultVisitor<T> implements ResultVisitor <T> {
   // TYPES
 
 //  public T visit (Type node) { return null; }
-  public T visit (NominalType node) { return null; }
-  public T visit (PrimitiveType node) { return null; }
+  public T visit (NominalDeclarator node) { return null; }
+  public T visit (PrimitiveDeclarator node) { return null; }
   public T visit (RoutinePointerType node) { return null; }
 
   public T visit (TemplateInstantiation node) { return null; }

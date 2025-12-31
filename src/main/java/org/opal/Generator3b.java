@@ -585,7 +585,7 @@ public class Generator3b extends BaseResultVisitor<ST> {
   }
   */
 
-  public ST visit (NominalType node) {
+  public ST visit (NominalDeclarator node) {
     var st = group.getInstanceOf("common/type/nominalType");
     st.add("name", node.getToken().getLexeme());
     return st;
@@ -629,7 +629,7 @@ public class Generator3b extends BaseResultVisitor<ST> {
   }
    */
 
-  public ST visit (PrimitiveType node) {
+  public ST visit (PrimitiveDeclarator node) {
     var st = group.getInstanceOf("common/type/primitiveType");
     st.add("name", node.getToken().getLexeme());
     return st;

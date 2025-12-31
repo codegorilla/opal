@@ -1,13 +1,12 @@
 package org.opal;
 
-import org.opal.error.Error;
+import org.opal.symbol.Scope;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -75,7 +74,10 @@ public class Translator {
     var pass1 = new Pass1(root);
     pass1.process();
 
-    var pass2 = new Pass2(root);
+    var pass10 = new Pass10(root);
+    pass10.process();
+
+    var pass2 = new Pass20(root);
     pass2.process();
 
     // Temporary exit

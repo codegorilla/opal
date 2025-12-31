@@ -3,82 +3,92 @@ package org.opal;
 import org.opal.ast.AstNode;
 import org.opal.ast.TranslationUnit;
 import org.opal.ast.declaration.*;
+import org.opal.ast.type.*;
+import org.opal.type.ArrayType;
+import org.opal.type.PointerType;
+import org.opal.type.Type;
+
 import java.util.LinkedList;
-import java.util.List;
 
-// The purpose of this pass is to create import declarations from use
-// declarations. This avoids an extra sub-pass during code generation.
+// The purpose of this pass is to annotate declarator/type AST nodes with type
+// expressions. This is not necessarily a type-checking pass though - that will
+// come later.
 
-public class Pass20 extends BaseResultVisitor<AstNode> {
+public class Pass20 extends BaseVisitor {
 
-  private final List<String> sourceLines;
+  private final LinkedList<Type> typeStack = new LinkedList<>();
 
-  // Stack for keeping track of current node path
-  private final LinkedList<AstNode> nodePath = new LinkedList<>();
-
-  public Pass20 (AstNode input, List<String> sourceLines) {
+  public Pass20 (AstNode input) {
     super(input);
-    this.sourceLines = sourceLines;
   }
 
-  @Override
-  public AstNode process () {
-    visit(root);
-    return null;
+  public void process () {
+    visit((TranslationUnit)root);
   }
 
-  public AstNode visit (AstNode node) {
-    nodePath.push(node);
-    var n = node.accept(this);
-    nodePath.pop();
-    return n;
+  public void visit (TranslationUnit node ) {
+    if (node.hasOtherDeclarations())
+      node.otherDeclarations().accept(this);
   }
 
-  @Override
-  public AstNode visit (TranslationUnit node) {
-    visit(node.declarations());
-    return null;
+  public void visit (OtherDeclarations node ) {
+    for (var otherDeclaration : node.children())
+      otherDeclaration.accept(this);
   }
 
-  @Override
-  public AstNode visit (Declarations node) {
-    visit(node.useDeclarations());
-    return null;
+  public void visit (VariableDeclaration node ) {
+    if (node.hasTypeSpecifier())
+      node.getTypeSpecifier().accept(this);
   }
 
-  // To do: Although the C++ standard allows multiple import declarations of
-  // the same module, we might want to avoid such duplication. One way to do
-  // this is to convert the qualified names to a string representation and then
-  // compare the strings to those of any existing qualified names. We could
-  // compare the hashes instead. Adding them to a set data structure may
-  // accomplish the same thing.
-
-  @Override
-  public AstNode visit (UseDeclarations node) {
-    var n = ((Declarations)nodePath.get(1)).importDeclarations();
-    for (var useDeclaration : node.getChildren())
-      n.addChild(visit(useDeclaration));
-    return null;
+  public void visit (VariableTypeSpecifier node ) {
+    node.getDeclarator().accept(this);
+    node.setType(typeStack.pop());
   }
 
-  @Override
-  public AstNode visit (UseDeclaration node) {
-    var n = new ImportDeclaration(null);
-    n.addChild(visit(node.qualifiedName()));
-    return n;
+  public void visit (Declarator node) {
+    node.getDirectDeclarator().accept(this);
+    node.getPointerDeclarators().accept(this);
+    node.getArrayDeclarators().accept(this);
   }
 
-  @Override
-  public AstNode visit (UseQualifiedName node) {
-    var n = new ImportQualifiedName();
-    for (var useName : node.getChildren())
-      n.addChild(visit(useName));
-    return n;
+  public void visit (ArrayDeclarators node) {
+    for (var arrayDeclarator : node.children())
+      arrayDeclarator.accept(this);
   }
 
-  @Override
-  public AstNode visit (UseName node) {
-    return new ImportName(node.getToken());
+  public void visit (ArrayDeclarator node) {
+    var t = new ArrayType();
+    t.setElementType(typeStack.pop());
+    // Hard code size for now. This will eventually just be a reference to an
+    // AST node representing the root of an expression sub-tree.
+    t.setSize(12);
+    typeStack.push(t);
   }
+
+  public void visit (NominalDeclarator node) {
+    var t = new org.opal.type.NominalType();
+    t.setString(node.getToken().getLexeme());
+    typeStack.push(t);
+  }
+
+  public void visit (PointerDeclarators node) {
+    for (var pointerDeclarator : node.children())
+      pointerDeclarator.accept(this);
+  }
+
+  public void visit (PointerDeclarator node) {
+    var t = new PointerType();
+    t.setPointeeType(typeStack.pop());
+    typeStack.push(t);
+  }
+
+  public void visit (PrimitiveDeclarator node) {
+    var t = new org.opal.type.PrimitiveType();
+    // Hard-code INT for now
+    t.setKind(org.opal.type.PrimitiveType.Kind.INT);
+    typeStack.push(t);
+  }
+
 
 }
