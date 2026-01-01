@@ -420,7 +420,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
       var st = group.getInstanceOf("common/declaration/functionDeclaration");
       if (node.modifiers().hasChildren())
         st.add("modifiers", visit(node.modifiers()));
-      st.add("name", visit(node.name()));
+      st.add("name", visit(node.getName()));
       st.add("parameters", visit(node.parameters()));
       if (node.hasNoexceptSpecifier())
         st.add("noexceptSpecifier", visit(node.noexceptSpecifier()));
@@ -434,7 +434,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
 
   public ST visit (RoutineModifiers node) {
     var st = group.getInstanceOf("common/declaration/functionModifiers");
-    for (var modifier : node.getModifiers()) {
+    for (var modifier : node.children()) {
       var kind = modifier.getToken().getKind();
       if (kind == Token.Kind.CONSTEXPR) {
         st.add("modifier", visit(modifier));

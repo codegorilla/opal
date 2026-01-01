@@ -46,8 +46,7 @@ public class Pass1 extends BaseVisitor {
       visit(node.importDeclarations());
     if (node.hasUseDeclarations())
       visit(node.useDeclarations());
-    if (node.hasOtherDeclarations())
-      visit(node.otherDeclarations());
+    visit(node.otherDeclarations());
   }
 
   // DECLARATIONS

@@ -58,8 +58,11 @@ public class Parser {
   // Used for symbol table operations. Cobalt requires a symbol table during
   // parsing in order to disambiguate a few grammar rules. We cannot wait until
   // the semantic analysis phase to begin constructing symbol tables.
-  private final Scope builtinScope;
-  private Scope currentScope;
+  // NOTE: We will probably just use a separate type table for parsing purposes
+  // and then discard the information. So the full symbol table won't exist until
+  // semantic analysis phases.
+//  private final Scope builtinScope;
+//  private Scope currentScope;
 
   // Reverse mapping from token-kind to string
   private final HashMap<Token.Kind, String> reverseLookup;
@@ -220,8 +223,6 @@ public class Parser {
     //stack = new LinkedList<>();
     nodeStack = new LinkedList<>();
     modifierStack = new LinkedList<>();
-    builtinScope = new Scope(Scope.Kind.BUILT_IN);
-    currentScope = builtinScope;
 
     var lookupTable = new LookupTable();
     reverseLookup = lookupTable.getReverseLookupTable();
@@ -405,7 +406,6 @@ public class Parser {
   }
 
   public AstNode process () {
-    definePrimitiveTypes();
     LOGGER.info("*** Parsing started... ***");
     var node = translationUnit();
     // EOF is the only token in the follow set of translationUnit. Must match
@@ -417,19 +417,6 @@ public class Parser {
 //    var s = builtinScope.getSymbolTable().getData;
 //    System.out.println(s);
     return node;
-  }
-
-  private void definePrimitiveTypes () {
-    builtinScope.define(new PrimitiveTypeSymbol("bool"));
-    builtinScope.define(new PrimitiveTypeSymbol("int"));
-    builtinScope.define(new PrimitiveTypeSymbol("int8"));
-    builtinScope.define(new PrimitiveTypeSymbol("int16"));
-    builtinScope.define(new PrimitiveTypeSymbol("int32"));
-    builtinScope.define(new PrimitiveTypeSymbol("int64"));
-    builtinScope.define(new PrimitiveTypeSymbol("float"));
-    builtinScope.define(new PrimitiveTypeSymbol("float32"));
-    builtinScope.define(new PrimitiveTypeSymbol("float64"));
-    builtinScope.define(new PrimitiveTypeSymbol("void"));
   }
 
   // TRANSLATION UNIT *********************************************************
@@ -979,13 +966,12 @@ public class Parser {
 
   // To do: Finish error recovery
 
-  private AstNode routineDeclaration (AstNode exportSpecifier) {
-    confirm(DEF);
-    var n = new RoutineDeclaration(mark2);
-    n.addChild(exportSpecifier);
-    n.addChild(routineModifiers());
-    match(Token.Kind.IDENTIFIER);
-    n.addChild(new RoutineName(mark2));
+  private AstNode routineDeclaration (ExportSpecifier exportSpecifier) {
+    var token = confirm(DEF);
+    var n = new RoutineDeclaration(token);
+    n.setExportSpecifier(exportSpecifier);
+    n.setModifiers(routineModifiers());
+    n.setName(routineName());
     n.addChild(routineParameters());
     if (kind == NOEXCEPT) {
       confirm(NOEXCEPT);
@@ -1002,13 +988,15 @@ public class Parser {
     return n;
   }
 
-  // Is this really deprecated?
+  private RoutineName routineName () {
+    var token = match(Token.Kind.IDENTIFIER);
+    return new RoutineName(token);
+  }
 
-  @Deprecated
-  private AstNode routineModifiers () {
+  private RoutineModifiers routineModifiers () {
     var n = new RoutineModifiers();
     while (!modifierStack.isEmpty())
-      n.addChild(modifierStack.pop());
+      n.addModifier(modifierStack.pop());
     return n;
   }
 

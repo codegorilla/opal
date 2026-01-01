@@ -4,19 +4,23 @@ import org.opal.ast.AstNode;
 import org.opal.ast.TranslationUnit;
 import org.opal.ast.declaration.*;
 import org.opal.ast.type.*;
+import org.opal.symbol.*;
 import org.opal.type.ArrayType;
 import org.opal.type.PointerType;
 import org.opal.type.Type;
 
 import java.util.LinkedList;
 
-// The purpose of this pass is to annotate declarator/type AST nodes with type
-// expressions. This is not necessarily a type-checking pass though - that will
-// come later.
+// The purpose of this pass is to add variable and routine symbols to the
+// symbol table. We don't want to try to resolve symbols in this pass because
+// we want to allow objects to be defined out of order.
 
 public class Pass20 extends BaseVisitor {
 
   private final LinkedList<Type> typeStack = new LinkedList<>();
+
+  // Built-in and global scopes were already created in previous pass
+  private Scope currentScope;
 
   public Pass20 (AstNode input) {
     super(input);
@@ -27,8 +31,16 @@ public class Pass20 extends BaseVisitor {
   }
 
   public void visit (TranslationUnit node ) {
-    if (node.hasOtherDeclarations())
-      node.otherDeclarations().accept(this);
+    currentScope = node.getScope();
+    node.otherDeclarations().accept(this);
+  }
+
+  public void visit (PackageDeclaration node) {
+    // Create package-level scope
+    var scope = new Scope(Scope.Kind.PACKAGE);
+    node.setScope(scope);
+    scope.setEnclosingScope(currentScope);
+    currentScope = scope;
   }
 
   public void visit (OtherDeclarations node ) {
@@ -37,57 +49,21 @@ public class Pass20 extends BaseVisitor {
   }
 
   public void visit (VariableDeclaration node ) {
-    if (node.hasTypeSpecifier())
-      node.getTypeSpecifier().accept(this);
+    node.getName().accept(this);
   }
 
-  public void visit (VariableTypeSpecifier node ) {
-    node.getDeclarator().accept(this);
-    node.setType(typeStack.pop());
+  public void visit (VariableName node) {
+    var symbol = new VariableSymbol(node.getToken().getLexeme());
+    currentScope.define(symbol);
   }
 
-  public void visit (Declarator node) {
-    node.getDirectDeclarator().accept(this);
-    node.getPointerDeclarators().accept(this);
-    node.getArrayDeclarators().accept(this);
+  public void visit (RoutineDeclaration node) {
+    node.getName().accept(this);
   }
 
-  public void visit (ArrayDeclarators node) {
-    for (var arrayDeclarator : node.children())
-      arrayDeclarator.accept(this);
-  }
-
-  public void visit (ArrayDeclarator node) {
-    var t = new ArrayType();
-    t.setElementType(typeStack.pop());
-    // Hard code size for now. This will eventually just be a reference to an
-    // AST node representing the root of an expression sub-tree.
-    t.setSize(12);
-    typeStack.push(t);
-  }
-
-  public void visit (NominalDeclarator node) {
-    var t = new org.opal.type.NominalType();
-    t.setString(node.getToken().getLexeme());
-    typeStack.push(t);
-  }
-
-  public void visit (PointerDeclarators node) {
-    for (var pointerDeclarator : node.children())
-      pointerDeclarator.accept(this);
-  }
-
-  public void visit (PointerDeclarator node) {
-    var t = new PointerType();
-    t.setPointeeType(typeStack.pop());
-    typeStack.push(t);
-  }
-
-  public void visit (PrimitiveDeclarator node) {
-    var t = new org.opal.type.PrimitiveType();
-    // Hard-code INT for now
-    t.setKind(org.opal.type.PrimitiveType.Kind.INT);
-    typeStack.push(t);
+  public void visit (RoutineName node) {
+    var symbol = new VariableSymbol(node.getToken().getLexeme());
+    currentScope.define(symbol);
   }
 
 

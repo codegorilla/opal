@@ -52,9 +52,12 @@ public class TranslationUnit extends AstNode {
     this.importDeclarations = importDeclarations;
   }
 
-  public boolean hasOtherDeclarations () {
-    return otherDeclarations != null;
-  }
+  // I think many of these has... declarations are no longer needed since
+  // switching to "items... item*" instead of "items?... item+"
+
+//  public boolean hasOtherDeclarations () {
+//    return otherDeclarations != null;
+//  }
 
   public OtherDeclarations otherDeclarations () {
     return otherDeclarations;

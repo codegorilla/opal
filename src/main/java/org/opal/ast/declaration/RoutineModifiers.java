@@ -4,7 +4,11 @@ import org.opal.ResultVisitor;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
+import java.util.LinkedList;
+
 public class RoutineModifiers extends AstNode {
+
+  private final LinkedList<Modifier> children = new LinkedList<>();
 
   public RoutineModifiers () {
     super();
@@ -20,8 +24,12 @@ public class RoutineModifiers extends AstNode {
     return v.visit(this);
   }
 
-  public Iterable<AstNode> getModifiers () {
-    return getChildren();
+  public Iterable<Modifier> children () {
+    return children;
+  }
+
+  public void addModifier (Modifier modifier) {
+    children.add(modifier);
   }
 
 }
