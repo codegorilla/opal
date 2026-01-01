@@ -218,9 +218,18 @@ public class Pass1 extends BaseVisitor {
     depth.decrement();
   }
 
+  public void visit (BinaryExpression node) {
+    depth.increment();
+    printNode(node);
+    node.getLeft().accept(this);
+    node.getRight().accept(this);
+    depth.decrement();
+  }
+
   public void visit (UnaryExpression node) {
     depth.increment();
     printNode(node);
+    // Shouldn't it always have a sub-expression?
     if (node.hasSubExpression())
       node.getSubExpression().accept(this);
     depth.decrement();

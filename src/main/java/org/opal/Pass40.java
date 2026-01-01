@@ -71,21 +71,37 @@ public class Pass40 extends BaseVisitor {
   // Just use 'instanceof' instead of visitor pattern
 
   public void visit (IntegerLiteral node) {
-      System.out.println("I32");
     var kind = node.getToken().getKind();
     if (kind == Token.Kind.INT32_LITERAL) {
       var symbol = currentScope.resolve("int32", true);
       if (symbol instanceof PrimitiveTypeSymbol) {
         var type = ((PrimitiveTypeSymbol)symbol).getType();
         node.setType(type);
+        System.out.println(type.getSymbol().getName());
         System.out.println(type);
       }
     } else if (kind == Token.Kind.INT64_LITERAL) {
-      System.out.println("I64");
       var symbol = currentScope.resolve("int64", true);
       if (symbol instanceof PrimitiveTypeSymbol) {
         var type = ((PrimitiveTypeSymbol) symbol).getType();
         node.setType(type);
+        System.out.println(type.getSymbol().getName());
+        System.out.println(type);
+      }
+    } else if (kind == Token.Kind.UINT32_LITERAL) {
+      var symbol = currentScope.resolve("uint32", true);
+      if (symbol instanceof PrimitiveTypeSymbol) {
+        var type = ((PrimitiveTypeSymbol)symbol).getType();
+        node.setType(type);
+        System.out.println(type.getSymbol().getName());
+        System.out.println(type);
+      }
+    } else if (kind == Token.Kind.UINT64_LITERAL) {
+      var symbol = currentScope.resolve("uint64", true);
+      if (symbol instanceof PrimitiveTypeSymbol) {
+        var type = ((PrimitiveTypeSymbol) symbol).getType();
+        node.setType(type);
+        System.out.println(type.getSymbol().getName());
         System.out.println(type);
       }
     }
