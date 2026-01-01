@@ -1,5 +1,8 @@
 package org.opal.symbol;
 
+import org.opal.ResultVisitor;
+import org.opal.SymbolVisitor;
+import org.opal.Visitor;
 import org.opal.type.PrimitiveType;
 
 public class PrimitiveTypeSymbol extends Symbol {
@@ -12,8 +15,15 @@ public class PrimitiveTypeSymbol extends Symbol {
     type.setSymbol(this);
   }
 
+  @Override
+  public void accept (SymbolVisitor v) {
+    v.visit(this);
+  }
+
   public PrimitiveType getType () {
     return type;
   }
+
+
 
 }

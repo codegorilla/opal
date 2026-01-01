@@ -8,6 +8,7 @@ import org.opal.ast.declaration.VariableInitializer;
 import org.opal.ast.declaration.VariableTypeSpecifier;
 import org.opal.ast.expression.*;
 import org.opal.ast.type.*;
+import org.opal.symbol.PrimitiveTypeSymbol;
 import org.opal.symbol.Scope;
 import org.opal.type.ArrayType;
 import org.opal.type.PointerType;
@@ -23,6 +24,8 @@ public class Pass40 extends BaseVisitor {
   private final LinkedList<Type> typeStack = new LinkedList<>();
 
   private Scope currentScope = null;
+
+  private BaseSymbolVisitor symbolVisitor = new BaseSymbolVisitor();
 
   public Pass40 (AstNode input) {
     super(input);
@@ -65,14 +68,27 @@ public class Pass40 extends BaseVisitor {
     node.getRight().accept(this);
   }
 
+  // Just use 'instanceof' instead of visitor pattern
+
   public void visit (IntegerLiteral node) {
+      System.out.println("I32");
     var kind = node.getToken().getKind();
     if (kind == Token.Kind.INT32_LITERAL) {
       var symbol = currentScope.resolve("int32", true);
-      // Now need to cast symbol to primitive symbol in order to retrieve type
-      // See if we can use a visitor for that.
+      if (symbol instanceof PrimitiveTypeSymbol) {
+        var type = ((PrimitiveTypeSymbol)symbol).getType();
+        node.setType(type);
+        System.out.println(type);
+      }
+    } else if (kind == Token.Kind.INT64_LITERAL) {
+      System.out.println("I64");
+      var symbol = currentScope.resolve("int64", true);
+      if (symbol instanceof PrimitiveTypeSymbol) {
+        var type = ((PrimitiveTypeSymbol) symbol).getType();
+        node.setType(type);
+        System.out.println(type);
+      }
     }
-
   }
 
 
