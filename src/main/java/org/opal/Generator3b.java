@@ -435,8 +435,8 @@ public class Generator3b extends BaseResultVisitor<ST> {
   public ST visit (BinaryExpression node) {
     var st = group.getInstanceOf("common/expression/binaryExpression");
     st.add("operation", node.getToken().getLexeme());
-    st.add("leftExpression",  visit(node.leftExpression()));
-    st.add("rightExpression", visit(node.rightExpression()));
+    st.add("leftExpression",  visit(node.getLeft()));
+    st.add("rightExpression", visit(node.getRight()));
     return st;
   }
 

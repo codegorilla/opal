@@ -7,6 +7,9 @@ import org.opal.ast.AstNode;
 
 public class BinaryExpression extends Expression {
 
+  private Expression left;
+  private Expression right;
+
   public BinaryExpression (Token token) {
     super(token);
   }
@@ -21,12 +24,30 @@ public class BinaryExpression extends Expression {
     return v.visit(this);
   }
 
-  public AstNode leftExpression () {
-    return getChild(0);
+//  public AstNode leftExpression () {
+//    return getChild(0);
+//  }
+//
+//  public AstNode rightExpression () {
+//    return getChild(1);
+//  }
+
+  public Expression getLeft () {
+    return left;
   }
 
-  public AstNode rightExpression () {
-    return getChild(1);
+  public Expression getRight () {
+    return right;
   }
+
+  public void setLeft (Expression expression) {
+    left = expression;
+  }
+
+  public void setRight (Expression expression) {
+    right = expression;
+  }
+
+
 
 }

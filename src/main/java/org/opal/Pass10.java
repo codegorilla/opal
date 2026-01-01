@@ -6,7 +6,7 @@ import org.opal.ast.declaration.*;
 import org.opal.ast.type.*;
 import org.opal.symbol.*;
 
-// The purpose of this pass is to add types to the symbol
+// The purpose of this pass is to add types to the symbol table.
 
 // Note: For now, this just adds built-in types. Other types can be added
 // later. They might be added in a separate pass, which will require traversing

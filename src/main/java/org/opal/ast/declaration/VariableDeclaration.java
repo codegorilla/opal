@@ -4,6 +4,7 @@ import org.opal.ResultVisitor;
 import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
+import org.opal.symbol.Scope;
 
 public class VariableDeclaration extends AstNode {
 
@@ -12,6 +13,9 @@ public class VariableDeclaration extends AstNode {
   private VariableName name = null;
   private VariableTypeSpecifier typeSpecifier = null;
   private VariableInitializer initializer = null;
+
+  // Attributes
+  private Scope scope = null;
 
   public VariableDeclaration (Token token) {
     super(token);

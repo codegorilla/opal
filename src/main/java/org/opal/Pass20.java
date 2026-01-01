@@ -52,6 +52,9 @@ public class Pass20 extends BaseVisitor {
     node.getName().accept(this);
   }
 
+  // Variable symbol should have a link to the AST node and AST node should
+  // have a link to the symbol. Why?
+
   public void visit (VariableName node) {
     var symbol = new VariableSymbol(node.getToken().getLexeme());
     currentScope.define(symbol);

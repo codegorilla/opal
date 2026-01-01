@@ -4,10 +4,14 @@ import org.opal.ResultVisitor;
 import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
+import org.opal.type.Type;
 
 public class Expression extends AstNode {
 
   private Expression subExpression = null;
+
+  // Attributes
+  private Type type = null;
 
   public Expression () {}
 
@@ -37,5 +41,12 @@ public class Expression extends AstNode {
     this.subExpression = subExpression;
   }
 
+  public Type getType () {
+    return type;
+  }
+
+  public void setType (Type type) {
+    this.type = type;
+  }
 
 }

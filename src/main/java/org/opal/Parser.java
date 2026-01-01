@@ -733,18 +733,22 @@ public class Parser {
   // CLASS DECLARATIONS
 
   private AstNode classDeclaration (AstNode exportSpecifier) {
-    confirm(CLASS);
-    var n = new ClassDeclaration(mark2);
+    var token = confirm(CLASS);
+    var n = new ClassDeclaration(token);
     n.addChild(exportSpecifier);
     n.addChild(classModifiers());
-    match(Token.Kind.IDENTIFIER);
-    n.addChild(new ClassName(mark2));
+    n.addChild(className());
     if (kind == EXTENDS)
       n.addChild(baseClasses(EnumSet.of(L_BRACE)));
     else
       n.addChild(EPSILON);
     n.addChild(classBody());
     return n;
+  }
+
+  private ClassName className () {
+    var token = match(Token.Kind.IDENTIFIER);
+    return new ClassName(token);
   }
 
   private AstNode classModifiers () {
@@ -761,12 +765,12 @@ public class Parser {
   private AstNode baseClasses (EnumSet<Token.Kind> syncSet) {
     confirm(EXTENDS);
     var n = new BaseClasses();
-    match(Token.Kind.IDENTIFIER);
-    n.addChild(new BaseClass(mark2));
+    var token = match(Token.Kind.IDENTIFIER);
+    n.addChild(new BaseClass(token));
     while (kind == COMMA) {
       confirm(COMMA);
-      match(Token.Kind.IDENTIFIER);
-      n.addChild(new BaseClass(mark2));
+      token = match(Token.Kind.IDENTIFIER);
+      n.addChild(new BaseClass(token));
     }
     return n;
   }
@@ -828,8 +832,8 @@ public class Parser {
       kind == VIRTUAL   ||
       kind == VOLATILE
     ) {
-      confirm(kind);
-      modifierStack.push(new Modifier(mark2));
+      var token = confirm(kind);
+      modifierStack.push(new Modifier(token));
     }
   }
 
@@ -1562,10 +1566,10 @@ public class Parser {
       kind == CARET_EQUAL ||
       kind == BAR_EQUAL
     ) {
-      confirm(kind);
-      var p = new BinaryExpression(mark2);
-      p.addChild(n);
-      p.addChild(logicalOrExpression());
+      var token = confirm(kind);
+      var p = new BinaryExpression(token);
+      p.setLeft(n);
+      p.setRight(logicalOrExpression());
       n = p;
     }
     return n;
@@ -1574,10 +1578,10 @@ public class Parser {
   private Expression logicalOrExpression () {
     var n = logicalAndExpression();
     while (kind == OR) {
-      confirm(OR);
-      var p = new BinaryExpression(mark2);
-      p.addChild(n);
-      p.addChild(logicalAndExpression());
+      var token = confirm(OR);
+      var p = new BinaryExpression(token);
+      p.setLeft(n);
+      p.setRight(logicalAndExpression());
       n = p;
     }
     return n;
@@ -1586,10 +1590,10 @@ public class Parser {
   private Expression logicalAndExpression () {
     var n = inclusiveOrExpression();
     while (kind == AND) {
-      confirm(AND);
-      var p = new BinaryExpression(mark2);
-      p.addChild(n);
-      p.addChild(inclusiveOrExpression());
+      var token = confirm(AND);
+      var p = new BinaryExpression(token);
+      p.setLeft(n);
+      p.setRight(inclusiveOrExpression());
       n = p;
     }
     return n;
@@ -1598,10 +1602,10 @@ public class Parser {
   private Expression inclusiveOrExpression () {
     var n = exclusiveOrExpression();
     while (kind == BAR) {
-      confirm(BAR);
-      var p = new BinaryExpression(mark2);
-      p.addChild(n);
-      p.addChild(exclusiveOrExpression());
+      var token = confirm(BAR);
+      var p = new BinaryExpression(token);
+      p.setLeft(n);
+      p.setRight(exclusiveOrExpression());
       n = p;
     }
     return n;
@@ -1610,10 +1614,10 @@ public class Parser {
   private Expression exclusiveOrExpression () {
     var n = andExpression();
     while (kind == CARET) {
-      confirm(CARET);
-      var p = new BinaryExpression(mark2);
-      p.addChild(n);
-      p.addChild(andExpression());
+      var token = confirm(CARET);
+      var p = new BinaryExpression(token);
+      p.setLeft(n);
+      p.setRight(andExpression());
       n = p;
     }
     return n;
@@ -1622,10 +1626,10 @@ public class Parser {
   private Expression andExpression () {
     var n = equalityExpression();
     while (kind == AMPERSAND) {
-      confirm(AMPERSAND);
-      var p = new BinaryExpression(mark2);
-      p.addChild(n);
-      p.addChild(equalityExpression());
+      var token = confirm(AMPERSAND);
+      var p = new BinaryExpression(token);
+      p.setLeft(n);
+      p.setRight(equalityExpression());
       n = p;
     }
     return n;
@@ -1634,10 +1638,10 @@ public class Parser {
   private Expression equalityExpression () {
     var n = relationalExpression();
     while (kind == EQUAL_EQUAL || kind == EXCLAMATION_EQUAL) {
-      confirm(kind);
-      var p = new BinaryExpression(mark2);
-      p.addChild(n);
-      p.addChild(relationalExpression());
+      var token = confirm(kind);
+      var p = new BinaryExpression(token);
+      p.setLeft(n);
+      p.setRight(relationalExpression());
       n = p;
     }
     return n;
@@ -1646,10 +1650,10 @@ public class Parser {
   private Expression relationalExpression () {
     var n = shiftExpression();
     while (kind == GREATER || kind == LESS || kind == GREATER_EQUAL || kind == LESS_EQUAL) {
-      confirm(kind);
-      var p = new BinaryExpression(mark2);
-      p.addChild(n);
-      p.addChild(shiftExpression());
+      var token = confirm(kind);
+      var p = new BinaryExpression(token);
+      p.setLeft(n);
+      p.setRight(shiftExpression());
       n = p;
     }
     return n;
@@ -1658,10 +1662,10 @@ public class Parser {
   private Expression shiftExpression () {
     var n = additiveExpression();
     while (kind == GREATER_GREATER || kind == LESS_LESS) {
-      confirm(kind);
-      var p = new BinaryExpression(mark2);
-      p.addChild(n);
-      p.addChild(additiveExpression());
+      var token = confirm(kind);
+      var p = new BinaryExpression(token);
+      p.setLeft(n);
+      p.setRight(additiveExpression());
       n = p;
     }
     return n;
@@ -1670,10 +1674,10 @@ public class Parser {
   private Expression additiveExpression () {
     var n = multiplicativeExpression();
     while (kind == PLUS || kind == MINUS) {
-      confirm(kind);
-      var p = new BinaryExpression(mark2);
-      p.addChild(n);
-      p.addChild(multiplicativeExpression());
+      var token = confirm(kind);
+      var p = new BinaryExpression(token);
+      p.setLeft(n);
+      p.setRight(multiplicativeExpression());
       n = p;
     }
     return n;
@@ -1683,10 +1687,10 @@ public class Parser {
     var n = unaryExpression();
     inSubExpression = true;
     while (kind == ASTERISK || kind == SLASH || kind == PERCENT) {
-      confirm(kind);
-      var p = new BinaryExpression(mark2);
-      p.addChild(n);
-      p.addChild(unaryExpression());
+      var token = confirm(kind);
+      var p = new BinaryExpression(token);
+      p.setLeft(n);
+      p.setRight(unaryExpression());
       n = p;
     }
     return n;
@@ -1701,8 +1705,8 @@ public class Parser {
   private Expression unaryExpression () {
     Expression n = null;
     if (kind == ASTERISK || kind == MINUS || kind == PLUS || kind == EXCLAMATION || kind == TILDE) {
-      confirm(kind);
-      n = new UnaryExpression(mark2);
+      var token = confirm(kind);
+      n = new UnaryExpression(token);
       n.setSubExpression(unaryExpression());
     } else if (kind == CAST || kind == DIVINE || kind == TRANSMUTE) {
       n = castExpression();
