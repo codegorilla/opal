@@ -63,9 +63,9 @@ public class Pass40 extends BaseVisitor {
     node.getSubExpression().accept(this);
   }
 
-  // There are a couple of differences in how promotions are handled between
+  // There are a couple of differences in how conversions are handled between
   // Opal and C++. First, booleans are not considered arithmetic types and
-  // cannot be promoted to arithmetic types. Second, small integral types
+  // cannot be converted to arithmetic types. Second, small integral types
   // (int8, int16, uint8, and uint16) are always promoted to int32, and never
   // uint32. Lastly, after promotion, no implicit conversion between signed and
   // unsigned types is allowed.
@@ -74,7 +74,8 @@ public class Pass40 extends BaseVisitor {
   // certain binary and unary expressions, not all. For example, it is not done
   // for the (unary) pointer dereference operator.
 
-  // To do: Floating point operations
+  // For usual arithmetic conversions, see the following reference:
+  // https://en.cppreference.com/w/cpp/language/usual_arithmetic_conversions.html
 
   public void visit (BinaryExpression node) {
     System.out.println("BIN EXPR");
@@ -82,83 +83,88 @@ public class Pass40 extends BaseVisitor {
     node.getRight().accept(this);
     var leftType = node.getLeft().getType();
     var rightType = node.getRight().getType();
-    // Step 1: Convert integral type to floating point type if required
-    if (isFloatingPoint(leftType) && isIntegral(rightType)) {
-      var convertNode = new ImplicitConvertExpression();
-      convertNode.setType(leftType);
-      convertNode.setOperand(node.getRight());
-      node.setRight(convertNode);
-      node.setType(leftType);
-    } else if (isIntegral(leftType) && isFloatingPoint(rightType)) {
-      var convertNode = new ImplicitConvertExpression();
-      convertNode.setType(rightType);
-      convertNode.setOperand(node.getLeft());
-      node.setLeft(convertNode);
-      node.setType(rightType);
-    } else if (isFloatingPoint(leftType) && isFloatingPoint(rightType)) {
-      // Compare ranks
-    } else {
-
-    }
-
-//    else {
-//      // Step 2: Promote small integral types to int32 if required
-//
-//    }
-
-
-    // All signed and unsigned small integers (int8, int16, uint8, and uint16)
-    // are promoted to signed int (int32) before any operations are performed.
-    if (
-      leftType == PrimitiveType.INT8   ||
-      leftType == PrimitiveType.INT16  ||
-      leftType == PrimitiveType.UINT8  ||
-      leftType == PrimitiveType.UINT16
-    ) {
-      var promoteNode = new ImplicitPromoteExpression();
-      promoteNode.setType(PrimitiveType.INT32);
-      promoteNode.setOperand(node.getLeft());
-      node.setLeft(promoteNode);
-      leftType = promoteNode.getType();
-    }
-    if (
-      rightType == PrimitiveType.INT8   ||
-      rightType == PrimitiveType.INT16  ||
-      rightType == PrimitiveType.UINT8  ||
-      rightType == PrimitiveType.UINT16
-    ) {
-      var promoteNode = new ImplicitPromoteExpression();
-      promoteNode.setType(PrimitiveType.INT32);
-      promoteNode.setOperand(node.getRight());
-      node.setRight(promoteNode);
-      rightType = promoteNode.getType();
-    }
-    if (leftType == rightType) {
-      node.setType(leftType);
-    } else {
-      // To do: Need to check float
-      var leftSigned = isSigned(leftType);
-      var rightSigned = isSigned(rightType);
-      var leftRank = computeRank(leftType);
-      var rightRank = computeRank(rightType);
-      if (leftSigned == rightSigned) {
-        // Same signedness: convert smaller rank to larger rank
+    if (isFloatingPoint(leftType) && isFloatingPoint(rightType)) {
+      if (leftType == rightType) {
+        // No conversion required
+        node.setType(leftType);
+      } else {
+        // Convert operand with lower rank to type of other operand
+        var leftRank = computeRank(leftType);
+        var rightRank = computeRank(rightType);
         if (leftRank < rightRank) {
+          // Convert left operand to type of right operand
           var convertNode = new ImplicitConvertExpression();
           convertNode.setType(rightType);
           convertNode.setOperand(node.getLeft());
           node.setLeft(convertNode);
           node.setType(convertNode.getType());
-        } else if (rightRank < leftRank) {
+        } else if (leftRank > rightRank) {
+          // Convert right operand to type of left operand
           var convertNode = new ImplicitConvertExpression();
           convertNode.setType(leftType);
           convertNode.setOperand(node.getRight());
           node.setRight(convertNode);
           node.setType(convertNode.getType());
         }
+      }
+    } else if (isIntegral(leftType) && isFloatingPoint(rightType)) {
+      // Convert left operand to type of right operand
+      var convertNode = new ImplicitConvertExpression();
+      convertNode.setType(rightType);
+      convertNode.setOperand(node.getLeft());
+      node.setLeft(convertNode);
+      node.setType(convertNode.getType());
+    } else if (isFloatingPoint(leftType) && isIntegral(rightType)) {
+      // Convert right operand to type of left operand
+      var convertNode = new ImplicitConvertExpression();
+      convertNode.setType(leftType);
+      convertNode.setOperand(node.getRight());
+      node.setRight(convertNode);
+      node.setType(convertNode.getType());
+    } else if (isIntegral(leftType) && isIntegral(rightType)) {
+      // Both operands are of integral type. All small integers (signed or not)
+      // are promoted to type int32 before any other operations are performed.
+      if (isSmall(leftType)) {
+        var promoteNode = new ImplicitPromoteExpression();
+        promoteNode.setType(PrimitiveType.INT32);
+        promoteNode.setOperand(node.getLeft());
+        node.setLeft(promoteNode);
+        leftType = promoteNode.getType();
+      }
+      if (isSmall(rightType)) {
+        var promoteNode = new ImplicitPromoteExpression();
+        promoteNode.setType(PrimitiveType.INT32);
+        promoteNode.setOperand(node.getRight());
+        node.setRight(promoteNode);
+        rightType = promoteNode.getType();
+      }
+      if (leftType == rightType) {
+        // No conversion required
+        node.setType(leftType);
       } else {
-        // Different signedness: no implicit conversion permitted
-        System.out.println("semantic error: implicit conversion between signed and unsigned types");
+        if (isSigned(leftType) == isSigned(rightType)) {
+          // Convert operand with lower rank to type of other operand
+          var leftRank = computeRank(leftType);
+          var rightRank = computeRank(rightType);
+          if (leftRank < rightRank) {
+            // Convert left operand to type of right operand
+            var convertNode = new ImplicitConvertExpression();
+            convertNode.setType(rightType);
+            convertNode.setOperand(node.getLeft());
+            node.setLeft(convertNode);
+            node.setType(convertNode.getType());
+          } else if (leftRank > rightRank) {
+            // Convert right operand to type of left operand
+            var convertNode = new ImplicitConvertExpression();
+            convertNode.setType(leftType);
+            convertNode.setOperand(node.getRight());
+            node.setRight(convertNode);
+            node.setType(convertNode.getType());
+          }
+        } else {
+          // Different signedness: no implicit conversion permitted
+          System.out.println("semantic error: implicit conversion between signed and unsigned types");
+        }
       }
     }
   }
@@ -193,6 +199,15 @@ public class Pass40 extends BaseVisitor {
       type == PrimitiveType.INT16 ||
       type == PrimitiveType.INT32 ||
       type == PrimitiveType.INT64
+    );
+  }
+
+  public boolean isSmall (Type type) {
+    return (
+      type == PrimitiveType.INT8   ||
+      type == PrimitiveType.INT16  ||
+      type == PrimitiveType.UINT8  ||
+      type == PrimitiveType.UINT16
     );
   }
 
