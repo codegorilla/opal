@@ -1,3 +1,9 @@
 package org.opal.type;
 
-public abstract class Type {}
+import org.opal.Visitor;
+
+public abstract class Type {
+
+  public abstract void accept (TypeVisitor v);
+
+}

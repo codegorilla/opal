@@ -56,6 +56,8 @@ public class Token {
     error = true;
   }
 
+  // What is the 32 for?
+
   public String toString () {
     return new StringBuilder(32)
         .append("Token(")

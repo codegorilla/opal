@@ -4,6 +4,7 @@ import org.opal.ast.*;
 import org.opal.ast.declaration.*;
 import org.opal.ast.expression.*;
 import org.opal.ast.type.*;
+import org.opal.type.PrintTypeVisitor;
 
 // The purpose of this pass is to print the AST
 
@@ -36,7 +37,18 @@ public class Pass1 extends BaseVisitor {
     var token = node.getToken();
     var error = (token != null && token.getError());
     var e = (error ? "(error) " : "");
-    System.out.println(spaces + "- " + e + className + (token != null ? ": " + token : ""));
+    System.out.println(spaces + "* " + e + className + (token != null ? ": " + token : ""));
+  }
+
+  public void printExpressionNode (Expression node) {
+    var INDENT_SPACES = 2;
+    var spaces = " ".repeat(INDENT_SPACES * depth.get());
+    var className = node.getClass().getSimpleName();
+    var token = node.getToken();
+    var type = node.getType();
+    var error = (token != null && token.getError());
+    var e = (error ? "(error) " : "");
+    System.out.println(spaces + "* " + e + className + (token != null ? ": " + token : "") + " -> " + type);
   }
 
   public void visit (TranslationUnit node ) {
@@ -220,7 +232,7 @@ public class Pass1 extends BaseVisitor {
 
   public void visit (BinaryExpression node) {
     depth.increment();
-    printNode(node);
+    printExpressionNode(node);
     node.getLeft().accept(this);
     node.getRight().accept(this);
     depth.decrement();
@@ -235,21 +247,28 @@ public class Pass1 extends BaseVisitor {
     depth.decrement();
   }
 
+  public void visit (ImplicitConvertExpression node) {
+    depth.increment();
+    printExpressionNode(node);
+    node.getOperand().accept(this);
+    depth.decrement();
+  }
+
   public void visit (FloatingPointLiteral node) {
     depth.increment();
-    printNode(node);
+    printExpressionNode(node);
     depth.decrement();
   }
 
   public void visit (IntegerLiteral node) {
     depth.increment();
-    printNode(node);
+    printExpressionNode(node);
     depth.decrement();
   }
 
   public void visit (UnsignedIntegerLiteral node) {
     depth.increment();
-    printNode(node);
+    printExpressionNode(node);
     depth.decrement();
   }
 

@@ -84,6 +84,9 @@ public class Translator {
     var pass40 = new Pass40(root);
     pass40.process();
 
+    pass1.process();
+
+
 //    var pass2 = new Pass30(root);
 //    pass2.process();
 

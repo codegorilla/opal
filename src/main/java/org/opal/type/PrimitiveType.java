@@ -4,36 +4,42 @@ import org.opal.symbol.Symbol;
 
 public class PrimitiveType extends Type {
 
-  private PrimitiveType.Kind kind;
+  private String text;
 
   private Symbol symbol;
 
-  public static final PrimitiveType BOOL    = new PrimitiveType();
-  public static final PrimitiveType FLOAT   = new PrimitiveType();
-  public static final PrimitiveType FLOAT32 = new PrimitiveType();
-  public static final PrimitiveType FLOAT64 = new PrimitiveType();
-  public static final PrimitiveType INT     = new PrimitiveType();
-  public static final PrimitiveType INT8    = new PrimitiveType();
-  public static final PrimitiveType INT16   = new PrimitiveType();
-  public static final PrimitiveType INT32   = new PrimitiveType();
-  public static final PrimitiveType INT64   = new PrimitiveType();
-  public static final PrimitiveType UINT    = new PrimitiveType();
-  public static final PrimitiveType UINT8   = new PrimitiveType();
-  public static final PrimitiveType UINT16  = new PrimitiveType();
-  public static final PrimitiveType UINT32  = new PrimitiveType();
-  public static final PrimitiveType UINT64  = new PrimitiveType();
-  public static final PrimitiveType VOID  = new PrimitiveType();
+  public static final PrimitiveType BOOL    = new PrimitiveType("bool");
+  public static final PrimitiveType FLOAT   = new PrimitiveType("float");
+  public static final PrimitiveType FLOAT32 = new PrimitiveType("float32");
+  public static final PrimitiveType FLOAT64 = new PrimitiveType("float64");
+  public static final PrimitiveType INT     = new PrimitiveType("int");
+  public static final PrimitiveType INT8    = new PrimitiveType("int8");
+  public static final PrimitiveType INT16   = new PrimitiveType("int16");
+  public static final PrimitiveType INT32   = new PrimitiveType("int32");
+  public static final PrimitiveType INT64   = new PrimitiveType("int64");
+  public static final PrimitiveType UINT     = new PrimitiveType("uint");
+  public static final PrimitiveType UINT8    = new PrimitiveType("uint8");
+  public static final PrimitiveType UINT16   = new PrimitiveType("uint16");
+  public static final PrimitiveType UINT32   = new PrimitiveType("uint32");
+  public static final PrimitiveType UINT64   = new PrimitiveType("uint64");
+  public static final PrimitiveType VOID  = new PrimitiveType("void");
 
-  public PrimitiveType () {
+  public PrimitiveType (String text) {
     super();
+    this.text = text;
   }
 
-  public PrimitiveType.Kind getKind () {
-    return kind;
+  @Override
+  public void accept (TypeVisitor v) {
+    v.visit(this);
   }
 
-  public void setKind (PrimitiveType.Kind kind) {
-    this.kind = kind;
+  public String getText () {
+    return text;
+  }
+
+  public void setText (String text) {
+    this.text = text;
   }
 
   public Symbol getSymbol () {
@@ -44,9 +50,8 @@ public class PrimitiveType extends Type {
     this.symbol = symbol;
   }
 
-  public enum Kind {
-    BOOL,
-    INT,
-    FLOAT
+  public String toString () {
+    return text;
   }
+
 }

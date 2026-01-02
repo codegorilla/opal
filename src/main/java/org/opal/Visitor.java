@@ -139,6 +139,10 @@ public interface Visitor {
   public void visit (RoutineArgument node);
   public void visit (ArraySubscript node);
 
+  // Implicit operations
+  public void visit (ImplicitConvertExpression node);
+  public void visit (ImplicitPromoteExpression node);
+
   // Literals
   public void visit (BooleanLiteral node);
   public void visit (CharacterLiteral node);

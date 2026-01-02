@@ -83,9 +83,9 @@ public class Pass30 extends BaseVisitor {
   }
 
   public void visit (PrimitiveDeclarator node) {
-    var t = new org.opal.type.PrimitiveType();
+    var t = new org.opal.type.PrimitiveType("INT");
     // Hard-code INT for now
-    t.setKind(org.opal.type.PrimitiveType.Kind.INT);
+    t.setText("INT");
     typeStack.push(t);
   }
 

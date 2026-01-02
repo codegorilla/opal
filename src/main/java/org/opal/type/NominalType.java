@@ -10,6 +10,11 @@ public class NominalType extends Type {
     super();
   }
 
+  @Override
+  public void accept (TypeVisitor v) {
+    v.visit(this);
+  }
+
   public String getString () {
     return string;
   }

@@ -1,5 +1,7 @@
 package org.opal.type;
 
+import org.opal.Visitor;
+
 public class ArrayType extends Type {
 
   private Type elementType = null;
@@ -10,6 +12,11 @@ public class ArrayType extends Type {
 
   public ArrayType () {
     super();
+  }
+
+  @Override
+  public void accept (TypeVisitor v) {
+    v.visit(this);
   }
 
   public Type getElementType () {

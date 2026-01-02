@@ -74,6 +74,8 @@ public class Pass40 extends BaseVisitor {
   // certain binary and unary expressions, not all. For example, it is not done
   // for the (unary) pointer dereference operator.
 
+  // To do: Floating point operations
+
   public void visit (BinaryExpression node) {
     System.out.println("BIN EXPR");
     node.getLeft().accept(this);
@@ -109,6 +111,7 @@ public class Pass40 extends BaseVisitor {
     if (leftType == rightType) {
       node.setType(leftType);
     } else {
+      // To do: Need to check float
       var leftSigned = computeSignedness(leftType);
       var rightSigned = computeSignedness(rightType);
       var leftRank = computeRank(leftType);
@@ -133,7 +136,6 @@ public class Pass40 extends BaseVisitor {
         System.out.println("semantic error: implicit conversion between signed and unsigned types");
       }
     }
-    System.out.println(node.getType());
   }
 
   public boolean computeSignedness (Type type) {
@@ -141,7 +143,15 @@ public class Pass40 extends BaseVisitor {
   }
 
   public int computeRank (Type type) {
-    return (type == PrimitiveType.INT32) ? 32 : 64;
+    return (type == PrimitiveType.INT32 || type == PrimitiveType.UINT32) ? 32 : 64;
+  }
+
+  public void visit (FloatingPointLiteral node) {
+    var kind = node.getToken().getKind();
+    if (kind == Token.Kind.FLOAT32_LITERAL)
+      node.setType(PrimitiveType.FLOAT32);
+    else if (kind == Token.Kind.FLOAT64_LITERAL)
+      node.setType(PrimitiveType.FLOAT64);
   }
 
   public void visit (IntegerLiteral node) {

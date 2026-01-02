@@ -138,6 +138,10 @@ public interface ResultVisitor <T> {
   public T visit (RoutineArgument node);
   public T visit (ArraySubscript node);
 
+  // Implicit operations
+  public T visit (ImplicitConvertExpression node);
+  public T visit (ImplicitPromoteExpression node);
+
   // Literals
   public T visit (BooleanLiteral node);
   public T visit (CharacterLiteral node);

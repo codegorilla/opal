@@ -8,6 +8,11 @@ public class PointerType extends Type {
     super();
   }
 
+  @Override
+  public void accept (TypeVisitor v) {
+    v.visit(this);
+  }
+
   public Type getPointeeType () {
     return pointeeType;
   }

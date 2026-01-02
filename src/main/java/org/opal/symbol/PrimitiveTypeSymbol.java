@@ -9,12 +9,6 @@ public class PrimitiveTypeSymbol extends Symbol {
 
   private final PrimitiveType type;
 
-  public PrimitiveTypeSymbol (String name) {
-    super(name);
-    type = new PrimitiveType();
-    type.setSymbol(this);
-  }
-
   public PrimitiveTypeSymbol (String name, PrimitiveType type) {
     super(name);
     this.type = type;

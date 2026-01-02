@@ -146,6 +146,10 @@ public class BaseResultVisitor<T> implements ResultVisitor <T> {
   public T visit (RoutineArgument node) { return null; }
   public T visit (ArraySubscript node) { return null; }
 
+  // Implicit operations
+  public T visit (ImplicitConvertExpression node) { return null; }
+  public T visit (ImplicitPromoteExpression node) { return null; }
+
   // Literals
   public T visit (BooleanLiteral node) { return null; }
   public T visit (CharacterLiteral node) { return null; }
