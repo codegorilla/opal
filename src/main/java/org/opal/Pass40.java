@@ -82,6 +82,31 @@ public class Pass40 extends BaseVisitor {
     node.getRight().accept(this);
     var leftType = node.getLeft().getType();
     var rightType = node.getRight().getType();
+    // Step 1: Convert integral type to floating point type if required
+    if (isFloatingPoint(leftType) && isIntegral(rightType)) {
+      var convertNode = new ImplicitConvertExpression();
+      convertNode.setType(leftType);
+      convertNode.setOperand(node.getRight());
+      node.setRight(convertNode);
+      node.setType(leftType);
+    } else if (isIntegral(leftType) && isFloatingPoint(rightType)) {
+      var convertNode = new ImplicitConvertExpression();
+      convertNode.setType(rightType);
+      convertNode.setOperand(node.getLeft());
+      node.setLeft(convertNode);
+      node.setType(rightType);
+    } else if (isFloatingPoint(leftType) && isFloatingPoint(rightType)) {
+      // Compare ranks
+    } else {
+
+    }
+
+//    else {
+//      // Step 2: Promote small integral types to int32 if required
+//
+//    }
+
+
     // All signed and unsigned small integers (int8, int16, uint8, and uint16)
     // are promoted to signed int (int32) before any operations are performed.
     if (
@@ -112,8 +137,8 @@ public class Pass40 extends BaseVisitor {
       node.setType(leftType);
     } else {
       // To do: Need to check float
-      var leftSigned = computeSignedness(leftType);
-      var rightSigned = computeSignedness(rightType);
+      var leftSigned = isSigned(leftType);
+      var rightSigned = isSigned(rightType);
       var leftRank = computeRank(leftType);
       var rightRank = computeRank(rightType);
       if (leftSigned == rightSigned) {
@@ -138,8 +163,37 @@ public class Pass40 extends BaseVisitor {
     }
   }
 
-  public boolean computeSignedness (Type type) {
-    return type == PrimitiveType.INT32 || type == PrimitiveType.INT64;
+  public boolean isFloatingPoint (Type type) {
+    return (
+      type == PrimitiveType.FLOAT   ||
+      type == PrimitiveType.FLOAT32 ||
+      type == PrimitiveType.FLOAT64
+    );
+  }
+
+  public boolean isIntegral (Type type) {
+    return (
+      type == PrimitiveType.INT    ||
+      type == PrimitiveType.INT8   ||
+      type == PrimitiveType.INT16  ||
+      type == PrimitiveType.INT32  ||
+      type == PrimitiveType.INT64  ||
+      type == PrimitiveType.UINT   ||
+      type == PrimitiveType.UINT8  ||
+      type == PrimitiveType.UINT16 ||
+      type == PrimitiveType.UINT32 ||
+      type == PrimitiveType.UINT64
+    );
+  }
+
+  public boolean isSigned (Type type) {
+    return (
+      type == PrimitiveType.INT   ||
+      type == PrimitiveType.INT8  ||
+      type == PrimitiveType.INT16 ||
+      type == PrimitiveType.INT32 ||
+      type == PrimitiveType.INT64
+    );
   }
 
   public int computeRank (Type type) {
