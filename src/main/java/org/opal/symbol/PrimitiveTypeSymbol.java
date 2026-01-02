@@ -15,6 +15,13 @@ public class PrimitiveTypeSymbol extends Symbol {
     type.setSymbol(this);
   }
 
+  public PrimitiveTypeSymbol (String name, PrimitiveType type) {
+    super(name);
+    this.type = type;
+    // Not sure if we actually need a link back or not
+    type.setSymbol(this);
+  }
+
   @Override
   public void accept (SymbolVisitor v) {
     v.visit(this);

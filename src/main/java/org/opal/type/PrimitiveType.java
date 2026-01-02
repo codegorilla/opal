@@ -8,6 +8,22 @@ public class PrimitiveType extends Type {
 
   private Symbol symbol;
 
+  public static final PrimitiveType BOOL    = new PrimitiveType();
+  public static final PrimitiveType FLOAT   = new PrimitiveType();
+  public static final PrimitiveType FLOAT32 = new PrimitiveType();
+  public static final PrimitiveType FLOAT64 = new PrimitiveType();
+  public static final PrimitiveType INT     = new PrimitiveType();
+  public static final PrimitiveType INT8    = new PrimitiveType();
+  public static final PrimitiveType INT16   = new PrimitiveType();
+  public static final PrimitiveType INT32   = new PrimitiveType();
+  public static final PrimitiveType INT64   = new PrimitiveType();
+  public static final PrimitiveType UINT    = new PrimitiveType();
+  public static final PrimitiveType UINT8   = new PrimitiveType();
+  public static final PrimitiveType UINT16  = new PrimitiveType();
+  public static final PrimitiveType UINT32  = new PrimitiveType();
+  public static final PrimitiveType UINT64  = new PrimitiveType();
+  public static final PrimitiveType VOID  = new PrimitiveType();
+
   public PrimitiveType () {
     super();
   }

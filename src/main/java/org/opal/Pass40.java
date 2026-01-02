@@ -12,6 +12,7 @@ import org.opal.symbol.PrimitiveTypeSymbol;
 import org.opal.symbol.Scope;
 import org.opal.type.ArrayType;
 import org.opal.type.PointerType;
+import org.opal.type.PrimitiveType;
 import org.opal.type.Type;
 
 import java.util.LinkedList;
@@ -62,49 +63,101 @@ public class Pass40 extends BaseVisitor {
     node.getSubExpression().accept(this);
   }
 
+  // There are a couple of differences in how promotions are handled between
+  // Opal and C++. First, booleans are not considered arithmetic types and
+  // cannot be promoted to arithmetic types. Second, small integral types
+  // (int8, int16, uint8, and uint16) are always promoted to int32, and never
+  // uint32. Lastly, after promotion, no implicit conversion between signed and
+  // unsigned types is allowed.
+
+  // To do: Note that the integer promotions and conversions are only done for
+  // certain binary and unary expressions, not all. For example, it is not done
+  // for the (unary) pointer dereference operator.
+
   public void visit (BinaryExpression node) {
     System.out.println("BIN EXPR");
     node.getLeft().accept(this);
     node.getRight().accept(this);
+    var leftType = node.getLeft().getType();
+    var rightType = node.getRight().getType();
+    // All signed and unsigned small integers (int8, int16, uint8, and uint16)
+    // are promoted to signed int (int32) before any operations are performed.
+    if (
+      leftType == PrimitiveType.INT8   ||
+      leftType == PrimitiveType.INT16  ||
+      leftType == PrimitiveType.UINT8  ||
+      leftType == PrimitiveType.UINT16
+    ) {
+      var promoteNode = new ImplicitPromoteExpression();
+      promoteNode.setType(PrimitiveType.INT32);
+      promoteNode.setOperand(node.getLeft());
+      node.setLeft(promoteNode);
+      leftType = promoteNode.getType();
+    }
+    if (
+      rightType == PrimitiveType.INT8   ||
+      rightType == PrimitiveType.INT16  ||
+      rightType == PrimitiveType.UINT8  ||
+      rightType == PrimitiveType.UINT16
+    ) {
+      var promoteNode = new ImplicitPromoteExpression();
+      promoteNode.setType(PrimitiveType.INT32);
+      promoteNode.setOperand(node.getRight());
+      node.setRight(promoteNode);
+      rightType = promoteNode.getType();
+    }
+    if (leftType == rightType) {
+      node.setType(leftType);
+    } else {
+      var leftSigned = computeSignedness(leftType);
+      var rightSigned = computeSignedness(rightType);
+      var leftRank = computeRank(leftType);
+      var rightRank = computeRank(rightType);
+      if (leftSigned == rightSigned) {
+        // Same signedness: convert smaller rank to larger rank
+        if (leftRank < rightRank) {
+          var convertNode = new ImplicitConvertExpression();
+          convertNode.setType(rightType);
+          convertNode.setOperand(node.getLeft());
+          node.setLeft(convertNode);
+          node.setType(convertNode.getType());
+        } else if (rightRank < leftRank) {
+          var convertNode = new ImplicitConvertExpression();
+          convertNode.setType(leftType);
+          convertNode.setOperand(node.getRight());
+          node.setRight(convertNode);
+          node.setType(convertNode.getType());
+        }
+      } else {
+        // Different signedness: no implicit conversion permitted
+        System.out.println("semantic error: implicit conversion between signed and unsigned types");
+      }
+    }
+    System.out.println(node.getType());
   }
 
-  // Just use 'instanceof' instead of visitor pattern
+  public boolean computeSignedness (Type type) {
+    return type == PrimitiveType.INT32 || type == PrimitiveType.INT64;
+  }
+
+  public int computeRank (Type type) {
+    return (type == PrimitiveType.INT32) ? 32 : 64;
+  }
 
   public void visit (IntegerLiteral node) {
     var kind = node.getToken().getKind();
-    if (kind == Token.Kind.INT32_LITERAL) {
-      var symbol = currentScope.resolve("int32", true);
-      if (symbol instanceof PrimitiveTypeSymbol) {
-        var type = ((PrimitiveTypeSymbol)symbol).getType();
-        node.setType(type);
-        System.out.println(type.getSymbol().getName());
-        System.out.println(type);
-      }
-    } else if (kind == Token.Kind.INT64_LITERAL) {
-      var symbol = currentScope.resolve("int64", true);
-      if (symbol instanceof PrimitiveTypeSymbol) {
-        var type = ((PrimitiveTypeSymbol) symbol).getType();
-        node.setType(type);
-        System.out.println(type.getSymbol().getName());
-        System.out.println(type);
-      }
-    } else if (kind == Token.Kind.UINT32_LITERAL) {
-      var symbol = currentScope.resolve("uint32", true);
-      if (symbol instanceof PrimitiveTypeSymbol) {
-        var type = ((PrimitiveTypeSymbol)symbol).getType();
-        node.setType(type);
-        System.out.println(type.getSymbol().getName());
-        System.out.println(type);
-      }
-    } else if (kind == Token.Kind.UINT64_LITERAL) {
-      var symbol = currentScope.resolve("uint64", true);
-      if (symbol instanceof PrimitiveTypeSymbol) {
-        var type = ((PrimitiveTypeSymbol) symbol).getType();
-        node.setType(type);
-        System.out.println(type.getSymbol().getName());
-        System.out.println(type);
-      }
-    }
+    if (kind == Token.Kind.INT32_LITERAL)
+      node.setType(PrimitiveType.INT32);
+    else if (kind == Token.Kind.INT64_LITERAL)
+      node.setType(PrimitiveType.INT64);
+  }
+
+  public void visit (UnsignedIntegerLiteral node) {
+    var kind = node.getToken().getKind();
+    if (kind == Token.Kind.UINT32_LITERAL)
+      node.setType(PrimitiveType.UINT32);
+    else if (kind == Token.Kind.UINT64_LITERAL)
+      node.setType(PrimitiveType.UINT64);
   }
 
 

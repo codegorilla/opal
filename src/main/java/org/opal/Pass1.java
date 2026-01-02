@@ -247,7 +247,7 @@ public class Pass1 extends BaseVisitor {
     depth.decrement();
   }
 
-  public void visit (BogusExpression node) {
+  public void visit (UnsignedIntegerLiteral node) {
     depth.increment();
     printNode(node);
     depth.decrement();

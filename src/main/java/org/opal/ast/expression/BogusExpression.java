@@ -7,6 +7,10 @@ import org.opal.ast.type.Declarator;
 
 // Not sure if we really need to capture a token or not
 
+// I don't think we will be using bogus expression nodes. (Might not use bogus
+// nodes at all.)
+
+@ Deprecated
 public class BogusExpression extends Expression {
 
   public BogusExpression (Token token) {
