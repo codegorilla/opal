@@ -7,16 +7,22 @@ import org.opal.symbol.Scope;
 
 public class TranslationUnit extends AstNode {
 
-  // Child nodes
+  // CHILD NODE FIELDS
+
   private PackageDeclaration packageDeclaration = null;
   private ImportDeclarations importDeclarations = null;
   private UseDeclarations useDeclarations = null;
   private OtherDeclarations otherDeclarations = null;
 
-  // Attributes
+  // ATTRIBUTE FIELDS
 
   // Built-in scope
   private Scope scope;
+
+  // Global scope
+  private Scope globalScope;
+
+  // STANDARD METHODS
 
   public TranslationUnit () {
     super();
@@ -32,58 +38,41 @@ public class TranslationUnit extends AstNode {
     return v.visit(this);
   }
 
-  public PackageDeclaration packageDeclaration () {
+  // CHILD NODE METHODS
+
+  public ImportDeclarations getImportDeclarations () {
+    return importDeclarations;
+  }
+
+  public OtherDeclarations getOtherDeclarations () {
+    return otherDeclarations;
+  }
+
+  public PackageDeclaration getPackageDeclaration () {
     return packageDeclaration;
   }
 
-  public void setPackageDeclaration (PackageDeclaration packageDeclaration) {
-    this.packageDeclaration = packageDeclaration;
-  }
-
-  public boolean hasImportDeclarations () {
-    return importDeclarations != null;
-  }
-
-  public ImportDeclarations importDeclarations () {
-    return importDeclarations;
+  public UseDeclarations getUseDeclarations () {
+    return useDeclarations;
   }
 
   public void setImportDeclarations (ImportDeclarations importDeclarations) {
     this.importDeclarations = importDeclarations;
   }
 
-  // I think many of these has... declarations are no longer needed since
-  // switching to "items... item*" instead of "items?... item+"
-
-//  public boolean hasOtherDeclarations () {
-//    return otherDeclarations != null;
-//  }
-
-  public OtherDeclarations otherDeclarations () {
-    return otherDeclarations;
-  }
-
   public void setOtherDeclarations (OtherDeclarations otherDeclarations) {
     this.otherDeclarations = otherDeclarations;
   }
 
-  public boolean hasUseDeclarations () {
-    return useDeclarations != null;
-  }
-
-  public UseDeclarations useDeclarations () {
-    return useDeclarations;
+  public void setPackageDeclaration (PackageDeclaration packageDeclaration) {
+    this.packageDeclaration = packageDeclaration;
   }
 
   public void setUseDeclarations (UseDeclarations useDeclarations) {
     this.useDeclarations = useDeclarations;
   }
 
-
-  // This needs to be updated
-  public AstNode declarations () {
-    return getChild(0);
-  }
+  // ATTRIBUTE METHODS
 
   public Scope getScope () {
     return scope;

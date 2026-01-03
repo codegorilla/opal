@@ -36,7 +36,7 @@ public class Pass120 extends BaseResultVisitor<AstNode> {
 
   @Override
   public AstNode visit (TranslationUnit node) {
-    visit(node.declarations());
+    visit(node.getOtherDeclarations());
     return null;
   }
 

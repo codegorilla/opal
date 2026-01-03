@@ -2,16 +2,10 @@ package org.opal;
 
 import org.opal.ast.AstNode;
 import org.opal.ast.TranslationUnit;
-import org.opal.ast.declaration.OtherDeclarations;
-import org.opal.ast.declaration.VariableDeclaration;
-import org.opal.ast.declaration.VariableInitializer;
-import org.opal.ast.declaration.VariableTypeSpecifier;
+import org.opal.ast.declaration.*;
 import org.opal.ast.expression.*;
-import org.opal.ast.type.*;
-import org.opal.symbol.PrimitiveTypeSymbol;
 import org.opal.symbol.Scope;
-import org.opal.type.ArrayType;
-import org.opal.type.PointerType;
+import org.opal.symbol.VariableSymbol;
 import org.opal.type.PrimitiveType;
 import org.opal.type.Type;
 
@@ -33,13 +27,23 @@ public class Pass40 extends BaseVisitor {
   }
 
   public void process () {
+    System.out.println("PASS 40");
     visit((TranslationUnit)root);
   }
 
   public void visit (TranslationUnit node ) {
-    // This is package scope
+    // This is global scope or package scope? Lets say global scope for now.
     currentScope = node.getScope();
-    node.otherDeclarations().accept(this);
+    node.getPackageDeclaration().accept(this);
+    node.getOtherDeclarations().accept(this);
+  }
+
+  // We never exit package scope, but global and built-in scopes are outer
+  // scopes, so resolution can search the higher scopes when recurse is
+  // enabled.
+
+  public void visit (PackageDeclaration node) {
+    currentScope = node.getScope();
   }
 
   public void visit (OtherDeclarations node ) {
@@ -265,6 +269,11 @@ public class Pass40 extends BaseVisitor {
       node.setType(PrimitiveType.UINT64);
   }
 
+  public void visit (Name node) {
+    var symbol = currentScope.resolve(node.getToken().getLexeme(), true);
+    if (symbol instanceof VariableSymbol)
+      System.out.println(((VariableSymbol)symbol).getType());
+  }
 
   /*
   public void visit (VariableTypeSpecifier node ) {

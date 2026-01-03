@@ -55,7 +55,7 @@ public class Pass110 extends BaseVisitor {
 
   public void visit (TranslationUnit node) {
     System.out.println("Translation unit");
-    visit(node.declarations());
+    visit(node.getOtherDeclarations());
   }
 
   // Declarations

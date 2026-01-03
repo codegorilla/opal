@@ -4,7 +4,6 @@ import org.opal.ast.*;
 import org.opal.ast.declaration.*;
 import org.opal.ast.expression.*;
 import org.opal.ast.type.*;
-import org.opal.type.PrintTypeVisitor;
 
 // The purpose of this pass is to print the AST
 
@@ -53,12 +52,10 @@ public class Pass1 extends BaseVisitor {
 
   public void visit (TranslationUnit node ) {
     printNode(node);
-    visit(node.packageDeclaration());
-    if (node.hasImportDeclarations())
-      visit(node.importDeclarations());
-    if (node.hasUseDeclarations())
-      visit(node.useDeclarations());
-    visit(node.otherDeclarations());
+    visit(node.getPackageDeclaration());
+    visit(node.getImportDeclarations());
+    visit(node.getUseDeclarations());
+    visit(node.getOtherDeclarations());
   }
 
   // DECLARATIONS
@@ -273,6 +270,12 @@ public class Pass1 extends BaseVisitor {
   }
 
   public void visit (UnsignedIntegerLiteral node) {
+    depth.increment();
+    printExpressionNode(node);
+    depth.decrement();
+  }
+
+  public void visit (Name node) {
     depth.increment();
     printExpressionNode(node);
     depth.decrement();

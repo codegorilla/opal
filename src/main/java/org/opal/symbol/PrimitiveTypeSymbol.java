@@ -25,6 +25,4 @@ public class PrimitiveTypeSymbol extends Symbol {
     return type;
   }
 
-
-
 }

@@ -1889,7 +1889,6 @@ public class Parser {
     if (kind == Token.Kind.THIS) {
       n = this_();
     } else if (kind == Token.Kind.IDENTIFIER) {
-      // Test this -- is this not working?
       n = name();
     } else if (kind == Token.Kind.L_PARENTHESIS) {
       n = parenthesizedExpression();
@@ -1986,9 +1985,8 @@ public class Parser {
   }
 
   private Expression name () {
-    var n = new Name(lookahead);
-    match(Token.Kind.IDENTIFIER);
-    return n;
+    var token = match(Token.Kind.IDENTIFIER);
+    return new Name(token);
   }
 
   // TYPES **************************************************

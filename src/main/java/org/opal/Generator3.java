@@ -51,7 +51,7 @@ public class Generator3 extends BaseResultVisitor<ST> {
 
   public ST visit (TranslationUnit node) {
     var st = group.getInstanceOf("implementation/translationUnit");
-    st.add("elements", visit(node.declarations()));
+    st.add("elements", visit(node.getOtherDeclarations()));
     return st;
   }
 

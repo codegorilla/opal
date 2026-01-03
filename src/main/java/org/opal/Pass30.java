@@ -27,7 +27,7 @@ public class Pass30 extends BaseVisitor {
   }
 
   public void visit (TranslationUnit node ) {
-    node.otherDeclarations().accept(this);
+    node.getOtherDeclarations().accept(this);
   }
 
   public void visit (OtherDeclarations node ) {

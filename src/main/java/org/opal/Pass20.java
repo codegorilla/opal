@@ -3,13 +3,12 @@ package org.opal;
 import org.opal.ast.AstNode;
 import org.opal.ast.TranslationUnit;
 import org.opal.ast.declaration.*;
-import org.opal.ast.type.*;
 import org.opal.symbol.*;
-import org.opal.type.ArrayType;
-import org.opal.type.PointerType;
 import org.opal.type.Type;
 
 import java.util.LinkedList;
+
+// DEFINE
 
 // The purpose of this pass is to add variable and routine symbols to the
 // symbol table. We don't want to try to resolve symbols in this pass because
@@ -27,12 +26,14 @@ public class Pass20 extends BaseVisitor {
   }
 
   public void process () {
+    System.out.println("PASS 20");
     visit((TranslationUnit)root);
   }
 
   public void visit (TranslationUnit node ) {
     currentScope = node.getScope();
-    node.otherDeclarations().accept(this);
+    node.getPackageDeclaration().accept(this);
+    node.getOtherDeclarations().accept(this);
   }
 
   public void visit (PackageDeclaration node) {

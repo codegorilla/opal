@@ -48,7 +48,7 @@ public class Generator1 extends BaseVisitor {
   }
 
   public void visit (TranslationUnit node) {
-    visit(node.declarations());
+    visit(node.getOtherDeclarations());
     ST st = group.getInstanceOf("translationUnit" + (nullaryEntryPoint ? 0 : 1));
     System.out.println("---");
     System.out.println(st.render());
