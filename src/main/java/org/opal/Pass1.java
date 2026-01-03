@@ -224,7 +224,7 @@ public class Pass1 extends BaseVisitor {
 
   public void visit (Expression node) {
     depth.increment();
-    printNode(node);
+    printExpressionNode(node);
     if (node.hasSubExpression())
       node.getSubExpression().accept(this);
     depth.decrement();
@@ -240,7 +240,7 @@ public class Pass1 extends BaseVisitor {
 
   public void visit (UnaryExpression node) {
     depth.increment();
-    printNode(node);
+    printExpressionNode(node);
     // Shouldn't it always have a sub-expression?
     if (node.hasSubExpression())
       node.getSubExpression().accept(this);
@@ -255,6 +255,12 @@ public class Pass1 extends BaseVisitor {
   }
 
   public void visit (FloatingPointLiteral node) {
+    depth.increment();
+    printExpressionNode(node);
+    depth.decrement();
+  }
+
+  public void visit (BooleanLiteral node) {
     depth.increment();
     printExpressionNode(node);
     depth.decrement();

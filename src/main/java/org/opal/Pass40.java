@@ -59,8 +59,8 @@ public class Pass40 extends BaseVisitor {
   // Does every expression have a sub-expression?
 
   public void visit (Expression node) {
-    System.out.println("GOT EXPR");
     node.getSubExpression().accept(this);
+    node.setType(node.getSubExpression().getType());
   }
 
   // There are a couple of differences in how conversions are handled between
@@ -78,15 +78,16 @@ public class Pass40 extends BaseVisitor {
   // https://en.cppreference.com/w/cpp/language/usual_arithmetic_conversions.html
 
   public void visit (BinaryExpression node) {
-    System.out.println("BIN EXPR");
     node.getLeft().accept(this);
     node.getRight().accept(this);
     var leftType = node.getLeft().getType();
     var rightType = node.getRight().getType();
+    var operation = node.getToken().getKind();
     if (isFloatingPoint(leftType) && isFloatingPoint(rightType)) {
       if (leftType == rightType) {
         // No conversion required
-        node.setType(leftType);
+        var resultType = isComparison(operation) ? PrimitiveType.BOOL : leftType;
+        node.setType(resultType);
       } else {
         // Convert operand with lower rank to type of other operand
         var leftRank = computeRank(leftType);
@@ -97,14 +98,16 @@ public class Pass40 extends BaseVisitor {
           convertNode.setType(rightType);
           convertNode.setOperand(node.getLeft());
           node.setLeft(convertNode);
-          node.setType(convertNode.getType());
+          var resultType = isComparison(operation) ? PrimitiveType.BOOL : convertNode.getType();
+          node.setType(resultType);
         } else if (leftRank > rightRank) {
           // Convert right operand to type of left operand
           var convertNode = new ImplicitConvertExpression();
           convertNode.setType(leftType);
           convertNode.setOperand(node.getRight());
           node.setRight(convertNode);
-          node.setType(convertNode.getType());
+          var resultType = isComparison(operation) ? PrimitiveType.BOOL : convertNode.getType();
+          node.setType(resultType);
         }
       }
     } else if (isIntegral(leftType) && isFloatingPoint(rightType)) {
@@ -113,14 +116,16 @@ public class Pass40 extends BaseVisitor {
       convertNode.setType(rightType);
       convertNode.setOperand(node.getLeft());
       node.setLeft(convertNode);
-      node.setType(convertNode.getType());
+      var resultType = isComparison(operation) ? PrimitiveType.BOOL : convertNode.getType();
+      node.setType(resultType);
     } else if (isFloatingPoint(leftType) && isIntegral(rightType)) {
       // Convert right operand to type of left operand
       var convertNode = new ImplicitConvertExpression();
       convertNode.setType(leftType);
       convertNode.setOperand(node.getRight());
       node.setRight(convertNode);
-      node.setType(convertNode.getType());
+      var resultType = isComparison(operation) ? PrimitiveType.BOOL : convertNode.getType();
+      node.setType(resultType);
     } else if (isIntegral(leftType) && isIntegral(rightType)) {
       // Both operands are of integral type. All small integers (signed or not)
       // are promoted to type int32 before any other operations are performed.
@@ -140,7 +145,8 @@ public class Pass40 extends BaseVisitor {
       }
       if (leftType == rightType) {
         // No conversion required
-        node.setType(leftType);
+        var resultType = isComparison(operation) ? PrimitiveType.BOOL : leftType;
+        node.setType(resultType);
       } else {
         if (isSigned(leftType) == isSigned(rightType)) {
           // Convert operand with lower rank to type of other operand
@@ -152,20 +158,25 @@ public class Pass40 extends BaseVisitor {
             convertNode.setType(rightType);
             convertNode.setOperand(node.getLeft());
             node.setLeft(convertNode);
-            node.setType(convertNode.getType());
+            var resultType = isComparison(operation) ? PrimitiveType.BOOL : convertNode.getType();
+            node.setType(resultType);
           } else if (leftRank > rightRank) {
             // Convert right operand to type of left operand
             var convertNode = new ImplicitConvertExpression();
             convertNode.setType(leftType);
             convertNode.setOperand(node.getRight());
             node.setRight(convertNode);
-            node.setType(convertNode.getType());
+            var resultType = isComparison(operation) ? PrimitiveType.BOOL : convertNode.getType();
+            node.setType(resultType);
           }
         } else {
           // Different signedness: no implicit conversion permitted
           System.out.println("semantic error: implicit conversion between signed and unsigned types");
         }
       }
+    } else {
+      // Incompatible types
+      System.out.println("semantic error: operation not permitted for incompatible types " + leftType + " and " + rightType);
     }
   }
 
@@ -215,12 +226,27 @@ public class Pass40 extends BaseVisitor {
     return (type == PrimitiveType.INT32 || type == PrimitiveType.UINT32) ? 32 : 64;
   }
 
+  public boolean isComparison (Token.Kind operation) {
+    return (
+      operation == Token.Kind.EQUAL_EQUAL       ||
+      operation == Token.Kind.EXCLAMATION_EQUAL ||
+      operation == Token.Kind.GREATER           ||
+      operation == Token.Kind.GREATER_EQUAL     ||
+      operation == Token.Kind.LESS              ||
+      operation == Token.Kind.LESS_EQUAL
+    );
+  }
+
   public void visit (FloatingPointLiteral node) {
     var kind = node.getToken().getKind();
     if (kind == Token.Kind.FLOAT32_LITERAL)
       node.setType(PrimitiveType.FLOAT32);
     else if (kind == Token.Kind.FLOAT64_LITERAL)
       node.setType(PrimitiveType.FLOAT64);
+  }
+
+  public void visit (BooleanLiteral node) {
+    node.setType(PrimitiveType.BOOL);
   }
 
   public void visit (IntegerLiteral node) {
