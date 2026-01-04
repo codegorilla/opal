@@ -173,8 +173,6 @@ public class BaseVisitor implements Visitor {
   public void visit (PointerDeclarators node) {}
   public void visit (PointerDeclarator node) {}
 
-  public void visit (BogusDeclarator node) {}
-
   // TYPES
 
 //  public void visit (Type node) {}

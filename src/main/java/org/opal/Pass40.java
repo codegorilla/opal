@@ -269,6 +269,9 @@ public class Pass40 extends BaseVisitor {
       node.setType(PrimitiveType.UINT64);
   }
 
+  // We need to get the type of the variable. But to do that, we need to build
+  // a dependency tree and try to figure out its type.
+
   public void visit (Name node) {
     var symbol = currentScope.resolve(node.getToken().getLexeme(), true);
     if (symbol instanceof VariableSymbol)

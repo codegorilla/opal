@@ -11,6 +11,8 @@ public class VariableTypeSpecifier extends AstNode {
 
   private Declarator declarator;
 
+  // I think I'd rather the type attribute be placed on the declarator node
+
   // Type attribute
   Type type = null;
 

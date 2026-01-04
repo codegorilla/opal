@@ -18,12 +18,12 @@ public class PrimitiveType extends Type {
   public static final PrimitiveType INT16   = new PrimitiveType("int16", 11);
   public static final PrimitiveType INT32   = new PrimitiveType("int32", 12);
   public static final PrimitiveType INT64   = new PrimitiveType("int64", 13);
-  public static final PrimitiveType UINT     = new PrimitiveType("uint", 12);
-  public static final PrimitiveType UINT8    = new PrimitiveType("uint8", 10);
-  public static final PrimitiveType UINT16   = new PrimitiveType("uint16", 11);
-  public static final PrimitiveType UINT32   = new PrimitiveType("uint32", 12);
-  public static final PrimitiveType UINT64   = new PrimitiveType("uint64", 13);
-  public static final PrimitiveType VOID  = new PrimitiveType("void", 0);
+  public static final PrimitiveType UINT    = new PrimitiveType("uint", 12);
+  public static final PrimitiveType UINT8   = new PrimitiveType("uint8", 10);
+  public static final PrimitiveType UINT16  = new PrimitiveType("uint16", 11);
+  public static final PrimitiveType UINT32  = new PrimitiveType("uint32", 12);
+  public static final PrimitiveType UINT64  = new PrimitiveType("uint64", 13);
+  public static final PrimitiveType VOID    = new PrimitiveType("void", 0);
 
   public PrimitiveType (String text, int rank) {
     super();

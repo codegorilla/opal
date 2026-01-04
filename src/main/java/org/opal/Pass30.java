@@ -4,9 +4,9 @@ import org.opal.ast.AstNode;
 import org.opal.ast.TranslationUnit;
 import org.opal.ast.declaration.*;
 import org.opal.ast.type.*;
-import org.opal.type.ArrayType;
-import org.opal.type.PointerType;
-import org.opal.type.Type;
+import org.opal.symbol.PrimitiveTypeSymbol;
+import org.opal.symbol.Scope;
+import org.opal.type.*;
 
 import java.util.LinkedList;
 
@@ -16,18 +16,27 @@ import java.util.LinkedList;
 
 public class Pass30 extends BaseVisitor {
 
+  private Scope currentScope;
+
   private final LinkedList<Type> typeStack = new LinkedList<>();
+  private final LinkedList<Type> typeQueue = new LinkedList<>();
 
   public Pass30 (AstNode input) {
     super(input);
   }
 
   public void process () {
+    System.out.println("PASS 30");
     visit((TranslationUnit)root);
   }
 
   public void visit (TranslationUnit node ) {
+    node.getPackageDeclaration().accept(this);
     node.getOtherDeclarations().accept(this);
+  }
+
+  public void visit (PackageDeclaration node) {
+    currentScope = node.getScope();
   }
 
   public void visit (OtherDeclarations node ) {
@@ -42,13 +51,19 @@ public class Pass30 extends BaseVisitor {
 
   public void visit (VariableTypeSpecifier node ) {
     node.getDeclarator().accept(this);
-    node.setType(typeStack.pop());
+//    for (var item : typeStack) {
+//      System.out.println(item);
+//    }
+//    typeStack.pop();
   }
 
   public void visit (Declarator node) {
+    System.out.println("DECL");
     node.getDirectDeclarator().accept(this);
-    node.getPointerDeclarators().accept(this);
+    var baseType = typeStack.pop();
     node.getArrayDeclarators().accept(this);
+    node.getPointerDeclarators().accept(this);
+    typeStack.push(baseType);
   }
 
   public void visit (ArrayDeclarators node) {
@@ -57,8 +72,8 @@ public class Pass30 extends BaseVisitor {
   }
 
   public void visit (ArrayDeclarator node) {
+    System.out.println("ARRAY_DECL");
     var t = new ArrayType();
-    t.setElementType(typeStack.pop());
     // Hard code size for now. This will eventually just be a reference to an
     // AST node representing the root of an expression sub-tree.
     t.setSize(12);
@@ -66,7 +81,8 @@ public class Pass30 extends BaseVisitor {
   }
 
   public void visit (NominalDeclarator node) {
-    var t = new org.opal.type.NominalType();
+    System.out.println("NOMINAL_DECL");
+    var t = new NominalType();
     t.setString(node.getToken().getLexeme());
     typeStack.push(t);
   }
@@ -77,17 +93,19 @@ public class Pass30 extends BaseVisitor {
   }
 
   public void visit (PointerDeclarator node) {
+    System.out.println("POINTER_DECL");
     var t = new PointerType();
-    t.setPointeeType(typeStack.pop());
     typeStack.push(t);
   }
 
   public void visit (PrimitiveDeclarator node) {
-    var t = new org.opal.type.PrimitiveType("INT", 12);
-    // Hard-code INT for now
-    t.setText("INT");
-    typeStack.push(t);
+    System.out.println("PRIM_DECL");
+    var symbol = currentScope.resolve(node.getToken().getLexeme(), true);
+    // The symbol is guaranteed a primitive type symbol because the resolve
+    // call is being made from a method that could only be arrived at if the
+    // declarator is a primitive declarator.
+    var type = ((PrimitiveTypeSymbol)symbol).getType();
+    typeStack.push(type);
   }
-
-
+  
 }
