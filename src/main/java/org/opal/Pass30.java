@@ -59,11 +59,9 @@ public class Pass30 extends BaseVisitor {
 
   public void visit (Declarator node) {
     System.out.println("DECL");
-    node.getDirectDeclarator().accept(this);
-    var baseType = typeStack.pop();
-    node.getArrayDeclarators().accept(this);
     node.getPointerDeclarators().accept(this);
-    typeStack.push(baseType);
+    node.getArrayDeclarators().accept(this);
+    node.getDirectDeclarator().accept(this);
   }
 
   public void visit (ArrayDeclarators node) {
@@ -73,19 +71,19 @@ public class Pass30 extends BaseVisitor {
 
   public void visit (ArrayDeclarator node) {
     System.out.println("ARRAY_DECL");
-    var t = new ArrayType();
+    var type = new ArrayType();
     // Hard code size for now. This will eventually just be a reference to an
     // AST node representing the root of an expression sub-tree.
-    t.setSize(12);
-    typeStack.push(t);
+    type.setSize(12);
+    typeQueue.add(type);
   }
 
-  public void visit (NominalDeclarator node) {
-    System.out.println("NOMINAL_DECL");
-    var t = new NominalType();
-    t.setString(node.getToken().getLexeme());
-    typeStack.push(t);
-  }
+//  public void visit (NominalDeclarator node) {
+//    System.out.println("NOMINAL_DECL");
+//    var t = new NominalType();
+//    t.setString(node.getToken().getLexeme());
+//    typeStack.push(t);
+//  }
 
   public void visit (PointerDeclarators node) {
     for (var pointerDeclarator : node.children())
@@ -94,8 +92,8 @@ public class Pass30 extends BaseVisitor {
 
   public void visit (PointerDeclarator node) {
     System.out.println("POINTER_DECL");
-    var t = new PointerType();
-    typeStack.push(t);
+    var type = new PointerType();
+    typeQueue.add(type);
   }
 
   public void visit (PrimitiveDeclarator node) {
@@ -104,8 +102,21 @@ public class Pass30 extends BaseVisitor {
     // The symbol is guaranteed a primitive type symbol because the resolve
     // call is being made from a method that could only be arrived at if the
     // declarator is a primitive declarator.
-    var type = ((PrimitiveTypeSymbol)symbol).getType();
-    typeStack.push(type);
+    Type t;
+    t = ((PrimitiveTypeSymbol)symbol).getType();
+    while (!typeQueue.isEmpty()) {
+      var u = typeQueue.remove();
+      if (u instanceof ArrayType) {
+        System.out.println("array of");
+        ((ArrayType)u).setElementType(t);
+        t = u;
+      } else if (u instanceof PointerType) {
+        System.out.println("pointer to");
+        ((PointerType)u).setPointeeType(t);
+        t = u;
+      }
+    }
+    typeQueue.add(t);
   }
-  
+
 }
