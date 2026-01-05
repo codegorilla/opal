@@ -208,12 +208,20 @@ public class Pass1 extends BaseVisitor {
     depth.increment();
     printNode(node);
     node.getName().accept(this);
+    node.getTypeSpecifier().accept(this);
     depth.decrement();
   }
 
   public void visit (RoutineParameterName node) {
     depth.increment();
     printNode(node);
+    depth.decrement();
+  }
+
+  public void visit (RoutineParameterTypeSpecifier node) {
+    depth.increment();
+    printNode(node);
+    node.getDeclarator().accept(this);
     depth.decrement();
   }
 
