@@ -1,9 +1,22 @@
 package org.opal.type;
 
-import org.opal.Visitor;
+public class Type {
 
-public abstract class Type {
+  private final Type.Kind kind;
 
-  public abstract void accept (TypeVisitor v);
+  public Type (Type.Kind kind) {
+    this.kind = kind;
+  }
+
+  public Type.Kind getKind () {
+    return  kind;
+  }
+
+  public enum Kind {
+    ARRAY,
+    NOMINAL,
+    PRIMITIVE,
+    POINTER,
+  }
 
 }

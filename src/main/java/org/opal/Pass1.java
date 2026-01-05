@@ -39,17 +39,6 @@ public class Pass1 extends BaseVisitor {
     System.out.println(spaces + "* " + e + className + (token != null ? ": " + token : ""));
   }
 
-  public void printDeclaratorNode (Declarator node) {
-    var INDENT_SPACES = 2;
-    var spaces = " ".repeat(INDENT_SPACES * depth.get());
-    var className = node.getClass().getSimpleName();
-    var token = node.getToken();
-    var type = node.getType();
-    var error = (token != null && token.getError());
-    var e = (error ? "(error) " : "");
-    System.out.println(spaces + "* " + e + className + (token != null ? ": " + token : "") + " [" + type + "]");
-  }
-
   public void printExpressionNode (Expression node) {
     var INDENT_SPACES = 2;
     var spaces = " ".repeat(INDENT_SPACES * depth.get());
@@ -296,7 +285,7 @@ public class Pass1 extends BaseVisitor {
 
   public void visit (Declarator node) {
     depth.increment();
-    printDeclaratorNode(node);
+    printNode(node);
     node.getPointerDeclarators().accept(this);
     node.getDirectDeclarator().accept(this);
     node.getArrayDeclarators().accept(this);

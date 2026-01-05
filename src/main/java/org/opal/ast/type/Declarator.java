@@ -8,18 +8,9 @@ import org.opal.type.Type;
 
 public class Declarator extends AstNode {
 
-  // CHILD NODE FIELDS
-
   private Declarator directDeclarator = null;
   private ArrayDeclarators arrayDeclarators = null;
   private PointerDeclarators pointerDeclarators = null;
-
-  // ATTRIBUTE FIELDS
-
-  // Type attribute
-  Type type = null;
-
-  // STANDARD METHODS
 
   public Declarator () {}
 
@@ -38,8 +29,6 @@ public class Declarator extends AstNode {
   public <T> T accept (ResultVisitor<T> v) {
     return v.visit(this);
   }
-
-  // CHILD NODE METHODS
 
   public ArrayDeclarators getArrayDeclarators () {
     return arrayDeclarators;
@@ -63,16 +52,6 @@ public class Declarator extends AstNode {
 
   public void setPointerDeclarators (PointerDeclarators pointerDeclarators) {
     this.pointerDeclarators = pointerDeclarators;
-  }
-
-  // ATTRIBUTE METHODS
-
-  public Type getType () {
-    return type;
-  }
-
-  public void setType (Type type) {
-    this.type = type;
   }
 
 }

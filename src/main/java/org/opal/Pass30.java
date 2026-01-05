@@ -4,7 +4,7 @@ import org.opal.ast.AstNode;
 import org.opal.ast.TranslationUnit;
 import org.opal.ast.declaration.*;
 import org.opal.ast.type.*;
-import org.opal.symbol.PrimitiveTypeSymbol;
+import org.opal.symbol.TypeSymbol;
 import org.opal.symbol.Scope;
 import org.opal.type.*;
 
@@ -18,7 +18,6 @@ public class Pass30 extends BaseVisitor {
 
   private Scope currentScope;
 
-  private final LinkedList<Type> typeStack = new LinkedList<>();
   private final LinkedList<Type> typeQueue = new LinkedList<>();
 
   public Pass30 (AstNode input) {
@@ -51,14 +50,10 @@ public class Pass30 extends BaseVisitor {
 
   public void visit (VariableTypeSpecifier node ) {
     node.getDeclarator().accept(this);
-//    for (var item : typeStack) {
-//      System.out.println(item);
-//    }
-//    typeStack.pop();
+    node.setType(typeQueue.remove());
   }
 
   public void visit (Declarator node) {
-    System.out.println("DECL");
     node.getPointerDeclarators().accept(this);
     node.getArrayDeclarators().accept(this);
     node.getDirectDeclarator().accept(this);
@@ -70,11 +65,10 @@ public class Pass30 extends BaseVisitor {
   }
 
   public void visit (ArrayDeclarator node) {
-    System.out.println("ARRAY_DECL");
     var type = new ArrayType();
     // Hard code size for now. This will eventually just be a reference to an
     // AST node representing the root of an expression sub-tree.
-    type.setSize(12);
+//    type.setSize(12);
     typeQueue.add(type);
   }
 
@@ -91,32 +85,26 @@ public class Pass30 extends BaseVisitor {
   }
 
   public void visit (PointerDeclarator node) {
-    System.out.println("POINTER_DECL");
     var type = new PointerType();
     typeQueue.add(type);
   }
 
   public void visit (PrimitiveDeclarator node) {
-    System.out.println("PRIM_DECL");
     var symbol = currentScope.resolve(node.getToken().getLexeme(), true);
-    // The symbol is guaranteed a primitive type symbol because the resolve
-    // call is being made from a method that could only be arrived at if the
-    // declarator is a primitive declarator.
-    Type t;
-    t = ((PrimitiveTypeSymbol)symbol).getType();
+    // The symbol is guaranteed a type symbol because the resolve call is being
+    // made from a method that could only be arrived at from a declarator.
+    var current = ((TypeSymbol)symbol).getType();
     while (!typeQueue.isEmpty()) {
-      var u = typeQueue.remove();
-      if (u instanceof ArrayType) {
-        System.out.println("array of");
-        ((ArrayType)u).setElementType(t);
-        t = u;
-      } else if (u instanceof PointerType) {
-        System.out.println("pointer to");
-        ((PointerType)u).setPointeeType(t);
-        t = u;
+      var next = typeQueue.remove();
+      if (next.getKind() == Type.Kind.ARRAY) {
+        ((ArrayType)next).setElementType(current);
+        current = next;
+      } else if (next.getKind() == Type.Kind.POINTER) {
+        ((PointerType)next).setPointeeType(current);
+        current = next;
       }
     }
-    typeQueue.add(t);
+    typeQueue.add(current);
   }
 
 }

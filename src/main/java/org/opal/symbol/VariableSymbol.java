@@ -1,7 +1,6 @@
 package org.opal.symbol;
 
 import org.opal.SymbolVisitor;
-import org.opal.type.PrimitiveType;
 import org.opal.type.Type;
 
 // Should the variable name symbol contain a reference to the variable name

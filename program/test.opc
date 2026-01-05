@@ -6,11 +6,11 @@ package main;
 //+ + use opal.math.*;
 //use opal.math.{ Bessel, Jacobian };
 
-var d: *(*int32)[1];
+var d: **(*float64)[1];
 
 //var s = 1 + d;
 
-//var t: *(*int)[10][5] = 1 + 2 + 2.5;
+var t: *(*int)[10][5] = 1 + 2 + 2.5;
 
 //: **int[2.5][4] = 5;
 

@@ -15,8 +15,7 @@ import org.opal.ast.type.*;
 
 import org.opal.ast.type.ArrayDeclarators;
 import org.opal.error.SyntaxError;
-import org.opal.symbol.Scope;
-import org.opal.symbol.PrimitiveTypeSymbol;
+import org.opal.symbol.*;
 
 // To do: Implement debug logging
 
