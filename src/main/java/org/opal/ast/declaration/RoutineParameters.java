@@ -28,6 +28,10 @@ public class RoutineParameters extends AstNode {
     return children;
   }
 
+  public Iterable<RoutineParameter> reversedChildren () {
+    return children.reversed();
+  }
+
   public void addParameter (RoutineParameter parameter) {
     children.add(parameter);
   }

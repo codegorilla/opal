@@ -3,11 +3,12 @@ package org.opal.symbol;
 import org.opal.SymbolVisitor;
 import org.opal.type.Type;
 
+import java.util.LinkedList;
+
 public class RoutineSymbol extends Symbol {
 
-  // Do routines really need a type?
-
-  private Type type;
+  private Type returnType = null;
+  private final LinkedList<Type> parameterTypes = new LinkedList<>();
 
   public RoutineSymbol (String name) {
     super(name);
@@ -18,12 +19,20 @@ public class RoutineSymbol extends Symbol {
     v.visit(this);
   }
 
-  public Type getType () {
-    return type;
+  public void addParameterType (Type parameterType) {
+    parameterTypes.add(parameterType);
   }
 
-  public void setType (Type type) {
-    this.type = type;
+  public Type getParameterType (int index) {
+    return parameterTypes.get(index);
+  }
+
+  public Type getReturnType () {
+    return returnType;
+  }
+
+  public void setReturnType (Type returnType) {
+    this.returnType = returnType;
   }
 
 }

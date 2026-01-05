@@ -16,6 +16,7 @@ public class Pass30 extends BaseVisitor {
   private Scope currentScope;
 
   private final LinkedList<Type> typeQueue = new LinkedList<>();
+  private final LinkedList<Type> typeList = new LinkedList<>();
 
   public Pass30 (AstNode input) {
     super(input);
@@ -38,6 +39,50 @@ public class Pass30 extends BaseVisitor {
   public void visit (OtherDeclarations node ) {
     for (var otherDeclaration : node.children())
       otherDeclaration.accept(this);
+  }
+
+  public void visit (RoutineDeclaration node) {
+    node.getParameters().accept(this);
+    node.getName().accept(this);
+    if (node.hasReturnTypeSpecifier()) {
+      node.getReturnTypeSpecifier().accept(this);
+      node.getName().accept(this);
+    }
+  }
+
+  private final Counter routineNameCounter = new Counter();
+
+  public void visit (RoutineName node) {
+    var count = routineNameCounter.get();
+    if (count == 0) {
+      System.out.println(typeList.size());
+      var symbol = currentScope.resolve(node.getToken().getLexeme(), true);
+      while (!typeList.isEmpty())
+        ((RoutineSymbol) symbol).addParameterType(typeList.remove());
+    } else if (count == 1) {
+      System.out.println(typeQueue.size());
+      var symbol = currentScope.resolve(node.getToken().getLexeme(), true);
+      ((RoutineSymbol)symbol).setReturnType(typeQueue.remove());
+    }
+    routineNameCounter.increment();
+  }
+
+  public void visit (RoutineParameters node) {
+    for (var routineParameter : node.children())
+      routineParameter.accept(this);
+  }
+
+  public void visit (RoutineParameter node) {
+    node.getTypeSpecifier().accept(this);
+  }
+
+  public void visit (RoutineParameterTypeSpecifier node) {
+    node.getDeclarator().accept(this);
+    typeList.add(typeQueue.remove());
+  }
+
+  public void visit (RoutineReturnTypeSpecifier node) {
+    node.getDeclarator().accept(this);
   }
 
   public void visit (VariableDeclaration node ) {
