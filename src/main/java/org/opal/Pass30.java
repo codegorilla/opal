@@ -1,19 +1,15 @@
 package org.opal;
 
-import org.opal.ast.AstNode;
-import org.opal.ast.TranslationUnit;
+import org.opal.ast.*;
 import org.opal.ast.declaration.*;
 import org.opal.ast.type.*;
-import org.opal.symbol.TypeSymbol;
-import org.opal.symbol.Scope;
-import org.opal.symbol.VariableSymbol;
+import org.opal.symbol.*;
 import org.opal.type.*;
 
 import java.util.LinkedList;
 
-// The purpose of this pass is to annotate declarator/type AST nodes with type
-// expressions. This is not necessarily a type-checking pass though - that will
-// come later.
+// The purpose of this pass is to construct type expressions from declarators.
+// However, this pass does not perform any type checking.
 
 public class Pass30 extends BaseVisitor {
 

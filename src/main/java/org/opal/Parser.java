@@ -975,7 +975,7 @@ public class Parser {
     n.setExportSpecifier(exportSpecifier);
     n.setModifiers(routineModifiers());
     n.setName(routineName());
-    n.addChild(routineParameters());
+    n.setParameters(routineParameters());
     if (kind == NOEXCEPT) {
       confirm(NOEXCEPT);
       n.addChild(new NoexceptSpecifier(mark2));
@@ -1003,7 +1003,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode routineParameters () {
+  private RoutineParameters routineParameters () {
     // To do: Add in parameter modifiers as required
     match(L_PARENTHESIS);
     var n = new RoutineParameters();

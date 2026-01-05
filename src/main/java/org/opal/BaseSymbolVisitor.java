@@ -1,19 +1,17 @@
 package org.opal;
 
-import org.opal.ast.AstNode;
-import org.opal.symbol.TypeSymbol;
-import org.opal.symbol.VariableSymbol;
+import org.opal.symbol.*;
 
 public class BaseSymbolVisitor implements SymbolVisitor {
 
   public BaseSymbolVisitor () {}
 
+  public void visit (RoutineSymbol symbol) {}
+
   public void visit (TypeSymbol symbol) {
     System.out.println("Visited primitive symbol");
   }
 
-  public void visit (VariableSymbol symbol) {
-
-  }
+  public void visit (VariableSymbol symbol) {}
 
 }

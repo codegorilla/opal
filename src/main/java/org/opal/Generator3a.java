@@ -300,11 +300,11 @@ public class Generator3a extends BaseResultVisitor<ST> {
     if (pass == ROUTINE_PASS) {
       if (node.hasExportSpecifier()) {
         var st = group.getInstanceOf("common/declaration/functionDeclaration");
-        if (node.modifiers().hasChildren()) {
-          st.add("modifiers", visit(node.modifiers()));
+        if (node.getModifiers().hasChildren()) {
+          st.add("modifiers", visit(node.getModifiers()));
         }
         st.add("name", visit(node.getName()));
-        st.add("parameters", visit(node.parameters()));
+        st.add("parameters", visit(node.getParameters()));
         if (node.hasNoexceptSpecifier())
           st.add("noexceptSpecifier", visit(node.noexceptSpecifier()));
         if (node.hasReturnType())

@@ -1,9 +1,10 @@
 package org.opal;
 
-import org.opal.symbol.TypeSymbol;
-import org.opal.symbol.VariableSymbol;
+import org.opal.symbol.*;
 
 public interface SymbolVisitor {
+
+  public void visit (RoutineSymbol symbol);
 
   public void visit (TypeSymbol symbol);
 

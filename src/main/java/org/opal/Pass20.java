@@ -66,7 +66,7 @@ public class Pass20 extends BaseVisitor {
   }
 
   public void visit (RoutineName node) {
-    var symbol = new VariableSymbol(node.getToken().getLexeme());
+    var symbol = new RoutineSymbol(node.getToken().getLexeme());
     currentScope.define(symbol);
   }
 

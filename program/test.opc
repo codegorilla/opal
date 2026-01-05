@@ -8,13 +8,16 @@ package main;
 
 //var d: **(*float64)[1];
 
-var d: int32;
+//var d: uint16;
 
-var s = 1 + d;
+def cos (x: int) {
+
+}
+
+
+//var s = 1 + d;
 
 //var t: *(*int)[10][5] = 1 + 2 + 2.5;
-
-//: **int[2.5][4] = 5;
 
 //var t: int[2][/|] = 5;
 

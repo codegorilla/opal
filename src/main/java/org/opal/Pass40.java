@@ -11,16 +11,14 @@ import org.opal.type.Type;
 
 import java.util.LinkedList;
 
-// The purpose of this pass is compute expression types and maybe
-// perform type checking, coercion, etc.
+// The purpose of this pass is compute types for expressions. It does not
+// perform type checking.
 
 public class Pass40 extends BaseVisitor {
 
   private final LinkedList<Type> typeStack = new LinkedList<>();
 
   private Scope currentScope = null;
-
-  private BaseSymbolVisitor symbolVisitor = new BaseSymbolVisitor();
 
   public Pass40 (AstNode input) {
     super(input);
@@ -275,60 +273,8 @@ public class Pass40 extends BaseVisitor {
   public void visit (Name node) {
     var symbol = currentScope.resolve(node.getToken().getLexeme(), true);
     if (symbol instanceof VariableSymbol) {
-      System.out.println(((VariableSymbol) symbol).getType());
       node.setType(((VariableSymbol) symbol).getType());
     }
   }
-
-  /*
-  public void visit (VariableTypeSpecifier node ) {
-    node.getDeclarator().accept(this);
-    node.setType(typeStack.pop());
-  }
-
-  public void visit (Declarator node) {
-    node.getDirectDeclarator().accept(this);
-    node.getPointerDeclarators().accept(this);
-    node.getArrayDeclarators().accept(this);
-  }
-
-  public void visit (ArrayDeclarators node) {
-    for (var arrayDeclarator : node.children())
-      arrayDeclarator.accept(this);
-  }
-
-  public void visit (ArrayDeclarator node) {
-    var t = new ArrayType();
-    t.setElementType(typeStack.pop());
-    // Hard code size for now. This will eventually just be a reference to an
-    // AST node representing the root of an expression sub-tree.
-    t.setSize(12);
-    typeStack.push(t);
-  }
-
-  public void visit (NominalDeclarator node) {
-    var t = new org.opal.type.NominalType();
-    t.setString(node.getToken().getLexeme());
-    typeStack.push(t);
-  }
-
-  public void visit (PointerDeclarators node) {
-    for (var pointerDeclarator : node.children())
-      pointerDeclarator.accept(this);
-  }
-
-  public void visit (PointerDeclarator node) {
-    var t = new PointerType();
-    t.setPointeeType(typeStack.pop());
-    typeStack.push(t);
-  }
-
-  public void visit (PrimitiveDeclarator node) {
-    var t = new org.opal.type.PrimitiveType();
-    // Hard-code INT for now
-    t.setKind(org.opal.type.PrimitiveType.Kind.INT);
-    typeStack.push(t);
-  }
-*/
 
 }

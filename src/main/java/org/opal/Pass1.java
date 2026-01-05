@@ -178,6 +178,28 @@ public class Pass1 extends BaseVisitor {
     depth.decrement();
   }
 
+  // OTHER DECLARATIONS
+
+  public void visit (RoutineDeclaration node) {
+    depth.increment();
+    printNode(node);
+    node.getName().accept(this);
+    node.getParameters().accept(this);
+    depth.decrement();
+  }
+
+  public void visit (RoutineName node) {
+    depth.increment();
+    printNode(node);
+    depth.decrement();
+  }
+
+  public void visit (RoutineParameters node) {
+    depth.increment();
+    printNode(node);
+    depth.decrement();
+  }
+
 
   public void visit (VariableDeclaration node) {
     depth.increment();
@@ -255,6 +277,13 @@ public class Pass1 extends BaseVisitor {
   }
 
   public void visit (ImplicitConvertExpression node) {
+    depth.increment();
+    printExpressionNode(node);
+    node.getOperand().accept(this);
+    depth.decrement();
+  }
+
+  public void visit (ImplicitPromoteExpression node) {
     depth.increment();
     printExpressionNode(node);
     node.getOperand().accept(this);

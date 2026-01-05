@@ -10,6 +10,7 @@ public class RoutineDeclaration extends AstNode {
   private ExportSpecifier exportSpecifier = null;
   private RoutineModifiers modifiers = null;
   private RoutineName name = null;
+  private RoutineParameters parameters = null;
 
   public RoutineDeclaration (Token token) {
     super(token);
@@ -37,22 +38,20 @@ public class RoutineDeclaration extends AstNode {
     return getChild(5) != null;
   }
 
-  public AstNode modifiers () {
-    return getChild(1);
-  }
-
-  public AstNode getName () {
-    return name;
-  }
 
   public RoutineModifiers getModifiers () {
     return modifiers;
   }
 
-  public AstNode parameters () {
-    return getChild(3);
+  public RoutineName getName () {
+    return name;
   }
 
+  public RoutineParameters getParameters () {
+    return parameters;
+  }
+
+  // ***
   public AstNode noexceptSpecifier () {
     return getChild(4);
   }
@@ -64,6 +63,7 @@ public class RoutineDeclaration extends AstNode {
   public AstNode body () {
     return getChild(6);
   }
+  // ***
 
   public void setExportSpecifier (ExportSpecifier exportSpecifier) {
     this.exportSpecifier = exportSpecifier;
@@ -75,6 +75,10 @@ public class RoutineDeclaration extends AstNode {
 
   public void setName (RoutineName name) {
     this.name = name;
+  }
+
+  public void setParameters (RoutineParameters parameters) {
+    this.parameters = parameters;
   }
 
 }
