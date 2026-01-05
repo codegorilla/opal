@@ -39,6 +39,16 @@ public class Pass1 extends BaseVisitor {
     System.out.println(spaces + "* " + e + className + (token != null ? ": " + token : ""));
   }
 
+  public void printVariableNameNode (AstNode node) {
+    var INDENT_SPACES = 2;
+    var spaces = " ".repeat(INDENT_SPACES * depth.get());
+    var className = node.getClass().getSimpleName();
+    var token = node.getToken();
+    var error = (token != null && token.getError());
+    var e = (error ? "(error) " : "");
+    System.out.println(spaces + "* " + e + className + (token != null ? ": " + token : ""));
+  }
+
   public void printExpressionNode (Expression node) {
     var INDENT_SPACES = 2;
     var spaces = " ".repeat(INDENT_SPACES * depth.get());

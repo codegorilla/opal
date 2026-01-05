@@ -27,4 +27,8 @@ public class ArrayType extends Type {
     this.size = size;
   }
 
+  public String toString () {
+    return "array of " + elementType;
+  }
+
 }

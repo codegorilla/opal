@@ -16,4 +16,8 @@ public class PointerType extends Type {
     this.pointeeType = type;
   }
 
+  public String toString () {
+    return "pointer to " + pointeeType;
+  }
+
 }

@@ -6,6 +6,7 @@ import org.opal.ast.declaration.*;
 import org.opal.ast.type.*;
 import org.opal.symbol.TypeSymbol;
 import org.opal.symbol.Scope;
+import org.opal.symbol.VariableSymbol;
 import org.opal.type.*;
 
 import java.util.LinkedList;
@@ -44,13 +45,19 @@ public class Pass30 extends BaseVisitor {
   }
 
   public void visit (VariableDeclaration node ) {
-    if (node.hasTypeSpecifier())
+    if (node.hasTypeSpecifier()) {
       node.getTypeSpecifier().accept(this);
+      node.getName().accept(this);
+    }
+  }
+
+  public void visit (VariableName node) {
+    var symbol = currentScope.resolve(node.getToken().getLexeme(), true);
+    ((VariableSymbol)symbol).setType(typeQueue.remove());
   }
 
   public void visit (VariableTypeSpecifier node ) {
     node.getDeclarator().accept(this);
-    node.setType(typeQueue.remove());
   }
 
   public void visit (Declarator node) {

@@ -274,8 +274,10 @@ public class Pass40 extends BaseVisitor {
 
   public void visit (Name node) {
     var symbol = currentScope.resolve(node.getToken().getLexeme(), true);
-    if (symbol instanceof VariableSymbol)
-      System.out.println(((VariableSymbol)symbol).getType());
+    if (symbol instanceof VariableSymbol) {
+      System.out.println(((VariableSymbol) symbol).getType());
+      node.setType(((VariableSymbol) symbol).getType());
+    }
   }
 
   /*
