@@ -8,9 +8,11 @@ import org.opal.type.Type;
 
 public class VariableTypeSpecifier extends AstNode {
 
-  private Declarator declarator;
+  private Declarator declarator = null;
 
   // I think I'd rather the type attribute be placed on the declarator node
+  // Update: I am not so sure about this. Perhaps it should actually be in the
+  // type specifier.
 
   // Type attribute
   Type type = null;

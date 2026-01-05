@@ -6,6 +6,9 @@ import org.opal.ast.AstNode;
 
 public class RoutineParameter extends AstNode {
 
+  private RoutineParameterName name = null;
+  private RoutineParameterTypeSpecifier typeSpecifier = null;
+
   public RoutineParameter () {
     super();
   }
@@ -20,12 +23,20 @@ public class RoutineParameter extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode routineParameterName () {
-    return getChild(0);
+  public RoutineParameterName getName () {
+    return name;
   }
 
-  public AstNode routineParameterTypeSpecifier () {
-    return getChild(1);
+  public RoutineParameterTypeSpecifier getTypeSpecifier () {
+    return typeSpecifier;
+  }
+
+  public void setName (RoutineParameterName name) {
+    this.name = name;
+  }
+
+  public void setTypeSpecifier (RoutineParameterTypeSpecifier typeSpecifier) {
+    this.typeSpecifier = typeSpecifier;
   }
 
 }

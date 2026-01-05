@@ -3,8 +3,11 @@ package org.opal.ast.declaration;
 import org.opal.ResultVisitor;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
+import org.opal.ast.type.Declarator;
 
 public class RoutineReturnTypeSpecifier extends AstNode {
+
+  private Declarator declarator = null;
 
   public RoutineReturnTypeSpecifier () {
     super();
@@ -20,8 +23,12 @@ public class RoutineReturnTypeSpecifier extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode type () {
-    return getChild(0);
+  public Declarator getDeclarator () {
+    return declarator;
+  }
+
+  public void setDeclarator (Declarator declarator) {
+    this.declarator = declarator;
   }
 
 }

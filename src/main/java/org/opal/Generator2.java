@@ -424,8 +424,8 @@ public class Generator2 extends BaseResultVisitor<ST> {
       st.add("parameters", visit(node.getParameters()));
       if (node.hasNoexceptSpecifier())
         st.add("noexceptSpecifier", visit(node.noexceptSpecifier()));
-      if (node.hasReturnType())
-        st.add("returnType", visit(node.returnType()));
+      if (node.hasReturnTypeSpecifier())
+        st.add("returnType", visit(node.getReturnTypeSpecifier()));
       return st;
     } else {
       return null;
@@ -456,8 +456,8 @@ public class Generator2 extends BaseResultVisitor<ST> {
 
   public ST visit (RoutineParameter node) {
     var st = group.getInstanceOf("common/declaration/functionParameter");
-    visit(node.routineParameterName());
-    st.add("typeSpecifier", visit(node.routineParameterTypeSpecifier()));
+    visit(node.getName());
+    st.add("typeSpecifier", visit(node.getTypeSpecifier()));
     st.add("declarator", stack.pop());
     return st;
   }
@@ -471,7 +471,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
 
   public ST visit (RoutineParameterTypeSpecifier node) {
     var st = group.getInstanceOf("common/declaration/functionParameterTypeSpecifier");
-    st.add("type", visit(node.type()));
+    st.add("type", visit(node.getDeclarator()));
     return st;
   }
 
@@ -482,7 +482,7 @@ public class Generator2 extends BaseResultVisitor<ST> {
   public ST visit (RoutineReturnTypeSpecifier node) {
     var st = group.getInstanceOf("common/declaration/functionReturnType");
     stack.push(emptyDeclarator());
-    st.add("type", visit(node.type()));
+    st.add("type", visit(node.getDeclarator()));
     st.add("declarator", stack.pop());
     return st;
   }

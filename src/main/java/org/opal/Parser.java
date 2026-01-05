@@ -983,7 +983,7 @@ public class Parser {
       n.addChild(EPSILON);
     }
     if (kind == MINUS_GREATER) {
-      n.addChild(routineReturnTypeSpecifier());
+      n.setReturnTypeSpecifier(routineReturnTypeSpecifier());
     } else {
       n.addChild(EPSILON);
     }
@@ -1003,15 +1003,17 @@ public class Parser {
     return n;
   }
 
+  // To do: Need to work on error recovery here
+
   private RoutineParameters routineParameters () {
     // To do: Add in parameter modifiers as required
     match(L_PARENTHESIS);
     var n = new RoutineParameters();
     if (kind == Token.Kind.IDENTIFIER)
-      n.addChild(routineParameter());
+      n.addParameter(routineParameter());
     while (kind == COMMA) {
       confirm(COMMA);
-      n.addChild(routineParameter());
+      n.addParameter(routineParameter());
     }
     match(R_PARENTHESIS);
     return n;
@@ -1019,18 +1021,22 @@ public class Parser {
 
   // Routine parameters are for all intents and purposes local variables
 
-  private AstNode routineParameter () {
+  private RoutineParameter routineParameter () {
     var n = new RoutineParameter();
-    match(Token.Kind.IDENTIFIER);
-    n.addChild(new RoutineParameterName(mark2));
-    n.addChild(routineParameterTypeSpecifier());
+    n.setName(routineParameterName());
+    n.setTypeSpecifier(routineParameterTypeSpecifier());
     return n;
   }
 
-  private AstNode routineParameterTypeSpecifier () {
+  private RoutineParameterName routineParameterName () {
+    var token = match(Token.Kind.IDENTIFIER);
+    return new RoutineParameterName(token);
+  }
+
+  private RoutineParameterTypeSpecifier routineParameterTypeSpecifier () {
     match(COLON);
-    var n = new RoutineParameterTypeSpecifier(mark2);
-    n.addChild(declarator(Parser.Context.ROUTINE_PARAMETER_TYPE_SPECIFIER));
+    var n = new RoutineParameterTypeSpecifier();
+    n.setDeclarator(declarator(Parser.Context.ROUTINE_PARAMETER_TYPE_SPECIFIER));
     return n;
   }
 
@@ -1042,10 +1048,10 @@ public class Parser {
   // We can either treat this like a type specifier or use it as a passthrough
   // to a type specifier.
 
-  private AstNode routineReturnTypeSpecifier () {
+  private RoutineReturnTypeSpecifier routineReturnTypeSpecifier () {
     confirm(MINUS_GREATER);
     var n = new RoutineReturnTypeSpecifier();
-    n.addChild(declarator(Context.ROUTINE_RETURN_TYPE_SPECIFIER));
+    n.setDeclarator(declarator(Context.ROUTINE_RETURN_TYPE_SPECIFIER));
     return n;
   }
 

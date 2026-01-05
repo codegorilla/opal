@@ -36,7 +36,7 @@ public class Pass1 extends BaseVisitor {
     var token = node.getToken();
     var error = (token != null && token.getError());
     var e = (error ? "(error) " : "");
-    System.out.println(spaces + "* " + e + className + (token != null ? ": " + token : ""));
+    System.out.println(spaces + "- " + e + className + (token != null ? ": " + token : ""));
   }
 
   public void printVariableNameNode (AstNode node) {
@@ -46,7 +46,7 @@ public class Pass1 extends BaseVisitor {
     var token = node.getToken();
     var error = (token != null && token.getError());
     var e = (error ? "(error) " : "");
-    System.out.println(spaces + "* " + e + className + (token != null ? ": " + token : ""));
+    System.out.println(spaces + "- " + e + className + (token != null ? ": " + token : ""));
   }
 
   public void printExpressionNode (Expression node) {
@@ -57,7 +57,7 @@ public class Pass1 extends BaseVisitor {
     var type = node.getType();
     var error = (token != null && token.getError());
     var e = (error ? "(error) " : "");
-    System.out.println(spaces + "* " + e + className + (token != null ? ": " + token : "") + " -> " + type);
+    System.out.println(spaces + "- " + e + className + (token != null ? ": " + token : "") + " -> " + type);
   }
 
   public void visit (TranslationUnit node ) {
@@ -185,6 +185,8 @@ public class Pass1 extends BaseVisitor {
     printNode(node);
     node.getName().accept(this);
     node.getParameters().accept(this);
+    if (node.hasReturnTypeSpecifier())
+      node.getReturnTypeSpecifier().accept(this);
     depth.decrement();
   }
 
@@ -197,9 +199,30 @@ public class Pass1 extends BaseVisitor {
   public void visit (RoutineParameters node) {
     depth.increment();
     printNode(node);
+    for (var routineParameter : node.children())
+      routineParameter.accept(this);
     depth.decrement();
   }
 
+  public void visit (RoutineParameter node) {
+    depth.increment();
+    printNode(node);
+    node.getName().accept(this);
+    depth.decrement();
+  }
+
+  public void visit (RoutineParameterName node) {
+    depth.increment();
+    printNode(node);
+    depth.decrement();
+  }
+
+  public void visit (RoutineReturnTypeSpecifier node) {
+    depth.increment();
+    printNode(node);
+    node.getDeclarator().accept(this);
+    depth.decrement();
+  }
 
   public void visit (VariableDeclaration node) {
     depth.increment();

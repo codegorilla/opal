@@ -8,9 +8,9 @@ package main;
 
 //var d: **(*float64)[1];
 
-//var d: uint16;
+var d: uint16;
 
-def cos (x: int) {
+def cos (x: double) -> double {
 
 }
 

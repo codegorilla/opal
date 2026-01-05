@@ -1,14 +1,17 @@
 package org.opal.ast.declaration;
 
 import org.opal.ResultVisitor;
-import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
+import org.opal.ast.type.Declarator;
+import org.opal.type.Type;
 
 public class RoutineParameterTypeSpecifier extends AstNode {
 
-  public RoutineParameterTypeSpecifier (Token token) {
-    super(token);
+  private Declarator declarator = null;
+
+  public RoutineParameterTypeSpecifier () {
+    super();
   }
 
   @Override
@@ -21,8 +24,12 @@ public class RoutineParameterTypeSpecifier extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode type () {
-    return getChild(0);
+  public Declarator getDeclarator () {
+    return declarator;
+  }
+
+  public void setDeclarator (Declarator declarator) {
+    this.declarator = declarator;
   }
 
 }

@@ -11,6 +11,7 @@ public class RoutineDeclaration extends AstNode {
   private RoutineModifiers modifiers = null;
   private RoutineName name = null;
   private RoutineParameters parameters = null;
+  private RoutineReturnTypeSpecifier returnTypeSpecifier = null;
 
   public RoutineDeclaration (Token token) {
     super(token);
@@ -34,10 +35,9 @@ public class RoutineDeclaration extends AstNode {
     return getChild(4) != null;
   }
 
-  public boolean hasReturnType () {
-    return getChild(5) != null;
+  public boolean hasReturnTypeSpecifier () {
+    return returnTypeSpecifier != null;
   }
-
 
   public RoutineModifiers getModifiers () {
     return modifiers;
@@ -51,13 +51,13 @@ public class RoutineDeclaration extends AstNode {
     return parameters;
   }
 
+  public RoutineReturnTypeSpecifier getReturnTypeSpecifier () {
+    return returnTypeSpecifier;
+  }
+
   // ***
   public AstNode noexceptSpecifier () {
     return getChild(4);
-  }
-
-  public AstNode returnType () {
-    return getChild(5);
   }
 
   public AstNode body () {
@@ -79,6 +79,10 @@ public class RoutineDeclaration extends AstNode {
 
   public void setParameters (RoutineParameters parameters) {
     this.parameters = parameters;
+  }
+
+  public void setReturnTypeSpecifier (RoutineReturnTypeSpecifier returnTypeSpecifier) {
+    this.returnTypeSpecifier = returnTypeSpecifier;
   }
 
 }
