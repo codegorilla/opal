@@ -37,7 +37,9 @@ public class Scope {
     enclosingScope = scope;
   }
 
-  // Where is package scope? Is it the same as global scope?
+  // Where is package scope? Is it the same as global scope? We might be able
+  // to combine them. But we might not be able to if we need to account for
+  // true global objects when interfacing with C language.
 
   public enum Kind {
     BUILT_IN,
@@ -48,35 +50,3 @@ public class Scope {
   }
 
 }
-
-/*
-
-class Scope1 (private var kind: Scope.Kind) {
-
-  val symbolTable = SymbolTable()
-  var enclosingScope: Scope = null
-
-  // Should caller provide name and kind, or already constructed symbol?
-
-  def define (symbol: Symbol) =
-      symbolTable.insert(symbol)
-
-  def resolve (name: String, recurse: Boolean = true): Symbol =
-  // Recurse through scope stack, looking for symbol
-  var symbol = symbolTable.lookup(name)
-    if symbol == null then
-      if recurse && enclosingScope != null then
-      symbol = enclosingScope.resolve(name)
-    return symbol
-
-  def getEnclosingScope (): Scope =
-  enclosingScope
-
-  def setEnclosingScope (scope: Scope) =
-  enclosingScope = scope
-
-  def getKind (): Scope.Kind =
-      return kind
-}
-
-*/

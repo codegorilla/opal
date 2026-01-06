@@ -11,6 +11,14 @@ import java.util.LinkedList;
 // The purpose of this pass is to construct type expressions from declarators.
 // However, this pass does not perform any type checking.
 
+// Do we want to do this before creating scopes?
+// Suppose we do... in some cases, types will be known due to type specifiers.
+// However, this is not always the case because some types are only known from
+// type inference. And those types require determining types of expressions,
+// which would require symbol table lookups. Thus, generally speaking, fully
+// determining types must be delayed. However, it might be possible to convert
+// declarators to types while building the symbol table.
+
 public class Pass30 extends BaseVisitor {
 
   private Scope currentScope;
