@@ -3,9 +3,8 @@ package org.opal.ast.statement;
 import org.opal.ResultVisitor;
 import org.opal.Token;
 import org.opal.Visitor;
-import org.opal.ast.AstNode;
 
-public class BreakStatement extends AstNode {
+public class BreakStatement extends Statement {
 
   public BreakStatement (Token token) {
     super(token);

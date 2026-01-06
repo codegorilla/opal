@@ -111,6 +111,7 @@ public class BaseResultVisitor<T> implements ResultVisitor <T> {
 
   // STATEMENTS
 
+  public T visit (Statement node) { return null; }
   public T visit (BreakStatement node) { return null; }
   public T visit (CompoundStatement node) { return null; }
   public T visit (ContinueStatement node) { return null; }

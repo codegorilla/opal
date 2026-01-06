@@ -103,6 +103,7 @@ public interface ResultVisitor <T> {
 
   // STATEMENTS
 
+  public T visit (Statement node);
   public T visit (BreakStatement node);
   public T visit (CompoundStatement node);
   public T visit (ContinueStatement node);

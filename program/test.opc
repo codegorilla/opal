@@ -16,6 +16,7 @@ package main;
 
 def cos (xt: int, yb: float32) -> int {
   break;
+  continue;
 }
 
 

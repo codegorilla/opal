@@ -104,6 +104,7 @@ public interface Visitor {
 
   // STATEMENTS
 
+  public void visit (Statement node);
   public void visit (BreakStatement node);
   public void visit (CompoundStatement node);
   public void visit (ContinueStatement node);

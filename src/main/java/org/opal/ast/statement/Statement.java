@@ -3,11 +3,16 @@ package org.opal.ast.statement;
 import org.opal.ResultVisitor;
 import org.opal.Token;
 import org.opal.Visitor;
+import org.opal.ast.AstNode;
 
-public class ContinueStatement extends Statement {
+public class Statement extends AstNode {
 
-  public ContinueStatement (Token token) {
+  public Statement (Token token) {
     super(token);
+  }
+
+  public Statement () {
+    super();
   }
 
   @Override
