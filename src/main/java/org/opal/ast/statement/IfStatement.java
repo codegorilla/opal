@@ -5,7 +5,7 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class IfStatement extends AstNode {
+public class IfStatement extends Statement {
 
   public IfStatement (Token token) {
     super(token);

@@ -5,7 +5,7 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class WhileStatement extends AstNode {
+public class WhileStatement extends Statement {
 
   public WhileStatement (Token token) {
     super(token);

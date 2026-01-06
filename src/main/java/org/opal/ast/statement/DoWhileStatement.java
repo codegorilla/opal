@@ -5,7 +5,7 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class DoWhileStatement extends AstNode {
+public class DoWhileStatement extends Statement {
 
   public DoWhileStatement (Token token) {
     super(token);

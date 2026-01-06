@@ -4,7 +4,7 @@ import org.opal.ResultVisitor;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class ExpressionStatement extends AstNode {
+public class ExpressionStatement extends Statement {
 
   public ExpressionStatement() {
     super();

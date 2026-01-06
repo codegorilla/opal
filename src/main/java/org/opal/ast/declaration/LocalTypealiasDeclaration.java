@@ -4,8 +4,11 @@ import org.opal.ResultVisitor;
 import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
+import org.opal.ast.statement.Statement;
 
-public class LocalTypealiasDeclaration extends AstNode {
+// This is actually a statement because it is a declaration statement
+
+public class LocalTypealiasDeclaration extends Statement {
 
   public LocalTypealiasDeclaration (Token token) {
     super(token);

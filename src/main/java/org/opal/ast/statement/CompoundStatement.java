@@ -10,7 +10,7 @@ import java.util.LinkedList;
 
 public class CompoundStatement extends Statement {
 
-  private final LinkedList<AstNode> statements = new LinkedList<>();
+  private final LinkedList<Statement> statements = new LinkedList<>();
 
   private Scope scope = null;
 
@@ -32,7 +32,7 @@ public class CompoundStatement extends Statement {
     return v.visit(this);
   }
 
-  public void addStatement (AstNode statement) {
+  public void addStatement (Statement statement) {
     statements.add(statement);
   }
 
@@ -44,7 +44,7 @@ public class CompoundStatement extends Statement {
     this.scope = scope;
   }
 
-  public Iterable<AstNode> getStatements () {
+  public Iterable<Statement> getStatements () {
     return statements;
   }
 

@@ -5,7 +5,7 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class ForStatement extends AstNode {
+public class ForStatement extends Statement {
 
   public ForStatement (Token token) {
     super(token);

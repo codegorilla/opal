@@ -5,7 +5,7 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class LoopStatement extends AstNode {
+public class LoopStatement extends Statement {
 
   public LoopStatement (Token token) {
     super(token);

@@ -5,7 +5,7 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class UntilStatement extends AstNode {
+public class UntilStatement extends Statement {
 
   public UntilStatement (Token token) {
     super(token);

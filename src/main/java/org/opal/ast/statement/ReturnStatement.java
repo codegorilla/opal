@@ -5,7 +5,7 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class ReturnStatement extends AstNode {
+public class ReturnStatement extends Statement {
 
   public ReturnStatement (Token token) {
     super(token);

@@ -3,8 +3,11 @@ package org.opal.ast.declaration;
 import org.opal.ResultVisitor;
 import org.opal.Token;
 import org.opal.Visitor;
+import org.opal.ast.statement.Statement;
 
-public class LocalVariableDeclaration extends Declaration {
+// This is actually a statement because it is a declaration statement
+
+public class LocalVariableDeclaration extends Statement {
 
   private VariableInitializer initializer = null;
   private VariableModifiers modifiers = null;

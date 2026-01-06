@@ -947,7 +947,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode localTypealiasDeclaration () {
+  private Statement localTypealiasDeclaration () {
     confirm(TYPEALIAS);
     var n = new LocalTypealiasDeclaration(lookahead);
     match(Token.Kind.IDENTIFIER);
@@ -1151,8 +1151,12 @@ public class Parser {
   // statements. This is because we want send the parser towards the statement
   // version of 'if'.
 
-  private AstNode statement () {
-    AstNode n = null;
+  // Statement returns generic AST node because it might return a declaration
+  // or a statement. Question: Are local variable declarations actually
+  // declaration statements or just declarations?
+
+  private Statement statement () {
+    Statement n = null;
     if (
       kind == BREAK     ||
       kind == L_BRACE   ||
@@ -1196,8 +1200,8 @@ public class Parser {
     return n;
   }
 
-  private AstNode standardStatement () {
-    AstNode n = null;
+  private Statement standardStatement () {
+    Statement n = null;
     switch (kind) {
       case Token.Kind.BREAK ->
         n = breakStatement();
@@ -1227,7 +1231,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode breakStatement () {
+  private BreakStatement breakStatement () {
     var token = confirm(BREAK);
     var n = new BreakStatement(token);
     match(SEMICOLON);
@@ -1245,7 +1249,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode continueStatement () {
+  private ContinueStatement continueStatement () {
     var token = confirm(CONTINUE);
     var n = new ContinueStatement(token);
     match(SEMICOLON);
@@ -1267,8 +1271,8 @@ public class Parser {
   // Should this just be a passthrough or do we want dedicated AST nodes at the
   // root of all statement sub-trees?
 
-  private AstNode declarationStatement () {
-    AstNode n = null;
+  private Statement declarationStatement () {
+    Statement n = null;
     modifiers();
     if (kind == Token.Kind.TYPEALIAS)
       n = localTypealiasDeclaration();
@@ -1281,8 +1285,8 @@ public class Parser {
   // The do statement is flexible and can either be a "do while" or a "do until"
   // statement, depending on what follows the 'do' keyword.
 
-  private AstNode doStatement () {
-    AstNode n = null;
+  private Statement doStatement () {
+    Statement n = null;
     match(Token.Kind.DO);
     switch (kind) {
       case Token.Kind.UNTIL ->
@@ -1295,7 +1299,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode doUntilStatement () {
+  private DoUntilStatement doUntilStatement () {
     var n = new DoUntilStatement(lookahead);
     match(Token.Kind.UNTIL);
     n.addChild(statementCondition());
@@ -1303,7 +1307,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode doWhileStatement () {
+  private DoWhileStatement doWhileStatement () {
     var n = new DoWhileStatement(lookahead);
     match(Token.Kind.WHILE);
     n.addChild(statementCondition());
@@ -1328,7 +1332,7 @@ public class Parser {
   // is a "noop". However, this may be useful to do because it will provide a
   // more faithful translation to C++. It will be optimized out by C++ anyways.
 
-  private AstNode emptyStatement () {
+  private EmptyStatement emptyStatement () {
     var token = confirm(SEMICOLON);
     return new EmptyStatement(token);
   }
@@ -1337,14 +1341,14 @@ public class Parser {
   // dedicated AST node at the root of all statement sub-trees.
   // NOTE: IS ABOVE TRUE?
 
-  private AstNode expressionStatement () {
+  private ExpressionStatement expressionStatement () {
     var n = new ExpressionStatement();
     n.addChild(expression(true));
     match(SEMICOLON);
     return n;
   }
 
-  private AstNode forStatement () {
+  private ForStatement forStatement () {
     var n = new ForStatement(lookahead);
     match(Token.Kind.FOR);
     match(Token.Kind.L_PARENTHESIS);
@@ -1362,7 +1366,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode ifStatement () {
+  private IfStatement ifStatement () {
     var n = new IfStatement(lookahead);
     match(Token.Kind.IF);
     n.addChild(statementCondition());
@@ -1382,7 +1386,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode loopStatement () {
+  private LoopStatement loopStatement () {
     var n = new LoopStatement(lookahead);
     match(Token.Kind.LOOP);
     if (kind == Token.Kind.L_PARENTHESIS)
@@ -1438,7 +1442,7 @@ public class Parser {
     }
   }
 
-  private AstNode returnStatement () {
+  private ReturnStatement returnStatement () {
     var n = new ReturnStatement(lookahead);
     match(Token.Kind.RETURN);
     if (lookahead.getKind() != SEMICOLON) {
@@ -1458,7 +1462,7 @@ public class Parser {
   // In C++26 the condition can be an expression or a declaration. For now, we
   // will only support expressions, and use the rule as a passthrough.
 
-  private AstNode untilStatement () {
+  private UntilStatement untilStatement () {
     var n = new UntilStatement(lookahead);
     match(Token.Kind.UNTIL);
     n.addChild(statementCondition());
@@ -1469,7 +1473,7 @@ public class Parser {
   // In C++26 the condition can be an expression or a declaration. For now, we
   // will only support expressions, and use the rule as a passthrough.
 
-  private AstNode whileStatement () {
+  private WhileStatement whileStatement () {
     var n = new WhileStatement(lookahead);
     match(Token.Kind.WHILE);
     n.addChild(statementCondition());
