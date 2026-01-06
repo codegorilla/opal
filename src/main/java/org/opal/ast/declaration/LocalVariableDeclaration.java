@@ -3,14 +3,13 @@ package org.opal.ast.declaration;
 import org.opal.ResultVisitor;
 import org.opal.Token;
 import org.opal.Visitor;
-import org.opal.ast.AstNode;
 
-public class LocalVariableDeclaration extends AstNode {
+public class LocalVariableDeclaration extends Declaration {
 
+  private VariableInitializer initializer = null;
   private VariableModifiers modifiers = null;
   private VariableName name = null;
   private VariableTypeSpecifier typeSpecifier = null;
-  private VariableInitializer initializer = null;
 
   public LocalVariableDeclaration (Token token) {
     super(token);
@@ -24,14 +23,6 @@ public class LocalVariableDeclaration extends AstNode {
   @Override
   public <T> T accept (ResultVisitor<T> v) {
     return v.visit(this);
-  }
-
-  public boolean hasInitializer () {
-    return initializer != null;
-  }
-
-  public boolean hasTypeSpecifier () {
-    return typeSpecifier != null;
   }
 
   public VariableInitializer getInitializer () {
@@ -48,6 +39,14 @@ public class LocalVariableDeclaration extends AstNode {
 
   public VariableTypeSpecifier getTypeSpecifier () {
     return typeSpecifier;
+  }
+
+  public boolean hasInitializer () {
+    return initializer != null;
+  }
+
+  public boolean hasTypeSpecifier () {
+    return typeSpecifier != null;
   }
 
   public void setInitializer (VariableInitializer initializer) {

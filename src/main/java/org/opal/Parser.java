@@ -658,7 +658,7 @@ public class Parser {
   // Entities may be declared as private, indicating that they are not
   // exported. Otherwise, they are considered public, i.e. exported.
 
-  private AstNode otherDeclaration () {
+  private Declaration otherDeclaration () {
     ExportSpecifier p;
     if (kind == PRIVATE) {
       var token = confirm(PRIVATE);
@@ -667,7 +667,7 @@ public class Parser {
       // Maybe change to EPSILON later
       p = null;
     }
-    AstNode n = null;
+    Declaration n = null;
     if (kind == TEMPLATE) {
 //      n = templateDeclaration();
     } else {
@@ -731,7 +731,7 @@ public class Parser {
 
   // CLASS DECLARATIONS
 
-  private AstNode classDeclaration (AstNode exportSpecifier) {
+  private Declaration classDeclaration (AstNode exportSpecifier) {
     var token = confirm(CLASS);
     var n = new ClassDeclaration(token);
     n.addChild(exportSpecifier);
@@ -794,7 +794,7 @@ public class Parser {
 
   // MEMBER DECLARATIONS
 
-  private AstNode memberDeclaration (EnumSet<Token.Kind> syncSet) {
+  private Declaration memberDeclaration (EnumSet<Token.Kind> syncSet) {
     AstNode accessSpecifier;
     if (kind == PRIVATE) {
       confirm(PRIVATE);
@@ -806,7 +806,7 @@ public class Parser {
       accessSpecifier = EPSILON;
     }
     memberModifiers();
-    AstNode n;
+    Declaration n;
     if (kind == TYPEALIAS) {
       n = memberTypealiasDeclaration(accessSpecifier);
     } else if (kind == DEF) {
@@ -839,7 +839,7 @@ public class Parser {
   // What if there are modifiers on typealias? Is that a syntax error or
   // semantic error?
 
-  private AstNode memberTypealiasDeclaration (AstNode accessSpecifier) {
+  private Declaration memberTypealiasDeclaration (AstNode accessSpecifier) {
     confirm(TYPEALIAS);
     var n = new MemberTypealiasDeclaration(mark2);
     n.addChild(accessSpecifier);
@@ -851,7 +851,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode memberRoutineDeclaration (AstNode accessSpecifier) {
+  private Declaration memberRoutineDeclaration (AstNode accessSpecifier) {
     confirm(DEF);
     var n = new MemberRoutineDeclaration(mark2);
     n.addChild(accessSpecifier);
@@ -912,7 +912,7 @@ public class Parser {
     return n;
   }
 
-  private AstNode memberVariableDeclaration (AstNode accessSpecifier) {
+  private Declaration memberVariableDeclaration (AstNode accessSpecifier) {
     confirm(kind == VAL ? VAL : VAR);
     var n = new MemberVariableDeclaration(mark2);
     n.addChild(accessSpecifier);
@@ -935,7 +935,7 @@ public class Parser {
 
   // TYPEALIAS DECLARATION
 
-  private AstNode typealiasDeclaration (AstNode exportSpecifier) {
+  private Declaration typealiasDeclaration (AstNode exportSpecifier) {
     confirm(TYPEALIAS);
     var n = new TypealiasDeclaration(mark2);
     n.addChild(exportSpecifier);
@@ -969,7 +969,7 @@ public class Parser {
 
   // To do: Finish error recovery
 
-  private AstNode routineDeclaration (ExportSpecifier exportSpecifier) {
+  private Declaration routineDeclaration (ExportSpecifier exportSpecifier) {
     var token = confirm(DEF);
     var n = new RoutineDeclaration(token);
     n.setExportSpecifier(exportSpecifier);
@@ -1064,12 +1064,6 @@ public class Parser {
 
   // VARIABLE DECLARATIONS
 
-  // To do: Local variables don't have access specifiers. Because children can
-  // be accessed by name, we need a separate local variable node type.
-
-  // We put null values into the list of children to ensure a constant node
-  // count and node order.
-
   // To do: variable initializer is being arrived at via a certain path and an
   // uncertain path. So do we match or do we confirm? I think we need to match,
   // which is a more fail-safe option.
@@ -1085,6 +1079,29 @@ public class Parser {
     var token = confirm(kind == VAL ? VAL : VAR);
     var n = new VariableDeclaration(token);
     n.setExportSpecifier(exportSpecifier);
+    n.setModifiers(variableModifiers());
+    n.setName(variableName());
+    if (kind != SEMICOLON) {
+      if (kind == COLON) {
+        n.setTypeSpecifier(variableTypeSpecifier());
+        if (kind == EQUAL)
+          n.setInitializer(variableInitializer());
+      } else if (kind == EQUAL) {
+        n.setInitializer(variableInitializer());
+      } else {
+        panic(COLON, EQUAL, SEMICOLON);
+      }
+    }
+    match(SEMICOLON);
+    return n;
+  }
+
+  // Local variables don't have access specifiers so we need a separate AST
+  // node for them.
+
+  private LocalVariableDeclaration localVariableDeclaration () {
+    var token = confirm(kind == VAL ? VAL : VAR);
+    var n = new LocalVariableDeclaration(token);
     n.setModifiers(variableModifiers());
     n.setName(variableName());
     if (kind != SEMICOLON) {
@@ -1125,26 +1142,6 @@ public class Parser {
     confirm(EQUAL);
     var n = new VariableInitializer();
     n.setExpression(expression(true));
-    return n;
-  }
-
-  private AstNode localVariableDeclaration () {
-    var token = confirm(kind == VAL ? VAL : VAR);
-    var n = new LocalVariableDeclaration(token);
-    n.setModifiers(variableModifiers());
-    n.setName(variableName());
-    if (kind != SEMICOLON) {
-      if (kind == COLON) {
-        n.setTypeSpecifier(variableTypeSpecifier());
-        if (kind == EQUAL)
-          n.setInitializer(variableInitializer());
-      } else if (kind == EQUAL) {
-        n.setInitializer(variableInitializer());
-      } else {
-        panic(COLON, EQUAL, SEMICOLON);
-      }
-    }
-    match(SEMICOLON);
     return n;
   }
 

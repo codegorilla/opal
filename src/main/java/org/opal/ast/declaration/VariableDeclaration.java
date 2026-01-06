@@ -3,16 +3,15 @@ package org.opal.ast.declaration;
 import org.opal.ResultVisitor;
 import org.opal.Token;
 import org.opal.Visitor;
-import org.opal.ast.AstNode;
 import org.opal.symbol.Scope;
 
-public class VariableDeclaration extends AstNode {
+public class VariableDeclaration extends Declaration {
 
   private ExportSpecifier exportSpecifier = null;
+  private VariableInitializer initializer = null;
   private VariableModifiers modifiers = null;
   private VariableName name = null;
   private VariableTypeSpecifier typeSpecifier = null;
-  private VariableInitializer initializer = null;
 
   // Attributes
   private Scope scope = null;
@@ -31,20 +30,8 @@ public class VariableDeclaration extends AstNode {
     return v.visit(this);
   }
 
-  public ExportSpecifier exportSpecifier () {
+  public ExportSpecifier getExportSpecifier () {
     return exportSpecifier;
-  }
-
-  public boolean hasExportSpecifier () {
-    return exportSpecifier != null;
-  }
-
-  public boolean hasInitializer () {
-    return initializer != null;
-  }
-
-  public boolean hasTypeSpecifier () {
-    return typeSpecifier != null;
   }
 
   public VariableInitializer getInitializer () {
@@ -61,6 +48,18 @@ public class VariableDeclaration extends AstNode {
 
   public VariableTypeSpecifier getTypeSpecifier () {
     return typeSpecifier;
+  }
+
+  public boolean hasExportSpecifier () {
+    return exportSpecifier != null;
+  }
+
+  public boolean hasInitializer () {
+    return initializer != null;
+  }
+
+  public boolean hasTypeSpecifier () {
+    return typeSpecifier != null;
   }
 
   public void setExportSpecifier (ExportSpecifier exportSpecifier) {

@@ -87,7 +87,7 @@ public class Pass1 extends BaseVisitor {
   public void visit (OtherDeclarations node) {
     depth.increment();
     printNode(node);
-    for (var otherDeclaration : node.children())
+    for (var otherDeclaration : node.getOtherDeclarations())
       otherDeclaration.accept(this);
     depth.decrement();
   }
@@ -101,7 +101,7 @@ public class Pass1 extends BaseVisitor {
   public void visit (ImportDeclarations node) {
     depth.increment();
     printNode(node);
-    for (var importDeclaration : node.children())
+    for (var importDeclaration : node.getImportDeclarations())
       importDeclaration.accept(this);
     depth.decrement();
   }
@@ -138,7 +138,7 @@ public class Pass1 extends BaseVisitor {
   public void visit (UseDeclarations node) {
     depth.increment();
     printNode(node);
-    for (var useDeclaration : node.children())
+    for (var useDeclaration : node.getUseDeclarations())
       visit(useDeclaration);
     depth.decrement();
   }

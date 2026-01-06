@@ -5,7 +5,7 @@ import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
-public class MemberRoutineDeclaration extends AstNode {
+public class MemberRoutineDeclaration extends Declaration {
 
   public MemberRoutineDeclaration (Token token) {
     super(token);

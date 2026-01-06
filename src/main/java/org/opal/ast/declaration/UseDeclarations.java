@@ -8,7 +8,7 @@ import org.opal.ast.AstNode;
 
 public class UseDeclarations extends AstNode {
 
-  private final LinkedList<UseDeclaration> children = new LinkedList<>();
+  private final LinkedList<UseDeclaration> useDeclarations = new LinkedList<>();
 
   public UseDeclarations () {}
 
@@ -22,12 +22,12 @@ public class UseDeclarations extends AstNode {
     return v.visit(this);
   }
 
-  public Iterable<UseDeclaration> children () {
-    return children;
+  public void addUseDeclaration (UseDeclaration useDeclaration) {
+    useDeclarations.add(useDeclaration);
   }
 
-  public void addUseDeclaration (UseDeclaration useDeclaration) {
-    children.add(useDeclaration);
+  public Iterable<UseDeclaration> getUseDeclarations () {
+    return useDeclarations;
   }
 
 }

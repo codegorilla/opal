@@ -12,7 +12,7 @@ public class OtherDeclarations extends AstNode {
   // Leave public for now while experimenting
   public LinkedList<ST> templates;
 
-  private final LinkedList<AstNode> children = new LinkedList<>();
+  private final LinkedList<Declaration> otherDeclarations = new LinkedList<>();
 
   public OtherDeclarations () {
     super();
@@ -29,12 +29,13 @@ public class OtherDeclarations extends AstNode {
     return v.visit(this);
   }
 
-  public Iterable<AstNode> children () {
-    return children;
+  public void addOtherDeclaration (Declaration otherDeclaration) {
+    otherDeclarations.add(otherDeclaration);
   }
 
-  public void addOtherDeclaration (AstNode otherDeclaration) {
-    children.add(otherDeclaration);
+  public Iterable<Declaration> getOtherDeclarations () {
+    return otherDeclarations;
   }
+
 
 }

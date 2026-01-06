@@ -57,7 +57,7 @@ public class Pass20 extends BaseVisitor {
 
   public void visit (OtherDeclarations node ) {
     nodePath.push(node);
-    for (var otherDeclaration : node.children())
+    for (var otherDeclaration : node.getOtherDeclarations())
       otherDeclaration.accept(this);
     nodePath.pop();
   }
