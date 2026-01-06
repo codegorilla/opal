@@ -287,6 +287,18 @@ public class Pass1 extends BaseVisitor {
     depth.decrement();
   }
 
+  public void visit (LocalVariableDeclaration node) {
+    depth.increment();
+    printNode(node);
+    node.getModifiers().accept(this);
+    node.getName().accept(this);
+    if (node.hasTypeSpecifier())
+      visit(node.getTypeSpecifier());
+    if (node.hasInitializer())
+      visit(node.getInitializer());
+    depth.decrement();
+  }
+
   // STATEMENTS
 
   public void visit (BreakStatement node) {
@@ -304,6 +316,12 @@ public class Pass1 extends BaseVisitor {
   }
 
   public void visit (ContinueStatement node) {
+    depth.increment();
+    printNode(node);
+    depth.decrement();
+  }
+
+  public void visit (EmptyStatement node) {
     depth.increment();
     printNode(node);
     depth.decrement();

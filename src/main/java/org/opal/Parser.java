@@ -1129,22 +1129,21 @@ public class Parser {
   }
 
   private AstNode localVariableDeclaration () {
-    confirm(kind == VAL ? VAL : VAR);
-    var n = new LocalVariableDeclaration(mark2);
-    n.addChild(variableModifiers());
-    match(Token.Kind.IDENTIFIER);
-    n.addChild(new VariableName(mark2));
-    if (kind == COLON) {
-      n.addChild(variableTypeSpecifier());
-      if (kind == EQUAL)
-        n.addChild(variableInitializer());
-      else
-        n.addChild(EPSILON);
-    } else {
-      n.addChild(EPSILON);
-      n.addChild(variableInitializer());
+    var token = confirm(kind == VAL ? VAL : VAR);
+    var n = new LocalVariableDeclaration(token);
+    n.setModifiers(variableModifiers());
+    n.setName(variableName());
+    if (kind != SEMICOLON) {
+      if (kind == COLON) {
+        n.setTypeSpecifier(variableTypeSpecifier());
+        if (kind == EQUAL)
+          n.setInitializer(variableInitializer());
+      } else if (kind == EQUAL) {
+        n.setInitializer(variableInitializer());
+      } else {
+        panic(COLON, EQUAL, SEMICOLON);
+      }
     }
-    // Local classes and nested routines are not supported
     match(SEMICOLON);
     return n;
   }
@@ -1237,8 +1236,6 @@ public class Parser {
     match(SEMICOLON);
     return n;
   }
-
-  // To do: Need to create a statement AST node that all statements derive from
 
   // To do: Work on error recovery
 
@@ -1335,9 +1332,8 @@ public class Parser {
   // more faithful translation to C++. It will be optimized out by C++ anyways.
 
   private AstNode emptyStatement () {
-    var n = new EmptyStatement(lookahead);
-    match(SEMICOLON);
-    return n;
+    var token = confirm(SEMICOLON);
+    return new EmptyStatement(token);
   }
 
   // The expression statement is primarily just a passthrough, but we want a

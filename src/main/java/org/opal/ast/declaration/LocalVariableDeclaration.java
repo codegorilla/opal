@@ -7,6 +7,11 @@ import org.opal.ast.AstNode;
 
 public class LocalVariableDeclaration extends AstNode {
 
+  private VariableModifiers modifiers = null;
+  private VariableName name = null;
+  private VariableTypeSpecifier typeSpecifier = null;
+  private VariableInitializer initializer = null;
+
   public LocalVariableDeclaration (Token token) {
     super(token);
   }
@@ -21,28 +26,44 @@ public class LocalVariableDeclaration extends AstNode {
     return v.visit(this);
   }
 
-  public boolean hasTypeSpecifier () {
-    return getChild(2) != null;
-  }
-
   public boolean hasInitializer () {
-    return getChild(3) != null;
+    return initializer != null;
   }
 
-  public AstNode modifiers () {
-    return getChild(0);
+  public boolean hasTypeSpecifier () {
+    return typeSpecifier != null;
   }
 
-  public AstNode name () {
-    return getChild(1);
+  public VariableInitializer getInitializer () {
+    return initializer;
   }
 
-  public AstNode typeSpecifier () {
-    return getChild(2);
+  public VariableModifiers getModifiers () {
+    return modifiers;
   }
 
-  public AstNode initializer () {
-    return getChild(3);
+  public VariableName getName () {
+    return name;
+  }
+
+  public VariableTypeSpecifier getTypeSpecifier () {
+    return typeSpecifier;
+  }
+
+  public void setInitializer (VariableInitializer initializer) {
+    this.initializer = initializer;
+  }
+
+  public void setModifiers (VariableModifiers modifiers) {
+    this.modifiers = modifiers;
+  }
+
+  public void setName (VariableName name) {
+    this.name = name;
+  }
+
+  public void setTypeSpecifier (VariableTypeSpecifier typeSpecifier) {
+    this.typeSpecifier = typeSpecifier;
   }
 
 }

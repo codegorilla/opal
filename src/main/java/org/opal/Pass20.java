@@ -43,6 +43,8 @@ public class Pass20 extends BaseVisitor {
     nodePath.pop();
   }
 
+  // DECLARATIONS
+
   public void visit (PackageDeclaration node) {
     nodePath.push(node);
     // Create package-level scope
@@ -57,22 +59,6 @@ public class Pass20 extends BaseVisitor {
     nodePath.push(node);
     for (var otherDeclaration : node.children())
       otherDeclaration.accept(this);
-    nodePath.pop();
-  }
-
-  public void visit (VariableDeclaration node ) {
-    nodePath.push(node);
-    node.getName().accept(this);
-    nodePath.pop();
-  }
-
-  // Variable symbol should have a link to the AST node and AST node should
-  // have a link to the symbol. Why?
-
-  public void visit (VariableName node) {
-    nodePath.push(node);
-    var symbol = new VariableSymbol(node.getToken().getLexeme());
-    currentScope.define(symbol);
     nodePath.pop();
   }
 
@@ -128,6 +114,30 @@ public class Pass20 extends BaseVisitor {
     node.getCompoundStatement().accept(this);
     nodePath.pop();
   }
+
+  public void visit (VariableDeclaration node ) {
+    nodePath.push(node);
+    node.getName().accept(this);
+    nodePath.pop();
+  }
+
+  // Variable symbol should have a link to the AST node and AST node should
+  // have a link to the symbol. Why?
+
+  public void visit (VariableName node) {
+    nodePath.push(node);
+    var symbol = new VariableSymbol(node.getToken().getLexeme());
+    currentScope.define(symbol);
+    nodePath.pop();
+  }
+
+  public void visit (LocalVariableDeclaration node) {
+    nodePath.push(node);
+    node.getName().accept(this);
+    nodePath.pop();
+  }
+
+  // STATEMENTS
 
   public void visit (CompoundStatement node) {
     nodePath.push(node);
