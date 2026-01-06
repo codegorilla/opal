@@ -3,6 +3,7 @@ package org.opal;
 import org.opal.ast.AstNode;
 import org.opal.ast.TranslationUnit;
 import org.opal.ast.declaration.*;
+import org.opal.ast.statement.CompoundStatement;
 import org.opal.symbol.*;
 import org.opal.type.Type;
 
@@ -15,6 +16,8 @@ import java.util.LinkedList;
 // we want to allow objects to be defined out of order.
 
 public class Pass20 extends BaseVisitor {
+
+  private final LinkedList<AstNode> nodeStack = new LinkedList<>();
 
   private final LinkedList<Type> typeStack = new LinkedList<>();
 
@@ -63,6 +66,8 @@ public class Pass20 extends BaseVisitor {
 
   public void visit (RoutineDeclaration node) {
     node.getName().accept(this);
+    node.getParameters().accept(this);
+    node.getBody().accept(this);
   }
 
   public void visit (RoutineName node) {
@@ -70,5 +75,44 @@ public class Pass20 extends BaseVisitor {
     currentScope.define(symbol);
   }
 
+  public void visit (RoutineParameters node) {
+    for (var routineParameter : node.children())
+      routineParameter.accept(this);
+  }
+
+  public void visit (RoutineParameter node) {
+    // Save it for later when we can process it into the routine body's
+    // top-level block scope.
+    nodeStack.push(node);
+  }
+
+  public void visit (RoutineParameterName node) {
+  }
+
+  public void visit (RoutineParameterTypeSpecifier node) {
+  }
+
+  // Normally, in C++ the function body is just a compound statement. However,
+  // the top-most compound statement is special in that it includes function
+  // parameters even though they appear outside of the block delimiters. This
+  // raises questions about how to best implement this "special case".
+
+  // One idea is to have a special kind of compound statement (i.e. a "top"
+  // compound statement). Another is to change behavior based on what the
+  // parent node is. For now, we will do the latter.
+
+  public void visit (RoutineBody node) {
+    node.getCompoundStatement().accept(this);
+  }
+
+  // To do: We need to pull the parameters into the block scope.
+
+  public void visit (CompoundStatement node) {
+    var scope = new Scope(Scope.Kind.BLOCK);
+    scope.setEnclosingScope(currentScope);
+    currentScope = scope;
+    node.setScope(currentScope);
+    // If the parent is instance of routine body then process the parameters
+  }
 
 }

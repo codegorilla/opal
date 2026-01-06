@@ -43,7 +43,7 @@ public class Scope {
     BUILT_IN,
     CLASS,
     GLOBAL,
-    LOCAL,
+    BLOCK,
     PACKAGE
   }
 

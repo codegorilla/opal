@@ -987,7 +987,7 @@ public class Parser {
     } else {
       n.addChild(EPSILON);
     }
-    n.addChild(routineBody());
+    n.setBody(routineBody());
     return n;
   }
 
@@ -1045,9 +1045,6 @@ public class Parser {
   // (which uses an arrow), the arrow stands out more when there are CV and ref
   // qualifiers.
 
-  // We can either treat this like a type specifier or use it as a passthrough
-  // to a type specifier.
-
   private RoutineReturnTypeSpecifier routineReturnTypeSpecifier () {
     confirm(MINUS_GREATER);
     var n = new RoutineReturnTypeSpecifier();
@@ -1059,9 +1056,9 @@ public class Parser {
   // compound statement? The top compound statement does not need to introduce a
   // new scope.
 
-  private AstNode routineBody () {
+  private RoutineBody routineBody () {
     var n = new RoutineBody();
-    n.addChild(compoundStatement());
+    n.setCompoundStatement(compoundStatement());
     return n;
   }
 
@@ -1084,7 +1081,7 @@ public class Parser {
 
   // Check-out?
 
-  private AstNode variableDeclaration (ExportSpecifier exportSpecifier) {
+  private VariableDeclaration variableDeclaration (ExportSpecifier exportSpecifier) {
     var token = confirm(kind == VAL ? VAL : VAR);
     var n = new VariableDeclaration(token);
     n.setExportSpecifier(exportSpecifier);
@@ -1241,9 +1238,9 @@ public class Parser {
     return n;
   }
 
-  private AstNode compoundStatement () {
-    var n = new CompoundStatement(lookahead);
-    match(Token.Kind.L_BRACE);
+  private CompoundStatement compoundStatement () {
+    var token = match(Token.Kind.L_BRACE);
+    var n = new CompoundStatement(token);
     while (kind != Token.Kind.R_BRACE) {
       n.addChild(statement());
       try {
@@ -1445,7 +1442,7 @@ public class Parser {
       return compoundStatement();
     else {
       // Insert fabricated compound statement
-      var n = new CompoundStatement(null);
+      var n = new CompoundStatement();
       n.addChild(statement());
       return n;
     }
@@ -1505,7 +1502,7 @@ public class Parser {
       return statement();
     else {
       // Insert fabricated compound statement
-      var n = new CompoundStatement(null);
+      var n = new CompoundStatement();
       n.addChild(statement());
       return n;
     }

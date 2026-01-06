@@ -10,9 +10,11 @@ package main;
 
 //var d: uint16;
 
-var d = 1;
+//var d = 1;
 
-def cos (x: float32, y: int, z: uint8) -> int32 {
+//def cos (x: float32, y: int, z: uint8) -> int32 {}
+
+def cos (x: int, y: float32) -> int {
 
 }
 

@@ -169,7 +169,7 @@ public class Generator3b extends BaseResultVisitor<ST> {
       st.add("noexceptSpecifier", visit(node.noexceptSpecifier()));
     if (node.hasReturnTypeSpecifier())
       st.add("returnType", visit(node.getReturnTypeSpecifier()));
-    st.add("body", visit(node.body()));
+    st.add("body", visit(node.getBody()));
     return st;
   }
 
@@ -233,7 +233,7 @@ public class Generator3b extends BaseResultVisitor<ST> {
 
   public ST visit (RoutineBody node) {
     var st = group.getInstanceOf("common/declaration/functionBody");
-    st.add("compoundStatement", visit(node.compoundStatement()));
+    st.add("compoundStatement", visit(node.getCompoundStatement()));
     return st;
   }
 

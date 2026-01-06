@@ -187,6 +187,7 @@ public class Pass1 extends BaseVisitor {
     node.getParameters().accept(this);
     if (node.hasReturnTypeSpecifier())
       node.getReturnTypeSpecifier().accept(this);
+    node.getBody().accept(this);
     depth.decrement();
   }
 
@@ -229,6 +230,12 @@ public class Pass1 extends BaseVisitor {
     depth.increment();
     printNode(node);
     node.getDeclarator().accept(this);
+    depth.decrement();
+  }
+
+  public void visit (RoutineBody node) {
+    depth.increment();
+    printNode(node);
     depth.decrement();
   }
 

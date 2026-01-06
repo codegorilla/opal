@@ -3,8 +3,11 @@ package org.opal.ast.declaration;
 import org.opal.ResultVisitor;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
+import org.opal.ast.statement.CompoundStatement;
 
 public class RoutineBody extends AstNode {
+
+  CompoundStatement compoundStatement = null;
 
   public RoutineBody() {
     super();
@@ -20,8 +23,12 @@ public class RoutineBody extends AstNode {
     return v.visit(this);
   }
 
-  public AstNode compoundStatement () {
-    return getChild(0);
+  public CompoundStatement getCompoundStatement () {
+    return compoundStatement;
+  }
+
+  public void setCompoundStatement (CompoundStatement compoundStatement) {
+    this.compoundStatement = compoundStatement;
   }
 
 }

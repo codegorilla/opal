@@ -375,7 +375,7 @@ public class Generator3a extends BaseResultVisitor<ST> {
 
   public ST visit (RoutineBody node) {
     var st = group.getInstanceOf("common/declaration/functionBody");
-    st.add("compoundStatement", visit(node.compoundStatement()));
+    st.add("compoundStatement", visit(node.getCompoundStatement()));
     return st;
   }
 
