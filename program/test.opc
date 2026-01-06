@@ -15,7 +15,7 @@ package main;
 //def cos (x: float32, y: int, z: uint8) -> int32 {}
 
 def cos (xt: int, yb: float32) -> int {
-
+  break;
 }
 
 

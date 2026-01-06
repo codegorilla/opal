@@ -1232,31 +1232,28 @@ public class Parser {
   }
 
   private AstNode breakStatement () {
-    confirm(BREAK);
-    var n = new BreakStatement(mark2);
+    var token = confirm(BREAK);
+    var n = new BreakStatement(token);
     match(SEMICOLON);
     return n;
   }
 
+  // To do: Need to create a statement AST node that all statements derive from
+
+  // To do: Work on error recovery
+
   private CompoundStatement compoundStatement () {
-    var token = match(Token.Kind.L_BRACE);
+    var token = match(L_BRACE);
     var n = new CompoundStatement(token);
-    while (kind != Token.Kind.R_BRACE) {
-      n.addChild(statement());
-      try {
-        System.out.println("Sleeping for " + SLEEP_TIME + " seconds in compoundStatement...");
-        Thread.sleep(SLEEP_TIME);
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
-    }
-    match(Token.Kind.R_BRACE);
+    while (kind != R_BRACE)
+      n.addStatement(statement());
+    match(R_BRACE);
     return n;
   }
 
   private AstNode continueStatement () {
-    var n = new ContinueStatement(lookahead);
-    match(Token.Kind.CONTINUE);
+    var token = confirm(CONTINUE);
+    var n = new ContinueStatement(token);
     match(SEMICOLON);
     return n;
   }

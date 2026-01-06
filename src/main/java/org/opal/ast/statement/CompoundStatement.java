@@ -4,9 +4,14 @@ import org.opal.ResultVisitor;
 import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
+import org.opal.ast.declaration.UseDeclaration;
 import org.opal.symbol.Scope;
 
+import java.util.LinkedList;
+
 public class CompoundStatement extends AstNode {
+
+  private final LinkedList<AstNode> statements = new LinkedList<>();
 
   private Scope scope = null;
 
@@ -28,12 +33,20 @@ public class CompoundStatement extends AstNode {
     return v.visit(this);
   }
 
+  public void addStatement (AstNode statement) {
+    statements.add(statement);
+  }
+
   public Scope getScope () {
     return scope;
   }
 
   public void setScope (Scope scope) {
     this.scope = scope;
+  }
+  
+  public Iterable<AstNode> getStatements () {
+    return statements;
   }
 
 }

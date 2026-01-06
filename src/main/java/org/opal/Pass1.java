@@ -3,6 +3,8 @@ package org.opal;
 import org.opal.ast.*;
 import org.opal.ast.declaration.*;
 import org.opal.ast.expression.*;
+import org.opal.ast.statement.BreakStatement;
+import org.opal.ast.statement.CompoundStatement;
 import org.opal.ast.type.*;
 
 // The purpose of this pass is to print the AST
@@ -236,6 +238,7 @@ public class Pass1 extends BaseVisitor {
   public void visit (RoutineBody node) {
     depth.increment();
     printNode(node);
+    node.getCompoundStatement().accept(this);
     depth.decrement();
   }
 
@@ -285,7 +288,21 @@ public class Pass1 extends BaseVisitor {
     depth.decrement();
   }
 
-  // STATEMENTS - TBD
+  // STATEMENTS
+
+  public void visit (CompoundStatement node) {
+    depth.increment();
+    printNode(node);
+    for (var statement : node.getStatements())
+      statement.accept(this);
+    depth.decrement();
+  }
+
+  public void visit (BreakStatement node) {
+    depth.increment();
+    printNode(node);
+    depth.decrement();
+  }
 
   // EXPRESSIONS
 
