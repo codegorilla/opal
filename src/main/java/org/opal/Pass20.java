@@ -131,12 +131,6 @@ public class Pass20 extends BaseVisitor {
     nodePath.pop();
   }
 
-  public void visit (LocalVariableDeclaration node) {
-    nodePath.push(node);
-    node.getName().accept(this);
-    nodePath.pop();
-  }
-
   // STATEMENTS
 
   public void visit (CompoundStatement node) {
@@ -159,6 +153,12 @@ public class Pass20 extends BaseVisitor {
     for (var statement : node.getStatements())
       statement.accept(this);
     currentScope = scope.getEnclosingScope();
+    nodePath.pop();
+  }
+
+  public void visit (LocalVariableDeclarationStatement node) {
+    nodePath.push(node);
+    node.getName().accept(this);
     nodePath.pop();
   }
 

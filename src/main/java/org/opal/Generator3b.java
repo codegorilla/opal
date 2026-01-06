@@ -251,7 +251,7 @@ public class Generator3b extends BaseResultVisitor<ST> {
 
   // Gen3a handles global variable definitions as part of declarations.
 
-  public ST visit (LocalVariableDeclaration node) {
+  public ST visit (LocalVariableDeclarationStatement node) {
     var st = group.getInstanceOf("common/declaration/localVariableDeclaration");
     if (node.getModifiers().hasChildren())
       st.add("modifiers", visit(node.getModifiers()));

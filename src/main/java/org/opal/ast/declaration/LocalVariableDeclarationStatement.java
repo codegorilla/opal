@@ -7,14 +7,14 @@ import org.opal.ast.statement.Statement;
 
 // This is actually a statement because it is a declaration statement
 
-public class LocalVariableDeclaration extends Statement {
+public class LocalVariableDeclarationStatement extends Statement {
 
   private VariableInitializer initializer = null;
   private VariableModifiers modifiers = null;
   private VariableName name = null;
   private VariableTypeSpecifier typeSpecifier = null;
 
-  public LocalVariableDeclaration (Token token) {
+  public LocalVariableDeclarationStatement (Token token) {
     super(token);
   }
 

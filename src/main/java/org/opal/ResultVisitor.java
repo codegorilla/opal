@@ -93,7 +93,7 @@ public interface ResultVisitor <T> {
   // Variable declarations
   public T visit (VariableDeclaration node);
   public T visit (VariableModifiers node);
-  public T visit (LocalVariableDeclaration node);
+  public T visit (LocalVariableDeclarationStatement node);
   public T visit (VariableName node);
   public T visit (VariableTypeSpecifier node);
   public T visit (VariableInitializer node);

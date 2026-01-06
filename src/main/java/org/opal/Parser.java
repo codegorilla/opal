@@ -15,7 +15,6 @@ import org.opal.ast.type.*;
 
 import org.opal.ast.type.ArrayDeclarators;
 import org.opal.error.SyntaxError;
-import org.opal.symbol.*;
 
 // To do: Implement debug logging
 
@@ -1096,29 +1095,6 @@ public class Parser {
     return n;
   }
 
-  // Local variables don't have access specifiers so we need a separate AST
-  // node for them.
-
-  private LocalVariableDeclaration localVariableDeclaration () {
-    var token = confirm(kind == VAL ? VAL : VAR);
-    var n = new LocalVariableDeclaration(token);
-    n.setModifiers(variableModifiers());
-    n.setName(variableName());
-    if (kind != SEMICOLON) {
-      if (kind == COLON) {
-        n.setTypeSpecifier(variableTypeSpecifier());
-        if (kind == EQUAL)
-          n.setInitializer(variableInitializer());
-      } else if (kind == EQUAL) {
-        n.setInitializer(variableInitializer());
-      } else {
-        panic(COLON, EQUAL, SEMICOLON);
-      }
-    }
-    match(SEMICOLON);
-    return n;
-  }
-
   private VariableName variableName () {
     var token = match(Token.Kind.IDENTIFIER);
     return new VariableName(token);
@@ -1277,7 +1253,7 @@ public class Parser {
     if (kind == Token.Kind.TYPEALIAS)
       n = localTypealiasDeclaration();
     else if (kind == Token.Kind.VAL || kind == Token.Kind.VAR)
-      n = localVariableDeclaration();
+      n = localVariableDeclarationStatement();
     // To do: Need error checking here
     return n;
   }
@@ -1383,6 +1359,28 @@ public class Parser {
       n.addChild(ifStatement());
     else
       n.addChild(statementBody());
+    return n;
+  }
+
+  // This is actually a kind of statement, not a declaration
+
+  private LocalVariableDeclarationStatement localVariableDeclarationStatement () {
+    var token = confirm(kind == VAL ? VAL : VAR);
+    var n = new LocalVariableDeclarationStatement(token);
+    n.setModifiers(variableModifiers());
+    n.setName(variableName());
+    if (kind != SEMICOLON) {
+      if (kind == COLON) {
+        n.setTypeSpecifier(variableTypeSpecifier());
+        if (kind == EQUAL)
+          n.setInitializer(variableInitializer());
+      } else if (kind == EQUAL) {
+        n.setInitializer(variableInitializer());
+      } else {
+        panic(COLON, EQUAL, SEMICOLON);
+      }
+    }
+    match(SEMICOLON);
     return n;
   }
 

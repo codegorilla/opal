@@ -101,7 +101,7 @@ public class BaseVisitor implements Visitor {
   // Variable declarations
   public void visit (VariableDeclaration node) {}
   public void visit (VariableModifiers node) {}
-  public void visit (LocalVariableDeclaration node) {}
+  public void visit (LocalVariableDeclarationStatement node) {}
   public void visit (VariableName node) {}
   public void visit (VariableTypeSpecifier node) {}
   public void visit (VariableInitializer node) {}

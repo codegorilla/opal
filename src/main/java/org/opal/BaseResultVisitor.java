@@ -101,7 +101,7 @@ public class BaseResultVisitor<T> implements ResultVisitor <T> {
   // Variable declarations
   public T visit (VariableDeclaration node) { return null; }
   public T visit (VariableModifiers node) { return null; }
-  public T visit (LocalVariableDeclaration node) { return null; }
+  public T visit (LocalVariableDeclarationStatement node) { return null; }
   public T visit (VariableName node) { return null; }
   public T visit (VariableTypeSpecifier node) { return null; }
   public T visit (VariableInitializer node) { return null; }

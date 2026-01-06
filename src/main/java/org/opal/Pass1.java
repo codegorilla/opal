@@ -287,7 +287,7 @@ public class Pass1 extends BaseVisitor {
     depth.decrement();
   }
 
-  public void visit (LocalVariableDeclaration node) {
+  public void visit (LocalVariableDeclarationStatement node) {
     depth.increment();
     printNode(node);
     node.getModifiers().accept(this);
