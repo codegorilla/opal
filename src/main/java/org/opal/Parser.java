@@ -411,9 +411,6 @@ public class Parser {
     match(Token.Kind.EOF);
 
     LOGGER.info("*** Parsing complete! ***");
-    // Inspect builtin scope
-//    var s = builtinScope.getSymbolTable().getData;
-//    System.out.println(s);
     return node;
   }
 
@@ -434,11 +431,6 @@ public class Parser {
     n.setImportDeclarations(importDeclarations());
     n.setUseDeclarations(useDeclarations());
     n.setOtherDeclarations(otherDeclarations());
-
-    //var scope = new Scope(Scope.Kind.GLOBAL);
-    //scope.setEnclosingScope(currentScope);
-    //currentScope = scope;
-    //n.setScope(currentScope);
     return n;
   }
 
@@ -968,6 +960,8 @@ public class Parser {
 
   // To do: Finish error recovery
 
+  // If the entire declaration cannot be completed, do we mark it as an error node?
+
   private Declaration routineDeclaration (ExportSpecifier exportSpecifier) {
     var token = confirm(DEF);
     var n = new RoutineDeclaration(token);
@@ -975,17 +969,14 @@ public class Parser {
     n.setModifiers(routineModifiers());
     n.setName(routineName());
     n.setParameters(routineParameters());
-    if (kind == NOEXCEPT) {
-      confirm(NOEXCEPT);
-      n.addChild(new NoexceptSpecifier(mark2));
-    } else {
-      n.addChild(EPSILON);
-    }
-    if (kind == MINUS_GREATER) {
+//    if (kind == NOEXCEPT) {
+//      confirm(NOEXCEPT);
+//      n.addChild(new NoexceptSpecifier(mark2));
+//    } else {
+//      n.addChild(EPSILON);
+//    }
+    if (kind == MINUS_GREATER)
       n.setReturnTypeSpecifier(routineReturnTypeSpecifier());
-    } else {
-      n.addChild(EPSILON);
-    }
     n.setBody(routineBody());
     return n;
   }
@@ -1006,13 +997,21 @@ public class Parser {
 
   private RoutineParameters routineParameters () {
     // To do: Add in parameter modifiers as required
-    match(L_PARENTHESIS);
-    var n = new RoutineParameters();
-    if (kind == Token.Kind.IDENTIFIER)
-      n.addParameter(routineParameter());
-    while (kind == COMMA) {
-      confirm(COMMA);
-      n.addParameter(routineParameter());
+    var token = match(L_PARENTHESIS);
+    var n = new RoutineParameters(token);
+    if (kind != R_PARENTHESIS) {
+      if (kind == Token.Kind.IDENTIFIER) {
+        n.addParameter(routineParameter());
+        while (kind != R_PARENTHESIS) {
+          match(COMMA);
+          if (kind == Token.Kind.IDENTIFIER)
+            n.addParameter(routineParameter());
+          else
+            panic("parameter name or ')'");
+        }
+      } else {
+        panic("parameter name or ')'");
+      }
     }
     match(R_PARENTHESIS);
     return n;
@@ -1219,8 +1218,17 @@ public class Parser {
   private CompoundStatement compoundStatement () {
     var token = match(L_BRACE);
     var n = new CompoundStatement(token);
-    while (kind != R_BRACE)
-      n.addStatement(statement());
+    while (kind != R_BRACE) {
+      if (
+        kind == FOR ||
+        kind == IF
+      ) {
+        n.addStatement(statement());
+      } else {
+        panic("statement");
+        break;
+      }
+    }
     match(R_BRACE);
     return n;
   }
@@ -2169,7 +2177,7 @@ public class Parser {
         if (kind == L_BRACKET)
           n.addArrayDeclarator(arrayDeclarator());
         else {
-          panic(L_BRACKET, R_PARENTHESIS);
+          panic(COMMA, L_BRACKET, R_PARENTHESIS);
           break;
         }
       }

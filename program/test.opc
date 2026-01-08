@@ -14,10 +14,11 @@ package main;
 
 //def cos (x: float32, y: int, z: uint8) -> int32 {}
 
-def cos (x: int, y: int) -> int {
-  break;
-  continue;
-  var x: int = 1;
+//def cos (x: int y: int) -> int {
+def cos (x: int, y) -> int {
+//  break;
+//  continue;
+//  var x: int = 1;
 }
 
 

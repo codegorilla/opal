@@ -1,6 +1,7 @@
 package org.opal.ast.declaration;
 
 import org.opal.ResultVisitor;
+import org.opal.Token;
 import org.opal.Visitor;
 import org.opal.ast.AstNode;
 
@@ -10,8 +11,8 @@ public class RoutineParameters extends AstNode {
 
   private final LinkedList<RoutineParameter> children = new LinkedList<>();
 
-  public RoutineParameters () {
-    super();
+  public RoutineParameters (Token token) {
+    super(token);
   }
 
   @Override
@@ -26,10 +27,6 @@ public class RoutineParameters extends AstNode {
 
   public Iterable<RoutineParameter> children () {
     return children;
-  }
-
-  public Iterable<RoutineParameter> reversedChildren () {
-    return children.reversed();
   }
 
   public void addParameter (RoutineParameter parameter) {
