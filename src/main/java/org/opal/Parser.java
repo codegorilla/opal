@@ -300,13 +300,16 @@ public class Parser {
     } else {
       LOGGER.info("mis-matched " + lookahead);
       lookahead.setError();
+      // Not sure if we need this when using exceptions
       if (!errorRecoveryMode)
         matchError(expectedKind);
       // Should we at least advance the input stream? If we do, then we
       // effectively delete the bad token. Different sources say yes or no,
       // but several seem to indicate that we should NOT consume.
       errorRecoveryMode = true;
-      return lookahead;
+      // Probably need to derive specific exception types
+      throw new RuntimeException();
+      //return lookahead;
     }
   }
 
@@ -650,36 +653,51 @@ public class Parser {
   // exported. Otherwise, they are considered public, i.e. exported.
 
   private Declaration otherDeclaration () {
-    ExportSpecifier p;
-    if (kind == PRIVATE) {
-      var token = confirm(PRIVATE);
-      p = new ExportSpecifier(token);
-    } else {
-      // Maybe change to EPSILON later
-      p = null;
-    }
-    Declaration n = null;
-    if (kind == TEMPLATE) {
+    try {
+      ExportSpecifier p;
+      if (kind == PRIVATE) {
+        var token = confirm(PRIVATE);
+        p = new ExportSpecifier(token);
+      } else {
+        // Maybe change to EPSILON later
+        p = null;
+      }
+      Declaration n = null;
+      if (kind == TEMPLATE) {
 //      n = templateDeclaration();
-    } else {
-      modifiers();
-      if (kind == CLASS)
-        n = classDeclaration(p);
-      else if (kind == TYPEALIAS)
-        n = typealiasDeclaration(p);
-      else if (kind == DEF)
-        n = routineDeclaration(p);
-      else if (kind == VAL || kind == VAR)
-        n = variableDeclaration(p);
-      else {
-        // Probably should panic with custom "expected start of declaration"
-        // message
-        panic(CLASS, TYPEALIAS, DEF, VAL, VAR);
-        modifierStack.clear();
+      } else {
+        modifiers();
+        if (kind == CLASS)
+          n = classDeclaration(p);
+        else if (kind == TYPEALIAS)
+          n = typealiasDeclaration(p);
+        else if (kind == DEF)
+          n = routineDeclaration(p);
+        else if (kind == VAL || kind == VAR)
+          n = variableDeclaration(p);
+        else {
+          // Probably should panic with custom "expected start of declaration"
+          // message
+          panic(CLASS, TYPEALIAS, DEF, VAL, VAR);
+          modifierStack.clear();
+        }
+      }
+      return n;
+    } catch (RuntimeException e) {
+      while (true) {
+        if (FirstSet.OTHER_DECLARATION.contains(kind)) {
+          return otherDeclaration();
+        } else if (FollowSet.OTHER_DECLARATION.contains(kind)) {
+          // Might need to augment the follow set
+          // In this case, we don't know what kind of declaration it is
+          // supposed to be.
+          return new BogusDeclaration(lookahead);
+        } else {
+          consume();
+        }
       }
     }
-    checkOut(FollowSet.OTHER_DECLARATION, "start of other declaration");
-    return n;
+   //return null;
   }
 
   // MODIFIERS
@@ -1071,28 +1089,51 @@ public class Parser {
   // following set. This is not a pure approach, as we previously assumed that
   // all members of the following set had to at least be in the FOLLOW set.
 
-  // Check-out?
-
   private VariableDeclaration variableDeclaration (ExportSpecifier exportSpecifier) {
     var token = confirm(kind == VAL ? VAL : VAR);
     var n = new VariableDeclaration(token);
-    n.setExportSpecifier(exportSpecifier);
-    n.setModifiers(variableModifiers());
-    n.setName(variableName());
-    if (kind != SEMICOLON) {
-      if (kind == COLON) {
-        n.setTypeSpecifier(variableTypeSpecifier());
-        if (kind == EQUAL)
+    try {
+      n.setExportSpecifier(exportSpecifier);
+      n.setModifiers(variableModifiers());
+      n.setName(variableName());
+      if (kind != SEMICOLON) {
+        if (kind == COLON) {
+          n.setTypeSpecifier(variableTypeSpecifier());
+          if (kind == EQUAL)
+            n.setInitializer(variableInitializer());
+        } else if (kind == EQUAL) {
           n.setInitializer(variableInitializer());
-      } else if (kind == EQUAL) {
-        n.setInitializer(variableInitializer());
-      } else {
-        panic(COLON, EQUAL, SEMICOLON);
+        } else {
+          panic(COLON, EQUAL, SEMICOLON);
+          throw new RuntimeException();
+        }
+      }
+      match(SEMICOLON);
+      return n;
+    } catch (RuntimeException except) {
+      // To do: make FOLLOW set variable declaration
+      while (true) {
+        if (FirstSet.VARIABLE_DECLARATION.contains(kind)) {
+          return variableDeclaration(exportSpecifier);
+        } else if (FollowSet.OTHER_DECLARATION.contains(kind)) {
+          n.setError();
+          return n;
+        } else if (kind == SEMICOLON) {
+          consume();
+          n.setError();
+          return n;
+        } else {
+          consume();
+        }
       }
     }
-    match(SEMICOLON);
-    return n;
   }
+
+  // Do we want match to throw the exception or pass it back up? There might be
+  // some scenarios where we'd want to keep going even after an error, but
+  // these would be very rare. In almost all cases, we'd want to unwind the
+  // stack. So I think we should throw inside match. We can always have a
+  // special version of match for other scenarios.
 
   private VariableName variableName () {
     var token = match(Token.Kind.IDENTIFIER);
