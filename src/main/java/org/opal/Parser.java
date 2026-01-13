@@ -291,6 +291,12 @@ public class Parser {
   // only be done after some explicit acknowledgement that error recovery is
   // complete.
 
+  // Do we want match to throw the exception or pass it back up? There might be
+  // some scenarios where we'd want to keep going even after an error, but
+  // these would be very rare. In almost all cases, we'd want to unwind the
+  // stack. So I think we should throw inside match. We can always have a
+  // special version of match for other scenarios.
+
   private Token match (Token.Kind expectedKind) {
     if (lookahead.getKind() == expectedKind) {
       LOGGER.info("matched " + lookahead);
@@ -422,15 +428,14 @@ public class Parser {
   // In parsing theory lingo, the top-most production is known as the "start
   // symbol". Thus, the translation unit is our start symbol.
 
-  // Maybe we need a check-in here
-
-  // TBD: Are check-ins in the middle of a production proper? I think the
-  // purpose of these is to ensure that error message say, "expected X or Y",
-  // not just "expected Y". Should we just be looking at follow sets?
+  // Treat package declaration as optional and detect if missing during
+  // semantic analysis. This eases parser error recovery when using exception
+  // handling.
 
   private AstNode translationUnit () {
     var n = new TranslationUnit();
-    n.setPackageDeclaration(packageDeclaration());
+    if (kind == PACKAGE)
+      n.setPackageDeclaration(packageDeclaration());
     n.setImportDeclarations(importDeclarations());
     n.setUseDeclarations(useDeclarations());
     n.setOtherDeclarations(otherDeclarations());
@@ -452,17 +457,28 @@ public class Parser {
   // same name.
 
   private PackageDeclaration packageDeclaration () {
-    checkIn(FirstSet.PACKAGE_DECLARATION, FollowSet.PACKAGE_DECLARATION, PACKAGE);
-    if (kind == PACKAGE) {
-      var token = confirm(PACKAGE);
-      var node = new PackageDeclaration(token);
+    var token = confirm(PACKAGE);
+    var node = new PackageDeclaration(token);
+    try {
       node.setPackageName(packageName());
       match(SEMICOLON);
-      checkOut(FollowSet.PACKAGE_DECLARATION, "'import', 'use', or start of other declaration");
       return node;
+    } catch (RuntimeException ex) {
+      while (true) {
+        if (FirstSet.PACKAGE_DECLARATION.contains(kind)) {
+          return packageDeclaration();
+        } else if (FollowSet.PACKAGE_DECLARATION.contains(kind)) {
+          node.setError();
+          return node;
+        } else if (kind == SEMICOLON) {
+          consume();
+          node.setError();
+          return node;
+        } else {
+          consume();
+        }
+      }
     }
-    cleanup();
-    return null;
   }
 
   // To do: Support qualified names for packages
@@ -494,23 +510,35 @@ public class Parser {
   // easiest implementation and the others hold no advantages for our
   // particular use case.
 
-  // We don't need a check-in for importDeclaration because it is optional, so
-  // the check-in logic is in the caller. If we enter this production, then we
-  // already know that the current token is in the FIRST set.
-
   private ImportDeclaration importDeclaration () {
     var token = confirm(IMPORT);
     var node = new ImportDeclaration(token);
-    node.setQualifiedName(importQualifiedName());
-    if (kind != SEMICOLON) {
-      if (kind == AS)
-        node.setAsName(importAsClause());
-      else
-        panic(AS, SEMICOLON);
+    try {
+      node.setQualifiedName(importQualifiedName());
+      if (kind != SEMICOLON) {
+        if (kind == AS)
+          node.setAsName(importAsClause());
+        else
+          panic(AS, SEMICOLON);
+      }
+      match(SEMICOLON);
+      return node;
+    } catch (Exception ex) {
+      while (true) {
+        if (FirstSet.IMPORT_DECLARATION.contains(kind)) {
+          return importDeclaration();
+        } else if (FollowSet.IMPORT_DECLARATION.contains(kind)) {
+          node.setError();
+          return node;
+        } else if (kind == SEMICOLON) {
+          consume();
+          node.setError();
+          return node;
+        } else {
+          consume();
+        }
+      }
     }
-    match(SEMICOLON);
-    checkOut(FollowSet.IMPORT_DECLARATION, "'import', 'use', or start of other declaration");
-    return node;
   }
 
   private ImportQualifiedName importQualifiedName () {
@@ -1082,12 +1110,7 @@ public class Parser {
 
   // To do: variable initializer is being arrived at via a certain path and an
   // uncertain path. So do we match or do we confirm? I think we need to match,
-  // which is a more fail-safe option.
-
-  // To do: Why doesn't sync stop at semicolon? Is there an issue with the
-  // following set? Here, we will experiment with putting semicolons into the
-  // following set. This is not a pure approach, as we previously assumed that
-  // all members of the following set had to at least be in the FOLLOW set.
+  // which is a more fail-safe option. UPDATE: Is this still true?
 
   private VariableDeclaration variableDeclaration (ExportSpecifier exportSpecifier) {
     var token = confirm(kind == VAL ? VAL : VAR);
@@ -1110,12 +1133,11 @@ public class Parser {
       }
       match(SEMICOLON);
       return n;
-    } catch (RuntimeException except) {
-      // To do: make FOLLOW set variable declaration
+    } catch (RuntimeException ex) {
       while (true) {
         if (FirstSet.VARIABLE_DECLARATION.contains(kind)) {
           return variableDeclaration(exportSpecifier);
-        } else if (FollowSet.OTHER_DECLARATION.contains(kind)) {
+        } else if (FollowSet.VARIABLE_DECLARATION.contains(kind)) {
           n.setError();
           return n;
         } else if (kind == SEMICOLON) {
@@ -1128,12 +1150,6 @@ public class Parser {
       }
     }
   }
-
-  // Do we want match to throw the exception or pass it back up? There might be
-  // some scenarios where we'd want to keep going even after an error, but
-  // these would be very rare. In almost all cases, we'd want to unwind the
-  // stack. So I think we should throw inside match. We can always have a
-  // special version of match for other scenarios.
 
   private VariableName variableName () {
     var token = match(Token.Kind.IDENTIFIER);

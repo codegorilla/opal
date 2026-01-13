@@ -77,6 +77,7 @@ public class FollowSet {
     Token.Kind.EOF
   );
 
+  public static final EnumSet<Token.Kind> VARIABLE_DECLARATION = FollowSet.OTHER_DECLARATION;
 
 
   public static final EnumSet<Token.Kind> ARRAY_DECLARATOR =

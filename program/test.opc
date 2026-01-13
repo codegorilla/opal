@@ -1,6 +1,6 @@
 package main;
 
-//import + opal.lang.math;
+import opal.lang.math;
 
 //use opal.math.cos;
 //+ + use opal.math.*;
@@ -8,9 +8,9 @@ package main;
 
 //var d: **(*float64)[1];
 
-var d& uint16;
+//var d& uint16;
 
-var x = 1;
+//var x = 1;
 
 //def cos (x: float32, y: int, z: uint8) -> int32 {}
 
