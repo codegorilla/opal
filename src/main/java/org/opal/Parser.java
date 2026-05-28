@@ -428,7 +428,7 @@ public class Parser {
   // In parsing theory lingo, the top-most production is known as the "start
   // symbol". Thus, the translation unit is our start symbol.
 
-  // Treat package declaration as optional and detect if missing dugit sring
+  // Treat package declaration as optional and detect if missing during
   // semantic analysis. This eases parser error recovery when using exception
   // handling.
 
