@@ -6,7 +6,9 @@ import org.opal.Visitor;
 import org.opal.ast.AstNode;
 import org.opal.symbol.Scope;
 
-public class PackageDeclaration extends AstNode {
+// Should extend GlobalDeclaration
+
+public class PackageDeclaration extends Declaration {
 
   // Child nodes
   private PackageName packageName = null;

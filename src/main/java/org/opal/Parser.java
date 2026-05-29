@@ -432,6 +432,8 @@ public class Parser {
   // semantic analysis. This eases parser error recovery when using exception
   // handling.
 
+  // Need to loop for global declarations
+
   private AstNode translationUnit () {
     var n = new TranslationUnit();
     if (kind == PACKAGE)
@@ -455,6 +457,17 @@ public class Parser {
   // translation unit, and it must appear at the very top. A package is
   // basically a direct 1:1 translation to a C++ module and namespace of the
   // same name.
+
+  // Loop inside globalDeclarations or just translationUnit?
+
+  private Declaration globalDeclaration () {
+    Declaration n = null;
+    if (kind == PACKAGE)
+      n = packageDeclaration();
+    else if (kind == IMPORT)
+      n = importDeclaration();
+    return n;
+  }
 
   private PackageDeclaration packageDeclaration () {
     var token = confirm(PACKAGE);
