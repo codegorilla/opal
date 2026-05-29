@@ -69,8 +69,11 @@ public class Translator {
 
     System.out.println("*** DONE PARSING ***");
 
-    var pass1 = new Pass1(root);
-    pass1.process();
+//    var pass1 = new Pass1(root);
+//    pass1.process();
+
+    var pass5 = new Pass5(root, sourceLines);
+    pass5.process();
 
     var pass10 = new Pass10(root);
     pass10.process();
@@ -84,7 +87,7 @@ public class Translator {
     var pass40 = new Pass40(root);
     pass40.process();
 
-    pass1.process();
+    //pass1.process();
 
 
 //    var pass2 = new Pass30(root);
